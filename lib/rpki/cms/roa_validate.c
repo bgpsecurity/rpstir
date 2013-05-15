@@ -28,7 +28,7 @@ int strict_profile_checks_cms = 0;
 #define MANIFEST_NUMBER_MAX_SIZE 20 /* in bytes */
 
 int check_sig(
-    struct ROA *rp,
+    struct CMS *rp,
     struct Certificate *certp)
 {
     CRYPT_CONTEXT pubkeyContext,
@@ -469,7 +469,7 @@ static int validateIPContents(
 }
 
 static int cmsValidate(
-    struct ROA *rp)
+    struct CMS *rp)
 {
     // validates general CMS things common to ROAs and manifests
 
@@ -635,14 +635,14 @@ static int cmsValidate(
         if (strict_profile_checks_cms
             || diff_objid(oidp, id_rsadsi_rsaEncryption))
         {
-            LOG(LOG_ERR, "invalid signature algorithm in ROA");
+            LOG(LOG_ERR, "invalid signature algorithm in CMS");
             return ERR_SCM_BADSIGALG;
         }
         /* In conversation at IETF 85, R. Austein said that this was a
          * mistake in the specification, not the code.  We'll wait for
          * an update to the RFC before we remove this entirely.  But
          * log at debug level rather than warning. */
-        LOG(LOG_DEBUG, "deprecated signature algorithm in ROA?");
+        LOG(LOG_DEBUG, "deprecated signature algorithm in CMS?");
     }
 
     // check that the subject key identifier has proper length
@@ -937,7 +937,7 @@ static int check_mft_duplicate_filenames(
  *   stale manifest, as described in Section 6.4.
  */
 int manifestValidate(
-    struct ROA *roap,
+    struct CMS *cmsp,
     int *stalep)
 {
     /*
@@ -948,12 +948,12 @@ int manifestValidate(
      */
     int iRes;
     // step 1
-    if (diff_objid(&roap->content.signedData.encapContentInfo.eContentType,
+    if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
                    id_roa_pki_manifest))
         return ERR_SCM_BADCT;
     // step 2
     struct Manifest *manp =
-        &roap->content.signedData.encapContentInfo.eContent.manifest;
+        &cmsp->content.signedData.encapContentInfo.eContent.manifest;
     if (size_casn(&manp->self) <= 0)
         return ERR_SCM_BADCT;
     if ((iRes = check_mft_version(&manp->version.self)) < 0)
@@ -977,7 +977,7 @@ int manifestValidate(
     if (iRes < 0)
         return iRes;
     // step 7
-    iRes = cmsValidate(roap);
+    iRes = cmsValidate(cmsp);
     if (iRes < 0)
         return iRes;
     return 0;
@@ -1185,7 +1185,7 @@ static int checkIPAddrs(
  * ROA.
  */
 int roaValidate(
-    struct ROA *rp)
+    struct CMS *rp)
 {
     int iRes = 0;
     intmax_t iAS_ID = 0;
@@ -1248,7 +1248,7 @@ int roaValidate(
 #define HAS_EXTN_IPADDR 0x04
 
 int roaValidate2(
-    struct ROA *rp)
+    struct CMS *rp)
 {
     int iRes;
     int sta;

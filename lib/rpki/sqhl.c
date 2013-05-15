@@ -1447,7 +1447,7 @@ static unsigned char *readfile(
 
 static int verify_roa(
     scmcon * conp,
-    struct ROA *r,
+    struct CMS *r,
     char *ski,
     int *chainOK)
 {
@@ -1619,7 +1619,7 @@ static int verifyChildROA(
     scmsrcha * s,
     int idx)
 {
-    struct ROA roa;
+    struct CMS roa;
     int typ,
         chainOK,
         sta;
@@ -1628,7 +1628,7 @@ static int verifyChildROA(
     unsigned int id;
 
     UNREFERENCED_PARAMETER(idx);
-    ROA(&roa, (ushort) 0);
+    CMS(&roa, (ushort) 0);
     // try verifying crl
     snprintf(pathname, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
              (char *)s->vec[1].valptr);
@@ -1835,26 +1835,26 @@ static int verifyChildManifest(
     int idx)
 {
     int sta;
-    struct ROA roa;
+    struct CMS cms;
     char outfull[PATH_MAX];
     UNREFERENCED_PARAMETER(idx);
     sta = updateValidFlags(conp, theManifestTable,
                            *((unsigned int *)(s->vec[0].valptr)),
                            *((unsigned int *)(s->vec[1].valptr)), 1);
-    ROA(&roa, 0);
+    CMS(&cms, 0);
     snprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
              (char *)(s->vec[3].valptr));
-    sta = get_casn_file(&roa.self, outfull, 0);
+    sta = get_casn_file(&cms.self, outfull, 0);
     if (sta < 0)
     {
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         LOG(LOG_ERR, "invalid manifest filename %s", outfull);
         return sta;
     }
     struct Manifest *manifest =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     sta = updateManifestObjs(conp, manifest);
-    delete_casn(&roa.self);
+    delete_casn(&cms.self);
     return 0;
 }
 
@@ -2264,7 +2264,7 @@ int addStateToFlags(
 {
     int sta,
         fd;
-    struct ROA roa;
+    struct CMS cms;
     struct casn ccasn;
     struct FileAndHash *fahp = NULL;
 
@@ -2287,10 +2287,10 @@ int addStateToFlags(
     if (!validManPath[0])
         return 0;
 
-    ROA(&roa, 0);
-    sta = get_casn_file(&roa.self, validManPath, 0);
+    CMS(&cms, 0);
+    sta = get_casn_file(&cms.self, validManPath, 0);
     struct Manifest *manifest =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     simple_constructor(&ccasn, (ushort) 0, ASN_IA5_STRING);
     write_casn(&ccasn, (uchar *) filename, strlen(filename));
     for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
@@ -2304,7 +2304,7 @@ int addStateToFlags(
         (void)close(fd);
     }
     delete_casn(&ccasn);
-    delete_casn(&roa.self);
+    delete_casn(&cms.self);
     return sta >= 0 ? 0 : sta;
 }
 
@@ -2624,7 +2624,7 @@ static int hexify_ski(
 }
 
 static int extractAndAddCert(
-    struct ROA *roap,
+    struct CMS *cmsp,
     scm * scmp,
     scmcon * conp,
     char *outdir,
@@ -2640,7 +2640,7 @@ static int extractAndAddCert(
         pathname[PATH_MAX];
     int sta = 0;
     struct Certificate *certp;
-    certp = (struct Certificate *)member_casn(&roap->content.signedData.
+    certp = (struct Certificate *)member_casn(&cmsp->content.signedData.
                                               certificates.self, 0);
     if (!certp)
         return ERR_SCM_BADNUMCERTS;
@@ -2833,7 +2833,7 @@ int add_roa(
     int utrust,
     int typ)
 {
-    struct ROA roa;             // note: roaFromFile constructs this
+    struct CMS roa;             // note: roaFromFile constructs this
     char ski[60],
        *sig = NULL,
         certfilename[PATH_MAX],
@@ -2929,7 +2929,7 @@ int add_manifest(
     int sta,
         cert_added = 0,
         stale;
-    struct ROA roa;
+    struct CMS cms;
     char *thisUpdate,
        *nextUpdate,
         certfilename[PATH_MAX];
@@ -2937,24 +2937,23 @@ int add_manifest(
                                 // 15
     unsigned int man_id = 0;
 
-    // manifest stored in same format as a roa
-    ROA(&roa, 0);
+    CMS(&cms, 0);
     initTables(scmp);
-    sta = get_casn_file(&roa.self, outfull, 0);
+    sta = get_casn_file(&cms.self, outfull, 0);
     if (sta < 0)
     {
         LOG(LOG_ERR, "invalid manifest %s", outfull);
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         return ERR_SCM_INVALASN;
     }
-    if (sta < 0 || (sta = manifestValidate(&roa, &stale)) < 0)
+    if (sta < 0 || (sta = manifestValidate(&cms, &stale)) < 0)
     {
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         return sta;
     }
     // now, read the data out of the manifest structure
     struct Manifest *manifest =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
 
     // read the list of files
     uchar file[200];
@@ -3019,7 +3018,7 @@ int add_manifest(
         if (sta < 0)
             break;
 
-        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, utrust, typ,
+        if ((sta = extractAndAddCert(&cms, scmp, conp, outdir, utrust, typ,
                                      outfile, ski, certfilename)) < 0)
             break;
         cert_added = 1;
@@ -3036,7 +3035,7 @@ int add_manifest(
         if (cert_added)
             (void)delete_object(scmp, conp, certfilename, outdir,
                                 outfull, (unsigned int)0);
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         return sta;
     }
     // the manifest is valid if the embedded cert is valid (since we already
@@ -3097,7 +3096,7 @@ int add_manifest(
     if (sta < 0 && cert_added)
         (void)delete_object(scmp, conp, certfilename,
                             outdir, outfull, (unsigned int)0);
-    delete_casn(&(roa.self));
+    delete_casn(&(cms.self));
     free(thisUpdate);
     free(nextUpdate);
     return sta;

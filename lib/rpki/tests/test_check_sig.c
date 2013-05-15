@@ -11,36 +11,36 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
+    struct CMS cms;
     struct Certificate *certp;
 
-    ROA(&roa, 0);
+    CMS(&cms, 0);
     if (argc < 2)
-        fprintf(stderr, "Need argvs for roa(s)\n");
+        fprintf(stderr, "Need argvs for CMS(s)\n");
     else
         for (argv++; argv && *argv; argv++)
         {
-            if (get_casn_file(&roa.self, argv[0], 0) < 0)
-                fprintf(stderr, "Reading roa failed\n");
+            if (get_casn_file(&cms.self, argv[0], 0) < 0)
+                fprintf(stderr, "Reading CMS failed\n");
             else if (!
                      (certp =
-                      (struct Certificate *)member_casn(&roa.content.
+                      (struct Certificate *)member_casn(&cms.content.
                                                         signedData.
                                                         certificates.self, 0)))
-                fprintf(stderr, "Couldn't get certificate in roa\n");
+                fprintf(stderr, "Couldn't get certificate in CMS\n");
             else
             {
                 char *n = "something else";
                 if (!diff_objid
-                    (&roa.content.signedData.encapContentInfo.eContentType,
+                    (&cms.content.signedData.encapContentInfo.eContentType,
                      id_roa_pki_manifest))
                     n = argv[0];
                 else if (!diff_objid
-                         (&roa.content.signedData.encapContentInfo.
+                         (&cms.content.signedData.encapContentInfo.
                           eContentType, id_routeOriginAttestation))
                     n = "ROA";
                 fprintf(stderr, "Checking %s %s\n", n,
-                        (check_sig(&roa, certp) <
+                        (check_sig(&cms, certp) <
                          0) ? "failed." : "SUCCEEDED!");
             }
         }

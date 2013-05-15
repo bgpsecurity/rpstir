@@ -91,7 +91,7 @@ static int cvaldtoc3(
 }
 
 unsigned char *roaSKI(
-    struct ROA *r)
+    struct CMS *r)
 {
     int i = 0;
     unsigned char *cSID = NULL;
@@ -137,7 +137,7 @@ unsigned char *roaSKI(
 }
 
 unsigned char *roaSignature(
-    struct ROA *r,
+    struct CMS *r,
     int *lenp)
 {
     if (r == NULL || lenp == NULL)
@@ -433,7 +433,7 @@ static unsigned char **roaIPAddresses(
     behavior.
 */
 uint32_t roaAS_ID(
-    struct ROA *r)
+    struct CMS *r)
 {
     intmax_t iAS_ID;
     read_casn_num_max(&r->content.signedData.encapContentInfo.eContent.roa.asID,
@@ -498,7 +498,7 @@ static int convertAddr(
 }
 
 int roaGetIPAddresses(
-    struct ROA *rp,
+    struct CMS *rp,
     char **str)
 {
     struct ROAIPAddrBlocks *addrBlocksp =
@@ -564,7 +564,7 @@ int roaGetIPAddresses(
 }
 
 int roaGenerateFilter(
-    struct ROA *r,
+    struct CMS *r,
     uchar * cert,
     FILE * fp,
     char *str,
@@ -646,7 +646,7 @@ int roaGenerateFilter(
 }
 
 int roaGenerateFilter2(
-    struct ROA *r,
+    struct CMS *r,
     char **strpp)
 {
     int i,

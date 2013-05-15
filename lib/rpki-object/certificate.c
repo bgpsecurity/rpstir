@@ -3,7 +3,7 @@
 #include "util/cryptlib_compat.h"
 #include "util/hashutils.h"
 #include "util/logging.h"
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 #include "rpki-object/certificate.h"
 
 

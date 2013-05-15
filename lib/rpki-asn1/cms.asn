@@ -1,0 +1,196 @@
+DEFINITIONS IMPLICIT TAGS ::=
+
+IMPORTS
+    AlgorithmIdentifier CMSAlgorithmIdentifier RPKIAlgorithmIdentifier
+        FROM Algorithms IN Algorithms.asn,
+    Certificate Version FROM certificate IN certificate.asn,
+    Extensions FROM extensions IN extensions.asn,
+    Name FROM name IN name.asn,
+    Manifest FROM Manifest IN manifest.asn,
+    RouteOriginAttestation FROM RouteOriginAttestation IN roa.asn;
+
+
+
+-- CMSBlob treats the encapsulated content as opaque. See CMS below for a
+-- definition that can be used when the encapsulated content is ASN.1.
+
+CMSBlob ::= SEQUENCE {
+    contentType ContentType TABLE BlobContentTable,
+    content [0] EXPLICIT ANY DEFINED BY contentType
+}
+
+BlobContentTable ::= TABLE {
+    signedData id-signedData BlobSignedData
+}
+
+BlobSignedData ::= SEQUENCE {
+    version CMSVersion,
+    digestAlgorithms DigestAlgorithmIdentifiers,
+    encapContentInfo BlobEncapsulatedContentInfo,
+    certificates [0] IMPLICIT CertificateSet OPTIONAL,
+    crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+    signerInfos SignerInfos
+}
+
+BlobEncapsulatedContentInfo ::= SEQUENCE {
+    eContentType ContentType TABLE BlobEContentTable,
+    eContent [0] EXPLICIT OCTET STRING DEFINED BY eContentType
+}
+
+BlobEContentTable ::= TABLE {
+    unknown 0xFFFF ANY
+}
+
+
+
+-- CMS can be used to parse ASN.1 in the encapsulated content. Use CMSBlob above
+-- when the encapsulated content is opaque.
+
+CMS ::= SEQUENCE {
+    contentType ContentType TABLE ContentTable,
+    content [0] EXPLICIT ANY DEFINED BY contentType
+}
+
+ContentTable ::= TABLE {
+    signedData id-signedData SignedData
+}
+
+SignedData ::= SEQUENCE {
+    version CMSVersion,
+    digestAlgorithms DigestAlgorithmIdentifiers,
+    encapContentInfo EncapsulatedContentInfo,
+    certificates [0] IMPLICIT CertificateSet OPTIONAL,
+    crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+    signerInfos SignerInfos
+}
+
+EncapsulatedContentInfo ::= SEQUENCE {
+    eContentType ContentType TABLE EContentTable,
+    eContent [0] EXPLICIT OCTET STRING DEFINED BY eContentType
+}
+
+EContentTable ::= TABLE {
+    roa id-routeOriginAttestation RouteOriginAttestation,
+    manifest id-roa-pki-manifest Manifest
+}
+
+pkcs OBJECT IDENTIFIER ::= {1.2.840.113549.1}
+pkcs-9 OBJECT IDENTIFIER ::= {pkcs 9}
+id-smime OBJECT IDENTIFIER ::= { pkcs-9 16 }
+id-ct OBJECT IDENTIFIER ::= { id-smime 1 }
+id-routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 }
+id-roa-pki-manifest OBJECT IDENTIFIER ::= { id-ct 26 }
+
+
+-- Definitions common to both CMSBlob and CMS
+
+ContentType ::= OBJECT IDENTIFIER
+
+pkcs-7 OBJECT IDENTIFIER ::= {pkcs 7 }
+id-signedData OBJECT IDENTIFIER ::= { pkcs-7 2 }
+
+CMSVersion ::= INTEGER {
+    v0 (0),
+    v1 (1),
+    v3 (3)
+}
+
+DigestAlgorithmIdentifiers ::= SET OF CMSAlgorithmIdentifier
+
+CertificateSet ::= SET OF Certificate
+
+RevocationInfoChoices ::= SET OF RevocationInfoChoice
+
+RevocationInfoChoice ::= CHOICE {
+    crl CertificateList,
+    other [1] IMPLICIT OtherRevocationInfoFormat
+}
+
+OtherRevocationInfoFormat ::= SEQUENCE {
+    otherRevInfoFormat OBJECT IDENTIFIER,
+    otherRevInfo ANY
+}
+
+CertificateList ::= SEQUENCE {
+    tbsCertList TBSCertList,
+    signatureAlgorithm AlgorithmIdentifier,
+    signatureValue BIT STRING
+}
+
+TBSCertList ::= SEQUENCE {
+    version Version OPTIONAL,
+    signature AlgorithmIdentifier,
+    issuer Name,
+    thisUpdate Time,
+    nextUpdate Time OPTIONAL,
+    revokedCertificates SEQUENCE OF SEQUENCE {
+        userCertificate CertificateSerialNumber,
+        revocationDate Time,
+        crlEntryExtensions Extensions OPTIONAL
+    } OPTIONAL,
+    crlExtensions [0] EXPLICIT Extensions OPTIONAL
+}
+
+CertificateSerialNumber ::= INTEGER
+
+Time ::= CHOICE {
+    utcTime UTCTime,
+    generalTime GeneralizedTime
+}
+
+SignerInfos ::= SET (SIZE (1..1)) OF SignerInfo
+
+SignerInfo ::= SEQUENCE {
+    version CMSVersion,
+    sid SignerIdentifier,
+    digestAlgorithm CMSAlgorithmIdentifier,
+    signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+    signatureAlgorithm SignatureAlgorithmIdentifier,
+    signature SignatureValue,
+    unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL
+}
+
+id-contentTypeAttr OBJECT IDENTIFIER ::= { pkcs-9 3 }
+id-messageDigestAttr OBJECT IDENTIFIER ::= { pkcs-9 4 }
+id-signingTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 5 }
+id-binSigningTimeAttr OBJECT IDENTIFIER ::= { pkcs-9 16.2.46 }
+
+SignedAttributes ::= SET SIZE (0..MAX) OF Attribute
+
+UnsignedAttributes ::= SET SIZE (0..0) OF Attribute
+
+Attribute ::= SEQUENCE {
+    attrType OBJECT IDENTIFIER TABLE AttrTable,
+    attrValues AttributeValues
+}
+
+AttributeValues ::= SET OF ANY DEFINED BY attrType IN Attribute
+
+AttrTable ::= TABLE {
+    contentType id-contentTypeAttr OBJECT IDENTIFIER,
+    messageDigest id-messageDigestAttr OCTET STRING,
+    signingTime id-signingTimeAttr SigningTime,
+    binSigningTime id-binSigningTimeAttr INTEGER,
+    ignored 0xFFFF ANY
+}
+
+SigningTime ::= CHOICE {
+    utcTime UTCTime,
+    generalizedTime GeneralizedTime
+}
+
+SignatureAlgorithmIdentifier ::= RPKIAlgorithmIdentifier
+
+SignerIdentifier ::= CHOICE {
+    issuerAndSerialNumber IssuerAndSerialNumber,
+    subjectKeyIdentifier [0] SubjectKeyIdentifier
+}
+
+IssuerAndSerialNumber ::= SEQUENCE {
+    issuer Name,
+    serialNumber CertificateSerialNumber
+}
+
+SignatureValue ::= OCTET STRING
+
+SubjectKeyIdentifier ::= OCTET STRING

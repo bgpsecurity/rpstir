@@ -12,7 +12,6 @@
 #include <time.h>
 #include <rpki-object/certificate.h>
 #include <rpki-object/cms/cms.h>
-#include <rpki-asn1/roa.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
 
@@ -45,8 +44,8 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
-    ROA(&roa, (ushort) 0);
+    struct CMS cms;
+    CMS(&cms, (ushort) 0);
     if (argc < 4 || argc > 5)
     {
         fprintf(stderr, "Usage: %s EEcert CMSfile EEkeyfile [outfile]\n",
@@ -64,14 +63,14 @@ int main(
     if (get_casn_file(&EEcert.self, argv[1], 0) < 0)
         fatal(1, "EE certificate");
     // get the CMS object
-    if (get_casn_file(&roa.self, argv[2], 0) < 0)
+    if (get_casn_file(&cms.self, argv[2], 0) < 0)
         fatal(1, "CMS file");
     struct Extension *sextp;
     // get EE's Auth Key ID
     if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
         fatal(3, "key identifier");
     // add cert to CMS object 
-    struct SignedData *signedDatap = &roa.content.signedData;
+    struct SignedData *signedDatap = &cms.content.signedData;
     struct Certificate *certp;
     clear_casn(&signedDatap->certificates.self);
     certp =
@@ -86,13 +85,13 @@ int main(
                strcmp(c, ".mnf")))
         fatal(1, "CMSfile suffix");
     // sign it!
-    const char *msg = signCMS(&roa, argv[3], 0);
+    const char *msg = signCMS(&cms, argv[3], 0);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else                        // and write it
     if (argc < 5)
-        put_casn_file(&roa.self, (char *)0, 1);
+        put_casn_file(&cms.self, (char *)0, 1);
     else
-        put_casn_file(&roa.self, argv[4], 0);
+        put_casn_file(&cms.self, argv[4], 0);
     return 0;
 }

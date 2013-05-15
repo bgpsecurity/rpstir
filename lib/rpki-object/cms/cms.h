@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 
 
 /**
@@ -12,7 +12,7 @@
  * @return NULL on success, error message on failure
  */
 const char *signCMS(
-    struct ROA *roa,
+    struct CMS *cms,
     const char *keyfilename,
     bool bad);
 

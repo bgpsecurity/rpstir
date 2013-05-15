@@ -180,7 +180,7 @@ int main(
         *keyfile = NULL,
         *readablefile = NULL,
         *pcertfile = NULL;
-    struct ROA roa;
+    struct CMS roa;
     struct Certificate cert,
         pcert;
     const char *msg;
@@ -307,7 +307,7 @@ int main(
     }
 
     // init roa
-    ROA(&roa, (ushort) 0);
+    CMS(&roa, (ushort) 0);
     write_objid(&roa.contentType, id_signedData);
 
     // init and read in the ee cert
