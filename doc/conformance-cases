@@ -12,7 +12,7 @@ root/root.crl
      root.mft
      [bad|good]Cert*.cer
      [bad|good]CMS*.roa
-     [bad|good]ROA.roa
+     [bad|good]ROA*.roa
      CRL*.cer
      CRL*/[bad|good]CRL*.crl
           CRL*.mft
