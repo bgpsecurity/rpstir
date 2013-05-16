@@ -77,7 +77,7 @@ int main(
     // check CMS suffix
     char *c = strrchr(argv[2], (int)'.');
     if (!c || (strcmp(c, ".roa") && strcmp(c, ".man") && strcmp(c, ".mft") &&
-               strcmp(c, ".mnf")))
+               strcmp(c, ".mnf") && strcmp(c, ".gbr")))
         fatal(1, "CMSfile suffix");
     // fill in SignerInfo
     struct SignerInfo *signerInfop =

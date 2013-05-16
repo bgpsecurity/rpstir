@@ -807,6 +807,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/templates/goodCert.raw \
 	tests/conformance/raw/templates/goodEECert.p15 \
 	tests/conformance/raw/templates/goodEECert.raw \
+	tests/conformance/raw/templates/goodEECertGBR.raw \
+	tests/conformance/raw/templates/goodGBR.raw \
 	tests/conformance/raw/templates/goodROA.raw \
 	tests/conformance/scripts/conformance.conf
 
@@ -821,6 +823,10 @@ tests/conformance/scripts/gen_all_CMSs.sh: $(srcdir)/tests/conformance/scripts/g
 check_SCRIPTS += tests/conformance/scripts/gen_all_CRLs.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CRLs.sh
 tests/conformance/scripts/gen_all_CRLs.sh: $(srcdir)/tests/conformance/scripts/gen_all_CRLs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_GBRs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_GBRs.sh
+tests/conformance/scripts/gen_all_GBRs.sh: $(srcdir)/tests/conformance/scripts/gen_all_GBRs.sh.in
 
 check_SCRIPTS += tests/conformance/scripts/gen_all_MFTs.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_MFTs.sh

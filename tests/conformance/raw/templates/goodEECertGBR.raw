@@ -1,0 +1,80 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x01 /* 1 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "root"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "goodEECert"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100D00C3569CAEC
+                0x80BA96D151A147C0CF05EFF8AC75FB30
+                0x76BA77AF39A02566AECF1F7A4AEEC47B
+                0xFC8BE76B1AEBB062F09AE0A8766AB0A7
+                0x2386218C3AD9D38BB40C5A2A1A405C7E
+                0x6A7F157F114E5345EDA618D5328C7787
+                0x63D71261AFCE38D2FA07A23E4D7626CD
+                0x88AD849220B10D70131B913EE3713F75
+                0xD4937F1E669FA96EBD03291BEE95DEF5
+                0xEA7A15CD38EECAA0BC7FC556043208B2
+                0x1E69D59A82DE0B8CF89898F7AB3392E8
+                0x9992A32756812CD4F40EEF3865CE97ED
+                0x2D928B9340DC57EC5A1F54244229351D
+                0xF815E61D00BF01DC0F3EE1F4D6963144
+                0x317614A90958C8A4FE621B9DCD0C86E4
+                0xA49E882D46F4AF7C1A04EE420FF5E921
+                0x264222AC678F7CEFA1ED0203010001
+        ctx+0x23
+            seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xCE47DB41F1A8352993EDEF5E690ED250
+                            0xDF8E9809
+                seq oid 2.5.29.35 /* id_authKeyId */
+                    ocw seq ctx+0x00
+                                0xD27F6E783B2B5CE535940D54C0A6F38F
+                                0x5B7804D4
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0780
+                seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                    ocw seq seq ctx+0x20
+                                    ctx+0x20
+                                        ctx+0x06
+                                            "rsync://rpki.bbn.com/conformance/r"
+                                            "oot/root.crl"
+                seq oid 1.3.6.1.5.5.7.1.1 /* id_pkix_authorityInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root.cer"
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/root/good"
+                                    ".roa"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                nul
+                            seq oct 0x0002
+                                nul
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                nul
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x00ACEF2CE984D62630A964952C1AB1ED2396B1EC5E9F7C0AF90CE5D50C34AB30
+        0x610B35B62FAB9D3F992501CF80506AEF0E0E44164E5EA66E1BA3B7F1F5AF147B
+        0x0B67D401AF2EDD402F3E024E1A0D50AD76B72D8D465CD9FB65453C3F9C252302
+        0xCCE3C7C94CABA5730C183D9B6CAF1AB0CC99BCF1D7EF57D02AA625004EB26D78
+        0x61EAAA653DFCC8CF7BD590A63C4B3734AB496C014ACD23C6D3997455B164CDA0
+        0x0EA55DD24856DE7EF199E10F054FEDB771EDB0A43169524E0DE2B25C2E5F3069
+        0x8146EA469D2B182AD832030520D51872393EE2A5642CF88317A10B8A46AC081F
+        0x4E0361EFC0848C2AB34CBDA43DD3AF3E505240EFFE59BF55B142592AC56450B6
+        0x8E

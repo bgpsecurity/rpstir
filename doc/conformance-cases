@@ -257,7 +257,7 @@ ROAs
 
 Ghostbusters
 
-    NothingWrong             # (good) nothing wrong
+600 NothingWrong             # (good) nothing wrong
     NotVCard                 # the eContent is not valid vCard 6493#5
     ExtraProperty            # a vCard property not listed in 6493#5 is present
     NoContact                # none of ADR, TEL, or EMAIL are present 6493#5
