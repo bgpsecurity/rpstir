@@ -134,6 +134,19 @@ static scmtab scmtabbuilder[] = {
      "         PRIMARY KEY (filename, dir_id)," "         KEY lid (local_id)",
      NULL,
      0},
+    {
+     "rpki_ghostbusters",
+     "GHOSTBUSTERS",
+     "filename VARCHAR(256) NOT NULL,"
+     "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
+     "local_id INT UNSIGNED NOT NULL UNIQUE,"
+     "ski      VARCHAR(128) NOT NULL,"
+     "hash     VARCHAR(256),"
+     "flags    INT UNSIGNED DEFAULT 0,"
+     "         PRIMARY KEY (filename, dir_id),"
+     "         KEY lid (local_id)",
+     NULL,
+     0},
     {                           /* RPKI_DIR */
      "rpki_dir",
      "DIRECTORY",
