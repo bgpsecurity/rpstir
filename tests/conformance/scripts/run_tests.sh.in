@@ -43,6 +43,9 @@ add_file () {
 		*.mft|*.man|*.mnf)
 			FILETYPE=man
 			;;
+		*.gbr)
+			FILETYPE=gbr
+			;;
 		*)
 			echo >&2 "Error: unknown filetype for file $FILE"
 			exit 1
