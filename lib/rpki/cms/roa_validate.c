@@ -494,7 +494,7 @@ static int cmsValidate(
          algorithm, id_sha256))
         return ERR_SCM_BADDA;
 
-    if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1)
+    if ((num_certs = num_items(&rp->content.signedData.certificates.self)) != 1)
         return ERR_SCM_BADNUMCERTS;
 
     if (num_items(&rp->content.signedData.signerInfos.self) != 1)
@@ -585,29 +585,25 @@ static int cmsValidate(
     if (ret != 0)
         return ret;
 
-    // if there is a cert, check it
-    if (num_certs > 0)
-    {
-        struct Certificate *certp =
-            (struct Certificate *)member_casn(&rp->content.signedData.
-                                              certificates.self, 0);
-        if ((ret = check_cert(certp, 1)) < 0)
-            return ret;
-        if ((ret = check_sig(rp, certp)) != 0)
-            return ret;
-        // check that the cert's SKI matches that in SignerInfo
-        struct Extension *extp;
-        for (extp =
-             (struct Extension *)member_casn(&certp->toBeSigned.extensions.
-                                             self, 0);
-             extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
-             extp = (struct Extension *)next_of(&extp->self));
-        if (!extp
-            || diff_casn(&extp->extnValue.subjectKeyIdentifier,
-                         &sigInfop->sid.subjectKeyIdentifier))
-            return ERR_SCM_SIGINFOSID;
-
-    }
+    // check the cert
+    struct Certificate *certp =
+        (struct Certificate *)member_casn(&rp->content.signedData.
+                                          certificates.self, 0);
+    if ((ret = check_cert(certp, 1)) < 0)
+        return ret;
+    if ((ret = check_sig(rp, certp)) != 0)
+        return ret;
+    // check that the cert's SKI matches that in SignerInfo
+    struct Extension *extp;
+    for (extp =
+         (struct Extension *)member_casn(&certp->toBeSigned.extensions.
+                                         self, 0);
+         extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+         extp = (struct Extension *)next_of(&extp->self));
+    if (!extp
+        || diff_casn(&extp->extnValue.subjectKeyIdentifier,
+                     &sigInfop->sid.subjectKeyIdentifier))
+        return ERR_SCM_SIGINFOSID;
 
     // check that roa->content->crls == NULL
     if (size_casn(&rp->content.signedData.crls.self) > 0)
