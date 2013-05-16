@@ -71,7 +71,8 @@ EncapsulatedContentInfo ::= SEQUENCE {
 
 EContentTable ::= TABLE {
     roa id-routeOriginAttestation RouteOriginAttestation,
-    manifest id-roa-pki-manifest Manifest
+    manifest id-roa-pki-manifest Manifest,
+    ghostbusters id-ct-rpkiGhostbusters NOTASN1
 }
 
 pkcs OBJECT IDENTIFIER ::= {1.2.840.113549.1}
@@ -80,6 +81,7 @@ id-smime OBJECT IDENTIFIER ::= { pkcs-9 16 }
 id-ct OBJECT IDENTIFIER ::= { id-smime 1 }
 id-routeOriginAttestation OBJECT IDENTIFIER ::= { id-ct 24 }
 id-roa-pki-manifest OBJECT IDENTIFIER ::= { id-ct 26 }
+id-ct-rpkiGhostbusters OBJECT IDENTIFIER ::= {id-ct 35 }
 
 
 -- Definitions common to both CMSBlob and CMS
