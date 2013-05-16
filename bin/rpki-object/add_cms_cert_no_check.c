@@ -112,7 +112,7 @@ int main(
     uchar hashbuf[40];
     uchar *tbh;
     int tbh_lth =
-        readvsize_casn(&roa.content.signedData.encapContentInfo.eContent.self,
+        readvsize_casn(&roa.content.signedData.encapContentInfo.eContent,
                        &tbh);
     tbh_lth = gen_hash(tbh, tbh_lth, hashbuf, CRYPT_ALGO_SHA2);
     if (tbh_lth < 0)

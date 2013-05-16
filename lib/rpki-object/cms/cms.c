@@ -276,7 +276,7 @@ const char *signCMSBlob(
 
     if (vsize_casn(&signerInfop->signedAttrs.self) == 0)
     {
-        if ((tbs_lth = vsize_casn(&encapContentInfop->eContent.self)) < 0)
+        if ((tbs_lth = vsize_casn(&encapContentInfop->eContent)) < 0)
         {
             errmsg = "sizing eContent";
             return errmsg;
@@ -288,7 +288,7 @@ const char *signCMSBlob(
             return errmsg;
         }
 
-        tbs_lth = read_casn(&encapContentInfop->eContent.self, tbsp);
+        tbs_lth = read_casn(&encapContentInfop->eContent, tbsp);
     }
     else
     {
