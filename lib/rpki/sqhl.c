@@ -41,6 +41,7 @@ static scmtab *theCertTable = NULL;
 static scmtab *theROATable = NULL;
 static scmtab *theCRLTable = NULL;
 static scmtab *theManifestTable = NULL;
+static scmtab *theGBRTable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm *theSCMP = NULL;
@@ -92,6 +93,12 @@ static void initTables(
         if (theManifestTable == NULL)
         {
             LOG(LOG_ERR, "Error finding manifest table");
+            exit(-1);
+        }
+        theGBRTable = findtablescm(scmp, "GHOSTBUSTERS");
+        if (theGBRTable == NULL)
+        {
+            LOG(LOG_ERR, "Error finding ghostbusters table");
             exit(-1);
         }
         theSCMP = scmp;
@@ -311,6 +318,8 @@ int infer_filetype(
     if ((strstr(fname, ".man") != NULL || strstr(fname, ".mft") != NULL ||
          strstr(fname, ".mnf") != NULL) && !typ)
         typ += OT_MAN;
+    if (strstr(fname, ".gbr") != NULL)
+        typ += OT_GBR;
     if (typ < OT_UNKNOWN || typ > OT_MAXBASIC)
         return (ERR_SCM_INVALFN);
     if (pem > 0)
@@ -1739,6 +1748,8 @@ static int updateManifestObjs(
             tabp = theCRLTable;
         else if (strstr((char *)file, ".roa"))
             tabp = theROATable;
+        else if (strstr((char *)file, ".gbr"))
+            tabp = theGBRTable;
         else
             continue;
         snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"",
@@ -2623,6 +2634,10 @@ static int hexify_ski(
     return size;
 }
 
+/*
+    Add the EE cert embedded in *cmsp. The skip and certfilenamep parameters
+    are output parameters.
+*/
 static int extractAndAddCert(
     struct CMS *cmsp,
     scm * scmp,
@@ -3103,6 +3118,117 @@ int add_manifest(
 }
 
 /*
+    Add a ghostbusters record to the database
+*/
+int add_ghostbusters(
+    scm * scmp,
+    scmcon * conp,
+    char *outfile,
+    char *outdir,
+    char *outfull,
+    unsigned int id,
+    int utrust,
+    int typ)
+{
+    int sta;
+    struct CMS cms;
+    char ski[60];
+    char certfilename[PATH_MAX]; // FIXME: this could allow a buffer overflow
+    unsigned int local_id = 0;
+    unsigned int flags = 0;
+
+    CMS(&cms, 0);
+    initTables(scmp);
+
+    sta = get_casn_file(&cms.self, outfull, 0);
+    if (sta < 0)
+    {
+        LOG(LOG_ERR, "invalid ghostbusters %s", outfull);
+        delete_casn(&cms.self);
+        return ERR_SCM_INVALASN;
+    }
+
+    sta = ghostbustersValidate(&cms);
+    if (sta < 0)
+    {
+        delete_casn(&cms.self);
+        return sta;
+    }
+
+    sta = extractAndAddCert(&cms, scmp, conp, outdir, utrust, typ, outfile, ski,
+                            certfilename);
+    if (sta < 0)
+    {
+        delete_casn(&cms.self);
+        return sta;
+    }
+    else if (sta == 0)
+    {
+        flags |= SCM_FLAG_NOCHAIN;
+    }
+    else
+    {
+        flags |= SCM_FLAG_VALIDATED;
+    }
+
+    sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id);
+    if (sta < 0)
+    {
+        (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
+        delete_casn(&cms.self);
+        return sta;
+    }
+
+    char dir_id_str[24];
+    snprintf(dir_id_str, sizeof(dir_id_str), "%u", id);
+    char local_id_str[24];
+    snprintf(local_id_str, sizeof(local_id_str), "%u", local_id);
+    char flags_str[24];
+    snprintf(flags_str, sizeof(flags_str), "%u", flags);
+
+    scmkv cols[] = {
+     {
+      .column = "filename",
+      .value = outfile,
+     },
+     {
+      .column = "dir_id",
+      .value = dir_id_str,
+     },
+     {
+      .column = "local_id",
+      .value = local_id_str,
+     },
+     {
+      .column = "ski",
+      .value = ski,
+     },
+     {
+      .column = "flags",
+      .value = flags_str,
+     },
+    };
+
+    scmkva aone = {
+     .vec = &cols[0],
+     .ntot = sizeof(cols)/sizeof(cols[0]),
+     .nused = sizeof(cols)/sizeof(cols[0]),
+     .vald = 0,
+    };
+
+    sta = insertscm(conp, theGBRTable, &aone);
+    if (sta < 0)
+    {
+        (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
+        delete_casn(&cms.self);
+        return sta;
+    }
+
+    delete_casn(&cms.self);
+    return 0;
+}
+
+/*
  * Add the indicated object to the DB. If "trusted" is set then verify that
  * the object is self-signed. Note that this add operation may result in the
  * directory also being added.
@@ -3164,6 +3290,10 @@ int add_object(
         sta =
             add_manifest(scmp, conp, outfile, outdir, outfull, id, utrust,
                          typ);
+        break;
+    case OT_GBR:
+        sta = add_ghostbusters(scmp, conp, outfile, outdir, outfull, id,
+                               utrust, typ);
         break;
     default:
         sta = ERR_SCM_INTERNAL;
@@ -3572,6 +3702,9 @@ int delete_object(
     case OT_MAN_PEM:
         thetab = theManifestTable;
         break;
+    case OT_GBR:
+        thetab = theGBRTable;
+        break;
     default:
         sta = ERR_SCM_INTERNAL;
         break;
@@ -3584,7 +3717,7 @@ int delete_object(
     if (sta != 0)
         return sta;
     if (typ == OT_ROA || typ == OT_ROA_PEM || typ == OT_MAN
-        || typ == OT_MAN_PEM)
+        || typ == OT_MAN_PEM || typ == OT_GBR)
     {
         unsigned int ndir_id;
         char noutfile[PATH_MAX],

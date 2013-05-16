@@ -229,6 +229,9 @@ int manifestValidate(
  * negative error code. 
  */
 
+int ghostbustersValidate(
+    struct CMS *cms);
+
 extern int roaValidate2(
     struct CMS *r);
 

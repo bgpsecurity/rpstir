@@ -1397,3 +1397,19 @@ int roaValidate2(
     // delete_casn(&cert.self);
     return iRes;
 }
+
+int ghostbustersValidate(
+    struct CMS *cms)
+{
+    int sta;
+
+    sta = cmsValidate(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    // TODO: ghostbusters profile checks
+
+    return 0;
+}
