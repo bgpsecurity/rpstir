@@ -253,6 +253,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAFamily.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamilyLth.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
+	tests/conformance/raw/keys/goodGBRNothingWrong.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
 	tests/conformance/raw/keys/goodMFTNumZero.mft.p15 \
 	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
@@ -777,6 +778,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage0.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage2.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.ee.stage0.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.stage1.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.stage2.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.stage3.patch \
 	tests/conformance/raw/patches/goodMFTNumMax.ee.stage0.patch \
 	tests/conformance/raw/patches/goodMFTNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodMFTNumMax.stage2.patch \
