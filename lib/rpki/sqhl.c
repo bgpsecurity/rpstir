@@ -3134,6 +3134,7 @@ int add_ghostbusters(
     struct CMS cms;
     char ski[60];
     char certfilename[PATH_MAX]; // FIXME: this could allow a buffer overflow
+    unsigned int local_id_old = 0;
     unsigned int local_id = 0;
     unsigned int flags = 0;
 
@@ -3171,12 +3172,22 @@ int add_ghostbusters(
         flags |= SCM_FLAG_VALIDATED;
     }
 
-    sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id);
+    sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id_old);
     if (sta < 0)
     {
         (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
         delete_casn(&cms.self);
         return sta;
+    }
+
+    local_id = local_id_old + 1;
+    if (local_id <= local_id_old)
+    {
+        // there was an integer overflow
+        LOG(LOG_ERR, "There are too many ghostbusters records in the database.");
+        (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
+        delete_casn(&cms.self);
+        return ERR_SCM_INTERNAL;
     }
 
     char dir_id_str[24];
