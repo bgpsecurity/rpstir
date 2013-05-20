@@ -510,7 +510,7 @@ int main(
             fatal(13, argv[4]);
     }
     for (c = &argv[1][1]; *c && *c >= '0' && *c <= '9'; c++);
-    if (*c && *c != 'M' && *c != 'R')
+    if (*c && *c != 'M' && *c != 'R' && *c != 'G')
         fatal(10, argv[1]);
     if (*c)
         ee = 1;

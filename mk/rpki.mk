@@ -1000,6 +1000,12 @@ tests_subsystem_testcases_make_test_crl_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
 
+check_PROGRAMS += tests/subsystem/testcases/make_test_gbr
+
+tests_subsystem_testcases_make_test_gbr_LDADD = \
+	$(LDADD_LIBRPKI)
+
+
 check_PROGRAMS += tests/subsystem/testcases/make_test_manifest
 
 tests_subsystem_testcases_make_test_manifest_LDADD = \
@@ -1080,26 +1086,37 @@ COPYFILES += \
 	tests/subsystem/testcases/C11.p15 \
 	tests/subsystem/testcases/C111.p15 \
 	tests/subsystem/testcases/C1111.p15 \
+	tests/subsystem/testcases/C1111G1.p15 \
 	tests/subsystem/testcases/C1111R1.p15 \
 	tests/subsystem/testcases/C111M1.p15 \
+	tests/subsystem/testcases/C111G1.p15 \
 	tests/subsystem/testcases/C111R1.p15 \
+	tests/subsystem/testcases/C111G2.p15 \
 	tests/subsystem/testcases/C111R2.p15 \
+	tests/subsystem/testcases/C111G3.p15 \
 	tests/subsystem/testcases/C111R3.p15 \
 	tests/subsystem/testcases/C112.p15 \
+	tests/subsystem/testcases/C112G1.p15 \
 	tests/subsystem/testcases/C112R1.p15 \
 	tests/subsystem/testcases/C113.p15 \
+	tests/subsystem/testcases/C113G1.p15 \
 	tests/subsystem/testcases/C113R1.p15 \
 	tests/subsystem/testcases/C11M1.p15 \
 	tests/subsystem/testcases/C11M2.p15 \
+	tests/subsystem/testcases/C11G1.p15 \
 	tests/subsystem/testcases/C11R1.p15 \
 	tests/subsystem/testcases/C12.p15 \
 	tests/subsystem/testcases/C121.p15 \
+	tests/subsystem/testcases/C121G1.p15 \
 	tests/subsystem/testcases/C121R1.p15 \
 	tests/subsystem/testcases/C13.p15 \
 	tests/subsystem/testcases/C131.p15 \
+	tests/subsystem/testcases/C131G1.p15 \
 	tests/subsystem/testcases/C131R1.p15 \
 	tests/subsystem/testcases/C132.p15 \
+	tests/subsystem/testcases/C132G1.p15 \
 	tests/subsystem/testcases/C132R1.p15 \
+	tests/subsystem/testcases/C132G2.p15 \
 	tests/subsystem/testcases/C132R2.p15 \
 	tests/subsystem/testcases/C1M1.p15 \
 	tests/subsystem/testcases/C1M2.p15 \
@@ -1107,27 +1124,40 @@ COPYFILES += \
 	tests/subsystem/testcases/C2.p15 \
 	tests/subsystem/testcases/C21.p15 \
 	tests/subsystem/testcases/C211.p15 \
+	tests/subsystem/testcases/C211G1.p15 \
 	tests/subsystem/testcases/C211R1.p15 \
 	tests/subsystem/testcases/C22.p15 \
 	tests/subsystem/testcases/C221.p15 \
 	tests/subsystem/testcases/C2211.p15 \
+	tests/subsystem/testcases/C2211G1.p15 \
 	tests/subsystem/testcases/C2211R1.p15 \
 	tests/subsystem/testcases/C2212.p15 \
+	tests/subsystem/testcases/C2212G1.p15 \
 	tests/subsystem/testcases/C2212R1.p15 \
+	tests/subsystem/testcases/C2212G2.p15 \
 	tests/subsystem/testcases/C2212R2.p15 \
+	tests/subsystem/testcases/C221G1.p15 \
 	tests/subsystem/testcases/C221R1.p15 \
+	tests/subsystem/testcases/C22G1.p15 \
 	tests/subsystem/testcases/C22R1.p15 \
 	tests/subsystem/testcases/C23.p15 \
 	tests/subsystem/testcases/C231.p15 \
+	tests/subsystem/testcases/C231G1.p15 \
 	tests/subsystem/testcases/C231R1.p15 \
+	tests/subsystem/testcases/C231G2.p15 \
 	tests/subsystem/testcases/C231R2.p15 \
 	tests/subsystem/testcases/C232.p15 \
+	tests/subsystem/testcases/C232G1.p15 \
 	tests/subsystem/testcases/C232R1.p15 \
 	tests/subsystem/testcases/C233.p15 \
+	tests/subsystem/testcases/C233G1.p15 \
 	tests/subsystem/testcases/C233R1.p15 \
+	tests/subsystem/testcases/C233G9.p15 \
 	tests/subsystem/testcases/C233R9.p15 \
 	tests/subsystem/testcases/C23M1.p15 \
+	tests/subsystem/testcases/C23G1.p15 \
 	tests/subsystem/testcases/C23R1.p15 \
+	tests/subsystem/testcases/C23G2.p15 \
 	tests/subsystem/testcases/C23R2.p15 \
 	tests/subsystem/testcases/CM1.p15
 
@@ -1143,6 +1173,10 @@ tests/subsystem/testcases/makecerts: $(srcdir)/tests/subsystem/testcases/makecer
 check_SCRIPTS += tests/subsystem/testcases/makecrls
 MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecrls
 tests/subsystem/testcases/makecrls: $(srcdir)/tests/subsystem/testcases/makecrls.in
+
+check_SCRIPTS += tests/subsystem/testcases/makegbrs
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makegbrs
+tests/subsystem/testcases/makegbrs: $(srcdir)/tests/subsystem/testcases/makegbrs.in
 
 check_SCRIPTS += tests/subsystem/testcases/makekeys
 MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makekeys
@@ -1164,6 +1198,7 @@ CLEANDIRS += \
 
 CLEANFILES += \
 	tests/subsystem/testcases/*.crl \
+	tests/subsystem/testcases/*.gbr \
 	tests/subsystem/testcases/*.man \
 	tests/subsystem/testcases/*.raw \
 	tests/subsystem/testcases/*.roa \

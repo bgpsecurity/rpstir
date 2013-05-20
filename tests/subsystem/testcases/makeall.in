@@ -6,5 +6,6 @@ cd "$TESTS_BUILDDIR"
 
 ./makecerts
 ./makecrls
+./makegbrs
 ./makeroas
 ./makemanifests
