@@ -9,4 +9,9 @@ use_config_file "$TESTS_SRCDIR/specs.1.2.conf"
 CMDLINE="query -t roa -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 16
 
+echo "Expecting 16 gbr filenames"
+use_config_file "$TESTS_SRCDIR/specs.1.2.conf"
+CMDLINE="query -t gbr -d filename"
+check_num_output_lines "$CMDLINE" "query client failed" 16
+
 echo $0 PASS
