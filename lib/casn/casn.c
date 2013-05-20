@@ -976,9 +976,12 @@ int _encode_tag_lth(
              !(casnp = _find_chosen(casnp))) ||
             (casnp->type == ASN_CHOICE && !(casnp = _find_filled(casnp))))
             return -1;
-        for (tag = (casnp->type) ? casnp->type : casnp->tag; tag;
-             *c++ = (tag & 0xFF), tag >>= 8);
-        *c++ = 0;
+        if (casnp->type != ASN_NOTASN1)
+        {
+            for (tag = (casnp->type) ? casnp->type : casnp->tag; tag;
+                 *c++ = (tag & 0xFF), tag >>= 8);
+            *c++ = 0;
+        }
     }
     *casnpp = casnp;
     return c - to;
