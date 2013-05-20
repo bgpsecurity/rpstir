@@ -196,9 +196,6 @@ int main(
         "END:VCARD\r\n";
     write_casn(&sgdp->encapContentInfo.eContent.ghostbusters, (uchar *)vcard,
                sizeof(vcard) - 1);
-    unsigned char *foo;
-    int lth = readvsize_casn(&sgdp->encapContentInfo.eContent.ghostbusters, &foo);
-    write(STDOUT_FILENO, foo, (size_t) lth);
 
     // sign the message
     msg = signCMS(&cms, keyfile, bad_signature);
