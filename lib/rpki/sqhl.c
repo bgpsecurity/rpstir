@@ -1869,6 +1869,21 @@ static int verifyChildManifest(
     return 0;
 }
 
+/** callback function for verifyChildCert */
+static int verifyChildGhostbusters(
+    scmcon * conp,
+    scmsrcha * s,
+    int idx)
+{
+    (void)idx;
+
+    updateValidFlags(conp, theGBRTable,
+                     *((unsigned int *)(s->vec[2].valptr)),
+                     *((unsigned int *)(s->vec[3].valptr)), 1);
+
+    return 0;
+}
+
 // structure containing data of children to propagate
 
 typedef struct _PropData {
@@ -1939,6 +1954,11 @@ static int verifyChildCert(
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+
+    /* Check for associated GBRs */
+    snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    searchscm(conp, theGBRTable, crlSrch, NULL, verifyChildGhostbusters,
+              SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated ROA */
     snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
