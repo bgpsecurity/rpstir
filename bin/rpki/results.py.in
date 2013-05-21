@@ -273,6 +273,58 @@ if options.verbose:
               "local repository path:\n", \
               "\n".join(db_mfts_outside_repo_path)
 
+
+#
+# Results for Ghostbusters Records
+#
+
+print
+print "-" * 79
+print "Ghostbusters Information:"
+print "-" * 79
+
+# In filesystem
+all_gbr_files = []
+all_gbr_files.extend(find_files_with_extension(repo_path,
+                                               "gbr"))
+print "Total ghostbusters files: %d" % len(all_gbr_files)
+
+# In database
+db_validated_gbrs = find_validated_objects_in_db("gbr")
+db_all_gbrs = find_all_objects_in_db("gbr")
+db_unknown_gbrs = list(set(db_all_gbrs) - set(db_validated_gbrs))
+invalid_gbrs = list(set(all_gbr_files) - set(db_all_gbrs))
+if not is_in_directory(repo_path, db_validated_gbrs):
+    print >>sys.stderr, "Warning: Found validated file outside of " + \
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, db_unknown_gbrs):
+    print >>sys.stderr, "Warning: Found file of unknown validity outside of "+\
+          "repository path.  Counts will be wrong."
+if not is_in_directory(repo_path, invalid_gbrs):
+    print >>sys.stderr, "Error: Found invalid file outside of "+\
+          "repository path.  This should never happen."
+print "Validated ghostbusters: %d" % len(db_validated_gbrs)
+print "Status-unknown ghostbusters: %d" % len(db_unknown_gbrs)
+print "Invalid or duplicate ghostbusters: %d" % len(invalid_gbrs)
+
+if options.verbose:
+    db_unknown_gbrs.sort()
+    invalid_gbrs.sort()
+    db_validated_gbrs.sort()
+    db_gbrs_outside_repo_path = list(set(db_all_gbrs) - set(all_gbr_files))
+    db_gbrs_outside_repo_path.sort()
+    if db_validated_gbrs:
+        print "\nValidated ghostbusters:\n", "\n".join(db_validated_gbrs)
+    if db_unknown_gbrs:
+        print "\nStatus-unknown ghostbusters::\n", "\n".join(db_unknown_gbrs)
+    if invalid_gbrs:
+        print "\nInvalid or duplicate ghostbusters::\n", "\n".join(invalid_gbrs)
+    if db_gbrs_outside_repo_path:
+        print "\nGhostbusters in the database but not found in " + \
+              "local repository path:\n", \
+              "\n".join(db_gbrs_outside_repo_path)
+
+
 # Informational message
 if not options.verbose:
     print "\nHint: to see lists of valid/unknown/invalid objects, run with -v."
