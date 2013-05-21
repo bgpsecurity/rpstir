@@ -1,3 +1,7 @@
+next
+
+	* Support Ghostbusters Records [RFC 6493].
+
 0.7
 
 	* Add preliminary support for adding files from the local cache. In the
