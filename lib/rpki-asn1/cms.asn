@@ -67,7 +67,8 @@ EncapsulatedContentInfo ::= SEQUENCE {
 EContentTable ::= TABLE {
     roa id-routeOriginAttestation RouteOriginAttestation,
     manifest id-roa-pki-manifest Manifest,
-    ghostbusters id-ct-rpkiGhostbusters NOTASN1
+    ghostbusters id-ct-rpkiGhostbusters NOTASN1,
+    invalid 2.999.42 NOTASN1 -- for testing only
 }
 
 pkcs OBJECT IDENTIFIER ::= {1.2.840.113549.1}

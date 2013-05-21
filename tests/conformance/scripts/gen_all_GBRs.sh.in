@@ -150,3 +150,8 @@ ensure_file_exists "${single_GBR_script}"
 ###############################################################################
 
 ${single_GBR_cmd} -x good GBR 600 NothingWrong
+${single_GBR_cmd} GBR 601 NotVCard
+${single_GBR_cmd} GBR 602 WrongOID
+${single_GBR_cmd} GBR 603 IPv4NotInherit
+${single_GBR_cmd} GBR 604 IPv6NotInherit
+${single_GBR_cmd} GBR 605 ASNotInherit
