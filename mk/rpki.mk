@@ -76,6 +76,12 @@ MK_SUBST_FILES_EXEC += bin/rpki/updateTA.py
 bin/rpki/updateTA.py: $(srcdir)/bin/rpki/updateTA.py.in
 
 
+pkglibexec_SCRIPTS += bin/rpki/upgrade
+MK_SUBST_FILES_EXEC += bin/rpki/upgrade
+bin/rpki/upgrade: $(srcdir)/bin/rpki/upgrade.in
+PACKAGE_NAME_BINS += upgrade
+
+
 dist_sampleta_DATA = \
 	etc/sample-ta/README \
 	etc/sample-ta/afrinic.tal \

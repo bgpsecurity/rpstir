@@ -475,7 +475,12 @@ Then run @PACKAGE_NAME@-initialize to set up the database:
 
 2.7.2 Upgrading
 
-In this release, there's no upgrade procedure.
+Consider backing up your configuration and data before upgrading @PACKAGE_NAME@.
+
+To upgrade from a previous release, run @PACKAGE_NAME@-upgrade with the version
+number of the previous release. For example, to upgrade from version 0.7, run:
+
+   @PACKAGE_NAME@-upgrade 0.7
 
 ===============================================================================
 
