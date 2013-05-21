@@ -219,6 +219,8 @@ int main(
                 strcpy(a, ".crl");
             else if (*curr_file == 'R')
                 strcpy(a, ".roa");
+            else if (*curr_file == 'G')
+                strcpy(a, ".gbr");
         }
         else
         {
