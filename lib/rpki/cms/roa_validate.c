@@ -11,6 +11,7 @@
 #include <inttypes.h>
 
 #include "roa_utils.h"
+#include "rpki-object/certificate.h"
 #include "util/cryptlib_compat.h"
 #include "util/logging.h"
 #include "util/hashutils.h"
@@ -1394,6 +1395,57 @@ int roaValidate2(
     return iRes;
 }
 
+static int check_ghostbusters_cms(
+    struct CMS *cms)
+{
+    if (diff_objid(&cms->content.signedData.encapContentInfo.eContentType,
+                   id_ct_rpkiGhostbusters))
+    {
+        LOG(LOG_ERR, "Ghostbusters record has incorrect content type");
+        return ERR_SCM_BADCT;
+    }
+
+    return 0;
+}
+
+static int check_ghostbusters_cert(
+    struct CMS *cms)
+{
+    struct Certificate *cert =
+        &cms->content.signedData.certificates.certificate;
+
+    if (has_non_inherit_resources(cert))
+    {
+        LOG(LOG_ERR, "Ghostbusters record's EE certificate has RFC3779 "
+            "resources that are not marked inherit");
+        return ERR_SCM_NOTINHERIT;
+    }
+
+    return 0;
+}
+
+static int check_ghostbusters_content(
+    struct CMS *cms)
+{
+    unsigned char *content = NULL;
+    int content_len = 0;
+
+    content_len = readvsize_casn(
+        &cms->content.signedData.encapContentInfo.eContent.ghostbusters,
+        &content);
+    if (content_len < 0)
+    {
+        LOG(LOG_ERR, "Error reading ghostbusters record's content");
+        return ERR_SCM_INTERNAL;
+    }
+
+    // TODO: Verify that it's actually a valid vCard conforming to RFC6493.
+
+    free(content);
+
+    return 0;
+}
+
 int ghostbustersValidate(
     struct CMS *cms)
 {
@@ -1405,7 +1457,23 @@ int ghostbustersValidate(
         return sta;
     }
 
-    // TODO: ghostbusters profile checks
+    sta = check_ghostbusters_cms(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    sta = check_ghostbusters_cert(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    sta = check_ghostbusters_content(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
 
     return 0;
 }

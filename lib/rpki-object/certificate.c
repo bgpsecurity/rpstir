@@ -442,3 +442,47 @@ bool make_IPAddrOrRange(
 
     return true;
 }
+
+bool has_non_inherit_resources(
+    struct Certificate *cert)
+{
+    struct Extension *ext;
+
+    ext = find_extension(&cert->toBeSigned.extensions, id_pe_ipAddrBlock,
+                         false);
+    if (ext)
+    {
+        struct IpAddrBlock *ip_ext = &ext->extnValue.ipAddressBlock;
+        struct IPAddressFamilyA *family;
+        for (family = (struct IPAddressFamilyA *)member_casn(&ip_ext->self, 0);
+             family != NULL;
+             family = (struct IPAddressFamilyA *)next_of(&family->self))
+        {
+            if (size_casn(&family->ipAddressChoice.inherit) <= 0)
+            {
+                return true;
+            }
+        }
+    }
+
+    ext = find_extension(&cert->toBeSigned.extensions, id_pe_autonomousSysNum,
+                         false);
+    if (ext)
+    {
+        struct ASNum *as_ext = &ext->extnValue.autonomousSysNum;
+
+        if (size_casn(&as_ext->asnum.self) > 0 &&
+            size_casn(&as_ext->asnum.inherit) <= 0)
+        {
+            return true;
+        }
+
+        if (size_casn(&as_ext->rdi.self) > 0 &&
+            size_casn(&as_ext->rdi.inherit) <= 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

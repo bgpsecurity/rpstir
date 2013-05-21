@@ -175,6 +175,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Invalid CRLNumber",        /* ERR_SCM_BADCRLNUM */
     "Missing RFC3779 IP extension",     /* ERR_SCM_NOIPEXT */
     "Object has been revoked",  /* ERR_SCM_REVOKED */
+    "Non-inherit resources present", /* ERR_SCM_NOTINHERIT */
 };
 
 char *err2string(
