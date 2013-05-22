@@ -718,8 +718,8 @@ int main(
                 struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
                 write_ASNums(asNump);
             }
-            else if (strchr(subjfile, (int)'M'))        // for signing
-                                                        // manifest
+            else if (strchr(subjfile, (int)'M') || // manifest
+                strchr(subjfile, (int)'G')) // ghostbusters
             {
                 write_casn(&extp->extnValue.autonomousSysNum.asnum.inherit,
                            (uchar *) "", 0);
