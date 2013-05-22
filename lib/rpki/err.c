@@ -176,6 +176,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Missing RFC3779 IP extension",     /* ERR_SCM_NOIPEXT */
     "Object has been revoked",  /* ERR_SCM_REVOKED */
     "Non-inherit resources present", /* ERR_SCM_NOTINHERIT */
+    "Invalid character sequence", /* ERR_SCM_BADCHAR */
 };
 
 char *err2string(

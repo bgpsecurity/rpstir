@@ -9,6 +9,9 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <locale.h>
 
 #include "roa_utils.h"
 #include "rpki-object/certificate.h"
@@ -1429,6 +1432,7 @@ static int check_ghostbusters_content(
 {
     unsigned char *content = NULL;
     int content_len = 0;
+    int sta = 0;
 
     content_len = readvsize_casn(
         &cms->content.signedData.encapContentInfo.eContent.ghostbusters,
@@ -1440,10 +1444,53 @@ static int check_ghostbusters_content(
     }
 
     // TODO: Verify that it's actually a valid vCard conforming to RFC6493.
+    // For now, we just verify the the content is valid UTF-8
+    // (http://tools.ietf.org/html/rfc6350#section-3.1) and has no control
+    // characters (which could mess up a user's terminal).
+
+    // backup the old locale and make sure we're using UTF-8
+    const char *old_locale = setlocale(LC_CTYPE, NULL);
+    if (setlocale(LC_CTYPE, "C.UTF-8") == NULL)
+    {
+        LOG(LOG_WARNING, "System does not support C.UTF-8 locale. Ghostbusters "
+            "records with invalid contents may be accepted.");
+        goto done;
+    }
+
+    size_t content_idx = 0;
+    wchar_t pwc;
+    size_t pwc_mb_len;
+    mbstate_t ps;
+    memset(&ps, 0, sizeof(ps));
+    while (content_idx < (size_t)content_len)
+    {
+        pwc_mb_len = mbrtowc(&pwc, (char *)content + content_idx,
+                             (size_t)content_len - content_idx, &ps);
+        if (pwc_mb_len <= 0 || pwc_mb_len > (size_t)content_len - content_idx)
+        {
+            LOG(LOG_ERR, "Invalid byte sequence in ghostbusters content");
+            sta = ERR_SCM_BADCHAR;
+            goto done;
+        }
+
+        content_idx += pwc_mb_len;
+
+        if (iswcntrl(pwc) && !iswspace(pwc))
+        {
+            LOG(LOG_ERR, "Ghostbusters content contains a control character "
+                "<U+%04" PRIXMAX ">", (uintmax_t)pwc);
+            sta = ERR_SCM_BADCHAR;
+            goto done;
+        }
+    }
+
+
+done:
+    setlocale(LC_CTYPE, old_locale);
 
     free(content);
 
-    return 0;
+    return sta;
 }
 
 int ghostbustersValidate(

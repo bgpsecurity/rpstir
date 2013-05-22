@@ -165,7 +165,8 @@
 #define ERR_SCM_NOIPEXT     -156        /* Missing RFC3779 IP extension */
 #define ERR_SCM_REVOKED     -157        /* Object has been revoked */
 #define ERR_SCM_NOTINHERIT  -158        /* Non-inherit resources present */
-#define ERR_SCM_MAXERR      -158
+#define ERR_SCM_BADCHAR     -159        /* Invalid character sequence */
+#define ERR_SCM_MAXERR      -159
 
 /*
  * macro that prints an error string and call return if a condition is true 
