@@ -16,6 +16,14 @@ usage () {
 
 upgrade_from_0_7 ()
 {
+    echo "Adding SKI index to the manifest table. This may take a few minutes."
+    echo "ALTER TABLE rpki_manifest ADD KEY ski (ski);" \
+        | mysql_cmd || \
+    {
+        error "Could not add SKI index to manifest table."
+        return 1
+    }
+
     echo "Creating new table for Ghostbusters Records."
     echo \
         "CREATE TABLE rpki_ghostbusters (" \
@@ -26,7 +34,8 @@ upgrade_from_0_7 ()
         "    hash     VARCHAR(256)," \
         "    flags    INT UNSIGNED DEFAULT 0," \
         "             PRIMARY KEY (filename, dir_id)," \
-        "             KEY lid (local_id)" \
+        "             KEY lid (local_id)," \
+        "             KEY ski (ski)" \
         ");" \
         | mysql_cmd || \
     {
