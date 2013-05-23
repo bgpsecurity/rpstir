@@ -224,13 +224,19 @@ int manifestValidate(
     int *stalep);
 
 /*
- * This function performs all validations steps on a manifest that do not
- * require database access.  On success it returns 0; on failure, it returns a 
- * negative error code. 
+ * This function performs all validation steps on a manifest that do
+ * not require database access.  On success it returns 0; on failure,
+ * it returns a negative error code.
  */
 
 int ghostbustersValidate(
     struct CMS *cms);
+
+/*
+ * This function performs all validation steps on a ghostbusters
+ * record that do not require database access.  On success it returns
+ * 0; on failure, it returns a negative error code.
+ */
 
 extern int roaValidate2(
     struct CMS *r);
