@@ -316,9 +316,9 @@ if options.verbose:
     if db_validated_gbrs:
         print "\nValidated ghostbusters:\n", "\n".join(db_validated_gbrs)
     if db_unknown_gbrs:
-        print "\nStatus-unknown ghostbusters::\n", "\n".join(db_unknown_gbrs)
+        print "\nStatus-unknown ghostbusters:\n", "\n".join(db_unknown_gbrs)
     if invalid_gbrs:
-        print "\nInvalid or duplicate ghostbusters::\n", "\n".join(invalid_gbrs)
+        print "\nInvalid or duplicate ghostbusters:\n", "\n".join(invalid_gbrs)
     if db_gbrs_outside_repo_path:
         print "\nGhostbusters in the database but not found in " + \
               "local repository path:\n", \

@@ -1869,7 +1869,8 @@ static int verifyChildManifest(
     return 0;
 }
 
-/** callback function for verifyChildCert */
+/** callback function for verifyChildCert.  This is used, for example,
+    to mark GBRs as valid when their EE certs become valid.  */
 static int verifyChildGhostbusters(
     scmcon * conp,
     scmsrcha * s,
@@ -2681,8 +2682,13 @@ static int hexify_ski(
 }
 
 /*
-    Add the EE cert embedded in *cmsp. The skip and certfilenamep parameters
-    are output parameters.
+    Add (to the database) the EE cert embedded in *cmsp. The skip and
+    certfilenamep parameters are output parameters.
+
+    Returns:
+    < 0: error (status code)
+    0: successful, but EE cert in unknown state
+    1: successful, and EE cert validated up through a trust anchor
 */
 static int extractAndAddCert(
     struct CMS *cmsp,
