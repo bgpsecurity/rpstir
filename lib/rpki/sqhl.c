@@ -2089,10 +2089,31 @@ static int revoke_roa(
     return 0;
 }
 
+static int revoke_gbr(
+    scmcon * conp,
+    scmsrcha * s,
+    int idx)
+{
+    char ski[512];
+
+    (void)idx;
+
+    strncpy(ski, (char *)(s->vec[1].valptr), sizeof(ski));
+    if (countvalidparents(conp, NULL, ski) > 0)
+    {
+        return 0;
+    }
+
+    updateValidFlags(conp, theGBRTable, *(unsigned int *)(s->vec[0].valptr),
+                     *(unsigned int *)(s->vec[2].valptr), 0);
+
+    return 0;
+}
+
 /*
  * utility function for verify_children
  */
-
+// TODO: support CRL and MFT
 static int invalidateChildCert(
     scmcon * conp,
     PropData * data,
@@ -2120,6 +2141,11 @@ static int invalidateChildCert(
     addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     searchscm(conp, theROATable, roaSrch, NULL, revoke_roa,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
+    // reuse roaSrch for GBRs because the columns are the same
+    searchscm(conp, theGBRTable, roaSrch, NULL, revoke_gbr,
+              SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
     return 0;
 }
 
