@@ -2071,7 +2071,7 @@ static scmsrcha *roaSrch = NULL;
  * callback function for invalidateChildCert
  */
 
-static int revoke_roa(
+static int invalidate_roa(
     scmcon * conp,
     scmsrcha * s,
     int idx)
@@ -2090,7 +2090,11 @@ static int revoke_roa(
     return 0;
 }
 
-static int revoke_gbr(
+/*
+ * callback function for invalidateChildCert
+ */
+
+static int invalidate_gbr(
     scmcon * conp,
     scmsrcha * s,
     int idx)
@@ -2140,11 +2144,11 @@ static int invalidateChildCert(
     }
     snprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
-    searchscm(conp, theROATable, roaSrch, NULL, revoke_roa,
+    searchscm(conp, theROATable, roaSrch, NULL, invalidate_roa,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     // reuse roaSrch for GBRs because the columns are the same
-    searchscm(conp, theGBRTable, roaSrch, NULL, revoke_gbr,
+    searchscm(conp, theGBRTable, roaSrch, NULL, invalidate_gbr,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     return 0;

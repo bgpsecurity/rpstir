@@ -1504,6 +1504,8 @@ int ghostbustersValidate(
         return sta;
     }
 
+    // ghostbusters profile checks
+
     sta = check_ghostbusters_cms(cms);
     if (sta < 0)
     {
