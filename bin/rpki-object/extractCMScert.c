@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <rpki-asn1/roa.h>
+#include <rpki-asn1/cms.h>
 
 int main(
     int argc,
@@ -15,16 +15,16 @@ int main(
         fprintf(stderr, "Too many parameters\n");
         return 1;
     }
-    struct ROA roa;
-    ROA(&roa, (ushort) 0);
-    int ansr = get_casn_file(&roa.self, argv[1], 0);
+    struct CMS cms;
+    CMS(&cms, (ushort) 0);
+    int ansr = get_casn_file(&cms.self, argv[1], 0);
     if (ansr <= 0)
     {
         fprintf(stderr, "Error reading file %s\n", argv[1]);
         return 1;
     }
     struct Certificate *certp =
-        (struct Certificate *)member_casn(&roa.content.signedData.certificates.
+        (struct Certificate *)member_casn(&cms.content.signedData.certificates.
                                           self, 0);
     if (!certp)
     {

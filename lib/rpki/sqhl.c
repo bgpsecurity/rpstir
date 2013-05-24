@@ -41,6 +41,7 @@ static scmtab *theCertTable = NULL;
 static scmtab *theROATable = NULL;
 static scmtab *theCRLTable = NULL;
 static scmtab *theManifestTable = NULL;
+static scmtab *theGBRTable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm *theSCMP = NULL;
@@ -92,6 +93,12 @@ static void initTables(
         if (theManifestTable == NULL)
         {
             LOG(LOG_ERR, "Error finding manifest table");
+            exit(-1);
+        }
+        theGBRTable = findtablescm(scmp, "GHOSTBUSTERS");
+        if (theGBRTable == NULL)
+        {
+            LOG(LOG_ERR, "Error finding ghostbusters table");
             exit(-1);
         }
         theSCMP = scmp;
@@ -311,6 +318,8 @@ int infer_filetype(
     if ((strstr(fname, ".man") != NULL || strstr(fname, ".mft") != NULL ||
          strstr(fname, ".mnf") != NULL) && !typ)
         typ += OT_MAN;
+    if (strstr(fname, ".gbr") != NULL)
+        typ += OT_GBR;
     if (typ < OT_UNKNOWN || typ > OT_MAXBASIC)
         return (ERR_SCM_INVALFN);
     if (pem > 0)
@@ -1447,7 +1456,7 @@ static unsigned char *readfile(
 
 static int verify_roa(
     scmcon * conp,
-    struct ROA *r,
+    struct CMS *r,
     char *ski,
     int *chainOK)
 {
@@ -1619,7 +1628,7 @@ static int verifyChildROA(
     scmsrcha * s,
     int idx)
 {
-    struct ROA roa;
+    struct CMS roa;
     int typ,
         chainOK,
         sta;
@@ -1628,7 +1637,7 @@ static int verifyChildROA(
     unsigned int id;
 
     UNREFERENCED_PARAMETER(idx);
-    ROA(&roa, (ushort) 0);
+    CMS(&roa, (ushort) 0);
     // try verifying crl
     snprintf(pathname, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
              (char *)s->vec[1].valptr);
@@ -1739,6 +1748,8 @@ static int updateManifestObjs(
             tabp = theCRLTable;
         else if (strstr((char *)file, ".roa"))
             tabp = theROATable;
+        else if (strstr((char *)file, ".gbr"))
+            tabp = theGBRTable;
         else
             continue;
         snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"",
@@ -1835,26 +1846,42 @@ static int verifyChildManifest(
     int idx)
 {
     int sta;
-    struct ROA roa;
+    struct CMS cms;
     char outfull[PATH_MAX];
     UNREFERENCED_PARAMETER(idx);
     sta = updateValidFlags(conp, theManifestTable,
                            *((unsigned int *)(s->vec[0].valptr)),
                            *((unsigned int *)(s->vec[1].valptr)), 1);
-    ROA(&roa, 0);
+    CMS(&cms, 0);
     snprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
              (char *)(s->vec[3].valptr));
-    sta = get_casn_file(&roa.self, outfull, 0);
+    sta = get_casn_file(&cms.self, outfull, 0);
     if (sta < 0)
     {
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         LOG(LOG_ERR, "invalid manifest filename %s", outfull);
         return sta;
     }
     struct Manifest *manifest =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     sta = updateManifestObjs(conp, manifest);
-    delete_casn(&roa.self);
+    delete_casn(&cms.self);
+    return 0;
+}
+
+/** callback function for verifyChildCert.  This is used, for example,
+    to mark GBRs as valid when their EE certs become valid.  */
+static int verifyChildGhostbusters(
+    scmcon * conp,
+    scmsrcha * s,
+    int idx)
+{
+    (void)idx;
+
+    updateValidFlags(conp, theGBRTable,
+                     *((unsigned int *)(s->vec[2].valptr)),
+                     *((unsigned int *)(s->vec[3].valptr)), 1);
+
     return 0;
 }
 
@@ -1928,6 +1955,11 @@ static int verifyChildCert(
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+
+    /* Check for associated GBRs */
+    snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    searchscm(conp, theGBRTable, crlSrch, NULL, verifyChildGhostbusters,
+              SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated ROA */
     snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
@@ -2039,7 +2071,7 @@ static scmsrcha *roaSrch = NULL;
  * callback function for invalidateChildCert
  */
 
-static int revoke_roa(
+static int invalidate_roa(
     scmcon * conp,
     scmsrcha * s,
     int idx)
@@ -2059,9 +2091,34 @@ static int revoke_roa(
 }
 
 /*
- * utility function for verify_children
+ * callback function for invalidateChildCert
  */
 
+static int invalidate_gbr(
+    scmcon * conp,
+    scmsrcha * s,
+    int idx)
+{
+    char ski[512];
+
+    (void)idx;
+
+    strncpy(ski, (char *)(s->vec[1].valptr), sizeof(ski));
+    if (countvalidparents(conp, NULL, ski) > 0)
+    {
+        return 0;
+    }
+
+    updateValidFlags(conp, theGBRTable, *(unsigned int *)(s->vec[0].valptr),
+                     *(unsigned int *)(s->vec[2].valptr), 0);
+
+    return 0;
+}
+
+/*
+ * utility function for verify_children
+ */
+// TODO: support CRL and MFT
 static int invalidateChildCert(
     scmcon * conp,
     PropData * data,
@@ -2087,8 +2144,13 @@ static int invalidateChildCert(
     }
     snprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
-    searchscm(conp, theROATable, roaSrch, NULL, revoke_roa,
+    searchscm(conp, theROATable, roaSrch, NULL, invalidate_roa,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
+    // reuse roaSrch for GBRs because the columns are the same
+    searchscm(conp, theGBRTable, roaSrch, NULL, invalidate_gbr,
+              SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
     return 0;
 }
 
@@ -2264,7 +2326,7 @@ int addStateToFlags(
 {
     int sta,
         fd;
-    struct ROA roa;
+    struct CMS cms;
     struct casn ccasn;
     struct FileAndHash *fahp = NULL;
 
@@ -2287,10 +2349,10 @@ int addStateToFlags(
     if (!validManPath[0])
         return 0;
 
-    ROA(&roa, 0);
-    sta = get_casn_file(&roa.self, validManPath, 0);
+    CMS(&cms, 0);
+    sta = get_casn_file(&cms.self, validManPath, 0);
     struct Manifest *manifest =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     simple_constructor(&ccasn, (ushort) 0, ASN_IA5_STRING);
     write_casn(&ccasn, (uchar *) filename, strlen(filename));
     for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
@@ -2304,7 +2366,7 @@ int addStateToFlags(
         (void)close(fd);
     }
     delete_casn(&ccasn);
-    delete_casn(&roa.self);
+    delete_casn(&cms.self);
     return sta >= 0 ? 0 : sta;
 }
 
@@ -2623,8 +2685,17 @@ static int hexify_ski(
     return size;
 }
 
+/*
+    Add (to the database) the EE cert embedded in *cmsp. The skip and
+    certfilenamep parameters are output parameters.
+
+    Returns:
+    < 0: error (status code)
+    0: successful, but EE cert in unknown state
+    1: successful, and EE cert validated up through a trust anchor
+*/
 static int extractAndAddCert(
-    struct ROA *roap,
+    struct CMS *cmsp,
     scm * scmp,
     scmcon * conp,
     char *outdir,
@@ -2640,7 +2711,7 @@ static int extractAndAddCert(
         pathname[PATH_MAX];
     int sta = 0;
     struct Certificate *certp;
-    certp = (struct Certificate *)member_casn(&roap->content.signedData.
+    certp = (struct Certificate *)member_casn(&cmsp->content.signedData.
                                               certificates.self, 0);
     if (!certp)
         return ERR_SCM_BADNUMCERTS;
@@ -2833,7 +2904,7 @@ int add_roa(
     int utrust,
     int typ)
 {
-    struct ROA roa;             // note: roaFromFile constructs this
+    struct CMS roa;             // note: roaFromFile constructs this
     char ski[60],
        *sig = NULL,
         certfilename[PATH_MAX],
@@ -2929,7 +3000,7 @@ int add_manifest(
     int sta,
         cert_added = 0,
         stale;
-    struct ROA roa;
+    struct CMS cms;
     char *thisUpdate,
        *nextUpdate,
         certfilename[PATH_MAX];
@@ -2937,24 +3008,23 @@ int add_manifest(
                                 // 15
     unsigned int man_id = 0;
 
-    // manifest stored in same format as a roa
-    ROA(&roa, 0);
+    CMS(&cms, 0);
     initTables(scmp);
-    sta = get_casn_file(&roa.self, outfull, 0);
+    sta = get_casn_file(&cms.self, outfull, 0);
     if (sta < 0)
     {
         LOG(LOG_ERR, "invalid manifest %s", outfull);
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         return ERR_SCM_INVALASN;
     }
-    if (sta < 0 || (sta = manifestValidate(&roa, &stale)) < 0)
+    if (sta < 0 || (sta = manifestValidate(&cms, &stale)) < 0)
     {
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         return sta;
     }
     // now, read the data out of the manifest structure
     struct Manifest *manifest =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
 
     // read the list of files
     uchar file[200];
@@ -3019,7 +3089,7 @@ int add_manifest(
         if (sta < 0)
             break;
 
-        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir, utrust, typ,
+        if ((sta = extractAndAddCert(&cms, scmp, conp, outdir, utrust, typ,
                                      outfile, ski, certfilename)) < 0)
             break;
         cert_added = 1;
@@ -3036,7 +3106,7 @@ int add_manifest(
         if (cert_added)
             (void)delete_object(scmp, conp, certfilename, outdir,
                                 outfull, (unsigned int)0);
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
         return sta;
     }
     // the manifest is valid if the embedded cert is valid (since we already
@@ -3097,10 +3167,132 @@ int add_manifest(
     if (sta < 0 && cert_added)
         (void)delete_object(scmp, conp, certfilename,
                             outdir, outfull, (unsigned int)0);
-    delete_casn(&(roa.self));
+    delete_casn(&(cms.self));
     free(thisUpdate);
     free(nextUpdate);
     return sta;
+}
+
+/*
+    Add a ghostbusters record to the database
+*/
+int add_ghostbusters(
+    scm * scmp,
+    scmcon * conp,
+    char *outfile,
+    char *outdir,
+    char *outfull,
+    unsigned int id,
+    int utrust,
+    int typ)
+{
+    int sta;
+    struct CMS cms;
+    char ski[60];
+    char certfilename[PATH_MAX]; // FIXME: this could allow a buffer overflow
+    unsigned int local_id_old = 0;
+    unsigned int local_id = 0;
+    unsigned int flags = 0;
+
+    CMS(&cms, 0);
+    initTables(scmp);
+
+    sta = get_casn_file(&cms.self, outfull, 0);
+    if (sta < 0)
+    {
+        LOG(LOG_ERR, "invalid ghostbusters %s", outfull);
+        delete_casn(&cms.self);
+        return ERR_SCM_INVALASN;
+    }
+
+    sta = ghostbustersValidate(&cms);
+    if (sta < 0)
+    {
+        delete_casn(&cms.self);
+        return sta;
+    }
+
+    sta = extractAndAddCert(&cms, scmp, conp, outdir, utrust, typ, outfile, ski,
+                            certfilename);
+    if (sta < 0)
+    {
+        delete_casn(&cms.self);
+        return sta;
+    }
+    else if (sta == 0)
+    {
+        flags |= SCM_FLAG_NOCHAIN;
+    }
+    else
+    {
+        flags |= SCM_FLAG_VALIDATED;
+    }
+
+    sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id_old);
+    if (sta < 0)
+    {
+        (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
+        delete_casn(&cms.self);
+        return sta;
+    }
+
+    local_id = local_id_old + 1;
+    if (local_id <= local_id_old)
+    {
+        // there was an integer overflow
+        LOG(LOG_ERR, "There are too many ghostbusters records in the database.");
+        (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
+        delete_casn(&cms.self);
+        return ERR_SCM_INTERNAL;
+    }
+
+    char dir_id_str[24];
+    snprintf(dir_id_str, sizeof(dir_id_str), "%u", id);
+    char local_id_str[24];
+    snprintf(local_id_str, sizeof(local_id_str), "%u", local_id);
+    char flags_str[24];
+    snprintf(flags_str, sizeof(flags_str), "%u", flags);
+
+    scmkv cols[] = {
+     {
+      .column = "filename",
+      .value = outfile,
+     },
+     {
+      .column = "dir_id",
+      .value = dir_id_str,
+     },
+     {
+      .column = "local_id",
+      .value = local_id_str,
+     },
+     {
+      .column = "ski",
+      .value = ski,
+     },
+     {
+      .column = "flags",
+      .value = flags_str,
+     },
+    };
+
+    scmkva aone = {
+     .vec = &cols[0],
+     .ntot = sizeof(cols)/sizeof(cols[0]),
+     .nused = sizeof(cols)/sizeof(cols[0]),
+     .vald = 0,
+    };
+
+    sta = insertscm(conp, theGBRTable, &aone);
+    if (sta < 0)
+    {
+        (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
+        delete_casn(&cms.self);
+        return sta;
+    }
+
+    delete_casn(&cms.self);
+    return 0;
 }
 
 /*
@@ -3165,6 +3357,10 @@ int add_object(
         sta =
             add_manifest(scmp, conp, outfile, outdir, outfull, id, utrust,
                          typ);
+        break;
+    case OT_GBR:
+        sta = add_ghostbusters(scmp, conp, outfile, outdir, outfull, id,
+                               utrust, typ);
         break;
     default:
         sta = ERR_SCM_INTERNAL;
@@ -3573,6 +3769,9 @@ int delete_object(
     case OT_MAN_PEM:
         thetab = theManifestTable;
         break;
+    case OT_GBR:
+        thetab = theGBRTable;
+        break;
     default:
         sta = ERR_SCM_INTERNAL;
         break;
@@ -3585,7 +3784,7 @@ int delete_object(
     if (sta != 0)
         return sta;
     if (typ == OT_ROA || typ == OT_ROA_PEM || typ == OT_MAN
-        || typ == OT_MAN_PEM)
+        || typ == OT_MAN_PEM || typ == OT_GBR)
     {
         unsigned int ndir_id;
         char noutfile[PATH_MAX],

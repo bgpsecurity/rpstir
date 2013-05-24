@@ -76,6 +76,12 @@ MK_SUBST_FILES_EXEC += bin/rpki/updateTA.py
 bin/rpki/updateTA.py: $(srcdir)/bin/rpki/updateTA.py.in
 
 
+pkglibexec_SCRIPTS += bin/rpki/upgrade
+MK_SUBST_FILES_EXEC += bin/rpki/upgrade
+bin/rpki/upgrade: $(srcdir)/bin/rpki/upgrade.in
+PACKAGE_NAME_BINS += upgrade
+
+
 dist_sampleta_DATA = \
 	etc/sample-ta/README \
 	etc/sample-ta/afrinic.tal \
@@ -223,6 +229,11 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badCMSVersion4.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageCABits.ee.p15 \
 	tests/conformance/raw/keys/badEESIAWrongAccessMethod.ee.p15 \
+	tests/conformance/raw/keys/badGBRASNotInherit.ee.p15 \
+	tests/conformance/raw/keys/badGBRIPv4NotInherit.ee.p15 \
+	tests/conformance/raw/keys/badGBRIPv6NotInherit.ee.p15 \
+	tests/conformance/raw/keys/badGBRNotVCard.ee.p15 \
+	tests/conformance/raw/keys/badGBRWrongOID.ee.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileOneHash.mft.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileTwoHashes.mft.p15 \
 	tests/conformance/raw/keys/badMFTFileHashLong.mft.p15 \
@@ -253,6 +264,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAFamily.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamilyLth.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
+	tests/conformance/raw/keys/goodGBRNothingWrong.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
 	tests/conformance/raw/keys/goodMFTNumZero.mft.p15 \
 	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
@@ -675,6 +687,26 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage2.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage3.patch \
+	tests/conformance/raw/patches/badGBRASNotInherit.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRASNotInherit.stage1.patch \
+	tests/conformance/raw/patches/badGBRASNotInherit.stage2.patch \
+	tests/conformance/raw/patches/badGBRASNotInherit.stage3.patch \
+	tests/conformance/raw/patches/badGBRIPv4NotInherit.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRIPv4NotInherit.stage1.patch \
+	tests/conformance/raw/patches/badGBRIPv4NotInherit.stage2.patch \
+	tests/conformance/raw/patches/badGBRIPv4NotInherit.stage3.patch \
+	tests/conformance/raw/patches/badGBRIPv6NotInherit.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRIPv6NotInherit.stage1.patch \
+	tests/conformance/raw/patches/badGBRIPv6NotInherit.stage2.patch \
+	tests/conformance/raw/patches/badGBRIPv6NotInherit.stage3.patch \
+	tests/conformance/raw/patches/badGBRNotVCard.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRNotVCard.stage1.patch \
+	tests/conformance/raw/patches/badGBRNotVCard.stage2.patch \
+	tests/conformance/raw/patches/badGBRNotVCard.stage3.patch \
+	tests/conformance/raw/patches/badGBRWrongOID.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRWrongOID.stage1.patch \
+	tests/conformance/raw/patches/badGBRWrongOID.stage2.patch \
+	tests/conformance/raw/patches/badGBRWrongOID.stage3.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileOneHash.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileOneHash.stage1.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileOneHash.stage2.patch \
@@ -777,6 +809,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage0.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage2.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.ee.stage0.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.stage1.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.stage2.patch \
+	tests/conformance/raw/patches/goodGBRNothingWrong.stage3.patch \
 	tests/conformance/raw/patches/goodMFTNumMax.ee.stage0.patch \
 	tests/conformance/raw/patches/goodMFTNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodMFTNumMax.stage2.patch \
@@ -807,6 +843,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/templates/goodCert.raw \
 	tests/conformance/raw/templates/goodEECert.p15 \
 	tests/conformance/raw/templates/goodEECert.raw \
+	tests/conformance/raw/templates/goodEECertGBR.raw \
+	tests/conformance/raw/templates/goodGBR.raw \
 	tests/conformance/raw/templates/goodROA.raw \
 	tests/conformance/scripts/conformance.conf
 
@@ -821,6 +859,10 @@ tests/conformance/scripts/gen_all_CMSs.sh: $(srcdir)/tests/conformance/scripts/g
 check_SCRIPTS += tests/conformance/scripts/gen_all_CRLs.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CRLs.sh
 tests/conformance/scripts/gen_all_CRLs.sh: $(srcdir)/tests/conformance/scripts/gen_all_CRLs.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/gen_all_GBRs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_GBRs.sh
+tests/conformance/scripts/gen_all_GBRs.sh: $(srcdir)/tests/conformance/scripts/gen_all_GBRs.sh.in
 
 check_SCRIPTS += tests/conformance/scripts/gen_all_MFTs.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_MFTs.sh
@@ -994,6 +1036,12 @@ tests_subsystem_testcases_make_test_crl_LDADD = \
 	$(LDADD_LIBRPKIOBJECT)
 
 
+check_PROGRAMS += tests/subsystem/testcases/make_test_gbr
+
+tests_subsystem_testcases_make_test_gbr_LDADD = \
+	$(LDADD_LIBRPKI)
+
+
 check_PROGRAMS += tests/subsystem/testcases/make_test_manifest
 
 tests_subsystem_testcases_make_test_manifest_LDADD = \
@@ -1074,26 +1122,37 @@ COPYFILES += \
 	tests/subsystem/testcases/C11.p15 \
 	tests/subsystem/testcases/C111.p15 \
 	tests/subsystem/testcases/C1111.p15 \
+	tests/subsystem/testcases/C1111G1.p15 \
 	tests/subsystem/testcases/C1111R1.p15 \
 	tests/subsystem/testcases/C111M1.p15 \
+	tests/subsystem/testcases/C111G1.p15 \
 	tests/subsystem/testcases/C111R1.p15 \
+	tests/subsystem/testcases/C111G2.p15 \
 	tests/subsystem/testcases/C111R2.p15 \
+	tests/subsystem/testcases/C111G3.p15 \
 	tests/subsystem/testcases/C111R3.p15 \
 	tests/subsystem/testcases/C112.p15 \
+	tests/subsystem/testcases/C112G1.p15 \
 	tests/subsystem/testcases/C112R1.p15 \
 	tests/subsystem/testcases/C113.p15 \
+	tests/subsystem/testcases/C113G1.p15 \
 	tests/subsystem/testcases/C113R1.p15 \
 	tests/subsystem/testcases/C11M1.p15 \
 	tests/subsystem/testcases/C11M2.p15 \
+	tests/subsystem/testcases/C11G1.p15 \
 	tests/subsystem/testcases/C11R1.p15 \
 	tests/subsystem/testcases/C12.p15 \
 	tests/subsystem/testcases/C121.p15 \
+	tests/subsystem/testcases/C121G1.p15 \
 	tests/subsystem/testcases/C121R1.p15 \
 	tests/subsystem/testcases/C13.p15 \
 	tests/subsystem/testcases/C131.p15 \
+	tests/subsystem/testcases/C131G1.p15 \
 	tests/subsystem/testcases/C131R1.p15 \
 	tests/subsystem/testcases/C132.p15 \
+	tests/subsystem/testcases/C132G1.p15 \
 	tests/subsystem/testcases/C132R1.p15 \
+	tests/subsystem/testcases/C132G2.p15 \
 	tests/subsystem/testcases/C132R2.p15 \
 	tests/subsystem/testcases/C1M1.p15 \
 	tests/subsystem/testcases/C1M2.p15 \
@@ -1101,27 +1160,40 @@ COPYFILES += \
 	tests/subsystem/testcases/C2.p15 \
 	tests/subsystem/testcases/C21.p15 \
 	tests/subsystem/testcases/C211.p15 \
+	tests/subsystem/testcases/C211G1.p15 \
 	tests/subsystem/testcases/C211R1.p15 \
 	tests/subsystem/testcases/C22.p15 \
 	tests/subsystem/testcases/C221.p15 \
 	tests/subsystem/testcases/C2211.p15 \
+	tests/subsystem/testcases/C2211G1.p15 \
 	tests/subsystem/testcases/C2211R1.p15 \
 	tests/subsystem/testcases/C2212.p15 \
+	tests/subsystem/testcases/C2212G1.p15 \
 	tests/subsystem/testcases/C2212R1.p15 \
+	tests/subsystem/testcases/C2212G2.p15 \
 	tests/subsystem/testcases/C2212R2.p15 \
+	tests/subsystem/testcases/C221G1.p15 \
 	tests/subsystem/testcases/C221R1.p15 \
+	tests/subsystem/testcases/C22G1.p15 \
 	tests/subsystem/testcases/C22R1.p15 \
 	tests/subsystem/testcases/C23.p15 \
 	tests/subsystem/testcases/C231.p15 \
+	tests/subsystem/testcases/C231G1.p15 \
 	tests/subsystem/testcases/C231R1.p15 \
+	tests/subsystem/testcases/C231G2.p15 \
 	tests/subsystem/testcases/C231R2.p15 \
 	tests/subsystem/testcases/C232.p15 \
+	tests/subsystem/testcases/C232G1.p15 \
 	tests/subsystem/testcases/C232R1.p15 \
 	tests/subsystem/testcases/C233.p15 \
+	tests/subsystem/testcases/C233G1.p15 \
 	tests/subsystem/testcases/C233R1.p15 \
+	tests/subsystem/testcases/C233G9.p15 \
 	tests/subsystem/testcases/C233R9.p15 \
 	tests/subsystem/testcases/C23M1.p15 \
+	tests/subsystem/testcases/C23G1.p15 \
 	tests/subsystem/testcases/C23R1.p15 \
+	tests/subsystem/testcases/C23G2.p15 \
 	tests/subsystem/testcases/C23R2.p15 \
 	tests/subsystem/testcases/CM1.p15
 
@@ -1137,6 +1209,10 @@ tests/subsystem/testcases/makecerts: $(srcdir)/tests/subsystem/testcases/makecer
 check_SCRIPTS += tests/subsystem/testcases/makecrls
 MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecrls
 tests/subsystem/testcases/makecrls: $(srcdir)/tests/subsystem/testcases/makecrls.in
+
+check_SCRIPTS += tests/subsystem/testcases/makegbrs
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makegbrs
+tests/subsystem/testcases/makegbrs: $(srcdir)/tests/subsystem/testcases/makegbrs.in
 
 check_SCRIPTS += tests/subsystem/testcases/makekeys
 MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makekeys
@@ -1158,6 +1234,7 @@ CLEANDIRS += \
 
 CLEANFILES += \
 	tests/subsystem/testcases/*.crl \
+	tests/subsystem/testcases/*.gbr \
 	tests/subsystem/testcases/*.man \
 	tests/subsystem/testcases/*.raw \
 	tests/subsystem/testcases/*.roa \

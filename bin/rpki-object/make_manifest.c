@@ -151,7 +151,7 @@ int main(
     char *c,
         curr_file[CURR_FILE_SIZE],
         locbuf[20];
-    struct ROA roa;
+    struct CMS cms;
     struct AlgorithmIdentifier *algidp;
     int man_num;
 
@@ -161,20 +161,20 @@ int main(
             ("Args needed: output file, certificate file, key file, optional directory\n");
         return 0;
     }
-    ROA(&roa, 0);
-    write_objid(&roa.contentType, id_signedData);
-    write_casn_num(&roa.content.signedData.version.self, (long)3);
-    inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
+    CMS(&cms, 0);
+    write_objid(&cms.contentType, id_signedData);
+    write_casn_num(&cms.content.signedData.version.self, (long)3);
+    inject_casn(&cms.content.signedData.digestAlgorithms.self, 0);
     algidp =
-        (struct AlgorithmIdentifier *)member_casn(&roa.content.
+        (struct AlgorithmIdentifier *)member_casn(&cms.content.
                                                   signedData.digestAlgorithms.
                                                   self, 0);
     write_objid(&algidp->algorithm, id_sha256);
     write_casn(&algidp->parameters.sha256, (uchar *) "", 0);
-    write_objid(&roa.content.signedData.encapContentInfo.eContentType,
+    write_objid(&cms.content.signedData.encapContentInfo.eContentType,
                 id_roa_pki_manifest);
     struct Manifest *manp =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     printf("What manifest number? ");
     fgets(locbuf, sizeof(locbuf), stdin);
     sscanf(locbuf, "%d", &man_num);
@@ -219,17 +219,17 @@ int main(
         else
             num = add_names(curr_file, c, manp, num);
     }
-    if (!inject_casn(&roa.content.signedData.certificates.self, 0))
+    if (!inject_casn(&cms.content.signedData.certificates.self, 0))
         fatal(4, "signedData");
     struct Certificate *certp =
-        (struct Certificate *)member_casn(&roa.content.signedData.certificates.
+        (struct Certificate *)member_casn(&cms.content.signedData.certificates.
                                           self, 0);
     if (get_casn_file(&certp->self, argv[2], 0) < 0)
         fatal(2, argv[2]);
-    if (!inject_casn(&roa.content.signedData.signerInfos.self, 0))
+    if (!inject_casn(&cms.content.signedData.signerInfos.self, 0))
         fatal(4, "signerInfo");
     struct SignerInfo *sigInfop =
-        (struct SignerInfo *)member_casn(&roa.content.signedData.signerInfos.
+        (struct SignerInfo *)member_casn(&cms.content.signedData.signerInfos.
                                          self, 0);
     write_casn_num(&sigInfop->version.v3, 3);
     write_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256);
@@ -237,18 +237,18 @@ int main(
                 id_sha_256WithRSAEncryption);
 
     const char *msg;
-    if ((msg = signCMS(&roa, argv[3], 0)))
+    if ((msg = signCMS(&cms, argv[3], 0)))
         fatal(5, msg);
-    if (put_casn_file(&roa.self, argv[1], 0) < 0)
+    if (put_casn_file(&cms.self, argv[1], 0) < 0)
         fatal(6, argv[1]);
     printf("What readable file, if any? ");
     fgets(curr_file, CURR_FILE_SIZE, stdin);
     curr_file[strlen(curr_file) - 1] = 0;
     if (*curr_file > ' ')
     {
-        int dsize = dump_size(&roa.self);
+        int dsize = dump_size(&cms.self);
         c = (char *)calloc(1, dsize + 2);
-        dump_casn(&roa.self, c);
+        dump_casn(&cms.self, c);
         FILE *str = fopen(curr_file, "w");
         fprintf(str, "%s", c);
         fclose(str);

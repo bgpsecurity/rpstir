@@ -31,6 +31,7 @@ static unsigned int theID;      // for passing to callback
 static sqlcountfunc countHandler;       // used by countCurrentCRLs
 static scmtab *certTable,
    *crlTable,
+   *gbrTable,
    *roaTable,
    *manifestTable;
 
@@ -216,6 +217,8 @@ int main(
     checkErr(certTable == NULL, "Cannot find table certificate\n");
     crlTable = findtablescm(scmp, "crl");
     checkErr(crlTable == NULL, "Cannot find table crl\n");
+    gbrTable = findtablescm(scmp, "ghostbusters");
+    checkErr(gbrTable == NULL, "Cannot find table ghostbusters\n");
     roaTable = findtablescm(scmp, "roa");
     checkErr(roaTable == NULL, "Cannot find table roa\n");
     manifestTable = findtablescm(scmp, "manifest");
@@ -298,6 +301,7 @@ int main(
     {
         handleStaleMan2(connect, certTable, staleManFiles[i]);
         handleStaleMan2(connect, crlTable, staleManFiles[i]);
+        handleStaleMan2(connect, gbrTable, staleManFiles[i]);
         handleStaleMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
@@ -316,6 +320,7 @@ int main(
     {
         handleFreshMan2(connect, certTable, staleManFiles[i]);
         handleFreshMan2(connect, crlTable, staleManFiles[i]);
+        handleFreshMan2(connect, gbrTable, staleManFiles[i]);
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }

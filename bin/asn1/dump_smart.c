@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "casn/casn.h"
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 #include "rpki-asn1/crlv2.h"
 
 static char *msgs[] = {
@@ -26,7 +26,7 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
+    struct CMS cms;
     struct Certificate certificate;
     struct CertificateRevocationList crl;
     char *buf;
@@ -63,17 +63,18 @@ int main(
         delete_casn(&crl.self);
     }
     else if (!strcmp(p, ".man") || !strcmp(p, ".mft") || !strcmp(p, ".mnf") ||
-             !strcmp(p, ".roa"))
+             !strcmp(p, ".roa") ||
+             !strcmp(p, ".gbr"))
     {
-        ROA(&roa, (ushort) 0);
-        if (get_casn_file(&roa.self, argv[1], 0) < 0)
+        CMS(&cms, (ushort) 0);
+        if (get_casn_file(&cms.self, argv[1], 0) < 0)
             fatal(3, casn_err_struct.asn_map_string);
-        bsize = dump_size(&roa.self);
+        bsize = dump_size(&cms.self);
         buf = (char *)calloc(1, bsize + 8);
-        dump_casn(&roa.self, buf);
+        dump_casn(&cms.self, buf);
         printf("%s", buf);
         free(buf);
-        delete_casn(&roa.self);
+        delete_casn(&cms.self);
     }
     else
         fatal(2, p);

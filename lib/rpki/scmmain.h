@@ -114,7 +114,8 @@ static scmtab scmtabbuilder[] = {
      "         PRIMARY KEY (filename, dir_id),"
      "         KEY asn (asn),"
      "         KEY sig (sig),"
-     "         KEY lid (local_id)," "         KEY ski (ski)",
+     "         KEY lid (local_id),"
+     "         KEY ski (ski)",
      NULL,
      0},
     {                           /* RPKI_MANIFEST */
@@ -131,7 +132,23 @@ static scmtab scmtabbuilder[] = {
      "fileslen INT UNSIGNED DEFAULT 0,"
      "flags    INT UNSIGNED DEFAULT 0,"
      "local_id INT UNSIGNED NOT NULL UNIQUE,"
-     "         PRIMARY KEY (filename, dir_id)," "         KEY lid (local_id)",
+     "         PRIMARY KEY (filename, dir_id),"
+     "         KEY lid (local_id),"
+     "         KEY ski (ski)",
+     NULL,
+     0},
+    {
+     "rpki_ghostbusters",
+     "GHOSTBUSTERS",
+     "filename VARCHAR(256) NOT NULL,"
+     "dir_id   INT UNSIGNED NOT NULL DEFAULT 1,"
+     "local_id INT UNSIGNED NOT NULL UNIQUE,"
+     "ski      VARCHAR(128) NOT NULL,"
+     "hash     VARCHAR(256),"
+     "flags    INT UNSIGNED DEFAULT 0,"
+     "         PRIMARY KEY (filename, dir_id),"
+     "         KEY lid (local_id),"
+     "         KEY ski (ski)",
      NULL,
      0},
     {                           /* RPKI_DIR */

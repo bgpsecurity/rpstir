@@ -2,6 +2,7 @@ lib_rpki_asn1_librpkiasn1_a_ASN1 = \
 	lib/rpki-asn1/Algorithms.asn \
 	lib/rpki-asn1/blob.asn \
 	lib/rpki-asn1/certificate.asn \
+	lib/rpki-asn1/cms.asn \
 	lib/rpki-asn1/crlv2.asn \
 	lib/rpki-asn1/extensions.asn \
 	lib/rpki-asn1/keyfile.asn \

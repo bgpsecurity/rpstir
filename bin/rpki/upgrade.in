@@ -1,0 +1,84 @@
+#!/bin/sh
+
+@SETUP_ENVIRONMENT@
+
+usage () {
+    echo >&2 "Usage: $0 <old version number>"
+    echo >&2
+    echo >&2 "This script upgrades @PACKAGE_NAME@'s data in place. Consider"
+    echo >&2 "backing up your data and configuration before running this."
+    echo >&2
+    echo >&2 "The only argument this script takes is the version number of"
+    echo >&2 "@PACKAGE_NAME@ that was used to create the existing data."
+    echo >&2 "This should be the version you're upgrading from."
+}
+
+
+upgrade_from_0_7 ()
+{
+    echo "Adding SKI index to the manifest table. This may take a few minutes."
+    echo "ALTER TABLE rpki_manifest ADD KEY ski (ski);" \
+        | mysql_cmd || \
+    {
+        error "Could not add SKI index to manifest table."
+        return 1
+    }
+
+    echo "Creating new table for Ghostbusters Records."
+    echo \
+        "CREATE TABLE rpki_ghostbusters (" \
+        "    filename VARCHAR(256) NOT NULL," \
+        "    dir_id   INT UNSIGNED NOT NULL DEFAULT 1," \
+        "    local_id INT UNSIGNED NOT NULL UNIQUE," \
+        "    ski      VARCHAR(128) NOT NULL," \
+        "    hash     VARCHAR(256)," \
+        "    flags    INT UNSIGNED DEFAULT 0," \
+        "             PRIMARY KEY (filename, dir_id)," \
+        "             KEY lid (local_id)," \
+        "             KEY ski (ski)" \
+        ");" \
+        | mysql_cmd || \
+    {
+        error "Could not create table rpki_ghostbusters"
+        return 1
+    }
+
+    echo "Adding Ghostbusters Records to the database."
+    find "`config_get RPKICacheDir`" -type f -name \*.gbr -print \
+        | rcli -l
+
+    return 0
+}
+
+
+if test $# -ne 1; then
+    usage_fatal "This script takes exactly one argument."
+fi
+
+OLD_VERSION="$1"
+
+case "$OLD_VERSION" in
+    -h | --help)
+        usage
+        exit 0
+        ;;
+
+    0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6)
+        fatal "Automatic upgrades from releases before 0.7 are not supported." \
+              "Please contact @PACKAGE_BUGREPORT@ for assistance with a" \
+              "manual upgrade."
+        ;;
+
+    0.7)
+        upgrade_from_0_7 || exit $?
+        ;;
+
+    "@PACKAGE_VERSION@")
+        usage_fatal "Please specify the version you're upgrading from, not" \
+                    "the version you're upgrading to."
+        ;;
+
+    *)
+        fatal "Unrecognized version number: $OLD_VERSION"
+        ;;
+esac

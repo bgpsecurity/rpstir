@@ -11,10 +11,10 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
+    struct CMS roa;
     int siz;
 
-    ROA(&roa, 0);
+    CMS(&roa, 0);
     if (argc < 2)
         fprintf(stderr, "Need argv[1] for roa\n");
     else

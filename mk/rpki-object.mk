@@ -85,6 +85,12 @@ TESTS += \
 	bin/rpki-object/create_object/tests/empty_manifest.sh
 
 
+pkglibexec_PROGRAMS += bin/rpki-object/extract-cms-content
+
+bin_rpki_object_extract_cms_content_LDADD = \
+	$(LDADD_LIBRPKIASN1)
+
+
 pkglibexec_PROGRAMS += bin/rpki-object/extractCMScert
 
 bin_rpki_object_extractCMScert_LDADD = \

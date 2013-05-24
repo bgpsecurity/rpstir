@@ -1,0 +1,27 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+./make_test_gbr    -o G111.gbr
+./make_test_gbr    -o G1111.gbr
+./make_test_gbr    -o G1112.gbr
+./make_test_gbr    -o G1113.gbr
+./make_test_gbr    -o G11111.gbr
+./make_test_gbr    -o G1121.gbr
+./make_test_gbr    -o G1131.gbr
+./make_test_gbr    -o G1211.gbr
+./make_test_gbr    -o G1311.gbr
+./make_test_gbr    -o G1321.gbr
+./make_test_gbr    -o G1322.gbr
+./make_test_gbr    -o G2111.gbr
+./make_test_gbr    -o G221.gbr
+./make_test_gbr    -o G2211.gbr
+./make_test_gbr    -o G22111.gbr
+./make_test_gbr    -o G22121.gbr
+./make_test_gbr -b -o G22122.gbr
+./make_test_gbr    -o G231.gbr
+./make_test_gbr    -o G2311.gbr
+./make_test_gbr    -o G2312.gbr
+./make_test_gbr    -o G2321.gbr
+./make_test_gbr    -o G2331.gbr
+./make_test_gbr    -o G2339.gbr

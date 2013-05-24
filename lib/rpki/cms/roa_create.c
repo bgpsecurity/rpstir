@@ -16,13 +16,13 @@
 int roaFromConfig(
     char *fname,
     int doval,
-    struct ROA *rp)
+    struct CMS *rp)
 {
     return roaFromFile(fname, FMT_CONF, doval, rp);
 }
 
 int roaToConfig(
-    struct ROA *roa,
+    struct CMS *roa,
     char *fname)
 {
     UNREFERENCED_PARAMETER(roa);

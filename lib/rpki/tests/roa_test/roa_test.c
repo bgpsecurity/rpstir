@@ -80,8 +80,8 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
-    struct ROA roa2;
+    struct CMS roa;
+    struct CMS roa2;
     unsigned char *blob = NULL;
     FILE *fp = NULL;
     scmcon *conp;
@@ -95,8 +95,8 @@ int main(
     char *fn = NULL;
     int sta = 0;
 
-    ROA(&roa, (ushort) 0);
-    ROA(&roa2, (ushort) 0);
+    CMS(&roa, (ushort) 0);
+    CMS(&roa2, (ushort) 0);
     if (argc < 2)
         filename_cnf = "roa.cnf";
     else

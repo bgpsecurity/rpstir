@@ -1,0 +1,20 @@
+--- badGBRWrongOID.raw.old	2013-05-21 19:18:48.086753879 -0400
++++ badGBRWrongOID.raw	2013-05-21 19:19:07.038753087 -0400
+@@ -3,7 +3,7 @@
+         seq int 0x03 /* 3 */ 
+             set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                     nul 
+-            seq oid 1.2.840.113549.1.9.16.1.35 /* id_ct_rpkiGhostbusters */
++            seq oid 2.999.42
+                 ctx+0x20
+                     ocw 0x424547494E3A56434152440D0A564552
+                         0x53494F4E3A342E300D0A464E3A48756D
+@@ -119,7 +119,7 @@
+                         nul 
+                     ctx+0x20
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+-                            set oid 1.2.840.113549.1.9.16.1.35 /* id_ct_rpkiGhostbusters */
++                            set oid 2.999.42
+                         seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+                             set oct 0xC8B159D52330B0B9D268DFAE0F1B8311
+                                     0xF41FAC87D479F010EA848A16663A4BAF

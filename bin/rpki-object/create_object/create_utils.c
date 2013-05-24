@@ -10,7 +10,6 @@
 #include "util/cryptlib_compat.h"
 #include "rpki-object/certificate.h"
 #include "rpki-object/cms/cms.h"
-#include <rpki-asn1/roa.h>
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
@@ -30,13 +29,13 @@ int write_EEcert(
     void *value)
 {
     struct Certificate my_cert;
-    struct ROA *roa = my_var;
+    struct CMS *cms = my_var;
     Certificate(&my_cert, (ushort) 0);
 
     // read the EE certificate from file
     if (!(get_casn_file(&my_cert.self, (char *)value, 0) < 0))
     {
-        struct SignedData *sgdp = &roa->content.signedData;
+        struct SignedData *sgdp = &cms->content.signedData;
         // Clear the old one
         eject_all_casn(&sgdp->certificates.self);
 
@@ -67,11 +66,11 @@ int write_EEkey(
     void *value)
 {
     // struct Certificate my_cert;
-    struct ROA *roa = my_var;
+    struct CMS *cms = my_var;
     // Certificate(&my_cert, (ushort)0);
     const char *c;
 
-    if ((c = signCMS(roa, (char *)value, 0)))
+    if ((c = signCMS(cms, (char *)value, 0)))
     {
         warn(1, "Error signing with the EE key file");
         return 1;

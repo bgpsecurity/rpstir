@@ -1,5 +1,5 @@
 #include "util/cryptlib_compat.h"
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 
 #include "crl.h"
 
