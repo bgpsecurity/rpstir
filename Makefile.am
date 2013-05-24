@@ -55,6 +55,7 @@ examples_DATA =
 noinst_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
+noinst_SCRIPTS =
 pkgdata_DATA =
 pkglibexec_PROGRAMS =
 pkglibexec_SCRIPTS =

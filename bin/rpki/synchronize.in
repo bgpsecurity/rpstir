@@ -109,7 +109,7 @@ while test -s "$ADDED_LIST"; do
 	echo "\"" >> "$RSYNC_CORD_CONF"
 
 	rsync_cord.py -d -c "$RSYNC_CORD_CONF" \
-		-t "`config_get DownloadConcurrency`"
+		-t "`config_get DownloadConcurrency`" --keep-logs
 
 	rm -f "$RSYNC_CORD_CONF"
 

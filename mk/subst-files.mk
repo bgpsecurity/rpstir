@@ -45,6 +45,7 @@ do_subst = $(SED) \
 	-e 's,[@]trap_errors[@],$(trap_errors),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
+	-e 's,[@]MKTEMP_DIR[@],$(MKTEMP_DIR),g' \
 	-e 's,[@]PACKAGE_BUGREPORT[@],$(PACKAGE_BUGREPORT),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
 	-e 's,[@]PACKAGE_SYS_CONF_FILE[@],$(PACKAGE_SYS_CONF_FILE),g' \
