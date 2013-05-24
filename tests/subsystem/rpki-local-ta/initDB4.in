@@ -1,16 +1,13 @@
 #!@SHELL_BASH@
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
-. $RPKI_ROOT/tests/test.include
+@trap_errors@
 
-. $RPKI_ROOT/lib/util/trap_errors
-
-echo About to clear database $RPKI_DB ...
+echo About to clear database ...
 
 # set up an initial database
+mkdir -p "`config_get LogDir`"
 run "rcli-x-t-y" rcli -x -t $PWD/testcases4_LTA -y     # Rsync's local cache
 run "rcli-y-F-MYTA" rcli -y -F $PWD/testcases4_LTA/MYTA.cer
 run "rcli-y-F-C" rcli -y -F $PWD/testcases4_LTA/C.cer  # Normal trust anchor

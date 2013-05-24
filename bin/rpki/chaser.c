@@ -13,11 +13,12 @@
 
 #include "rpki/err.h"
 #include "util/logging.h"
+#include "config/config.h"
 #include "db/connect.h"
 #include "db/clients/chaser.h"
 #include "util/stringutils.h"
 
-#define CHASER_LOG_IDENT PACKAGE_NAME "-chaser"
+#define CHASER_LOG_IDENT "chaser"
 #define CHASER_LOG_FACILITY LOG_DAEMON
 
 
@@ -433,7 +434,8 @@ static int handle_uri_string(
         if (-1 == ret)
         {
             scrub_for_print(scrubbed_str2, section, DST_SZ, NULL, "");
-            LOG(LOG_WARNING,
+            // Removing a trailing slash is common; log at debug level.
+            LOG(LOG_DEBUG,
                 "modified rsync uri, replaced:  \"%s\" with \"%s\"",
                 scrubbed_str, scrubbed_str2);
         }
@@ -669,8 +671,6 @@ static int printUsage(
     fprintf(stderr,
             "  -d seconds   chase CRLs where 'next update < seconds'  (default:  chase all CRLs)\n");
     fprintf(stderr,
-            "  -f filename  use filename instead of 'additional_rsync_uris.config'\n");
-    fprintf(stderr,
             "  -s           delimit output with newlines  (default:  null byte)\n");
     fprintf(stderr, "  -t           for testing, don't access the database\n");
     fprintf(stderr,
@@ -695,9 +695,6 @@ int main(
     int ret;
     int consumed;
 
-    char *config_file = "additional_rsync_uris.config";
-    FILE *fp;
-
     // size = length of string + \0 + \n + char to detect oversized
     char msg[DB_URI_LEN + 3];   // temp string storage
     size_t i;
@@ -707,7 +704,7 @@ int main(
 
     // parse the command-line flags
     int ch;
-    while ((ch = getopt(argc, argv, "ad:f:styh")) != -1)
+    while ((ch = getopt(argc, argv, "ad:styh")) != -1)
     {
         switch (ch)
         {
@@ -723,9 +720,6 @@ int main(
                 printUsage();
                 return EXIT_FAILURE;
             }
-            break;
-        case 'f':
-            config_file = optarg;
             break;
         case 's':
             output_delimiter = '\n';
@@ -744,6 +738,13 @@ int main(
 
     OPEN_LOG(CHASER_LOG_IDENT, CHASER_LOG_FACILITY);
     (void)setbuf(stdout, NULL);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "Could not load configuration");
+        return EXIT_FAILURE;
+    }
+
     uris = malloc(sizeof(char *) * uris_max_sz);
     if (!uris)
     {
@@ -751,37 +752,24 @@ int main(
         return -1;
     }
 
-    // read uris from file
-    fp = fopen(config_file, "r");
-    if (!fp)
+    // get configured extra URIs
+    for (i = 0; i < config_get_length(CONFIG_RPKI_EXTRA_PUBLICATION_POINTS); ++i)
     {
-        LOG(LOG_ERR, "Could not open file: %s", config_file);
-        goto cant_open_file;
-    }
-    while (fgets(msg, sizeof(msg), fp) != NULL)
-    {
-        if (strncasecmp(RSYNC_SCHEME, msg, strlen(RSYNC_SCHEME)))
+        const char * uri = CONFIG_RPKI_EXTRA_PUBLICATION_POINTS_get(i);
+
+        if (DB_URI_LEN < strlen(uri))
         {
-            continue;
-        }
-        // strip the trailing \n from fgets
-        if (0 < strlen(msg))
-            msg[strlen(msg) - 1] = '\0';
-        if (DB_URI_LEN < strlen(msg))
-        {
-            scrub_for_print(scrubbed_str, msg, DST_SZ, NULL, "");
+            scrub_for_print(scrubbed_str, uri, DST_SZ, NULL, "");
             snprintf(msg, 50, "%s", scrubbed_str);
             LOG(LOG_WARNING,
                 "uri from file too long, dropping:  %s <truncated>", msg);
             continue;
         }
-        if (ERR_CHASER_OOM == handle_uri_string(msg))
+
+        if (ERR_CHASER_OOM == handle_uri_string(uri))
             return -1;
     }
-    fclose(fp);
-    LOG(LOG_DEBUG, "loaded %zu rsync uris from file: %s", num_uris,
-        config_file);
-  cant_open_file:
+    LOG(LOG_DEBUG, "loaded %zu rsync uris from configuration", num_uris);
 
     if (skip_database)
     {
@@ -912,6 +900,8 @@ int main(
     }
 
     free_uris();
+
+    config_unload();
 
     CLOSE_LOG();
 

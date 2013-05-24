@@ -17,38 +17,6 @@
 // that the ROA has
 // been validated at entry and that ipaddrmax exceeds ipaddrmin
 
-// A quick itoa implementation that works only for radix <= 10
-static int itoa(
-    int n,
-    char *cN,
-    int radix)
-{
-    int i = 0;
-    int j = 0;
-    char *s;
-
-    if ((radix > 10) || (NULL == cN))
-        return ERR_SCM_INVALARG;
-
-    s = (char *)calloc(33, sizeof(char));
-    if (s == NULL)
-        return ERR_SCM_NOMEM;
-
-    do
-    {
-        s[i++] = (char)(n % radix + '0');
-        n -= n % radix;
-    }
-    while ((n /= radix) > 0);
-
-    for (j = 0; j < i; j++)
-        cN[i - 1 - j] = s[j];
-
-    cN[j] = '\0';
-    free(s);
-    return 0;
-}
-
 static int cvalhtoc2(
     unsigned char cVal,
     unsigned char *c2Array)
@@ -123,7 +91,7 @@ static int cvaldtoc3(
 }
 
 unsigned char *roaSKI(
-    struct ROA *r)
+    struct CMS *r)
 {
     int i = 0;
     unsigned char *cSID = NULL;
@@ -169,7 +137,7 @@ unsigned char *roaSKI(
 }
 
 unsigned char *roaSignature(
-    struct ROA *r,
+    struct CMS *r,
     int *lenp)
 {
     if (r == NULL || lenp == NULL)
@@ -459,22 +427,19 @@ static unsigned char **roaIPAddresses(
     return pcAddresses;
 }
 
-int roaAS_ID(
-    struct ROA *r)
+/**
+    WARNING: This function does no error checking. Calling it with a NULL
+    r, or if r hasn't passed roaValidate() could cause unpredictable
+    behavior.
+*/
+uint32_t roaAS_ID(
+    struct CMS *r)
 {
-    long iAS_ID = 0;
+    intmax_t iAS_ID;
+    read_casn_num_max(&r->content.signedData.encapContentInfo.eContent.roa.asID,
+                      &iAS_ID);
 
-    // parameter check
-    if (NULL == r)
-        return 0;
-
-    if (0 >=
-        read_casn_num(&
-                      (r->content.signedData.encapContentInfo.eContent.roa.
-                       asID), &iAS_ID))
-        return -1;
-
-    return iAS_ID;
+    return (uint32_t)iAS_ID;
 }
 
 /*
@@ -533,7 +498,7 @@ static int convertAddr(
 }
 
 int roaGetIPAddresses(
-    struct ROA *rp,
+    struct CMS *rp,
     char **str)
 {
     struct ROAIPAddrBlocks *addrBlocksp =
@@ -599,7 +564,7 @@ int roaGetIPAddresses(
 }
 
 int roaGenerateFilter(
-    struct ROA *r,
+    struct CMS *r,
     uchar * cert,
     FILE * fp,
     char *str,
@@ -610,7 +575,7 @@ int roaGenerateFilter(
     int iRes = 0;
     int iFamilies = 0;
     int iAddrNum = 0;
-    int iAS_ID = 0;
+    uint32_t iAS_ID = 0;
     int sta;
     char cAS_ID[17];
     unsigned char *cSID = NULL;
@@ -628,11 +593,9 @@ int roaGenerateFilter(
 
     memset(cAS_ID, 0, 17);
     iAS_ID = roaAS_ID(r);
-    if (iAS_ID == 0)
-        return ERR_SCM_INVALASID;
-    sta = itoa(iAS_ID, cAS_ID, 10);
-    if (sta < 0)
-        return sta;
+    sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
+    if (sta < 0 || sta >= (int)sizeof(cAS_ID))
+        return -1;
 
     cSID = roaSKI(r);
     if (NULL == cSID)
@@ -683,7 +646,7 @@ int roaGenerateFilter(
 }
 
 int roaGenerateFilter2(
-    struct ROA *r,
+    struct CMS *r,
     char **strpp)
 {
     int i,
@@ -691,7 +654,7 @@ int roaGenerateFilter2(
     int iRes = 0;
     int iFamilies = 0;
     int iAddrNum = 0;
-    int iAS_ID = 0;
+    uint32_t iAS_ID = 0;
     int sta;
     char cAS_ID[20];
     unsigned char *cSID = NULL;
@@ -707,10 +670,10 @@ int roaGenerateFilter2(
         free(*strpp);
 
     memset(cAS_ID, 0, sizeof(cAS_ID));
-    if ((iAS_ID = roaAS_ID(r)) == 0)
-        return ERR_SCM_INVALASID;
-    if ((sta = itoa(iAS_ID, cAS_ID, 10)) < 0)
-        return sta;
+    iAS_ID = roaAS_ID(r);
+    sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
+    if (sta < 0 || sta >= (int)sizeof(cAS_ID))
+        return -1;
 
     if ((cSID = roaSKI(r)) == NULL)
         return ERR_SCM_INVALSKI;

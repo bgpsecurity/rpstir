@@ -958,7 +958,7 @@ static int translateIPv6Prefix(
 // ///////////////////////////////////////////////////////////
 
 static int setVersion(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *versionstring)
 {
     int iRes = 0;
@@ -993,7 +993,7 @@ static int setVersion(
 #ifdef NOTDEF
 
 static int setSID(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *sidstring)
 {
     int iLen = 0;
@@ -1075,14 +1075,23 @@ static int setSID(
  * ( signature != NULL ) free(signature); return ansr; } 
  */
 
+/*
+ FIXME: This does not handle the full range of 32-bit AS numbers.
+ Fortunately, it is called only from a single unit test and is never
+ used in production.  It may be better to just remove the entire
+ calling code path (starts at the top from roaFromConfig).  We now
+ have other ways of generating ROAs from text files other than
+ roaFromConfig().  And/or we need to fix write_casn_num() as well as
+ its internal limit-checking code.
+*/
 static int setAS_ID(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *asidstring)
 {
     int iLen = 0;
     int iAS_ID = 0;
 
-    // Because we only accept 0 < ASID < 2**32
+    // FIXME: We deny AS 0 and AS numbers > 999999999, but allow negatives!
     iLen = strlen((char *)asidstring);
     if (9 < iLen)
         return ERR_SCM_INVALASID;
@@ -1097,7 +1106,7 @@ static int setAS_ID(
 }
 
 static int setIPFamily(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *ipfamstring)
 {
     int iLen = 0;
@@ -1158,7 +1167,7 @@ static int setIPFamily(
 }
 
 static int setIPAddr(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *ipaddrstring)
 {
     unsigned char ipv4array[5];
@@ -1320,7 +1329,7 @@ static int setIPAddr(
 #ifdef IP_RANGES_ALLOWED
 
 int setIPAddrMin(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *ipaddrminstring)
 {
     unsigned char ipv4array[5];
@@ -1441,7 +1450,7 @@ int setIPAddrMin(
 }
 
 int setIPAddrMax(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *ipaddrmaxstring)
 {
     unsigned char ipv4array[5];
@@ -1564,7 +1573,7 @@ int setIPAddrMax(
 #endif                          // IP_RANGES_ALLOWED
 
 static int setCertName(
-    struct ROA *roa,
+    struct CMS *roa,
     unsigned char *certfilenamestring)
 {
     int iRet = 0;
@@ -1598,7 +1607,7 @@ static int setCertName(
 
 static int confInterpret(
     char *filename,
-    struct ROA *roa)
+    struct CMS *roa)
 {
     char line[MAX_LINE + 1] = "";
     char key[MAX_LINE + 1] = "";
@@ -1829,7 +1838,7 @@ int roaFromFile(
     char *fname,
     int fmt,
     int doval,
-    struct ROA *rp)
+    struct CMS *rp)
 {
     int iReturn,
         fd;
@@ -1871,7 +1880,7 @@ int roaFromFile(
         }
     }
     // handle format-specific processing
-    ROA(rp, 0);                 // initialize the ROA
+    CMS(rp, 0);                 // initialize the ROA
     switch (fmt)
     {
     case FMT_PEM:
@@ -1914,7 +1923,7 @@ int roaFromFile(
 }
 
 int roaToFile(
-    struct ROA *r,
+    struct CMS *r,
     char *fname,
     int fmt)
 {

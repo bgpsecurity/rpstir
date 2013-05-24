@@ -3,7 +3,7 @@
 #include "util/cryptlib_compat.h"
 #include "util/hashutils.h"
 #include "util/logging.h"
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 #include "rpki-object/certificate.h"
 
 
@@ -86,7 +86,7 @@ bool check_signature(
     }
     buf = (uchar *) calloc(1, bsize);
     encode_casn(&hicertp->toBeSigned.subjectPublicKeyInfo.self, buf);
-    sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA);
+    sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA1);
     if (sidsize < 0)
     {
         LOG(LOG_ERR, "gen_hash failed");
@@ -252,7 +252,7 @@ int writeHashedPublicKey(
     uchar *bitval;
     int siz = readvsize_casn(keyp, &bitval);
     uchar hashbuf[24];
-    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA);
+    siz = gen_hash(&bitval[1], siz - 1, hashbuf, CRYPT_ALGO_SHA1);
     free(bitval);
     if (bad)
         hashbuf[0]++;
@@ -441,4 +441,48 @@ bool make_IPAddrOrRange(
     }
 
     return true;
+}
+
+bool has_non_inherit_resources(
+    struct Certificate *cert)
+{
+    struct Extension *ext;
+
+    ext = find_extension(&cert->toBeSigned.extensions, id_pe_ipAddrBlock,
+                         false);
+    if (ext)
+    {
+        struct IpAddrBlock *ip_ext = &ext->extnValue.ipAddressBlock;
+        struct IPAddressFamilyA *family;
+        for (family = (struct IPAddressFamilyA *)member_casn(&ip_ext->self, 0);
+             family != NULL;
+             family = (struct IPAddressFamilyA *)next_of(&family->self))
+        {
+            if (size_casn(&family->ipAddressChoice.inherit) <= 0)
+            {
+                return true;
+            }
+        }
+    }
+
+    ext = find_extension(&cert->toBeSigned.extensions, id_pe_autonomousSysNum,
+                         false);
+    if (ext)
+    {
+        struct ASNum *as_ext = &ext->extnValue.autonomousSysNum;
+
+        if (size_casn(&as_ext->asnum.self) > 0 &&
+            size_casn(&as_ext->asnum.inherit) <= 0)
+        {
+            return true;
+        }
+
+        if (size_casn(&as_ext->rdi.self) > 0 &&
+            size_casn(&as_ext->rdi.inherit) <= 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

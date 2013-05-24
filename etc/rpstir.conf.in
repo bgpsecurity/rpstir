@@ -1,0 +1,124 @@
+# Sample rpstir configuration file. Copy this to @PACKAGE_SYS_CONF_FILE@
+# to use it system-wide.
+#
+# Default values are commented out. To change the default, uncomment the line
+# and edit the value. Configuration options that need to be filled in are
+# uncommented and have placeholder values. Edit the placeholders.
+#
+# Options for files (e.g., TrustAnchorLocators) or directories (e.g.,
+# RPKICacheDir) can take either absolute paths or paths relative to this
+# configuration file.
+
+# Database to use.
+Database some_database
+
+# User to connect to the database as.
+DatabaseUser some_user
+
+# Password of DatabaseUser above.
+DatabasePassword some_password
+
+# ODBC DSN for the Database. This should match one of the sections in your
+# odbc.ini file. For example, if there's a section "[myodbc]" in /etc/odbc.ini,
+# this configuration item could be set to "myodbc".
+DatabaseDSN myodbc
+
+# List of TALs to use. These should be stored locally such that only trusted
+# users can modify these files, i.e. they should normally be in
+# @pkgsysconfdir@. Here's more information on TALs:
+#
+# A trust anchor certificate in the RPKI is obtained through a long term
+# Trust Anchor Locator (TAL), which allows distribution via a mix of
+# out-of-band and online means [RFC 6490].  In practice, relying parties
+# obtain TAL files through a trusted out-of-band channel of their choice.
+# For testing purposes, you can use the examples in @sampletadir@
+# or Rob Austein's collection of sample trust anchors found at
+# http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
+# Additionally, to get a copy of ARIN's TAL, go to
+# https://www.arin.net/public/rpki/tal/index.xhtml and follow the
+# directions there.
+#
+# If you want to get started testing things out and don't want to worry
+# about TALs yet, uncomment the section below and comment out the other
+# section with placeholder values for TrustAnchorLocators. Note that unlike
+# the other commented out configuration parameters, this is not the default,
+# just an example.
+#
+#     # DO NOT TRUST THESE FOR ANYTHING EVEN SLIGHTLY IMPORTANT.
+#     # They are for testing only.
+#     TrustAnchorLocators \
+#         @sampletadir@/afrinic.tal \
+#         @sampletadir@/apnic-rpki-root-afrinic-origin.tal \
+#         @sampletadir@/apnic-rpki-root-arin-origin.tal \
+#         @sampletadir@/apnic-rpki-root-iana-origin.tal \
+#         @sampletadir@/apnic-rpki-root-lacnic-origin.tal \
+#         @sampletadir@/apnic-rpki-root-ripe-origin.tal \
+#         @sampletadir@/lacnic.tal \
+#         @sampletadir@/ripe-ncc-root.tal
+#
+# If you know which TALs you want to use, put them in @pkgsysconfdir@
+# and list them below:
+TrustAnchorLocators \
+    bar.tal \
+    foo.tal
+
+# How much to log. Only messages that are at the specified level or more
+# important are logged. See syslog(3) for the possible values.
+#LogLevel LOG_INFO
+
+# How many downloads to attempt at one time.
+#DownloadConcurrency 24
+
+# Port that rcli listens on. Pick any available port above 1024.
+#RPKIPort 7344
+
+# How long to keep data for rpki-rtr.
+#RpkiRtrRetentionHours 96
+
+# If a ROA at one point had a trust chain back to a trust anchor
+# validating it, but then later lost this trust chain due to a
+# certificate expiring or being revoked by a CRL, then the ROA is
+# in a validation stale state.
+# Specifying no means that all such ROAs are eliminated from the output,
+# while yes treats all such ROAs as equivalent to valid ROAs.
+#RPKIAllowStaleValidationChain no
+
+# If a ROA or any certificate on its trust chain has never been on a
+# valid manifest, then there is reason to consider the ROA suspect.
+# Specifying no means that all such ROAs are eliminated from the output,
+# while yes treats all such ROAs as equivalent to valid ROAs.
+#RPKIAllowNoManifest yes
+
+# If a CRL is stale, i.e. the current time is past its next update time,
+# and a more recent replacement CRL has not arrived, then all the
+# certificates in the scope of this CRL and their descendants are suspect.
+# Specifying no eliminates all such objects, while yes allows them
+# into the output (essentially ignoring this type of staleness).
+#RPKIAllowStaleCRL yes
+
+# In the same way that a CRL can be stale, so can a manifest, which makes
+# all the certificates in its scope and their descendants stale.
+# Specifying no eliminates all such objects, while yes allows them
+# into the output (essentially ignoring this type of staleness).
+#RPKIAllowStaleManifest yes
+
+# Certificate can be added that have not yet become valid. Yes includes
+# these certificates, no excludes them.
+#RPKIAllowNotYet no
+
+# List of URIs of extra publication points to download from.
+#RPKIExtraPublicationPoints
+
+# Where to check for new versions of @PACKAGE_NAME@. If you want to disable
+# checking for new versions, set it to the exact string "none".
+#NewVersionCheck "https://rpki.bbn.com/check-version?package=@PACKAGE_NAME@&version=@PACKAGE_VERSION@"
+
+# Where to store the cache of the global RPKI.
+#RPKICacheDir @pkgcachedir@
+
+# Where to store additional logs such as rsync logs.  Note that
+# primary logging is performed by syslog, which by default goes to
+# /var/log/syslog, /var/log/messages, or another file in /var/log.
+# This setting only affects the secondary logging from programs such
+# as rsync.
+# LogDir @pkglogdir@

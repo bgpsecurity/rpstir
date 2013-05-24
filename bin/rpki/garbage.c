@@ -9,7 +9,8 @@
 #include "rpki/scmf.h"
 #include "rpki/sqhl.h"
 #include "rpki/err.h"
-#include "util/logutils.h"
+#include "config/config.h"
+#include "util/logging.h"
 
 /*
  * $Id$ 
@@ -30,6 +31,7 @@ static unsigned int theID;      // for passing to callback
 static sqlcountfunc countHandler;       // used by countCurrentCRLs
 static scmtab *certTable,
    *crlTable,
+   *gbrTable,
    *roaTable,
    *manifestTable;
 
@@ -41,8 +43,8 @@ static int handleTimestamps(
     scmsrcha * s,
     int numLine)
 {
-    conp = conp;
-    numLine = numLine;          // silence compiler warnings
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(numLine);
     currTimestamp = (char *)s->vec[0].valptr;
     prevTimestamp = (char *)s->vec[1].valptr;
     return 0;
@@ -57,7 +59,7 @@ static int handleIfStale(
     scmsrcha * s,
     int cnt)
 {
-    s = s;
+    UNREFERENCED_PARAMETER(s);
     char msg[600];
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
@@ -84,8 +86,8 @@ static int handleIfCurrent(
     scmsrcha * s,
     int cnt)
 {
-    s = s;
     char msg[128];
+    UNREFERENCED_PARAMETER(s);
     if (cnt == 0)
         return 0;               // exists another crl that is current
     snprintf(msg, 128, "update %s set flags = flags - %d where local_id=%d;",
@@ -105,7 +107,7 @@ static int countCurrentCRLs(
     scmsrcha * s,
     int numLine)
 {
-    numLine = numLine;
+    UNREFERENCED_PARAMETER(numLine);
     if (cntSrch == NULL)
     {
         cntSrch = newsrchscm(NULL, 1, 0, 1);
@@ -155,8 +157,8 @@ static int handleStaleMan(
     scmsrcha * s,
     int numLine)
 {
-    numLine = numLine;
-    conp = conp;
+    UNREFERENCED_PARAMETER(numLine);
+    UNREFERENCED_PARAMETER(conp);
     int len = *((unsigned int *)s->vec[1].valptr);
     staleManFiles[numStaleManFiles] = malloc(len + 1);
     memcpy(staleManFiles[numStaleManFiles], (char *)s->vec[0].valptr, len);
@@ -200,12 +202,13 @@ int main(
     // initialize
     argc = argc;
     argv = argv;                // silence compiler warnings
-    if (log_init("garbage.log", "garbage", LOG_DEBUG, LOG_DEBUG) != 0)
-    {
-        perror("Could not initialize garbage collector's logfile");
-        exit(1);
-    }
     (void)setbuf(stdout, NULL);
+    OPEN_LOG("garbage", LOG_USER);
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
+        exit(EXIT_FAILURE);
+    }
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
     connect = connectscm(scmp->dsn, msg, WHERESTR_SIZE);
@@ -214,6 +217,8 @@ int main(
     checkErr(certTable == NULL, "Cannot find table certificate\n");
     crlTable = findtablescm(scmp, "crl");
     checkErr(crlTable == NULL, "Cannot find table crl\n");
+    gbrTable = findtablescm(scmp, "ghostbusters");
+    checkErr(gbrTable == NULL, "Cannot find table ghostbusters\n");
     roaTable = findtablescm(scmp, "roa");
     checkErr(roaTable == NULL, "Cannot find table roa\n");
     manifestTable = findtablescm(scmp, "manifest");
@@ -296,6 +301,7 @@ int main(
     {
         handleStaleMan2(connect, certTable, staleManFiles[i]);
         handleStaleMan2(connect, crlTable, staleManFiles[i]);
+        handleStaleMan2(connect, gbrTable, staleManFiles[i]);
         handleStaleMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
@@ -314,6 +320,7 @@ int main(
     {
         handleFreshMan2(connect, certTable, staleManFiles[i]);
         handleFreshMan2(connect, crlTable, staleManFiles[i]);
+        handleFreshMan2(connect, gbrTable, staleManFiles[i]);
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
@@ -354,6 +361,7 @@ int main(
         exit(EXIT_FAILURE);
     }
 
-    log_close();
+    config_unload();
+    CLOSE_LOG();
     return 0;
 }

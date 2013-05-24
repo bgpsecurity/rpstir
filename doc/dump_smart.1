@@ -36,24 +36,6 @@ error it is a sequence of dot-separated numbers indicating where the
 error was found, e.g. 1.2.3.4 means in the fourth member of the third
 member of the second member of the first member of the ASN.1 encoding.
 
-.SH ENVIRONMENT
-
-.B dump_smart
-is affected by a very useful environment variable.
-
-.TP
-.B OIDTABLE
-The pathname to the OID table is kept in this environment variable.
-If provided,
-.B dump_smart
-can use the OID table to label every object identifier it recognizes,
-like this:
-.IP
-seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
-.IP
-To generate a suitable OID table for use with RPKI objects, see
-.BR make_oidtable (1).
-
 .SH ALTERNATIVES
 
 .B dump_smart

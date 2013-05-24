@@ -1,5 +1,0 @@
-rsync://example.com/./a/
-rsync://example.com/c/./d/
-rsync://example.com/e/f/./
-rsync://example.com/g/h/.i/
-rsync://example.com/j/k/l./

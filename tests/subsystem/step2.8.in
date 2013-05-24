@@ -1,20 +1,27 @@
 #!@SHELL_BASH@
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
-. $RPKI_ROOT/lib/util/trap_errors
-
-# test functions
-. $RPKI_ROOT/tests/test.include
+@trap_errors@
 
 echo "Expecting 3 roa filenames"
-CMDLINE="query -s specs.2.6 -t roa -d filename"
+use_config_file "$TESTS_SRCDIR/specs.2.6.conf"
+CMDLINE="query -t roa -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 3
 
 echo "Expecting 2 roa filenames"
-CMDLINE="query -s specs.2.8 -t roa -d filename"
+use_config_file "$TESTS_SRCDIR/specs.2.8.conf"
+CMDLINE="query -t roa -d filename"
+check_num_output_lines "$CMDLINE" "query client failed" 2
+
+echo "Expecting 3 gbr filenames"
+use_config_file "$TESTS_SRCDIR/specs.2.6.conf"
+CMDLINE="query -t gbr -d filename"
+check_num_output_lines "$CMDLINE" "query client failed" 3
+
+echo "Expecting 2 gbr filenames"
+use_config_file "$TESTS_SRCDIR/specs.2.8.conf"
+CMDLINE="query -t gbr -d filename"
 check_num_output_lines "$CMDLINE" "query client failed" 2
 
 echo $0 PASS

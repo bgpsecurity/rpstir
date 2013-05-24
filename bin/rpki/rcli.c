@@ -32,7 +32,8 @@
 #include "rpki/myssl.h"
 #include "rpki/cms/roa_utils.h"
 #include "rpki/err.h"
-#include "util/logutils.h"
+#include "config/config.h"
+#include "util/logging.h"
 
 
 static char *tdir = NULL;       // top level dir of the repository
@@ -64,7 +65,7 @@ static int saveState(
         free((void *)stmt);
         stmt = NULL;
         if (sta != 0)
-            log_msg(LOG_ERR, "Could not back up table %s to file backup_%s",
+            LOG(LOG_ERR, "Could not back up table %s to file backup_%s",
                     name, name);
     }
     return sta;
@@ -98,7 +99,7 @@ static int restoreState(
         stmt = NULL;
         sta = statementscm_no_data(conp, stmt);
         if (sta != 0)
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "Could not restore to table %s from file backup_%s", name,
                     name);
     }
@@ -118,15 +119,17 @@ static int deleteop(
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
-        log_msg(LOG_ERR, "Internal error in deleteop()");
+        LOG(LOG_ERR, "Internal error in deleteop()");
         return (-1);
     }
     // drop the database, destroying all tables in the process
     sta = deletedbscm(conp, scmp->db);
     if (sta == 0)
-        log_msg(LOG_NOTICE, "Delete operation succeeded");
+        LOG(LOG_NOTICE, "Delete database (%s) operation succeeded",
+            scmp->db);
     else
-        log_msg(LOG_ERR, "Delete operation failed: %s", geterrorscm(conp));
+        LOG(LOG_ERR, "Delete database (%s) operation failed: %s",
+            scmp->db, geterrorscm(conp));
     return (sta);
 }
 
@@ -143,25 +146,26 @@ static int createop(
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
-        log_msg(LOG_ERR, "Internal error in createop()");
+        LOG(LOG_ERR, "Internal error in createop()");
         return (-1);
     }
     // step 1: create the database itself
     sta = createdbscm(conp, scmp->db, scmp->dbuser);
     if (sta == 0)
-        log_msg(LOG_NOTICE, "Create database operation succeeded");
+        LOG(LOG_NOTICE, "Create database (%s) operation succeeded",
+            scmp->db);
     else
     {
-        log_msg(LOG_ERR, "Create database operation failed: %s",
-                geterrorscm(conp));
+        LOG(LOG_ERR, "Create database (%s) operation failed: %s",
+            scmp->db, geterrorscm(conp));
         return (sta);
     }
     // step 2: create all the tables in the database
     sta = createalltablesscm(conp, scmp);
     if (sta == 0)
-        log_msg(LOG_NOTICE, "Create tables operation succeeded");
+        LOG(LOG_NOTICE, "Create tables operation succeeded");
     else
-        log_msg(LOG_ERR, "Create table %s failed: %s",
+        LOG(LOG_ERR, "Create table %s failed: %s",
                 gettablescm(conp), geterrorscm(conp));
     return (sta);
 }
@@ -178,26 +182,26 @@ static int create2op(
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
-        log_msg(LOG_ERR, "Internal error in create2op()");
+        LOG(LOG_ERR, "Internal error in create2op()");
         return (-1);
     }
     if (topdir == NULL || topdir[0] == 0)
     {
-        log_msg(LOG_ERR, "Must specify a top level repository directory");
+        LOG(LOG_ERR, "Must specify a top level repository directory");
         return (-2);
     }
     // step 1: locate the metadata table
     mtab = findtablescm(scmp, "METADATA");
     if (mtab == NULL)
     {
-        log_msg(LOG_ERR, "Cannot find METADATA table");
+        LOG(LOG_ERR, "Cannot find METADATA table");
         return (-3);
     }
     // step 2: translate "topdir" into an absolute path
     tdir = r2adir(topdir);
     if (tdir == NULL)
     {
-        log_msg(LOG_ERR, "Invalid directory: %s", topdir);
+        LOG(LOG_ERR, "Invalid directory: %s", topdir);
         return (-4);
     }
     // step 3: init the metadata table
@@ -209,9 +213,9 @@ static int create2op(
     aone.vald = 0;
     sta = insertscm(conp, mtab, &aone);
     if (sta == 0)
-        log_msg(LOG_NOTICE, "Init metadata table succeeded");
+        LOG(LOG_NOTICE, "Init metadata table succeeded");
     else
-        log_msg(LOG_ERR, "Init metadata table failed: %s", geterrorscm(conp));
+        LOG(LOG_ERR, "Init metadata table failed: %s", geterrorscm(conp));
     return (sta);
 }
 
@@ -241,10 +245,14 @@ static void usage(
         ("  -d dir     delete the indicated file (using full pathname)\n");
     (void)printf("  -f file    add the indicated file\n");
     (void)printf("  -F file    add the indicated trusted file\n");
+    (void)printf("  -l         add files listed one per line on stdin\n");
+    (void)printf("  -L         add trusted files, one per line on stdin\n");
     (void)printf("  -p         run the socket listener in perpetual mode\n");
     (void)printf("  -t topdir  create all database tables\n");
     (void)printf("  -w port    start an rsync listener on port\n");
     (void)printf("  -x         destroy all database tables\n");
+    (void)printf("             Note that if you use -x without -t,\n");
+    (void)printf("             no other operations can succeed.\n");
     (void)
         printf("  -y         force operation: do not ask for confirmation\n");
     (void)printf("  -a         allow expired certificates\n");
@@ -273,30 +281,23 @@ static int yorn(
 }
 
 static int makesock(
-    char *porto,
+    uint16_t port,
     int *protosp)
 {
     struct sockaddr_in sinn;
     struct sockaddr_in sout;
     socklen_t leen;
-    uint16_t port;
     int protos;
     int sta;
-    int consumed;
     static int64_t num_accepted_connections = 0;
     static int64_t num_failed_connections = 0;
     int one = 1;
     int s;
 
-    if (sscanf(porto, "%" SCNu16 "%n", &port, &consumed) < 1 ||
-        porto[consumed] != '\0')
-    {
-        return (-1);
-    }
     protos = *protosp;
     if (protos < 0)
     {
-        log_msg(LOG_INFO, "Creating a socket on port %" PRIu16, port);
+        LOG(LOG_INFO, "Creating a socket on port %" PRIu16, port);
         protos = socket(AF_INET, SOCK_STREAM, 0);
         if (protos < 0)
         {
@@ -308,7 +309,7 @@ static int makesock(
         sta = setsockopt(protos, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
         if (sta < 0)
         {
-            log_msg(LOG_WARNING, "Failed to set SO_REUSEADDR");
+            LOG(LOG_WARNING, "Failed to set SO_REUSEADDR");
             perror("Failed to set SO_REUSEADDR");
         }
 
@@ -332,20 +333,20 @@ static int makesock(
         }
         *protosp = protos;
     }
-    log_msg(LOG_INFO, "Waiting for a connection on port %s", porto);
+    LOG(LOG_INFO, "Waiting for a connection on port %" PRIu16, port);
     leen = sizeof(sout);
     s = accept(protos, (struct sockaddr *)&sout, &leen);
     if (s >= 0)
     {
         num_accepted_connections++;
-        log_msg(LOG_INFO, "New connection accepted on port %s (#%" PRId64 ")",
-                porto, num_accepted_connections);
+        LOG(LOG_INFO, "New connection accepted on port %" PRIu16 " (#%" PRId64 ")",
+                port, num_accepted_connections);
     }
     else
     {
         num_failed_connections++;
-        log_msg(LOG_ERR, "Failed to accept connection on port %s (failure #%"
-                PRId64 ")", porto, num_failed_connections);
+        LOG(LOG_ERR, "Failed to accept connection on port %" PRIu16 " (failure #%"
+                PRId64 ")", port, num_failed_connections);
     }
     // (void)close(protos);
     return (s);
@@ -398,7 +399,7 @@ static int aur(
     sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
     if (sta != 0)
     {
-        log_msg(LOG_ERR, "Error loading file %s/%s: %s", hdir, valu,
+        LOG(LOG_ERR, "Error loading file %s/%s: %s", hdir, valu,
                 err2string(sta));
         free((void *)outdir);
         free((void *)outfile);
@@ -613,7 +614,7 @@ static int sockline(
          * by A. Chi, 3/18/11. 
          */
         /*
-         * if ( (sta=probe(s)) < 0 ) { log_msg(LOG_ERR, "Probe error %d",
+         * if ( (sta=probe(s)) < 0 ) { LOG(LOG_ERR, "Probe error %d",
          * sta); return(sta); } 
          */
         sta = sock1line(s, &left, &ptr);
@@ -621,11 +622,11 @@ static int sockline(
             return sta;
         if (ptr == NULL)
             continue;
-        log_msg(LOG_INFO, "Sockline: %s", ptr);
+        LOG(LOG_DEBUG, "Sockline: %s", ptr);
         c = ptr[0];
         if (!isspace((int)(unsigned char)(ptr[1])))
         {
-            log_msg(LOG_ERR, "Invalid line: ignored");
+            LOG(LOG_ERR, "Invalid line: ignored");
             free((void *)ptr);
             continue;
         }
@@ -634,11 +635,11 @@ static int sockline(
         {
         case 'b':              /* begin */
         case 'B':
-            log_msg(LOG_INFO, "AUR beginning at %s", valu);
+            LOG(LOG_INFO, "AUR beginning at %s", valu);
             break;
         case 'e':
         case 'E':              /* end */
-            log_msg(LOG_INFO, "AUR ending at %s", valu);
+            LOG(LOG_INFO, "AUR ending at %s", valu);
             done = 1;
             break;
         case 'c':
@@ -652,51 +653,51 @@ static int sockline(
             break;
         case 'a':
         case 'A':              /* add */
-            log_msg(LOG_INFO, "AUR add request: %s", valu);
+            LOG(LOG_INFO, "AUR add request: %s", valu);
             sta = aur(scmp, conp, 'a', valu);   // , splitOnWhite(valu));
             if (sta < 0)
-                log_msg(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
-                log_msg(LOG_DEBUG, "Status was %d", sta);
+                LOG(LOG_DEBUG, "Status was %d", sta);
             break;
         case 'u':
         case 'U':              /* update */
-            log_msg(LOG_INFO, "AUR update request: %s", valu);
+            LOG(LOG_INFO, "AUR update request: %s", valu);
             sta = aur(scmp, conp, 'u', valu);   // , splitOnWhite(valu));
             if (sta < 0)
-                log_msg(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
-                log_msg(LOG_DEBUG, "Status was %d", sta);
+                LOG(LOG_DEBUG, "Status was %d", sta);
             break;
         case 'r':
         case 'R':              /* remove */
-            log_msg(LOG_INFO, "AUR remove request: %s", valu);
+            LOG(LOG_INFO, "AUR remove request: %s", valu);
             sta = aur(scmp, conp, 'r', valu);   // , NULL);
             if (sta < 0)
-                log_msg(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
-                log_msg(LOG_DEBUG, "Status was %d", sta);
+                LOG(LOG_DEBUG, "Status was %d", sta);
             break;
         case 'l':
         case 'L':              /* link */
-            log_msg(LOG_INFO, "AUR link request: %s", valu);
+            LOG(LOG_INFO, "AUR link request: %s", valu);
             break;
         case 'f':
         case 'F':              /* fatal error */
-            log_msg(LOG_INFO, "AUR fatal error: %s", valu);
+            LOG(LOG_INFO, "AUR fatal error: %s", valu);
             done = 1;
             break;
         case 'x':
         case 'X':              /* error */
-            log_msg(LOG_ERR, "AUR error: %s", valu);
+            LOG(LOG_ERR, "AUR error: %s", valu);
             break;
         case 'w':
         case 'W':              /* warning */
-            log_msg(LOG_WARNING, "AUR warning: %s", valu);
+            LOG(LOG_WARNING, "AUR warning: %s", valu);
             break;
         case 'i':
         case 'I':              /* information */
-            log_msg(LOG_INFO, "AUR message: %s", valu);
+            LOG(LOG_INFO, "AUR message: %s", valu);
             break;
         case 's':
         case 'S':              /* save */
@@ -713,7 +714,7 @@ static int sockline(
         case 0:
             break;
         default:
-            log_msg(LOG_INFO, "AUR invalid tag '%c' ignored", c);
+            LOG(LOG_INFO, "AUR invalid tag '%c' ignored", c);
             break;
         }
         free((void *)ptr);
@@ -741,11 +742,11 @@ static int fileline(
         char *cp;
         for (cp = ptr; *cp >= ' '; cp++);
         *cp = 0;                // trim off CR/LF
-        log_msg(LOG_INFO, "Sockline: %s", ptr);
+        LOG(LOG_DEBUG, "Sockline: %s", ptr);
         c = ptr[0];
         if (!isspace((int)(unsigned char)(ptr[1])))
         {
-            log_msg(LOG_ERR, "Invalid line: ignored");
+            LOG(LOG_ERR, "Invalid line: ignored");
             continue;
         }
         valu = afterwhite(ptr + 1);
@@ -753,11 +754,11 @@ static int fileline(
         {
         case 'b':              /* begin */
         case 'B':
-            log_msg(LOG_INFO, "AUR beginning at %s", valu);
+            LOG(LOG_INFO, "AUR beginning at %s", valu);
             break;
         case 'e':
         case 'E':              /* end */
-            log_msg(LOG_INFO, "AUR ending at %s", valu);
+            LOG(LOG_INFO, "AUR ending at %s", valu);
             done = 1;
             break;
         case 'c':
@@ -771,51 +772,51 @@ static int fileline(
             break;
         case 'a':
         case 'A':              /* add */
-            log_msg(LOG_INFO, "AUR add request: %s", valu);
+            LOG(LOG_INFO, "AUR add request: %s", valu);
             sta = aur(scmp, conp, 'a', valu);   // , splitOnWhite(valu));
             if (sta < 0)
-                log_msg(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
-                log_msg(LOG_DEBUG, "Status was %d", sta);
+                LOG(LOG_DEBUG, "Status was %d", sta);
             break;
         case 'u':
         case 'U':              /* update */
-            log_msg(LOG_INFO, "AUR update request: %s", valu);
+            LOG(LOG_INFO, "AUR update request: %s", valu);
             sta = aur(scmp, conp, 'u', valu);   // , splitOnWhite(valu));
             if (sta < 0)
-                log_msg(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
-                log_msg(LOG_DEBUG, "Status was %d", sta);
+                LOG(LOG_DEBUG, "Status was %d", sta);
             break;
         case 'r':
         case 'R':              /* remove */
-            log_msg(LOG_INFO, "AUR remove request: %s", valu);
+            LOG(LOG_INFO, "AUR remove request: %s", valu);
             sta = aur(scmp, conp, 'r', valu);   // , NULL);
             if (sta < 0)
-                log_msg(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
-                log_msg(LOG_DEBUG, "Status was %d", sta);
+                LOG(LOG_DEBUG, "Status was %d", sta);
             break;
         case 'l':
         case 'L':              /* link */
-            log_msg(LOG_INFO, "AUR link request: %s", valu);
+            LOG(LOG_INFO, "AUR link request: %s", valu);
             break;
         case 'f':
         case 'F':              /* fatal error */
-            log_msg(LOG_ERR, "AUR fatal error: %s", valu);
+            LOG(LOG_ERR, "AUR fatal error: %s", valu);
             done = -1;
             break;
         case 'x':
         case 'X':              /* error */
-            log_msg(LOG_ERR, "AUR error: %s", valu);
+            LOG(LOG_ERR, "AUR error: %s", valu);
             break;
         case 'w':
         case 'W':              /* warning */
-            log_msg(LOG_WARNING, "AUR warning: %s", valu);
+            LOG(LOG_WARNING, "AUR warning: %s", valu);
             break;
         case 'i':
         case 'I':              /* information */
-            log_msg(LOG_INFO, "AUR message: %s", valu);
+            LOG(LOG_INFO, "AUR message: %s", valu);
             break;
         case 's':
         case 'S':              /* save */
@@ -832,7 +833,7 @@ static int fileline(
         case 0:
             break;
         default:
-            log_msg(LOG_INFO, "AUR invalid tag '%c' ignored", c);
+            LOG(LOG_INFO, "AUR invalid tag '%c' ignored", c);
             break;
         }
     }
@@ -847,6 +848,8 @@ static int fileline(
 // -d object delete the given object
 // -f file add the given object
 // -F file add the given trusted object
+// -l add files listed one per line on stdin
+// -L add trusted files, one per line on stdin
 // -w port operate in wrapper mode using the given socket port
 // -p with -w indicates to run perpetually, e.g. as a daemon
 // -z run from file list instead of port
@@ -867,7 +870,6 @@ int main(
     char *outfull = NULL;
     char *outdir = NULL;
     char *tmpdsn = NULL;
-    char *password = NULL;
     char *ne;
     char *porto = NULL;
     char errmsg[1024];
@@ -877,6 +879,7 @@ int main(
     int do_delete = 0;
     int do_sockopts = 0;
     int do_fileopts = 0;
+    int use_filelist = 0;
     int perpetual = 0;
     int really = 0;
     int trusted = 0;
@@ -892,7 +895,7 @@ int main(
         usage();
         return (1);
     }
-    while ((c = getopt(argc, argv, "t:xyhad:f:F:w:z:pm:c:s")) != EOF)
+    while ((c = getopt(argc, argv, "t:xyhad:f:F:lLwz:pm:c:s")) != EOF)
     {
         switch (c)
         {
@@ -919,9 +922,13 @@ int main(
         case 'f':
             thefile = optarg;
             break;
+        case 'L':
+            trusted++;
+        case 'l':
+            use_filelist++;
+            break;
         case 'w':
             do_sockopts++;
-            porto = optarg;
             break;
         case 'z':
             do_fileopts++;
@@ -954,17 +961,18 @@ int main(
         return (1);
     }
     if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 &&
-        thefile == 0 && thedelfile == 0 && skifile == 0)
+        thefile == 0 && thedelfile == 0 && skifile == 0 && use_filelist == 0)
     {
         (void)printf("You need to specify at least one operation "
                      "(e.g. -f file).\n");
         usage();
         return (1);
     }
-    if (log_init("rcli.log", "rcli", LOG_DEBUG, LOG_DEBUG) != 0)
+    OPEN_LOG("rcli", LOG_USER);
+    if (!my_config_load())
     {
-        perror("Could not initialize rcli log file");
-        exit(1);
+        LOG(LOG_ERR, "can't load configuration");
+        exit(EXIT_FAILURE);
     }
     if (force == 0)
     {
@@ -973,7 +981,7 @@ int main(
             ians = yorn("Do you REALLY want to delete all database tables");
             if (ians <= 0)
             {
-                log_msg(LOG_NOTICE, "Delete operation cancelled");
+                LOG(LOG_NOTICE, "Delete operation cancelled");
                 return (1);
             }
             really++;
@@ -983,7 +991,7 @@ int main(
             ians = yorn("Do you REALLY want to create all database tables");
             if (ians <= 0)
             {
-                log_msg(LOG_NOTICE, "Create operation cancelled");
+                LOG(LOG_NOTICE, "Create operation cancelled");
                 return (1);
             }
             really++;
@@ -992,7 +1000,7 @@ int main(
     scmp = initscm();
     if (scmp == NULL)
     {
-        log_msg(LOG_ERR, "Internal error: cannot initialize database schema");
+        LOG(LOG_ERR, "Internal error: cannot initialize database schema");
         return (-2);
     }
     /*
@@ -1003,35 +1011,18 @@ int main(
      * A test dsn is needed for operations that operate on the overall
      * database state as opposed to the rpki tables, namely the create and
      * delete operations.
-     * 
-     * Note that this code is done here in main() rather than in a subroutine
-     * in order to avoid passing parameter(s) on the stack that contain the
-     * root database password. 
      */
     if ((do_create + do_delete) > 0)
     {
         /*
-         * These privileged operations will need a password. 
+         * Note that in the following line, we do not intend to edit
+         * the database named "information_schema".  We are simply
+         * filling in the "database name" parameter with something
+         * that is guaranteed to be valid for MySQL.
          */
-        password = getenv("RPKI_ROOTPASSWORD"); /* can be defined by
-                                                 * environment variable */
-        if (password == NULL)   /* env variable does not specify password */
-        {
-            /*
-             * note: getpass manpage states that "this function is obsolete,
-             * do not use" and it is possible to write a local one, but leave
-             * this for now 
-             */
-            password = getpass("Enter MySQL root password: ");
-        }
-        /*
-         * Note that in the following line, we do not intend to edit the
-         * database named "mysql".  We are simply filling in the "database
-         * name" parameter with something that is guaranteed to be valid. 
-         */
-        tmpdsn = makedsnscm(scmp->dsnpref, "mysql", "root", password);
-        if (password != NULL)
-            memset(password, 0, strlen(password));
+        tmpdsn = makedsnscm(scmp->dsnpref, "information_schema",
+                            CONFIG_DATABASE_USER_get(),
+                            CONFIG_DATABASE_PASSWORD_get());
         if (tmpdsn == NULL)
         {
             membail();
@@ -1042,7 +1033,7 @@ int main(
         free((void *)tmpdsn);
         if (testconp == NULL)
         {
-            log_msg(LOG_ERR, "Cannot connect to DSN: %s", errmsg);
+            LOG(LOG_ERR, "Cannot connect to DSN: %s", errmsg);
             freescm(scmp);
             return (-1);
         }
@@ -1052,7 +1043,7 @@ int main(
         realconp = connectscm(scmp->dsn, errmsg, 1024);
         if (realconp == NULL)
         {
-            log_msg(LOG_ERR, "Cannot connect to DSN %s: %s", scmp->dsn,
+            LOG(LOG_ERR, "Cannot connect to DSN %s: %s", scmp->dsn,
                     errmsg);
             freescm(scmp);
             return (-1);
@@ -1075,9 +1066,10 @@ int main(
         testconp = NULL;
     }
     /*
-     * If there has been an error, bail out. 
+     * If there has been an error or if we're done because the database was
+     * just deleted and not re-created, bail out.
      */
-    if (sta < 0)
+    if (sta < 0 || (do_delete > 0 && do_create == 0))
     {
         if (realconp != NULL)
             disconnectscm(realconp);
@@ -1094,9 +1086,8 @@ int main(
         realconp = connectscm(scmp->dsn, errmsg, 1024);
         if (realconp == NULL)
         {
-            if (do_delete == 0)
-                log_msg(LOG_ERR, "Cannot connect to DSN %s: %s",
-                        scmp->dsn, errmsg);
+            LOG(LOG_ERR, "Cannot connect to DSN %s: %s",
+                scmp->dsn, errmsg);
             freescm(scmp);
             if (tdir != NULL)
                 free((void *)tdir);
@@ -1116,12 +1107,12 @@ int main(
     {
         tdir = retrieve_tdir(scmp, realconp, &sta);
         if (tdir == NULL)
-            log_msg(LOG_ERR,
+            LOG(LOG_ERR,
                     "Cannot retrieve top level repository info from DB");
     }
     if (sta == 0)
     {
-        log_msg(LOG_INFO, "Top level repository directory is %s", tdir);
+        LOG(LOG_INFO, "Top level repository directory is %s", tdir);
         tdirlen = strlen(tdir);
     }
     /*
@@ -1129,7 +1120,7 @@ int main(
      */
     OpenSSL_add_all_algorithms();
     ERR_load_crypto_strings();
-    log_msg(LOG_NOTICE, "Rsync client session started");
+    LOG(LOG_NOTICE, "Rsync client session started");
     if (thefile != NULL && sta == 0)
     {
         // Check that the file is in the repository, ask if not and force is
@@ -1155,34 +1146,92 @@ int main(
                     sta = 1;
             }
             if (sta == 1)
-                log_msg(LOG_NOTICE, "File operation cancelled");
+                LOG(LOG_NOTICE, "File operation cancelled");
             if (sta == 0)
             {
-                log_msg(LOG_INFO, "Attempting to add file %s", outfile);
+                LOG(LOG_INFO, "Attempting add: %s", outfile);
                 setallowexpired(allowex);
                 sta = add_object(scmp, realconp, outfile, outdir, outfull,
                                  trusted);
                 if (sta < 0)
                 {
-                    log_msg(LOG_ERR,
-                            "Could not add file %s: error %s (%d)",
+                    LOG(LOG_ERR,
+                            "Add failed: %s: error %s (%d)",
                             thefile, err2string(sta), sta);
                     if (sta == ERR_SCM_SQL)
                     {
                         ne = geterrorscm(realconp);
                         if (ne != NULL && ne != 0)
-                            log_msg(LOG_ERR, "\t%s", ne);
+                            LOG(LOG_ERR, "\t%s", ne);
                     }
                 }
                 else
-                    log_msg(LOG_INFO, "Add operation succeeded");
+                    LOG(LOG_INFO, "Add succeeded: %s", outfile);
             }
             free((void *)outdir);
             free((void *)outfile);
             free((void *)outfull);
         }
         else
-            log_msg(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "%s (%d)", err2string(sta), sta);
+    }
+    if (use_filelist > 0 && sta == 0)
+    {
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+        int status;
+
+        setallowexpired(allowex);
+        while ((read = getline(&line, &len, stdin)) != -1)
+        {
+            if (read == 0)
+                continue;
+
+            // Trim newline and skip line if empty
+            if (line[read - 1] == '\n')
+                line[read - 1] = '\0';
+            if (strlen(line) == 0)
+                continue;
+
+            // Split directory and file components of path
+            status = splitdf(NULL, NULL, line, &outdir, &outfile, &outfull);
+            if (status != 0)
+            {
+                LOG(LOG_ERR, "%s (%d)", err2string(sta), status);
+                continue;
+            }
+
+            LOG(LOG_INFO, "Attempting add: %s", outfile);
+
+            // Warn if file not within repository directory
+            if (strncmp(tdir, outdir, tdirlen) != 0)
+                LOG(LOG_WARNING, "%s is not in the repository", line);
+
+            // Add
+            status = add_object(scmp, realconp, outfile, outdir, outfull,
+                                trusted);
+            if (status == 0)
+            {
+                LOG(LOG_INFO, "Add succeeded: %s", outfile);
+            }
+            else
+            {
+                LOG(LOG_ERR, "Add failed: %s: error %s (%d)",
+                    line, err2string(status), status);
+                if (status == ERR_SCM_SQL)
+                {
+                    ne = geterrorscm(realconp);
+                    if (ne != NULL && ne != 0)
+                        LOG(LOG_ERR, "\t%s", ne);
+                }
+            }
+            free((void *)outdir);
+            free((void *)outfile);
+            free((void *)outfull);
+        }
+
+        free(line);
     }
     if (thedelfile != NULL && sta == 0)
     {
@@ -1192,27 +1241,27 @@ int main(
             sta = delete_object(scmp, realconp, outfile, outdir, outfull, 0);
             if (sta < 0)
             {
-                log_msg(LOG_ERR,
+                LOG(LOG_ERR,
                         "Could not delete file %s: error %s (%d)",
                         thedelfile, err2string(sta), sta);
                 if (sta == ERR_SCM_SQL)
                 {
                     ne = geterrorscm(realconp);
                     if (ne != NULL && ne != 0)
-                        log_msg(LOG_ERR, "\t%s", ne);
+                        LOG(LOG_ERR, "\t%s", ne);
                 }
             }
             else
-                log_msg(LOG_INFO, "Delete operation succeeded (%s removed)",
+                LOG(LOG_INFO, "Delete operation succeeded (%s removed)",
                         thedelfile);
             free((void *)outdir);
             free((void *)outfile);
             free((void *)outfull);
         }
         else
-            log_msg(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
     }
-    if ((do_sockopts + do_fileopts) > 0 && porto != NULL && sta == 0)
+    if ((do_sockopts + do_fileopts) > 0 && sta == 0)
     {
         int protos = (-1);
         const int max_makesock_attempts = 10;
@@ -1221,17 +1270,18 @@ int main(
         {
             if (do_sockopts > 0)
             {
-                s = makesock(porto, &protos);
+                uint16_t port = CONFIG_RPKI_PORT_get();
+                s = makesock(port, &protos);
                 if (s < 0)
                 {
                     makesock_failures++;
-                    log_msg(LOG_ERR,
-                            "Failed to listen on port %s (failure #%d)", porto,
+                    LOG(LOG_ERR,
+                            "Failed to listen on port %" PRIu16 " (failure #%d)", port,
                             makesock_failures);
                     sleep(1);
                     if (makesock_failures >= max_makesock_attempts)
                     {
-                        log_msg(LOG_ERR,
+                        LOG(LOG_ERR,
                                 "%d failed attempts to create socket. Aborting.",
                                 max_makesock_attempts);
                         sta = -1;
@@ -1241,43 +1291,43 @@ int main(
                 else
                 {
                     makesock_failures = 0;
-                    log_flush();
+                    FLUSH_LOG();
                     sta = sockline(scmp, realconp, s);
-                    log_msg(LOG_INFO, "Socket connection closed");
-                    log_flush();
+                    LOG(LOG_INFO, "Socket connection closed");
+                    FLUSH_LOG();
                     (void)close(s);
                 }
             }
-            if (do_fileopts > 0)
+            if (do_fileopts > 0 && porto != NULL)
             {
                 if (!isatty(0))
                 {
-                    log_msg(LOG_DEBUG, "Opening stdin");
+                    LOG(LOG_DEBUG, "Opening stdin");
                     sfile = stdin;
                     sta = fileline(scmp, realconp, sfile);
                 }
                 else
                 {
-                    log_msg(LOG_DEBUG, "Opening a socket cmdfile %s", porto);
+                    LOG(LOG_DEBUG, "Opening a socket cmdfile %s", porto);
                     sfile = fopen(porto, "r");
                     if (sfile == NULL)
-                        log_msg(LOG_ERR, "Could not open cmdfile");
+                        LOG(LOG_ERR, "Could not open cmdfile");
                     else
                     {
                         sta = fileline(scmp, realconp, sfile);
-                        log_msg(LOG_DEBUG, "Cmdfile closed");
+                        LOG(LOG_DEBUG, "Cmdfile closed");
                         (void)fclose(sfile);
                     }
                 }
             }
             if (sta == 0 && skifile)
             {
-                log_msg(LOG_DEBUG, "Starting skifile %s", skifile);
+                LOG(LOG_DEBUG, "Starting skifile %s", skifile);
                 sta = read_SKI_blocks(scmp, realconp, skifile);
                 if (sta > 0)
                     sta = 0;
                 if (sta)
-                    log_msg(LOG_ERR, "Error with skifile: %s (%d)",
+                    LOG(LOG_ERR, "Error with skifile: %s (%d)",
                             err2string(sta), sta);
             }
         } while (perpetual > 0);
@@ -1286,12 +1336,12 @@ int main(
     }
     if (sta == 0 && skifile)
     {
-        log_msg(LOG_DEBUG, "Starting skifile %s", skifile);
+        LOG(LOG_DEBUG, "Starting skifile %s", skifile);
         sta = read_SKI_blocks(scmp, realconp, skifile);
         if (sta > 0)
             sta = 0;
         if (sta)
-            log_msg(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta),
+            LOG(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta),
                     sta);
     }
     (void)ranlast(scmp, realconp, "RSYNC");
@@ -1301,7 +1351,8 @@ int main(
     freescm(scmp);
     if (tdir != NULL)
         free((void *)tdir);
-    log_msg(LOG_NOTICE, "Rsync client session ended");
-    log_close();
+    LOG(LOG_NOTICE, "Rsync client session ended");
+    config_unload();
+    CLOSE_LOG();
     return (sta);
 }

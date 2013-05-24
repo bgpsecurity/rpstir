@@ -24,7 +24,7 @@
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/certificate.h"
 #include "rpki/err.h"
-#include "util/logutils.h"
+#include "util/logging.h"
 #include "util/stringutils.h"
 
 #define INFO_FLAG 0x1
@@ -37,7 +37,7 @@
 struct write_port *global_wport;
 
 #ifndef UNREFERENCED_PARAMETER
-#define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
+#define UNREFERENCED_PARAMETER(A) ((void)A)
 #endif
 
 #endif

@@ -12,7 +12,6 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <rpki-asn1/certificate.h>
-#include <rpki-asn1/roa.h>
 #include <rpki-object/cms/cms.h>
 #include <casn/casn.h>
 #include "util/hashutils.h"
@@ -45,8 +44,8 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
-    ROA(&roa, (ushort) 0);
+    struct CMS cms;
+    CMS(&cms, (ushort) 0);
     if (argc < 4)
     {
         fprintf(stderr, "Usage: CMSfile EEkeyfile rehashFile(s)\n");
@@ -54,7 +53,7 @@ int main(
     }
     strcpy(keyring.label, "label");
     strcpy(keyring.password, "password");
-    if (get_casn_file(&roa.self, argv[1], 0) < 0)
+    if (get_casn_file(&cms.self, argv[1], 0) < 0)
         fatal(1, "CMS file");
     char *c = strrchr(argv[1], (int)'.');
     if (!c || (strcmp(c, ".man") && strcmp(c, ".mft") && strcmp(c, ".mnf")))
@@ -65,7 +64,7 @@ int main(
     uchar *tbh;
     int tbh_lth;
     struct Manifest *manp =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     for (fname = argv[i = 3]; fname; fname = argv[++i])
     {
         struct stat statbuf;
@@ -94,10 +93,10 @@ int main(
         free(tbh);
         write_casn(&fahp->hash, hashbuf, j + 1);
     }
-    const char *msg = signCMS(&roa, argv[2], 0);
+    const char *msg = signCMS(&cms, argv[2], 0);
     if (msg)
         fprintf(stderr, "%s\n", msg);
     else
-        put_casn_file(&roa.self, argv[1], 0);
+        put_casn_file(&cms.self, argv[1], 0);
     return 0;
 }

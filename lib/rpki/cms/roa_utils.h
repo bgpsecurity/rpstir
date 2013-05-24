@@ -29,7 +29,7 @@
 #include <openssl/bn.h>
 
 // Generated from the asn definition
-#include <rpki-asn1/roa.h>
+#include <rpki-asn1/cms.h>
 
 #include "rpki/err.h"
 
@@ -73,7 +73,7 @@ struct badfile {
 int roaFromConfig(
     char *fname,
     int doval,
-    struct ROA *rp);
+    struct CMS *rp);
 
 /*
  * This function reads the file at "fname" and parses it.  Presuming the file
@@ -89,7 +89,7 @@ int roaFromConfig(
  */
 
 int roaToConfig(
-    struct ROA *r,
+    struct CMS *r,
     char *fname);
 
 /*
@@ -107,7 +107,7 @@ int roaFromFile(
     char *fname,
     int fmt,
     int doval,
-    struct ROA *rp);
+    struct CMS *rp);
 
 /*
  * This is a more generalized function for similar purposes.  It reads in a
@@ -130,7 +130,7 @@ int roaFromFile(
  */
 
 int roaToFile(
-    struct ROA *r,
+    struct CMS *r,
     char *fname,
     int fmt);
 
@@ -144,7 +144,7 @@ int roaToFile(
  */
 
 int roaGenerateFilter(
-    struct ROA *r,
+    struct CMS *r,
     uchar * cert,
     FILE * fp,
     char *str,
@@ -164,14 +164,14 @@ int roaGenerateFilter(
  */
 
 int roaGenerateFilter2(
-    struct ROA *r,
+    struct CMS *r,
     char **str);
 /*
  * Similar to above but allocates space for result as needed 
  */
 
 int roaGetIPAddresses(
-    struct ROA *r,
+    struct CMS *r,
     char **str);
 /*
  * Fills the IP addresses assigned by a ROA into a multiline string, where
@@ -179,7 +179,7 @@ int roaGetIPAddresses(
  */
 
 unsigned char *roaSKI(
-    struct ROA *r);
+    struct CMS *r);
 
 /*
  * This utility function extracts the SKI from a ROA and formats it in the
@@ -191,7 +191,7 @@ unsigned char *roaSKI(
  */
 
 unsigned char *roaSignature(
-    struct ROA *r,
+    struct CMS *r,
     int *lenp);
 
 /*
@@ -202,16 +202,16 @@ unsigned char *roaSignature(
  * returns NULL. 
  */
 
-int roaAS_ID(
-    struct ROA *r);
+uint32_t roaAS_ID(
+    struct CMS *r);
 
 /*
- * This utility function extracts the AS# from a ROA and returns it. On
- * success this function returns a non-zero number, On failure it returns 0. 
+ * This utility function extracts the AS# from a ROA and returns it. Only
+ * call this after roaValidate() passes.
  */
 
 int roaValidate(
-    struct ROA *r);
+    struct CMS *r);
 
 /*
  * This function performs all validations steps on a ROA that do not require
@@ -220,17 +220,26 @@ int roaValidate(
  */
 
 int manifestValidate(
-    struct ROA *r,
+    struct CMS *r,
     int *stalep);
 
 /*
- * This function performs all validations steps on a manifest that do not
- * require database access.  On success it returns 0; on failure, it returns a 
- * negative error code. 
+ * This function performs all validation steps on a manifest that do
+ * not require database access.  On success it returns 0; on failure,
+ * it returns a negative error code.
+ */
+
+int ghostbustersValidate(
+    struct CMS *cms);
+
+/*
+ * This function performs all validation steps on a ghostbusters
+ * record that do not require database access.  On success it returns
+ * 0; on failure, it returns a negative error code.
  */
 
 extern int roaValidate2(
-    struct ROA *r);
+    struct CMS *r);
 
 /*
  * This function performs all validations steps on a ROA that require an X509
@@ -256,7 +265,7 @@ int check_fileAndHash(
     int inhashtotlen);
 
 int manifestValidate2(
-    struct ROA *r,
+    struct CMS *r,
     char *dir,
     struct badfile ***badfilesppp);
 
@@ -272,7 +281,7 @@ void free_badfiles(
     struct badfile **badfilespp);
 
 void roaFree(
-    struct ROA *r);
+    struct CMS *r);
 
 /*
  * This function frees all memory allocated when "r" was created. It is
@@ -282,7 +291,7 @@ void roaFree(
  */
 
 int check_sig(
-    struct ROA *rp,
+    struct CMS *rp,
     struct Certificate *certp);
 
 /*
@@ -304,5 +313,5 @@ int decode_b64(
  */
 
 #ifndef UNREFERENCED_PARAMETER
-#define UNREFERENCED_PARAMETER(A) { void *craig = (void *)(A); craig++; }
+#define UNREFERENCED_PARAMETER(A) ((void)A)
 #endif

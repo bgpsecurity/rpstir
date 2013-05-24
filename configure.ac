@@ -2,9 +2,15 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.5, rpstir-support@bbn.com)
+AC_INIT(rpstir, 0.7, rpstir-support@bbn.com)
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
+PACKAGE_NAME_UC="RPSTIR"
+AC_SUBST([PACKAGE_NAME_UC])
+AC_DEFINE_UNQUOTED([PACKAGE_NAME_UC], ["$PACKAGE_NAME_UC"])
+CONFIG_ENV_VAR="RPSTIR_CONFIG"
+AC_SUBST([CONFIG_ENV_VAR])
+AC_DEFINE_UNQUOTED([CONFIG_ENV_VAR], ["$CONFIG_ENV_VAR"])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
@@ -25,6 +31,7 @@ AC_PROG_RANLIB
 #AC_PROG_LIBTOOL
 AC_PROG_SED
 AM_PATH_PYTHON([2.6])
+AC_PROG_LN_S
 
 # Ideally this should be a check for how to create a temporary file on each platform,
 # but this seems to work for now on multiple platforms.
@@ -225,7 +232,11 @@ AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getline getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+if test "$ac_cv_func_getline" != yes; then
+    AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
+fi
+
 
 # warn if the target isn't 32-bit
 AC_CHECK_SIZEOF([int])
@@ -237,191 +248,9 @@ fi
 
 
 AC_CONFIG_FILES([
-    etc/envir.setup
     Makefile
-    tests/test.include
-    INSTRUCTIONS
+    README
 ])
-
-AC_CONFIG_FILES([bin/rpki/chaser.sh],
-                [chmod +x bin/rpki/chaser.sh])
-
-AC_CONFIG_FILES([bin/rpki/results.py],
-                [chmod +x bin/rpki/results.py])
-
-AC_CONFIG_FILES([bin/rpki/run_from_TALs.sh],
-                [chmod +x bin/rpki/run_from_TALs.sh])
-
-AC_CONFIG_FILES([bin/rpki/updateTA.py],
-                [chmod +x bin/rpki/updateTA.py])
-
-AC_CONFIG_FILES([bin/rpki-rsync/rsync_cord.py],
-                [chmod +x bin/rpki-rsync/rsync_cord.py])
-
-AC_CONFIG_FILES([bin/rpki-statistics/for-each-run.sh],
-                [chmod +x bin/rpki-statistics/for-each-run.sh])
-
-AC_CONFIG_FILES([bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py],
-                [chmod +x bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py])
-
-AC_CONFIG_FILES([bin/rpki-statistics/for-each-run-helpers/validation-time.py],
-                [chmod +x bin/rpki-statistics/for-each-run-helpers/validation-time.py])
-
-AC_CONFIG_FILES([bin/rpki-statistics/run-times.py],
-                [chmod +x bin/rpki-statistics/run-times.py])
-
-AC_CONFIG_FILES([tests/subsystem/rtr/badPDUs.py],
-                [chmod +x tests/subsystem/rtr/badPDUs.py])
-
-AC_CONFIG_FILES([tests/subsystem/rtr/test.sh],
-                [chmod +x tests/subsystem/rtr/test.sh])
-
-AC_CONFIG_FILES([tests/subsystem/initDB],
-                [chmod +x tests/subsystem/initDB])
-
-AC_CONFIG_FILES([tests/subsystem/rpki-local-ta/initDB4],
-                [chmod +x tests/subsystem/rpki-local-ta/initDB4])
-
-AC_CONFIG_FILES([tests/subsystem/runSubsystemTest.sh],
-                [chmod +x tests/subsystem/runSubsystemTest.sh])
-
-AC_CONFIG_FILES([tests/subsystem/rpki-local-ta/runSubsystemTest4.sh],
-                [chmod +x tests/subsystem/rpki-local-ta/runSubsystemTest4.sh])
-
-AC_CONFIG_FILES([tests/subsystem/step1.1],
-                [chmod +x tests/subsystem/step1.1])
-
-AC_CONFIG_FILES([tests/subsystem/step1.2],
-                [chmod +x tests/subsystem/step1.2])
-
-AC_CONFIG_FILES([tests/subsystem/step1.3],
-                [chmod +x tests/subsystem/step1.3])
-
-AC_CONFIG_FILES([tests/subsystem/step1.4],
-                [chmod +x tests/subsystem/step1.4])
-
-AC_CONFIG_FILES([tests/subsystem/step1.5],
-                [chmod +x tests/subsystem/step1.5])
-
-AC_CONFIG_FILES([tests/subsystem/step1.6],
-                [chmod +x tests/subsystem/step1.6])
-
-AC_CONFIG_FILES([tests/subsystem/step1.7],
-                [chmod +x tests/subsystem/step1.7])
-
-AC_CONFIG_FILES([tests/subsystem/step1.8],
-                [chmod +x tests/subsystem/step1.8])
-
-AC_CONFIG_FILES([tests/subsystem/step1.9],
-                [chmod +x tests/subsystem/step1.9])
-
-AC_CONFIG_FILES([tests/subsystem/step2.1],
-                [chmod +x tests/subsystem/step2.1])
-
-AC_CONFIG_FILES([tests/subsystem/step2.2],
-                [chmod +x tests/subsystem/step2.2])
-
-AC_CONFIG_FILES([tests/subsystem/step2.3],
-                [chmod +x tests/subsystem/step2.3])
-
-AC_CONFIG_FILES([tests/subsystem/step2.4],
-                [chmod +x tests/subsystem/step2.4])
-
-AC_CONFIG_FILES([tests/subsystem/step2.5],
-                [chmod +x tests/subsystem/step2.5])
-
-AC_CONFIG_FILES([tests/subsystem/step2.6],
-                [chmod +x tests/subsystem/step2.6])
-
-AC_CONFIG_FILES([tests/subsystem/step2.7],
-                [chmod +x tests/subsystem/step2.7])
-
-AC_CONFIG_FILES([tests/subsystem/step2.8],
-                [chmod +x tests/subsystem/step2.8])
-
-AC_CONFIG_FILES([tests/subsystem/step3.1],
-                [chmod +x tests/subsystem/step3.1])
-
-AC_CONFIG_FILES([tests/subsystem/step3.2],
-                [chmod +x tests/subsystem/step3.2])
-
-AC_CONFIG_FILES([tests/subsystem/step3.3],
-                [chmod +x tests/subsystem/step3.3])
-
-AC_CONFIG_FILES([tests/subsystem/step3.4],
-                [chmod +x tests/subsystem/step3.4])
-
-AC_CONFIG_FILES([tests/subsystem/step3.5],
-                [chmod +x tests/subsystem/step3.5])
-
-AC_CONFIG_FILES([tests/subsystem/step3.6],
-                [chmod +x tests/subsystem/step3.6])
-
-AC_CONFIG_FILES([tests/subsystem/step3.7],
-                [chmod +x tests/subsystem/step3.7])
-
-AC_CONFIG_FILES([tests/subsystem/step3.8],
-                [chmod +x tests/subsystem/step3.8])
-
-AC_CONFIG_FILES([tests/subsystem/step3.9],
-                [chmod +x tests/subsystem/step3.9])
-
-AC_CONFIG_FILES([tests/subsystem/rpki-local-ta/step4],
-                [chmod +x tests/subsystem/rpki-local-ta/step4])
-
-AC_CONFIG_FILES([tests/system/testbed/src/create_objects.py],
-                [chmod +x tests/system/testbed/src/create_objects.py])
-
-AC_CONFIG_FILES([tests/system/testbed/src/generic_allocate.py],
-                [chmod +x tests/system/testbed/src/generic_allocate.py])
-
-AC_CONFIG_FILES([tests/system/testbed/src/rpkirepo.py],
-                [chmod +x tests/system/testbed/src/rpkirepo.py])
-
-AC_CONFIG_FILES([tests/system/testbed/src/testbed_create.py],
-                [chmod +x tests/system/testbed/src/testbed_create.py])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_all.sh],
-                [chmod +x tests/conformance/scripts/gen_all.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_all_CMSs.sh],
-                [chmod +x tests/conformance/scripts/gen_all_CMSs.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_all_CRLs.sh],
-                [chmod +x tests/conformance/scripts/gen_all_CRLs.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_all_MFTs.sh],
-                [chmod +x tests/conformance/scripts/gen_all_MFTs.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_all_ROAs.sh],
-                [chmod +x tests/conformance/scripts/gen_all_ROAs.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_all_certs.sh],
-                [chmod +x tests/conformance/scripts/gen_all_certs.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_child_ca.sh],
-                [chmod +x tests/conformance/scripts/gen_child_ca.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/gen_mft.sh],
-                [chmod +x tests/conformance/scripts/gen_mft.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/make_test_CMS.sh],
-                [chmod +x tests/conformance/scripts/make_test_CMS.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/make_test_CRL.sh],
-                [chmod +x tests/conformance/scripts/make_test_CRL.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/make_test_MFT.sh],
-                [chmod +x tests/conformance/scripts/make_test_MFT.sh])
-
-AC_CONFIG_FILES([tests/conformance/scripts/make_test_cert.sh],
-                [chmod +x tests/conformance/scripts/make_test_cert.sh])
-
-AC_CONFIG_FILES([tests/subsystem/testcases/tools/create_cert.py],
-                [chmod +x tests/subsystem/testcases/tools/create_cert.py])
-
-AC_CONFIG_FILES([tests/subsystem/testcases/tools/run_tc.py],
-                [chmod +x tests/subsystem/testcases/tools/run_tc.py])
 
 AC_CONFIG_LINKS([lib/rpki-asn1/casn.h:lib/casn/casn.h])
 

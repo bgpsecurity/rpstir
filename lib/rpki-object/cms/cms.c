@@ -13,21 +13,20 @@
 #include <time.h>
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
-#include <rpki-asn1/roa.h>
 
 #include "cms.h"
 
-// find the SID for this ROA and return it
+// find the SID for this CMS and return it
 static struct casn *findSID(
-    struct ROA *roap)
+    struct CMS *cmsp)
 {
     struct Certificate *certp;
     struct Extensions *extsp;
     struct Extension *extp;
 
-    // iterate through the roa's cert's extensions to find the SID
+    // iterate through the cms's cert's extensions to find the SID
     certp =
-        (struct Certificate *)member_casn(&roap->content.signedData.
+        (struct Certificate *)member_casn(&cmsp->content.signedData.
                                           certificates.self, 0);
     extsp = &certp->toBeSigned.extensions;
     extp = (struct Extension *)member_casn(&extsp->self, 0);
@@ -47,7 +46,7 @@ static struct casn *findSID(
 }
 
 const char *signCMS(
-    struct ROA *roa,
+    struct CMS *cms,
     const char *keyfilename,
     bool bad)
 {
@@ -68,20 +67,20 @@ const char *signCMS(
     // signer info
     // firat clear out any old stuff in signerInfos that may have been put
     // there by old code
-    while (num_items(&roa->content.signedData.signerInfos.self) > 0)
-        eject_casn(&roa->content.signedData.signerInfos.self, 0);
+    while (num_items(&cms->content.signedData.signerInfos.self) > 0)
+        eject_casn(&cms->content.signedData.signerInfos.self, 0);
     sigInfop =
         (struct SignerInfo *)
-        inject_casn(&(roa->content.signedData.signerInfos.self), 0);
+        inject_casn(&(cms->content.signedData.signerInfos.self), 0);
 
     // write the signature version (3) to the signer info
     write_casn_num(&sigInfop->version.self, 3);
 
     // find the SID 
-    if ((sidp = findSID(roa)) == NULL)
+    if ((sidp = findSID(cms)) == NULL)
         return "finding SID";
 
-    // copy the ROA's SID over to the signature's SID
+    // copy the CMS's SID over to the signature's SID
     copy_casn(&sigInfop->sid.subjectKeyIdentifier, sidp);
 
     // use sha256 as the algorithm
@@ -96,7 +95,7 @@ const char *signCMS(
     attrtdp =
         (struct AttrTableDefined *)inject_casn(&attrp->attrValues.self, 0);
     copy_casn(&attrtdp->contentType,
-              &roa->content.signedData.encapContentInfo.eContentType);
+              &cms->content.signedData.encapContentInfo.eContentType);
 
     // second attribute: message digest
     attrp = (struct Attribute *)inject_casn(&sigInfop->signedAttrs.self, 1);
@@ -106,7 +105,7 @@ const char *signCMS(
 
     // first pull out the content
     if ((tbs_lth =
-         readvsize_casn(&roa->content.signedData.encapContentInfo.eContent.
+         readvsize_casn(&cms->content.signedData.encapContentInfo.eContent.
                         self, &tbsp)) < 0)
         return "getting content";
 
@@ -277,7 +276,7 @@ const char *signCMSBlob(
 
     if (vsize_casn(&signerInfop->signedAttrs.self) == 0)
     {
-        if ((tbs_lth = vsize_casn(&encapContentInfop->eContent.self)) < 0)
+        if ((tbs_lth = vsize_casn(&encapContentInfop->eContent)) < 0)
         {
             errmsg = "sizing eContent";
             return errmsg;
@@ -289,7 +288,7 @@ const char *signCMSBlob(
             return errmsg;
         }
 
-        tbs_lth = read_casn(&encapContentInfop->eContent.self, tbsp);
+        tbs_lth = read_casn(&encapContentInfop->eContent, tbsp);
     }
     else
     {

@@ -1,8 +1,10 @@
 chaser
-chaser.sh
 garbage
+initialize
 query
 rcli
+results
 results.py
-run_from_TALs.sh
+synchronize
 updateTA.py
+upgrade

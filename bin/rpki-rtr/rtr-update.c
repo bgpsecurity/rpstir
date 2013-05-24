@@ -2,6 +2,8 @@
  * Get the next round of RTR data into the database
  ***********************/
 
+#include "util/logging.h"
+#include "config/config.h"
 #include "rpki/err.h"
 #include "rpki/scmf.h"
 #include "rpki/querySupport.h"
@@ -11,12 +13,6 @@
 #include <limits.h>
 #include <inttypes.h>
 #include <time.h>
-
-// number of hours to retain incremental updates
-// should be at least 24 + the maximum time between updates, since need
-// to always have not just all those within the last 24 hours but also
-// one more beyond these
-#define RETENTION_HOURS_DEFAULT 96
 
 static scm *scmp = NULL;
 static scmcon *connection = NULL;
@@ -73,17 +69,6 @@ static uint getLastSerialNumber(
     return lastSerialNum;
 }
 
-/*****
- * allows overriding of retention time for data via environment variable
- *****/
-static int retentionHours(
-    )
-{
-    if (getenv("RTR_RETENTION_HOURS") != NULL)
-        return atoi(getenv("RTR_RETENTION_HOURS"));
-    return RETENTION_HOURS_DEFAULT;
-}
-
 
 /******
  * callback that writes the data from a ROA into the update table
@@ -99,8 +84,9 @@ static int writeROAData(
         *end;
     char msg[1024];
     int sta;
-    conp = conp;
-    numLine = numLine;
+
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(numLine);
 
     if (!checkValidity((char *)s->vec[2].valptr, 0, scmp, connection))
         return -1;
@@ -120,7 +106,7 @@ static int writeROAData(
         snprintf(msg, sizeof(msg),
                  "insert ignore into %s values (%u, %u, \"%s\");",
                  fullTable->tabname, currSerialNum, asn, ptr);
-        statementscm_no_data(connection, msg);
+        sta = statementscm_no_data(connection, msg);
         checkErr(sta < 0, "Can't insert into %s", fullTable->tabname);
     }
     return 1;
@@ -141,14 +127,22 @@ int main(
     int first_time = 0;
     int force_update = 0;
 
-    if (argc < 2 || argc > 3)
+    if (argc < 1 || argc > 2)
     {
         fprintf(stderr,
-                "Usage: %s <staleness spec file> [<next serial number>]\n",
+                "Usage: %s [<next serial number>]\n",
                 argv[0]);
         fprintf(stderr, "\n");
         fprintf(stderr,
                 "The next serial number should only be specified in test mode.\n");
+        return EXIT_FAILURE;
+    }
+
+    OPEN_LOG("rtr-update", LOG_USER);
+
+    if (!my_config_load())
+    {
+        LOG(LOG_ERR, "can't load configuration");
         return EXIT_FAILURE;
     }
 
@@ -168,43 +162,32 @@ int main(
     sta = getuintscm(connection, &session_count);
     pophstmt(connection);
     checkErr(sta < 0, "Can't get results of querying rtr_session\n");
-    if (session_count != 1)
+    if (session_count == 0)
     {
-        sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_session;");
-        checkErr(sta < 0, "Can't truncate rtr_session");
+        LOG(LOG_ERR, "The rpki-rtr database isn't initialized.");
+        LOG(LOG_ERR, "See %s-rpki-rtr-initialize.", PACKAGE_NAME);
+        return EXIT_FAILURE;
+    }
+    else if (session_count != 1)
+    {
+        LOG(LOG_ERR,
+            "The rtr_session table has %u entries, which should never happen.",
+            session_count);
+        LOG(LOG_ERR,
+            "Consider running %s-rpki-rtr-clear and %s-rpki-rtr-initialize.",
+            PACKAGE_NAME, PACKAGE_NAME);
+        return EXIT_FAILURE;
+    }
 
-        sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_update;");
-        checkErr(sta < 0, "Can't truncate rtr_update");
-
-        sta = statementscm_no_data(connection, "TRUNCATE TABLE rtr_full;");
-        checkErr(sta < 0, "Can't truncate rtr_full");
-
-        sta =
-            statementscm_no_data(connection,
-                                 "TRUNCATE TABLE rtr_incremental;");
-        checkErr(sta < 0, "Can't truncate rtr_incremental");
-
-        sta =
-            statementscm_no_data(connection,
-                                 "INSERT INTO rtr_session (session_id) VALUES (FLOOR(RAND() * (1 << 16)));");
-        checkErr(sta < 0, "Can't generate a session id");
-
+    sta = newhstmt(connection);
+    checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
+    sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_update;");
+    checkErr(sta < 0, "Can't query rtr_update\n");
+    sta = getuintscm(connection, &update_count);
+    pophstmt(connection);
+    checkErr(sta < 0, "Can't get results of querying rtr_update\n");
+    if (update_count <= 0)
         first_time = 1;
-    }
-
-    // if there's a session but no updates, treat it as the first time
-    if (!first_time)
-    {
-        sta = newhstmt(connection);
-        checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-        sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_update;");
-        checkErr(sta < 0, "Can't query rtr_update\n");
-        sta = getuintscm(connection, &update_count);
-        pophstmt(connection);
-        checkErr(sta < 0, "Can't get results of querying rtr_update\n");
-        if (update_count <= 0)
-            first_time = 1;
-    }
 
     // delete any updates that weren't completed
     sta = statementscm_no_data(connection,
@@ -231,10 +214,10 @@ int main(
     {
         prevSerialNum = getLastSerialNumber(connection, scmp);
     }
-    if (argc > 2)
+    if (argc > 1)
     {
         force_update = 1;
-        if (sscanf(argv[2], "%" SCNu32, &currSerialNum) != 1)
+        if (sscanf(argv[1], "%" SCNu32, &currSerialNum) != 1)
         {
             fprintf(stderr,
                     "Error: next serial number must be a nonnegative integer\n");
@@ -265,7 +248,7 @@ int main(
         checkErr(sta < 0,
                  "Can't get results of querying rtr_update for unusual corner cases\n");
 
-        if (argc > 2)
+        if (argc > 1)
         {
             checkErr(dont_proceed,
                      "Error: rtr_update is full or in an unusual state, or the specified next serial number already exists\n");
@@ -279,7 +262,7 @@ int main(
 
     // setup up the query if this is the first time
     // note that the where string is set to only select valid roa's, where
-    // the definition of valid is given by the staleness specs
+    // the definition of valid is given by the configuration file
     if (roaSrch == NULL)
     {
         QueryField *field;
@@ -291,7 +274,6 @@ int main(
         field = findField("ski");
         addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
         roaSrch->wherestr[0] = 0;
-        parseStalenessSpecsFile(argv[1]);
         addQueryFlagTests(roaSrch->wherestr, 0);
         roaTable = findtablescm(scmp, "roa");
         checkErr(roaTable == NULL, "Cannot find table roa\n");
@@ -399,9 +381,10 @@ int main(
 
     snprintf(msg, sizeof(msg),
              "delete from rtr_update\n"
-             "where create_time < adddate(now(), interval -%d hour)\n"
+             "where create_time < adddate(now(), interval -%zu hour)\n"
              "and serial_num<>%u and serial_num<>%u;",
-             retentionHours(), prevSerialNum, currSerialNum);
+             CONFIG_RPKI_RTR_RETENTION_HOURS_get(),
+             prevSerialNum, currSerialNum);
     sta = statementscm_no_data(connection, msg);
     checkErr(sta < 0, "Can't delete expired update metadata");
 
@@ -419,6 +402,10 @@ int main(
                                "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
                                "where rtr_update.prev_serial_num is null;");
     checkErr(sta < 0, "Can't delete old rtr_incremental data");
+
+    config_unload();
+
+    CLOSE_LOG();
 
     return 0;
 }

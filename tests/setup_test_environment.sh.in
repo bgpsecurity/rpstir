@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+export TESTS_TOP_BUILDDIR="$(cd "@abs_top_builddir@" && pwd)"
+export TESTS_TOP_SRCDIR="$(cd "@abs_top_srcdir@" && pwd)"
+export TESTS_INCLUDE_CONFIG="$TESTS_TOP_BUILDDIR/tests/test.conf"
+
+. "$TESTS_TOP_BUILDDIR/tests/test.include"
+
+use_config_file "$TESTS_INCLUDE_CONFIG"
+
+PROG="$1"
+shift
+
+# Determine and export TESTS_BUILDDIR and TESTS_SRCDIR, which are the paths to
+# $PROG's directory in builddir and srcdir respectively.
+PROG_DIR="$(cd "$(dirname "$PROG")" && pwd)"
+case "$PROG_DIR" in
+    "$TESTS_TOP_BUILDDIR" | "$TESTS_TOP_SRCDIR")
+        export TESTS_BUILDDIR="$TESTS_TOP_BUILDDIR"
+        export TESTS_SRCDIR="$TESTS_TOP_SRCDIR"
+        ;;
+    "$TESTS_TOP_BUILDDIR"/*)
+        export TESTS_BUILDDIR="$PROG_DIR"
+        export TESTS_SRCDIR="$(echo "$PROG_DIR" | \
+            sed "s,^$TESTS_TOP_BUILDDIR,$TESTS_TOP_SRCDIR,")"
+        ;;
+    "$TESTS_TOP_SRCDIR"/*)
+        export TESTS_BUILDDIR="$(echo "$PROG_DIR" | \
+            sed "s,^$TESTS_TOP_SRCDIR,$TESTS_TOP_BUILDDIR,")"
+        export TESTS_SRCDIR="$PROG_DIR"
+        ;;
+esac
+
+case "$PROG" in
+    *.sh)
+        "$PROG" "$@" || exit $?
+        ;;
+
+    *)
+        test -n "$TEST_LOG_NAME" || TEST_LOG_NAME=check
+        test -n "$TEST_LOG_DIR" || TEST_LOG_DIR=`dirname "$PROG"`
+        test -n "$STRICT_CHECKS" || STRICT_CHECKS=1
+        run `basename "$PROG"` "$PROG" "$@" || exit $?
+        ;;
+esac

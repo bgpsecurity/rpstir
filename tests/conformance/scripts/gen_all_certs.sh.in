@@ -4,12 +4,13 @@
 # gen_all_certs.sh - create all certificates for RPKI syntax
 #                    conformance test
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+@trap_errors@
+
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
 
 # Usage
 usage ( ) {
@@ -93,7 +94,7 @@ Outputs:
 
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
 USE_EXISTING_PATCHES=
 
 # Process command line arguments.
@@ -125,7 +126,7 @@ else
     patch_option=
 fi
 
-single_cert_script="$RPKI_ROOT/tests/conformance/scripts/make_test_cert.sh"
+single_cert_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_cert.sh"
 single_cert_cmd="${single_cert_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################
@@ -238,3 +239,5 @@ ${single_cert_cmd} 188 IssuerSet2SerNums
 ${single_cert_cmd} 189 SubjectSet2SerNums
 ${single_cert_cmd} -x good 190 SerNumMax
 ${single_cert_cmd} 191 SerNumTooBig
+${single_cert_cmd} 192 ResourcesIPEmpty
+${single_cert_cmd} 193 ResourcesASEmpty

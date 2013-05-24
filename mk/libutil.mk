@@ -14,10 +14,11 @@ lib_util_libutil_a_SOURCES = \
 	lib/util/hashutils.h \
 	lib/util/inet.c \
 	lib/util/inet.h \
+	lib/util/logging.c \
 	lib/util/logging.h \
-	lib/util/logutils.c \
-	lib/util/logutils.h \
 	lib/util/macros.h \
+	lib/util/path_compat.c \
+	lib/util/path_compat.h \
 	lib/util/queue.c \
 	lib/util/queue.h \
 	lib/util/semaphore_compat.c \
@@ -60,7 +61,7 @@ lib_util_tests_stringutils_test_LDADD = \
 TESTS += lib/util/tests/stringutils-test
 
 
-EXTRA_DIST += lib/util/shell_utils
+dist_pkgdata_DATA += lib/util/shell_utils
 
 
-EXTRA_DIST += lib/util/trap_errors
+dist_pkgdata_DATA += lib/util/trap_errors

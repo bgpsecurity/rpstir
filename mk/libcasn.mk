@@ -7,7 +7,7 @@ lib_casn_asn_gen_asn_gen_CPPFLAGS = \
 	-Dasn_hdr_id=casn_hdr_id \
 	-Dconstruct=cconstruct \
 	-Ddo_hdr=cdo_hdr \
-	-Ilib/casn/asn_gen
+	-I$(top_srcdir)/lib/casn/asn_gen
 
 lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/asn.h \
@@ -23,15 +23,7 @@ lib_casn_asn_gen_asn_gen_SOURCES = \
 	lib/casn/asn_gen/casn_constr.c \
 	lib/casn/asn_gen/casn_hdr.c
 
-dist_man_MANS += doc/asn_gen.1
-
-%.c %.h: %.asn lib/casn/asn_gen/asn_gen
-	cd "`dirname $<`" && \
-		TEST_LOG_NAME=`basename "$<"` \
-		TEST_LOG_DIR=. \
-		STRICT_CHECKS=0 \
-		$(abs_top_builddir)/tests/run_with_tool.sh \
-		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen "`basename $<`"
+EXTRA_DIST += doc/asn_gen.1
 
 
 noinst_LIBRARIES += lib/casn/libcasn.a
@@ -63,4 +55,11 @@ lib_casn_libcasn_a_SOURCES = \
 	lib/casn/casn_real.c \
 	lib/casn/casn_time.c
 
-dist_man_MANS += doc/casn_functions.3
+EXTRA_DIST += doc/casn_functions.3
+
+check_PROGRAMS += lib/casn/tests/readcasnnum-test
+
+lib_casn_tests_readcasnnum_test_LDADD = \
+	$(LDADD_LIBCASN)
+
+TESTS += lib/casn/tests/readcasnnum-test

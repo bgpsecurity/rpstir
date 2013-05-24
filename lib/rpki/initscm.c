@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <ctype.h>
 
+#include "config/config.h"
+
 #include "scm.h"
 #define  SCM_DEFINED_HERE
 #include "scmmain.h"
@@ -245,10 +247,10 @@ static int preparetables(
  */
 
 char *makedsnscm(
-    char *pref,
-    char *db,
-    char *usr,
-    char *pass)
+    const char *pref,
+    const char *db,
+    const char *usr,
+    const char *pass)
 {
     char *ptr;
     int len;
@@ -279,21 +281,21 @@ scm *initscm(
 {
     scm *scmp;
     int sta;
-    char *db = getenv("RPKI_DB");
-    char *dbu = getenv("RPKI_DBUSER");
-    char *dbp = getenv("RPKI_DBPASS");
-    char *dsn = getenv("RPKI_DSN");
+    const char *db = CONFIG_DATABASE_get();
+    const char *dbu = CONFIG_DATABASE_USER_get();
+    const char *dbp = CONFIG_DATABASE_PASSWORD_get();
+    const char *dsn = CONFIG_DATABASE_DSN_get();
 
     scmp = (scm *) calloc(1, sizeof(scm));
     if (scmp == NULL)
         return (NULL);
-    scmp->db = strdup((db == NULL) ? RPKI_DB : db);
+    scmp->db = strdup(db);
     if (scmp->db == NULL)
     {
         freescm(scmp);
         return (NULL);
     }
-    scmp->dbuser = strdup((dbu == NULL) ? RPKI_DBUSER : dbu);
+    scmp->dbuser = strdup(dbu);
     if (scmp->dbuser == NULL)
     {
         freescm(scmp);
@@ -304,10 +306,9 @@ scm *initscm(
         scmp->dbpass = strdup(dbp);
     else
     {
-        if (RPKI_DBPASS != NULL)
-            scmp->dbpass = strdup(RPKI_DBPASS);
+        scmp->dbpass = NULL;
     }
-    scmp->dsnpref = strdup((dsn == NULL) ? RPKI_DSN : dsn);
+    scmp->dsnpref = strdup(dsn);
     if (scmp->dsnpref == NULL)
     {
         freescm(scmp);

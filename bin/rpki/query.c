@@ -12,7 +12,8 @@
 #include "rpki/myssl.h"
 #include "rpki/sqhl.h"
 #include "rpki/querySupport.h"
-#include "util/logutils.h"
+#include "config/config.h"
+#include "util/logging.h"
 
 
 /*
@@ -35,7 +36,7 @@
 #define MAX_CONDS 10
 
 #define BAD_OBJECT_TYPE \
-  "\nBad object type; must be roa, cert, crl, man[ifest] or rpsl\n\n"
+  "\nBad object type; must be roa, cert, crl, man[ifest], gbr, or rpsl\n\n"
 
 /*
  * I hate to use all these static variables, but the problem is
@@ -43,11 +44,6 @@
  * functions that are used to process SQL queries
  */
 static FILE *output;            /* place to print output (file or screen) */
-static int rejectStaleChain = 0;
-static int rejectStaleManifest = 0;
-static int rejectStaleCRL = 0;
-static int rejectNoManifest = 0;
-static int rejectNotYet = 0;
 static QueryField *globalFields[MAX_VALS];      /* to pass into handleResults */
 static int useLabels,
     multiline,
@@ -58,7 +54,8 @@ static int isROA = 0,
     isCert = 0,
     isCRL = 0,
     isRPSL = 0,
-    isManifest = 0;
+    isManifest = 0,
+    isGBR = 0;
 static scm *scmp = NULL;
 static scmcon *connection = NULL;
 
@@ -76,6 +73,8 @@ struct {
     "crl", "crl"},
     {
     "manifest", "manifest"},
+    {
+    "gbr", "ghostbusters"},
     {
     "rpsl", "roa"},};
 
@@ -121,12 +120,12 @@ static int handleResults(
     char resultStr[MAX_RESULT_SZ];
     int i;
 
-    conp = conp;
-    numLine = numLine;          // silence compiler warnings
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(numLine);
     if (validate)
     {
         if (!checkValidity
-            ((isROA || isRPSL || isManifest
+            ((isROA || isRPSL || isManifest || isGBR
               || isCRL) ? (char *)s->vec[valIndex].valptr : NULL,
              isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0, scmp,
              connection))
@@ -164,12 +163,12 @@ static int handleResults(
                     filename = "";
             }
             else
-                log_msg(LOG_WARNING, "unexpected field %s in RPSL query",
+                LOG(LOG_WARNING, "unexpected field %s in RPSL query",
                         field->name);
         }
         if (asn == 0 || ip_addrs == 0)
         {
-            log_msg(LOG_ERR, "incomplete result returned in RPSL query: %s",
+            LOG(LOG_ERR, "incomplete result returned in RPSL query: %s",
                     (asn == 0) ? "no asn" : "no ip_addrs");
         }
         else
@@ -449,7 +448,7 @@ static int doQuery(
     if (validate)
     {
         valIndex = srch.nused;
-        if (isROA || isRPSL || isManifest || isCRL)
+        if (isROA || isRPSL || isManifest || isCRL || isGBR)
         {
             char *ski;
             if (isCRL)
@@ -490,7 +489,7 @@ static int listOptions(
         j;
 
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
-             (!isManifest), BAD_OBJECT_TYPE);
+             (!isManifest) && (!isGBR), BAD_OBJECT_TYPE);
     printf("\nPossible fields to display or use in clauses for a %s:\n",
            objectType);
     for (i = 0; i < getNumFields(); i++)
@@ -500,7 +499,8 @@ static int listOptions(
         if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
             ((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
             ((getFields()[i].flags & Q_FOR_CERT) && isCert) ||
-            ((getFields()[i].flags & Q_FOR_MAN) && isManifest))
+            ((getFields()[i].flags & Q_FOR_MAN) && isManifest) ||
+            ((getFields()[i].flags & Q_FOR_GBR) && isGBR))
         {
             printf("  %s: %s\n", getFields()[i].name,
                    getFields()[i].description);
@@ -532,7 +532,8 @@ static int addAllFields(
         if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
             ((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
             ((getFields()[i].flags & Q_FOR_MAN) && isManifest) ||
-            ((getFields()[i].flags & Q_FOR_CERT) && isCert))
+            ((getFields()[i].flags & Q_FOR_CERT) && isCert) ||
+            ((getFields()[i].flags & Q_FOR_GBR) && isGBR))
         {
             displays[numDisplays++] = getFields()[i].name;
         }
@@ -561,7 +562,7 @@ static int addRPSLFields(
 static int printUsage(
     )
 {
-    printf("\nPossible usages:\n  query -r [-o <outfile>] [-s <specsFile>]\n");
+    printf("\nPossible usages:\n  query -r [-o <outfile>]\n");
     printf
         ("     Note that this is the form that a typical user should always use.\n");
     printf("     It produces the expected output of the system: RPSL.\n");
@@ -569,17 +570,14 @@ static int printUsage(
     printf("       to view the supporting data.\n");
     printf("  query -l <type>\n");
     printf
-        ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-s <specsFile>] [-i] [-n] [-m]\n\nSwitches:\n");
+        ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-i] [-n] [-m]\n\nSwitches:\n");
     printf("  -r: Output the RPSL data\n");
     printf("  -o <filename>: print results to filename (default is screen)\n");
     printf
-        ("  -s <filename>: filename specifies how to handle different types of staleness.\n");
-    printf("      See the sample specifications file sampleQuerySpecs\n");
-    printf
         ("  -l <type>: list the possible display fields for the type, where type is\n");
-    printf("     roa, cert, crl, or manifest.\n");
+    printf("     roa, cert, crl, gbr, or manifest.\n");
     printf
-        ("  -t <type>: the type of object requested: roa, cert, crl, or man[ifest]\n");
+        ("  -t <type>: the type of object requested: roa, cert, crl, gbr, or man[ifest]\n");
     printf("  -d <field>: display a field of the object (or 'all')\n");
     printf
         ("  -f <field>.<op>.<value>: filter where op is a comparison operator\n");
@@ -611,6 +609,7 @@ static void setObjectType(
     isManifest = (strcasecmp(objectType, "manifest") == 0);
     setIsManifest(isManifest);
     isRPSL = (strcasecmp(objectType, "rpsl") == 0);
+    isGBR = (strcasecmp(objectType, "gbr") == 0);
 }
 
 int main(
@@ -625,10 +624,11 @@ int main(
     int numDisplays = 0;
     int numClauses = 0;
 
-    if (log_init("query.log", "query", LOG_DEBUG, LOG_DEBUG) != 0)
+    OPEN_LOG("query", LOG_USER);
+    if (!my_config_load())
     {
-        perror("Could not initialize query client log file");
-        exit(1);
+        LOG(LOG_ERR, "can't initialize configuration");
+        exit(EXIT_FAILURE);
     }
     output = stdout;
     useLabels = 1;
@@ -690,13 +690,6 @@ int main(
         {
             orderp = argv[i + 1];
         }
-        else if (strcasecmp(argv[i], "-s") == 0)
-        {
-            if (parseStalenessSpecsFile(argv[i + 1]))
-                return -1;
-            getSpecsVals(&rejectStaleChain, &rejectStaleManifest,
-                         &rejectStaleCRL, &rejectNoManifest, &rejectNotYet);
-        }
         else
         {                       // unknown switch
             return printUsage();
@@ -708,14 +701,15 @@ int main(
         numDisplays = addRPSLFields(displays);
     }
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
-             (!isManifest), BAD_OBJECT_TYPE);
+             (!isManifest) && (!isGBR), BAD_OBJECT_TYPE);
     checkErr(numDisplays == 0 && isRPSL == 0, "Need to display something\n");
     if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
         numDisplays = addAllFields(displays, 0);
     displays[numDisplays++] = NULL;
     clauses[numClauses++] = NULL;
     if ((status = doQuery(displays, clauses, orderp)) < 0)
-        log_msg(LOG_ERR, "%s", err2string(status));
-    log_close();
+        LOG(LOG_ERR, "%s", err2string(status));
+    config_unload();
+    CLOSE_LOG();
     return status;
 }

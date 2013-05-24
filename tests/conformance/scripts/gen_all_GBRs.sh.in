@@ -1,0 +1,157 @@
+#!@SHELL_BASH@
+
+# gen_all_GBRs.sh - create all GBR test cases for RPKI syntactic
+#                   conformance test
+
+@SETUP_ENVIRONMENT@
+
+# Safe bash shell scripting practices
+@trap_errors@
+
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
+
+# Usage
+usage ( ) {
+    usagestr="
+Usage: $0 [options]
+
+Options:
+  -P        \tApply patches instead of prompting user to edit (default = false)
+  -h        \tDisplay this help file
+
+This script creates a large number of GBRs (with embedded EE certs),
+prompts the user multiple times to edit interactively (e.g., in order
+to introduce errors), and captures those edits in '.patch' files
+(output of diff -u).  Later, running $0 with the -P option can replay
+the creation process by automatically applying those patch files
+instead of prompting for user intervention.  In patch mode, existing
+keys are reused from the keys directory, instead of the default of
+generating new keys.
+
+This tool assumes the repository structure in the diagram below.  It
+creates a ton of GBRs (with embedded EE certs).  In the EE certs' SIA, the
+accessMethod id-ad-signedObject will have an accessLocation of
+rsync://rpki.bbn.com/conformance/root/subjname.gbr.
+
+NOTE: this script does NOT update the manifest issued by root.
+
+               +-----------------------------------+
+               | rsync://rpki.bbn.com/conformance/ |
+               |     +--------+                    |
+         +---------->|  Root  |                    |
+         |     |     |  cert  |                    |
+         |     |     |  SIA ----------------------------+
+         |     |     +---|----+                    |    |
+         |     +---------|-------------------------+    |
+         |               |                              |
+         |               V                              |
+         |     +----------------------------------------|----+
+         |     | rsync://rpki.bbn.com/conformance/root/ |    |
+         |     |                                        V    |
+         |     | +-------------+       +-----------------+   |
+         |     | | *GBR issued |<--+   | Manifest issued |   |
+         |     | | by Root     |   |   | by Root         |   |
+         |     | | +--------+  |   |   | root.mft        |   |
+         |     | | | EECert |  |   |   +-----------------+   |
+         +----------- AIA   |  |   |                         |
+               | | |  SIA ---------+       +------------+    |
+               | | |  CRLDP--------------->| CRL issued |    |
+               | | +--------+  |           | by Root    |    |
+               | +-------------+           | root.crl   |    |
+               |                           +------------+    |
+               | Root's Repo                                 |
+               | Directory                                   |
+               +---------------------------------------------+
+
+Inputs:
+  -P - (optional) use patch mode for automatic insertion of errors
+
+Outputs:
+  GBR
+  patch files - manual edits are saved as diff output in
+                'badROA<filestem>.stageN.patch' (N=0..1) in the patch
+                directory
+  key files - generated key pairs for the EE certs are stored in keys directory
+              as badROA<filestem>.ee.p15
+    "
+    printf "${usagestr}\n"
+    exit 1
+}
+
+# NOTES
+
+# Variable naming convention -- preset constants and command line
+# arguments are in ALL_CAPS.  Derived/computed values are in
+# lower_case.
+
+
+# Options and defaults
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
+USE_EXISTING_PATCHES=
+
+# Process command line arguments.
+while getopts Ph opt
+do
+  case $opt in
+      P)
+	  USE_EXISTING_PATCHES=1
+	  ;;
+      h)
+	  usage
+	  ;;
+  esac
+done
+shift $((OPTIND - 1))
+if [ $# != "0" ]
+then
+    usage
+fi
+
+###############################################################################
+# Computed Variables
+###############################################################################
+
+if [ $USE_EXISTING_PATCHES ]
+then
+    patch_option="-P"
+else
+    patch_option=
+fi
+
+single_GBR_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CMS.sh"
+single_GBR_cmd="${single_GBR_script} ${patch_option} -o ${OUTPUT_DIR}"
+
+###############################################################################
+# Check for prerequisite tools and files
+###############################################################################
+
+ensure_file_exists ( ) {
+    if [ ! -e "$1" ]
+    then
+	echo "Error: file not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+	echo "Error: directory not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists "$OUTPUT_DIR"
+ensure_file_exists "${single_GBR_script}"
+
+###############################################################################
+# Generate GBR cases
+###############################################################################
+
+${single_GBR_cmd} -x good GBR 600 NothingWrong
+${single_GBR_cmd} GBR 601 NotVCard
+${single_GBR_cmd} GBR 602 WrongOID
+${single_GBR_cmd} GBR 603 IPv4NotInherit
+${single_GBR_cmd} GBR 604 IPv6NotInherit
+${single_GBR_cmd} GBR 605 ASNotInherit

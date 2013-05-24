@@ -11,6 +11,7 @@
 #include <errno.h>
 #include "util/cryptlib_compat.h"
 #include "rpki-asn1/certificate.h"
+#include "rpki-asn1/cms.h"
 #include "rpki-asn1/roa.h"
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
@@ -20,8 +21,8 @@
 #include "obj_err.h"
 #include "util/inet.h"
 // #include "create_utils.h"
+#include "config/config.h"
 
-char *roa_template = TEMPLATES_DIR "/R.roa";
 void print_table(
     struct object_field *table);
 int write_EEcert(
@@ -50,7 +51,7 @@ int write_asID(
 {
     // first cast the generic parameters and then write in the value to the 
     // correct location in the ROA CMS structure
-    struct ROA *roa = my_var;
+    struct CMS *roa = my_var;
     if (value == NULL)
         return -1;
 
@@ -244,7 +245,7 @@ int write_ipv4(
     // Casts generic parameters and then calls the function above
     if (my_var == NULL)
         return -1;
-    struct ROA *roa = my_var;
+    struct CMS *roa = my_var;
     struct RouteOriginAttestation *roap =
         (struct RouteOriginAttestation *)&roa->content.signedData.
         encapContentInfo.eContent.roa.self;
@@ -274,7 +275,7 @@ int write_ipv6(
     // Casts generic parameters and then calls the function above
     if (my_var == NULL)
         return -1;
-    struct ROA *roa = my_var;
+    struct CMS *roa = my_var;
     struct RouteOriginAttestation *roap =
         (struct RouteOriginAttestation *)&roa->content.signedData.
         encapContentInfo.eContent.roa.self;
@@ -323,15 +324,15 @@ struct object_field *get_roa_field_table(
 int create_roa(
     struct object_field *table)
 {
-    struct ROA roa;
+    struct CMS roa;
 
     // init roa
-    ROA(&roa, (ushort) 0);
+    CMS(&roa, (ushort) 0);
 
     // Read the manifest template into this manifest
-    if (get_casn_file(&roa.self, roa_template, 0) < 0)
+    if (get_casn_file(&roa.self, CONFIG_TEMPLATE_ROA_get(), 0) < 0)
     {
-        warn(FILE_OPEN_ERR, roa_template);
+        warn(FILE_OPEN_ERR, CONFIG_TEMPLATE_ROA_get());
         return (FILE_OPEN_ERR);
     }
 

@@ -1,0 +1,18 @@
+# Configuration file for testing only.
+#
+# Users should not edit this file.
+
+Include ${HOME}/.@PACKAGE_NAME@.test.conf
+
+TrustAnchorLocators
+
+NewVersionCheckCACert ${TESTS_TOP_SRCDIR}/etc/version-server-ca.pem
+
+TemplateCACert ${TESTS_TOP_SRCDIR}/var/templates/ca_template.cer
+TemplateEECert ${TESTS_TOP_SRCDIR}/var/templates/ee_template.cer
+TemplateCRL ${TESTS_TOP_SRCDIR}/var/templates/crl_template.crl
+TemplateManifest ${TESTS_TOP_SRCDIR}/var/templates/M.man
+TemplateROA ${TESTS_TOP_SRCDIR}/var/templates/R.roa
+
+RPKICacheDir ${TESTS_TOP_BUILDDIR}/REPOSITORY
+LogDir ${TESTS_TOP_BUILDDIR}/LOGS

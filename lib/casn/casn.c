@@ -16,7 +16,7 @@ Cambridge, Ma. 02138
 char casn_sfcsid[] = "@(#)casn.c 871P";
 #include "casn.h"
 #include <stdio.h>
-#include "util/logutils.h"
+#include "util/logging.h"
 
 #define ASN_READ 1              // modes for encode & read
 
@@ -285,7 +285,7 @@ int decode_casn_lth(
                            (struct casn *)0, &has_indef);
     casnp->flags |= has_indef;
     if (ansr < 0)
-        log_msg(LOG_ERR, "ASN.1 decode error at %s, offset %d (0x%x)",
+        LOG(LOG_ERR, "ASN.1 decode error at %s, offset %d (0x%x)",
                 casn_err_struct.asn_map_string, -ansr, -ansr);
     return ansr;
 }
@@ -976,9 +976,12 @@ int _encode_tag_lth(
              !(casnp = _find_chosen(casnp))) ||
             (casnp->type == ASN_CHOICE && !(casnp = _find_filled(casnp))))
             return -1;
-        for (tag = (casnp->type) ? casnp->type : casnp->tag; tag;
-             *c++ = (tag & 0xFF), tag >>= 8);
-        *c++ = 0;
+        if (casnp->type != ASN_NOTASN1)
+        {
+            for (tag = (casnp->type) ? casnp->type : casnp->tag; tag;
+                 *c++ = (tag & 0xFF), tag >>= 8);
+            *c++ = 0;
+        }
     }
     *casnpp = casnp;
     return c - to;
@@ -1823,7 +1826,7 @@ int _readsize(
                 tcasnp = &time_casn;
                 if (casnp->lth != tcasnp->lth ||
                     memcmp(casnp->startp, tcasnp->startp, casnp->lth))
-                    log_msg(LOG_DEBUG, "Converted date to DER");
+                    LOG(LOG_DEBUG, "Converted date to DER");
             }
             else
             {

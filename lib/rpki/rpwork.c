@@ -5,7 +5,7 @@
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
-#include "util/logutils.h"
+#include "util/logging.h"
 #include "rpki-object/certificate.h"
 
 extern struct done_certs done_certs;
@@ -194,11 +194,11 @@ static int add_paracert2DB(
             (ansr = set_cert_flag(locconp, done_certp->origID,
                                   done_certp->origflags)))
             return ansr;
-        log_msg(LOG_INFO, "Added %s to DB", fullname);
+        LOG(LOG_INFO, "Added %s to DB", fullname);
         return 1;
     }
     else
-        log_msg(LOG_ERR, "Adding %s to DB failed with error %d",
+        LOG(LOG_ERR, "Adding %s to DB failed with error %d",
                 fullname, -ansr);
     return ansr;
 }
@@ -1020,7 +1020,7 @@ static int run_through_typlist(
                 typname = "IPv6";
             else
                 typname = "AS#";
-            log_msg(LOG_DEBUG, "Did not expand %s in block %s.", typname,
+            LOG(LOG_DEBUG, "Did not expand %s in block %s.", typname,
                     currskibuf);
             did = 0;
         }
@@ -1552,11 +1552,11 @@ int read_SKI_blocks(
     struct keyring keyring = { NULL, NULL, NULL };
     // step 1
     FILE *SKI = fopen(skiblockfile, "r");
-    log_msg(LOG_DEBUG, "Starting LTA work");
+    LOG(LOG_DEBUG, "Starting LTA work");
     if (!SKI)
         ansr = ERR_SCM_NOSKIFILE;
     else if ((ansr =
-              parse_SKI_blocks(&keyring, SKI, skibuf, sizeof(skibuf),
+              parse_SKI_blocks(&keyring, SKI, skiblockfile, skibuf, sizeof(skibuf),
                                &locflags)) >= 0)
     {
         if (!Xcp)
@@ -1589,7 +1589,7 @@ int read_SKI_blocks(
             // flag original cert as having a paracert
             if (locansr >= 0 && (locansr = add_paracert2DB(done_certp)) < 0)
             {
-                log_msg(LOG_DEBUG, "Error adding paracert %s to DB",
+                LOG(LOG_DEBUG, "Error adding paracert %s to DB",
                         done_certp->filename);
                 strcpy(locfilename, done_certp->filename);
                 *skibuf = 0;
@@ -1626,8 +1626,8 @@ int read_SKI_blocks(
             errbuf[strlen(errbuf) - 1] != '.' &&
             errbuf[strlen(errbuf) - 1] != '\n')
             strcat(errbuf, ".");
-        log_msg(LOG_ERR, "%s", errbuf);
+        LOG(LOG_ERR, "%s", errbuf);
     }
-    log_msg(LOG_DEBUG, "Finished LTA work");
+    LOG(LOG_DEBUG, "Finished LTA work");
     return ansr;
 }

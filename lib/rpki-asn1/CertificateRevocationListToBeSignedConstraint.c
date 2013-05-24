@@ -1,5 +1,5 @@
 
-#include "crlv2.h"
+#include "rpki-asn1/crlv2.h"
 
 int CertificateRevocationListToBeSignedConstraint(
     struct CertificateRevocationListToBeSigned *ctbsp)

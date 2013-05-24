@@ -1,15 +1,10 @@
 #!@SHELL_BASH@
 
-# set environment variables if not set
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
-. $RPKI_ROOT/lib/util/trap_errors
-
-# test functions
-. $RPKI_ROOT/tests/test.include
+@trap_errors@
 
 echo "Making L111 expired"
-$THIS_SCRIPT_DIR/makeL111Expired || check_errs $? "$0 makeL111Expired failed"
+"$TESTS_BUILDDIR/makeL111Expired" || check_errs $? "$0 makeL111Expired failed"
 
 echo $0 PASS

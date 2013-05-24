@@ -5,6 +5,8 @@ blob.h
 casn.h
 certificate.c
 certificate.h
+cms.c
+cms.h
 crlv2.c
 crlv2.h
 extensions.c

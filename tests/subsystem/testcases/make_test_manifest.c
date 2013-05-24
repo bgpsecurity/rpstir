@@ -4,7 +4,7 @@
 
 
 #include "rpki-asn1/manifest.h"
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 #include "rpki-asn1/certificate.h"
 #include "util/cryptlib_compat.h"
 #include <stdio.h>
@@ -128,7 +128,7 @@ int main(
     char **argv)
 {
     const char *msg;
-    struct ROA roa;
+    struct CMS cms;
     struct CMSAlgorithmIdentifier *algidp;
     ulong now = time((time_t *) 0);
 
@@ -158,20 +158,20 @@ int main(
     strcat(certfile, "cer");
     strcat(keyfile, "p15");
 
-    ROA(&roa, 0);
-    write_objid(&roa.contentType, id_signedData);
-    write_casn_num(&roa.content.signedData.version.self, (long)3);
-    inject_casn(&roa.content.signedData.digestAlgorithms.self, 0);
+    CMS(&cms, 0);
+    write_objid(&cms.contentType, id_signedData);
+    write_casn_num(&cms.content.signedData.version.self, (long)3);
+    inject_casn(&cms.content.signedData.digestAlgorithms.self, 0);
     algidp =
-        (struct CMSAlgorithmIdentifier *)member_casn(&roa.content.
+        (struct CMSAlgorithmIdentifier *)member_casn(&cms.content.
                                                      signedData.digestAlgorithms.
                                                      self, 0);
     write_objid(&algidp->algorithm, id_sha256);
     write_casn(&algidp->parameters.sha256, (uchar *) "", 0);
-    write_objid(&roa.content.signedData.encapContentInfo.eContentType,
+    write_objid(&cms.content.signedData.encapContentInfo.eContentType,
                 id_roa_pki_manifest);
     struct Manifest *manp =
-        &roa.content.signedData.encapContentInfo.eContent.manifest;
+        &cms.content.signedData.encapContentInfo.eContent.manifest;
     write_casn_num(&manp->manifestNumber, (long)index);
     int timediff = 0;
     if (argc == 3)
@@ -219,6 +219,8 @@ int main(
                 strcpy(a, ".crl");
             else if (*curr_file == 'R')
                 strcpy(a, ".roa");
+            else if (*curr_file == 'G')
+                strcpy(a, ".gbr");
         }
         else
         {
@@ -228,14 +230,14 @@ int main(
         }
         add_name(curr_file, manp, num, bad);
     }
-    if (!inject_casn(&roa.content.signedData.certificates.self, 0))
+    if (!inject_casn(&cms.content.signedData.certificates.self, 0))
         fatal(4, "signedData");
     struct Certificate *certp =
-        (struct Certificate *)member_casn(&roa.content.signedData.certificates.
+        (struct Certificate *)member_casn(&cms.content.signedData.certificates.
                                           self, 0);
     if (get_casn_file(&certp->self, certfile, 0) < 0)
         fatal(2, certfile);
-    if ((msg = signCMS(&roa, keyfile, 0)))
+    if ((msg = signCMS(&cms, keyfile, 0)))
         fatal(7, msg);
 
     char fullpath[40];
@@ -255,16 +257,16 @@ int main(
         }
     }
 
-    if (put_casn_file(&roa.self, manifestfile, 0) < 0)
+    if (put_casn_file(&cms.self, manifestfile, 0) < 0)
         fatal(6, manifestfile);
-    if (put_casn_file(&roa.self, fullpath, 0) < 0)
+    if (put_casn_file(&cms.self, fullpath, 0) < 0)
         fatal(2, fullpath);
     for (c = manifestfile; *c && *c != '.'; c++);
     strcpy(c, ".raw");
     char *rawp;
-    int lth = dump_size(&roa.self);
+    int lth = dump_size(&cms.self);
     rawp = (char *)calloc(1, lth + 4);
-    dump_casn(&roa.self, rawp);
+    dump_casn(&cms.self, rawp);
     int fd = open(manifestfile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
     write(fd, rawp, lth);
     close(fd);

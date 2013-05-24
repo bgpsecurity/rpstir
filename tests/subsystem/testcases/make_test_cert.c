@@ -510,7 +510,7 @@ int main(
             fatal(13, argv[4]);
     }
     for (c = &argv[1][1]; *c && *c >= '0' && *c <= '9'; c++);
-    if (*c && *c != 'M' && *c != 'R')
+    if (*c && *c != 'M' && *c != 'R' && *c != 'G')
         fatal(10, argv[1]);
     if (*c)
         ee = 1;
@@ -718,8 +718,8 @@ int main(
                 struct ASNum *asNump = &extp->extnValue.autonomousSysNum;
                 write_ASNums(asNump);
             }
-            else if (strchr(subjfile, (int)'M'))        // for signing
-                                                        // manifest
+            else if (strchr(subjfile, (int)'M') || // manifest
+                strchr(subjfile, (int)'G')) // ghostbusters
             {
                 write_casn(&extp->extnValue.autonomousSysNum.asnum.inherit,
                            (uchar *) "", 0);

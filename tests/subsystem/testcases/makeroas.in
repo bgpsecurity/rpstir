@@ -1,0 +1,27 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+./make_test_roa    -r R111.roa   -a 8      # 1-12
+./make_test_roa    -r R1111.roa  -a 2      # 1-4
+./make_test_roa    -r R1112.roa  -a 3      # 1-4
+./make_test_roa    -r R1113.roa  -a 4      # 1-4
+./make_test_roa    -r R11111.roa -a 1      # 1
+./make_test_roa    -r R1121.roa  -a 5      # 5-8
+./make_test_roa    -r R1131.roa  -a 9      # 9-10
+./make_test_roa    -r R1211.roa  -a 13 -4 24 -6 96 # 13-17
+./make_test_roa    -r R1311.roa  -a 25     # 25-27
+./make_test_roa    -r R1321.roa  -a 30     # 30-31
+./make_test_roa    -r R1322.roa  -a 31     # 30-31
+./make_test_roa    -r R2111.roa  -a 51     # 51-52
+./make_test_roa    -r R221.roa   -a 63     # 63-75
+./make_test_roa    -r R2211.roa  -a 64     # 63-69
+./make_test_roa    -r R22111.roa -a 65     # 65
+./make_test_roa    -r R22121.roa -a 66     # 66-69
+./make_test_roa -b -r R22122.roa -a 67     # 66-69
+./make_test_roa    -r R231.roa   -a 76     # 76-83
+./make_test_roa    -r R2311.roa  -a 77     # 76-79
+./make_test_roa    -r R2312.roa  -a 78     # 76-79
+./make_test_roa    -r R2321.roa  -a 80     # 80-82
+./make_test_roa    -r R2331.roa  -a 66     # 66
+./make_test_roa    -r R2339.roa  -a 70     # 70

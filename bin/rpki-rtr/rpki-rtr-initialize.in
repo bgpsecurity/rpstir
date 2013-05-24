@@ -1,0 +1,17 @@
+#!/bin/sh
+# initialize rpki-rtr data
+
+@SETUP_ENVIRONMENT@
+
+
+SESSION_COUNT="$(echo "SELECT COUNT(*) FROM rtr_session;" | mysql_cmd | tail -n 1)"
+if test "$SESSION_COUNT" -ne 0; then
+    error "The rpki-rtr database is already initialized. See"
+    error "@PACKAGE_NAME@-rpki-rtr-clear if you want to clear the database"
+    error "before reinitializing it."
+    exit 1
+fi
+
+echo "INSERT INTO rtr_session (session_id) VALUES (FLOOR(RAND() * (1 << 16)));" \
+    | mysql_cmd \
+    || fatal "Could not insert session_id."

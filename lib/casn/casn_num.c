@@ -69,6 +69,24 @@ int read_casn_num(
     struct casn *casnp,
     long *valp)
 {
+    intmax_t tmp;
+    int ret;
+
+    ret = read_casn_num_max(casnp, &tmp);
+    *valp = (long)tmp;
+
+    if (ret > (int)sizeof(*valp))
+    {
+        ret = _casn_obj_err(casnp, ASN_LENGTH_ERR);
+    }
+
+    return ret;
+}
+
+int read_casn_num_max(
+    struct casn *casnp,
+    intmax_t *valp)
+{
     struct casn *tcasnp;
     int ansr,
         err = 0;
@@ -125,7 +143,7 @@ int read_casn_num(
         else
             *valp = 0;
         for (c = casnp->startp; c < &casnp->startp[casnp->lth];
-             *valp = (*valp << 8) + (long)*c++);
+             *valp = (*valp << 8) + (intmax_t)*c++);
         return (c - casnp->startp);
     }
 }

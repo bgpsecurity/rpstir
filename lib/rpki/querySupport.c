@@ -1,8 +1,3 @@
-
-/*
- * $Id: query.c 857 2009-09-30 15:27:40Z dmontana $ 
- */
-
 /****************
  * Functions and flags shared by query and server code
  ****************/
@@ -13,6 +8,8 @@
 #include <string.h>
 #include <mysql.h>
 
+#include "config/config.h"
+
 #include "globals.h"
 #include "scm.h"
 #include "scmf.h"
@@ -21,100 +18,22 @@
 #include "querySupport.h"
 #include "err.h"
 #include "myssl.h"
-
-static int rejectStaleChain = 0;
-static int rejectStaleManifest = 0;
-static int rejectStaleCRL = 0;
-static int rejectNoManifest = 0;
-static int rejectNotYet = 0;
-
-/*
- * routine to parse the filter specification file which determines how to
- * handle the various meta-data SCM_FLAG_XXX flags (ignore, matchset,
- * matchclr) 
- */
-int parseStalenessSpecsFile(
-    char *specsFilename)
-{
-    char str[WHERESTR_SIZE],
-        str2[WHERESTR_SIZE],
-        str3[WHERESTR_SIZE];
-    FILE *input = fopen(specsFilename, "r");
-
-    if (input == NULL)
-    {
-        printf("Could not open specs file: %s\n", specsFilename);
-        exit(-1);
-    }
-    while (fgets(str, WHERESTR_SIZE, input))
-    {
-        int got = sscanf(str, "%s %s", str2, str3);
-        if (got <= 0)
-            continue;
-        if (str2[0] == '#')
-            continue;
-        if (got == 1)
-        {
-            perror("Bad format for specs file\n");
-            return -1;
-        }
-        if (strcmp(str2, "StaleCRL") == 0)
-        {
-            rejectStaleCRL = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "StaleManifest") == 0)
-        {
-            rejectStaleManifest = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "StaleValidationChain") == 0)
-        {
-            rejectStaleChain = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "NoManifest") == 0)
-        {
-            rejectNoManifest = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else if (strcmp(str2, "NotYet") == 0)
-        {
-            rejectNotYet = str3[0] == 'n' || str3[0] == 'N';
-        }
-        else
-        {
-            printf("Bad keyword in specs file: %s\n", str2);
-            return -1;
-        }
-    }
-    return 0;
-}
-
-void getSpecsVals(
-    int *rejectStaleChainp,
-    int *rejectStaleManifestp,
-    int *rejectStaleCRLp,
-    int *rejectNoManifestp,
-    int *rejectNotYetp)
-{
-    *rejectStaleChainp = rejectStaleChain;
-    *rejectStaleManifestp = rejectStaleManifest;
-    *rejectStaleCRLp = rejectStaleCRL;
-    *rejectNoManifestp = rejectNoManifest;
-    *rejectNotYetp = rejectNotYet;
-}
+#include "util/logging.h"
 
 void addQueryFlagTests(
     char *whereStr,
     int needAnd)
 {
     addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, needAnd);
-    if (rejectStaleChain)
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
         addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
-    if (rejectStaleCRL)
+    if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
         addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
-    if (rejectStaleManifest)
+    if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
         addFlagTest(whereStr, SCM_FLAG_STALEMAN, 0, 1);
-    if (rejectNoManifest)
+    if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
         addFlagTest(whereStr, SCM_FLAG_ONMAN, 1, 1);
-    if (rejectNotYet)
+    if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
         addFlagTest(whereStr, SCM_FLAG_NOTYET, 0, 1);
 }
 
@@ -128,27 +47,36 @@ static scmsrcha *validSrch = NULL,
     *anySrch = NULL;
 char *validWhereStr;
 static char *whereInsertPtr;
-static int found;
+static int parentsFound;
 static char *nextSKI,
    *nextSubject;
 
 /*
- * callback to indicate that parent found 
+ * callback to indicate that a parent was found
  */
-static int registerFound(
+static int registerParent(
     scmcon * conp,
     scmsrcha * s,
     int numLine)
 {
-    conp = conp;
-    s = s;
-    numLine = numLine;
-    found = 1;
+    UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(s);
+    UNREFERENCED_PARAMETER(numLine);
+
+    /* FIXME: nextSKI and nextSubject already point to
+     * s->vec[0].valptr and s->vec[1].valptr, so they are not updated
+     * here.  But when a column is NULL, avalsize = SQL_NULL_DATA
+     * (-1), and we should NOT be using the corresponding valptr.
+     * checkValidity() currently depends on valptr being zeroed out.
+     * This is Bad(TM).  Fix this on a rewrite of checkValidity. */
+
+    /* Count parent. */
+    parentsFound++;
     return 0;
 }
 
 /*
- * check the valdity via the db of the cert whose ski or localID is given 
+ * check the validity via the db of the cert whose ski or localID is given
  */
 int checkValidity(
     char *ski,
@@ -170,19 +98,20 @@ int checkValidity(
         addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
         validWhereStr = validSrch->wherestr;
         validWhereStr[0] = 0;
-        if (rejectStaleChain)
+        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
             snprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
         free(now);
-        addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1, rejectStaleChain);
-        if (rejectStaleChain)
+        addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
+                    !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
+        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
             addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
-        if (rejectStaleCRL)
+        if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
             addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
-        if (rejectStaleManifest)
+        if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
             addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-        if (rejectNotYet)
+        if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
             addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
-        if (rejectNoManifest)
+        if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
         {
             int len = strlen(validWhereStr);
             snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
@@ -194,7 +123,7 @@ int checkValidity(
         nextSKI = (char *)validSrch->vec[0].valptr;
         nextSubject = (char *)validSrch->vec[1].valptr;
 
-        if (!rejectStaleChain)
+        if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
         {
             anySrch = newsrchscm(NULL, 1, 0, 1);
             field = findField("flags");
@@ -202,11 +131,20 @@ int checkValidity(
         }
     }
 
+    /* FIXME: This code assumes that is suffices to trace a single
+     * parent until one arrives at a trust anchor.  This will not
+     * always be the case, so key rollover or malicious activity might
+     * break the query client.  In addition, the right behavior is to
+     * trace up to any TRUSTED cert, which is not necessarily
+     * equivalent to any SELF-SIGNED cert.  Fix this on a future
+     * rewrite of checkValidity().  */
+
     // now do the part specific to this cert
     int firstTime = 1;
     char prevSKI[128];
-    // keep going until trust anchor, where AKI = SKI
-    while (firstTime || (strcmp(nextSKI, prevSKI) != 0))
+    // keep going until trust anchor, where either AKI = SKI or no AKI
+    while (firstTime ||
+	   !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
     {
         if (firstTime)
         {
@@ -234,19 +172,27 @@ int checkValidity(
                      escaped_subject);
             strncpy(prevSKI, nextSKI, 128);
         }
-        found = 0;
+        parentsFound = 0;
         status = searchscm(connect, validTable, validSrch, NULL,
-                           registerFound, SCM_SRCH_DOVALUE_ALWAYS, NULL);
-        if (!found)
+                           registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+        if (parentsFound > 1)
+        {
+            LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
+                parentsFound);
+        }
+        else if (parentsFound == 0)
         {                       // no parent cert
-            if (rejectStaleChain)
+            if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
                 return 0;
             snprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                      whereInsertPtr + 5);
             status =
-                searchscm(connect, validTable, anySrch, NULL, registerFound,
+                searchscm(connect, validTable, anySrch, NULL, registerParent,
                           SCM_SRCH_DOVALUE_ALWAYS, NULL);
-            return !found;
+            if (parentsFound > 1)
+                LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
+                    parentsFound);
+            return !parentsFound;
         }
     }
     return 1;
@@ -382,7 +328,7 @@ static QueryField fields[] = {
     {
      "filename",
      "the filename where the data is stored in the repository",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN,
+     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
      SQL_C_CHAR, FNAMESIZE,
      NULL, NULL,
      "Filename", NULL,
@@ -391,7 +337,7 @@ static QueryField fields[] = {
      "pathname",
      "full pathname (directory plus filename) where the data is stored",
      Q_JUST_DISPLAY | Q_FOR_ROA | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_MAN |
-     Q_REQ_JOIN,
+     Q_FOR_GBR | Q_REQ_JOIN,
      -1, 0,
      "dirname", "filename",
      "Pathname", pathnameDisplay,
@@ -399,7 +345,7 @@ static QueryField fields[] = {
     {
      "dirname",
      "the directory in the repository where the data is stored",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_REQ_JOIN,
+     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR | Q_REQ_JOIN,
      SQL_C_CHAR, DNAMESIZE,
      NULL, NULL,
      "Directory", NULL,
@@ -407,7 +353,7 @@ static QueryField fields[] = {
     {
      "ski",
      "subject key identifier",
-     Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN,
+     Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
      SQL_C_CHAR, SKISIZE,
      NULL, NULL,
      "SKI", NULL,
@@ -561,7 +507,7 @@ static QueryField fields[] = {
     {
      "flags",
      "which flags are set in the database",
-     Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN,
+     Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
      SQL_C_ULONG, 8,
      NULL, NULL,
      "Flags Set", displayFlags,

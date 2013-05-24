@@ -3,12 +3,13 @@
 # gen_all_MFTs.sh - create all MFT test cases for RPKI syntactic
 #                   conformance test
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+@trap_errors@
+
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
 
 # Usage
 usage ( ) {
@@ -105,7 +106,7 @@ Auxiliary Outputs: (not shown in diagram)
 
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
 USE_EXISTING_PATCHES=
 
 # Process command line arguments.
@@ -137,7 +138,7 @@ else
     patch_option=
 fi
 
-single_MFT_script="$RPKI_ROOT/tests/conformance/scripts/make_test_MFT.sh"
+single_MFT_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_MFT.sh"
 single_MFT_cmd="${single_MFT_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################
@@ -186,3 +187,4 @@ ${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
 ${single_MFT_cmd} -x good 785 MFTNumMax
 ${single_MFT_cmd} -x good 786 MFTNumZero
 ${single_MFT_cmd} 787 MFTNumTooBig
+${single_MFT_cmd} -x good 788 MFTUnkownFileExtension

@@ -8,6 +8,7 @@
 #   -h, --help             show this help message and exit
 #   -r PATH, --rsync=PATH  PATH to rsync executable
 #   -s PATH, --ssl=PATH    PATH to openssl executable
+#   -d, --delete           delete TA's not referenced on the command line
 #   -v, --verbose          print gory details to stdout
 #
 # Parses one or more Trust Anchor Locator (TAL) files defined by
@@ -67,8 +68,14 @@ from syslog import syslog, openlog, \
 
 def updateTA_main():
     overallret = 0
+    referenced_ta_paths = []
     for f in args:
-        ret = update_one_TA(f)
+        ret, ta_path = update_one_TA(f)
+        referenced_ta_paths.append(ta_path)
+        if ret != 0:
+            overallret = ret
+    if options.delete:
+        ret = delete_other_TAs(referenced_ta_paths)
         if ret != 0:
             overallret = ret
     return overallret
@@ -102,7 +109,7 @@ def update_one_TA(tal_file):
             print >>sys.stderr,\
                 "If you wish to remove this trust anchor, run 'rcli -d %s'" % \
                 (local_path)
-        return 0
+        return 0, local_path
 
     # Did the TA change?
     TA_has_changed = False
@@ -113,7 +120,7 @@ def update_one_TA(tal_file):
     # Finish if done
     if not TA_has_changed:
         syslog(LOG_INFO, "Trust anchor has not changed (%s)" % rsync_uri)
-        return 0
+        return 0, local_path
 
     # Is the new TA signed correctly?
     ret = verify_TA_signature(local_path)
@@ -124,7 +131,7 @@ def update_one_TA(tal_file):
                 "Restoring old certificate from backup: %s --> %s"
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
-        return 0
+        return 0, local_path
 
     # Does the new TA have the right public key info?
     ret = verify_SubjectPubKeyInfo(local_path, pubkey_b64)
@@ -135,7 +142,7 @@ def update_one_TA(tal_file):
                 "Restoring old certificate from backup: %s --> %s"
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
-        return 0
+        return 0, local_path
 
     # If necessary, remove existing TA from database.
     existing_TA_removed = False
@@ -151,11 +158,11 @@ def update_one_TA(tal_file):
                 "Restoring old certificate from backup: %s --> %s"
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
-            return ret
+            return ret, local_path
         existing_TA_removed = True
 
     # Add new TA to database.
-    ret = subprocess.call([rcli_path, '-y', '-F', local_path])
+    ret = subprocess.call(['rcli', '-y', '-F', local_path])
     
     # If failure, restore old TA in the filesystem and database.
     if ret != 0:
@@ -167,14 +174,52 @@ def update_one_TA(tal_file):
                 % (local_backup_path, local_path))
             shutil.move(local_backup_path, local_path)
         if existing_TA_removed:
-            restore_ret = subprocess.call([rcli_path, '-y', '-F', local_path])
+            restore_ret = subprocess.call(['rcli', '-y', '-F', local_path])
             if restore_ret != 0:
                 syslog(LOG_ERR,
                     "Error: could not restore old TA, this is bad!")
-                return restore_ret
+                return restore_ret, local_path
 
     syslog(LOG_INFO, "Trust anchor updated (%s) " % rsync_uri)
-    return ret
+    return ret, local_path
+
+def delete_other_TAs(keep_paths):
+    """Remove all TAs from the database, except for the ones in keep_paths."""
+
+    overallret = 0
+
+    keep_paths = set([os.path.normpath(path) for path in keep_paths])
+
+    query_p = subprocess.Popen(
+        ['query', '-t', 'cert', '-d', 'pathname', '-n', '-i'],
+        stdout=subprocess.PIPE)
+    all_certs = query_p.communicate()[0].splitlines()
+    if query_p.returncode != 0:
+        syslog(LOG_ERR, "Failed to query for all certificates")
+        return query_p.returncode
+
+    ta_repo_path_norm = os.path.normpath(ta_repo_path)
+
+    for path in all_certs:
+        path = os.path.normpath(path.rstrip())
+
+        if not path.startswith(ta_repo_path_norm):
+            # It's not a TA.
+            continue
+
+        if path in keep_paths:
+            # It's a TA that we want to keep.
+            continue
+
+        syslog(LOG_NOTICE, "Removing trust anchor from database: " + path)
+        ret = remove_from_db(path)
+        if ret != 0:
+            syslog(LOG_ERR,
+                   "Removing trust anchor %s failed with return code %d" %
+                    (path, ret))
+            overallret = ret
+
+    return overallret
 
 def parse_TAL_file(tal_file):
     """Return [rsyncURI, subjectPublicKeyInfo] as a pair of strings."""
@@ -278,7 +323,7 @@ def verify_TA_signature(cert_path):
     return ret
 
 def verify_SubjectPubKeyInfo(cert_path, pubkey_base64):
-    p1 = subprocess.Popen([extractkey_path, cert_path], stdout=subprocess.PIPE)
+    p1 = subprocess.Popen(['extractPubKeyInfo', cert_path], stdout=subprocess.PIPE)
     pubkey_binary = p1.communicate()[0]
     ret = p1.returncode
     if ret != 0:
@@ -292,7 +337,7 @@ def verify_SubjectPubKeyInfo(cert_path, pubkey_base64):
     return 0
 
 def remove_from_db(cert_path):
-    return subprocess.call([rcli_path, '-d', cert_path])
+    return subprocess.call(['rcli', '-d', cert_path])
 
 ###############################################################################
 
@@ -307,6 +352,9 @@ if __name__ == "__main__":
                       help="PATH to rsync executable", metavar="PATH")
     parser.add_option("-s", "--ssl", dest="openssl_cmd", default="openssl",
                       help="PATH to openssl executable", metavar="PATH")
+    parser.add_option("-d", "--delete",
+                      action="store_true", dest="delete", default=False,
+                      help="delete any TAs NOT referenced by the specified TALs")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose", default=False,
                       help="print gory details to stdout")
@@ -315,26 +363,11 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
     
-    # Get top-level RPKI directory, and compute local repository cache
-    # path based on $RPKI_ROOT environment variable.
-    if not "RPKI_ROOT" in os.environ:
-        print >>sys.stderr, "Error: environment variable RPKI_ROOT is not set"
-        sys.exit(1)
-    rpki_root = os.environ["RPKI_ROOT"].strip().rstrip("/")
-    repo_path = rpki_root + "/REPOSITORY"
+    # Get top-level RPKI directory, and compute local repository cache path
+    repo_path = subprocess.Popen(["config_get", "RPKICacheDir"],
+                                 stdout=subprocess.PIPE) \
+        .communicate()[0].strip().rstrip("/")
     ta_repo_path = repo_path + "/trustanchors"
-    rcli_path = rpki_root + "/bin/rpki/rcli"
-    extractkey_path = rpki_root + "/bin/rpki-object/extractPubKeyInfo"
-    if not os.path.exists(rpki_root):
-        print >>sys.stderr, "Error: rpki_root (%s) is not a valid path"
-        sys.exit(1)
-    if not os.path.exists(rcli_path):
-        print >>sys.stderr, "Error: rcli_path (%s) is not a valid path"
-        sys.exit(1)
-    if not os.path.exists(extractkey_path):
-        print >>sys.stderr, "Error: extractkey_path (%s) is not a valid path"
-        sys.exit(1)
-    syslog(LOG_INFO, "Using RPKI root directory: " + rpki_root)
     syslog(LOG_INFO, "Using local repository path: " + repo_path)
     syslog(LOG_INFO, "Using local trust anchor path: " + ta_repo_path)
     

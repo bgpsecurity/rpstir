@@ -2,7 +2,8 @@ noinst_LIBRARIES += lib/rpki/librpki.a
 
 LDADD_LIBRPKI = \
 	lib/rpki/librpki.a \
-	$(LDADD_LIBRPKIOBJECT)
+	$(LDADD_LIBRPKIOBJECT) \
+	$(LDADD_LIBCONFIG)
 
 lib_rpki_librpki_a_SOURCES = \
 	lib/rpki/cms/roa_create.c \
@@ -34,7 +35,7 @@ lib_rpki_librpki_a_SOURCES = \
 	lib/rpki/sqhl.h
 
 
-dist_check_DATA += \
+EXTRA_DIST += \
 	lib/rpki/tests/roa_test/Cert.req \
 	lib/rpki/tests/roa_test/keyfile.p15 \
 	lib/rpki/tests/roa_test/mytest.cert.req \

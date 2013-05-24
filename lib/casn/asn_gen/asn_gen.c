@@ -43,7 +43,7 @@ int array,
     made_change,
     option,
     state = PRE_GLOBAL,
-    vflag;
+    vflag = 0;                  /* verbosity */
 
 short subtype;
 
@@ -448,7 +448,8 @@ int main(
         fatal(2, source);
     dup2(fd, 0);
     close(fd);
-    fprintf(stderr, "Starting %s\n", source);
+    if (vflag > 0)
+        printf("Starting %s\n", source);
     start = time(&last);
     state = GLOBAL;
     pre_proc(-1, (FILE *) 0, 0);
@@ -526,8 +527,12 @@ int main(
         if (!find_name(token))
         {
             if (!did++)
-                printf("Defined but not used:\n");
-            printf("    %s\n", ntbp->name);
+            {
+                if (vflag > 0)
+                    printf("Defined but not used:\n");
+            }
+            if (vflag > 0)
+                printf("    %s\n", ntbp->name);
         }
     }
     for (ubp = (struct ub_table *)ub_area.area, eubp = &ubp[ub_area.next];
@@ -535,9 +540,13 @@ int main(
     {
         struct name_table *ntbp;
         if (!(ntbp = find_name(ubp->name)) || !ntbp->name)
-            printf("    %s\n", ubp->name);
+        {
+            if (vflag > 0)
+                printf("    %s\n", ubp->name);
+        }
     }
-    printf("\n");
+    if (vflag > 0)
+        printf("\n");
     for (did = 0, ntbp = (struct name_table *)name_area.area; ntbp <
          &((struct name_table *)name_area.area)[name_area.next]; ntbp++)
     {
@@ -574,7 +583,8 @@ int main(
             outstr = stdout;
         else
         {
-            printf("File %s\n", fname);
+            if (vflag > 0)
+                printf("File %s\n", fname);
             if (!(outstr = fopen(fname, "w")))
                 fatal(2, fname);
             cat(sfx, ".h");
@@ -598,7 +608,8 @@ int main(
         else
         {
             cat(sfx, ".h");
-            printf("File %s\n", fname);
+            if (vflag > 0)
+                printf("File %s\n", fname);
             if (!(outstr = fopen(fname, "w")))
                 fatal(2, fname);
             for (b = strcpy(locbuf, fname); *b; b++)
@@ -651,7 +662,8 @@ int main(
         if (!uflag)
             unlink(pprocname);
     }
-    fatal(0, source);
+    if (vflag > 0)
+        fatal(0, source);
     return 0;
 }
 

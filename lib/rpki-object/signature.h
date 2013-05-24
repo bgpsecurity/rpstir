@@ -6,7 +6,7 @@
 #include "casn/casn.h"
 
 /**
- * Create a signature.
+ * Create a RSA-SHA256 signature.
  *
  * @param[in] content ASN.1 structure to sign
  * @param[out] signature ASN.1 structure to put the signature into

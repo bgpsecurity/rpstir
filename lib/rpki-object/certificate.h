@@ -71,4 +71,11 @@ bool make_IPAddrOrRange(
     const void * low,
     const void * high);
 
+/**
+    @return True iff the certificate has any RFC3779 resources that are not
+            marked inherit.
+*/
+bool has_non_inherit_resources(
+    struct Certificate *cert);
+
 #endif

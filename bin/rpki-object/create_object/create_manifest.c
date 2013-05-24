@@ -8,7 +8,7 @@
 #include <errno.h>
 #include "util/cryptlib_compat.h"
 #include "rpki-asn1/certificate.h"
-#include "rpki-asn1/roa.h"
+#include "rpki-asn1/cms.h"
 #include <rpki-asn1/keyfile.h>
 #include <casn/casn.h>
 #include <casn/asn.h>
@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "util/cryptlib_compat.h"
+#include "config/config.h"
 
 /**
  *
@@ -34,7 +35,6 @@ int write_EEcert(
 int write_EEkey(
     void *my_var,
     void *value);
-char *man_template = TEMPLATES_DIR "/M.man";
 
 /**
  * Write the unique identifier for this manifest number
@@ -50,9 +50,9 @@ int write_manNum(
     // CMS object, then I parse the value parameter into a long and then I
     // write 
     // it into the struct. 
-    struct ROA *roa = man;
+    struct CMS *cms = man;
     struct Manifest *manp =
-        &roa->content.signedData.encapContentInfo.eContent.manifest;
+        &cms->content.signedData.encapContentInfo.eContent.manifest;
     long manNum = strtol(((char *)value), NULL, 0);
     write_casn_num(&manp->manifestNumber, manNum);
     return SUCCESS;
@@ -68,13 +68,13 @@ int write_thisUpdate(
     // Same idea here. Cast the generic parameters, grab the manifest part of
     // the
     // CMS object, clear out the old value and then put in the new one. 
-    struct ROA *roa = man;
+    struct CMS *cms = man;
 
     if (value == NULL)
         return -1;
 
     struct Manifest *manp =
-        &roa->content.signedData.encapContentInfo.eContent.manifest;
+        &cms->content.signedData.encapContentInfo.eContent.manifest;
     clear_casn(&manp->thisUpdate);
 
     if (write_casn(&manp->thisUpdate, (uchar *) value, strlen(value)) < 0)
@@ -90,13 +90,13 @@ int write_nextUpdate(
     void *value)
 {
     // Same as the thisUpdate function above. 
-    struct ROA *roa = man;
+    struct CMS *cms = man;
 
     if (value == NULL)
         return -1;
 
     struct Manifest *manp =
-        &roa->content.signedData.encapContentInfo.eContent.manifest;
+        &cms->content.signedData.encapContentInfo.eContent.manifest;
     clear_casn(&manp->nextUpdate);
 
     if (write_casn(&manp->nextUpdate, (uchar *) value, strlen(value)) < 0)
@@ -116,14 +116,14 @@ int write_fileList(
     void *value)
 {
     // cast the parameter into the correct struct
-    struct ROA *roa = man;
+    struct CMS *cms = man;
     char *filesAndHashes;
     char *buf;
     char *token = ",";
 
     // Get the manifest pointer
     struct Manifest *manp =
-        &roa->content.signedData.encapContentInfo.eContent.manifest;
+        &cms->content.signedData.encapContentInfo.eContent.manifest;
     struct FileAndHash *fahp;
 
     if (value == NULL)
@@ -224,26 +224,26 @@ struct object_field *get_man_field_table(
 int create_manifest(
     struct object_field *table)
 {
-    struct ROA roa;
+    struct CMS cms;
     struct FileListInManifest *f;
     // struct CMSAlgorithmIdentifier *algidp;
 
-    ROA(&roa, 0);
+    CMS(&cms, 0);
 
     if (!templateFile)
     {
-        templateFile = man_template;
+        templateFile = CONFIG_TEMPLATE_MANIFEST_get();
     }
 
     // Read the manifest template into this manifest
-    if (get_casn_file(&roa.self, (char *)templateFile, 0) < 0)
+    if (get_casn_file(&cms.self, (char *)templateFile, 0) < 0)
     {
         warn(FILE_OPEN_ERR, (char *)templateFile);
         return (FILE_OPEN_ERR);
     }
 
     // Remove existing manifest file list.
-    f = &roa.content.signedData.encapContentInfo.eContent.manifest.fileList;
+    f = &cms.content.signedData.encapContentInfo.eContent.manifest.fileList;
     eject_all_casn(&f->self);
 
     // Setup the outerlying CMS structure
@@ -259,7 +259,7 @@ int create_manifest(
                 // This is useful to allow us to have a loop over all 
                 // of the manifest table fields. This is an extremely 
                 // generic call to a function pointer in the table
-                if (table[i].func(&roa, table[i].value) != SUCCESS)
+                if (table[i].func(&cms, table[i].value) != SUCCESS)
                 {
                     return -1;
                 }
@@ -269,7 +269,7 @@ int create_manifest(
 
     // write the new file out
     char *fileName = table[0].value;
-    if (put_casn_file(&roa.self, fileName, 0) < SUCCESS)
+    if (put_casn_file(&cms.self, fileName, 0) < SUCCESS)
     {
         printf("fail\n");
         return -1;

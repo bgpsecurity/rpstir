@@ -12,7 +12,8 @@ root/root.crl
      root.mft
      [bad|good]Cert*.cer
      [bad|good]CMS*.roa
-     [bad|good]ROA.roa
+     [bad|good]ROA*.roa
+     [bad|good]GBR*.gbr
      CRL*.cer
      CRL*/[bad|good]CRL*.crl
           CRL*.mft
@@ -94,8 +95,8 @@ CA Certificates
 142 ResourcesBadV6Order # IPv6 addresses out of order 3779 (but full set is pending)
 143 ResourcesIPNoCrit   # IP address extension not critical 6487#4.8.10
 144 ResourcesNone       # neither AS nor IP 3779 extensions 6487#4.8.10
-    ResourcesIPEmpty    # empty set of IP addresses 6487#4.8.10
-    ResourcesASEmpty    # empty set of AS numbers 6487#4.8.11
+192 ResourcesIPEmpty    # empty set of IP addresses 6487#4.8.10
+193 ResourcesASEmpty    # empty set of AS numbers 6487#4.8.11
 145 ResourcesSAFI       # IP addresses has SAFI digit 6487#4.8.10
     ResourcesIP6Inherit # (good) inherit IPv6 resources only, others explicit 6487#4.8.10
     ResourcesIP4Inherit # (good) inherit IPv4 resources only, others explicit 6487#4.8.10
@@ -233,6 +234,8 @@ ROAs
     WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
 551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
 552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
+560 ASIDZero                 # (good) AS 0 is allowed 6482#3.2, 6483#5, 6491
+561 ASIDMax                  # (good) AS 2^32-1 is allowed 6482#3.2, 4893#7
 553 Family                   # invalid family 6482#3.3
 554 FamilyLth                # family name too long 6482#3.3
     IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
@@ -251,6 +254,17 @@ ROAs
 558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature 6482#3
 559 VersionV2                # Version V2 (int 1) 6482#3.1
                              # IP addresses exceed via inherit?
+
+Ghostbusters
+
+600 NothingWrong             # (good) nothing wrong
+601 NotVCard                 # the eContent is not valid vCard 6493#5
+    ExtraProperty            # a vCard property not listed in 6493#5 is present
+    NoContact                # none of ADR, TEL, or EMAIL are present 6493#5
+602 WrongOID                 # the wrong OID is used in both the eContentType and the content-type 6493#6
+603 IPv4NotInherit           # the EE cert has IPv4 resources not set to inherit 6493#6
+604 IPv6NotInherit           # the EE cert has IPv6 resources not set to inherit 6493#6
+605 ASNotInherit             # the EE cert has AS resources not set to inherit 6493#6
 
 CRLs
 
@@ -314,6 +328,8 @@ Manifests
 782 MFTHashOctetStr          # file hash is octet, not bit string 6486#4.2
 783 MFTDuplicateFileOneHash  # duplicate file name with same hash 6486#4.2.1
 784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash 6486#4.2.1
+788 MFTUnkownFileExtension   # (good) file name has an unrecognized extension 6486#4.2.1
+TODO: enumerate cases of MFT EE rfc3779 resources. All resources present should be set to inherit, but it's unclear if all possible resources (AS, IPv4, IPv6) have to be present in the first place.
 
 
 Trust Anchor (self-signed) certificates

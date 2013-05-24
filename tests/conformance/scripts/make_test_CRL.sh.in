@@ -4,17 +4,14 @@
 # make_test_CRL.sh - manually create CertificateRevocationList (CRL)
 #       for RPKI syntax conformance test
 
-# Set up RPKI environment variables if not already done.
-THIS_SCRIPT_DIR=$(dirname $0)
-. $THIS_SCRIPT_DIR/../../../etc/envir.setup
+@SETUP_ENVIRONMENT@
 
 # Safe bash shell scripting practices
-. $RPKI_ROOT/lib/util/trap_errors
+@trap_errors@
 
-TEST_LOG_DIR="$RPKI_ROOT/tests/conformance/scripts"
+TEST_LOG_DIR="$TESTS_BUILDDIR"
 TEST_LOG_NAME=`basename "$0"`
 STRICT_CHECKS=0
-. "$RPKI_ROOT/tests/test.include"
 
 # Usage
 usage ( ) {
@@ -117,14 +114,14 @@ Auxiliary Outputs: (not shown in diagram)
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
 
-CONF_SCRIPTS=$RPKI_ROOT/tests/conformance/scripts
+CONF_SCRIPTS="$TESTS_BUILDDIR"
 
 # Options and defaults
-OUTPUT_DIR="$RPKI_ROOT/tests/conformance/raw/root"
-PATCHES_DIR="$RPKI_ROOT/tests/conformance/raw/patches"
-KEYS_DIR="$RPKI_ROOT/tests/conformance/raw/keys"
-ROOT_KEY_PATH="$RPKI_ROOT/tests/conformance/raw/root.p15"
-ROOT_CERT_PATH="$RPKI_ROOT/tests/conformance/raw/root.cer"
+OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
+PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
+KEYS_DIR="$TESTS_SRCDIR/../raw/keys"
+ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
+ROOT_CERT_PATH="$TESTS_BUILDDIR/../raw/root.cer"
 USE_EXISTING_PATCHES=
 PREFIX="bad"
 EDITOR=${EDITOR:-vi}            # set editor to vi if undefined
