@@ -6,14 +6,28 @@
 @SETUP_ENVIRONMENT@
 
 
-# TODO: Create an example /etc/rpstir/statistics.conf. It should mention that
-#       the database will be overwritten on every run. It should not include
-#       RPKICacheDir or LogDir. It should use different values that allow
-#       stats to not interfere with normal use.
-# TODO: Create a temporary config file that includes
-#       /etc/rpstir/statistics.conf. The temporary config file should allow
-#       this script to set RPKICacheDir and LogDir based on an env var.
-# TODO: Figure out if the above can work with ~/.rpstir/statistics.conf.
+# The builtin config file statistics-internal.conf includes the user-supplied
+# statistics.conf, but allows this script to influence where data is stored
+# using environment variables.
+export @CONFIG_ENV_VAR@="@pkgdatadir@/statistics-internal.conf"
+export @PACKAGE_NAME_UC@_STATISTICS_CONFIG="@pkgsysconfdir@/statistics.conf"
+
+test -e "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}" || {
+    echo >&2 "This script will not work without the configuration file"
+    echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}."
+    echo >&2 ""
+    echo >&2 "To create the configuration file, copy"
+    echo >&2 "@examplesdir@/statistics.conf to"
+    echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG} and edit"
+    echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}, following the comments in"
+    echo >&2 "the file."
+    echo >&2 ""
+    echo >&2 "Once that is done, this script can be used to collect data on"
+    echo >&2 "the global RPKI. This is probably only useful to people who want"
+    echo >&2 "to monitor the RPKI, not to people who just want their routers"
+    echo >&2 "to work."
+    exit 1
+}
 
 
 # Directory layout of RPKIStatisticsDir:
@@ -36,6 +50,9 @@ mkdir -p \
 
 LOCK_FILE="$STATS_DIR/tmp/collect.lock"
 WORK_DIR="$STATS_DIR/tmp/work-`date +%s`-`hostname`-$$"
+
+# For use in statistics-internal.conf
+export @PACKAGE_NAME_UC@_STATISTICS_COLLECTION_DIR="$WORK_DIR"
 
 
 # Whether the run should go in the bad/ or good/ directory above.
