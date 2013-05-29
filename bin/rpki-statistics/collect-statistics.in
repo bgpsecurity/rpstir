@@ -1,0 +1,141 @@
+#!/bin/sh
+
+# cron runs this script once every X time period to collect statistics
+# from the global RPKI
+
+@SETUP_ENVIRONMENT@
+
+
+# TODO: Create an example /etc/rpstir/statistics.conf. It should mention that
+#       the database will be overwritten on every run. It should not include
+#       RPKICacheDir or LogDir. It should use different values that allow
+#       stats to not interfere with normal use.
+# TODO: Create a temporary config file that includes
+#       /etc/rpstir/statistics.conf. The temporary config file should allow
+#       this script to set RPKICacheDir and LogDir based on an env var.
+# TODO: Figure out if the above can work with ~/.rpstir/statistics.conf.
+
+
+# Directory layout of RPKIStatisticsDir:
+#   bad/ - stats for failed runs
+#     <start-time>~<end-time>.tgz
+#   good/ - stats for successful runs
+#     <start-time>~<end-time>.tgz
+#   tmp/ - temporary work
+#     collect.lock - lock file so only one run happens at a time
+#     work-*/ - contents of the run, before the end time is known
+#     <start-time>~<end-time>/ - contents of the run, once the end time is known
+
+STATS_DIR="`config_get RPKIStatisticsDir`"
+
+mkdir -p \
+    "$STATS_DIR/bad" \
+    "$STATS_DIR/good" \
+    "$STATS_DIR/tmp" \
+    || fatal "could not create stats directories under $STATS_DIR"
+
+LOCK_FILE="$STATS_DIR/tmp/collect.lock"
+WORK_DIR="$STATS_DIR/tmp/work-`date +%s`-`hostname`-$$"
+
+
+# Whether the run should go in the bad/ or good/ directory above.
+RESULT=good
+
+START_TIME=""
+END_TIME=""
+
+
+formatted_date () {
+    date -u +"%Y-%m-%dT%H:%M:%S"
+}
+
+# This function must only be called when the mutex is locked and $WORK_DIR
+# exists.
+cleanup () {
+    failed=""
+
+    test -n "$START_TIME" || START_TIME="`formatted_date`"
+    test -n "$END_TIME" || END_TIME="`formatted_date`"
+    NAME="${START_TIME}~${END_TIME}"
+
+    # Compress $WORK_DIR to $STATS_DIR/$RESULT/$NAME.tgz.
+    if mv "$WORK_DIR" "$STATS_DIR/tmp/$NAME" && \
+        tar -cpzf "$STATS_DIR/$RESULT/$NAME.tgz" -C "$STATS_DIR/tmp" "$NAME"
+    then
+        rm -rf "$STATS_DIR/tmp/$NAME" || {
+            error "could not remove temporary directory $STATS_DIR/tmp/$NAME"
+            failed=true
+        }
+    else
+        error "could not make $STATS_DIR/$RESULT/$NAME.tgz"
+        failed=true
+    fi
+
+    mutex_unlock "$LOCK_FILE"
+
+    # Only modify the return code if this function failed.
+    test -n "$failed" && exit 1
+}
+
+
+# Set up the conditions required to run cleanup(), then trap cleanup().
+mutex_trylock "$LOCK_FILE" || exit 1 # mutex_trylock prints its own error message
+mkdir "$WORK_DIR" || {
+    mutex_unlock "$LOCK_FILE"
+    fatal "could not create work directory $WORK_DIR"
+}
+trap cleanup 0
+
+
+# By this point, the mutex is locked, $WORK_DIR exists, and cleanup() is
+# trapped, so fatal() can record info in $WORK_DIR and modify the behavior of
+# cleanup() by setting $RESULT.
+fatal () {
+    error "$@"
+    error "$@" > "$WORK_DIR/error" 2>&1
+    RESULT=bad
+    exit 1
+}
+
+
+hostname > "$WORK_DIR/hostname" \
+    || fatal "could not record hostname"
+
+echo "@PACKAGE_VERSION_FULL@" > "$WORK_DIR/version" \
+    || fatal "could not record software version"
+
+
+initialize -f > "$WORK_DIR/initialize.log" 2>&1 \
+    || fatal "failed to initialize database"
+
+START_TIME="`formatted_date`"
+synchronize > "$WORK_DIR/synchronize.log" 2>&1 \
+    || fatal "error syncing with repositories"
+END_TIME="`formatted_date`"
+
+
+query -t cert -d pathname -d valfrom -d valto -d flags -i \
+    > "$WORK_DIR/query.cer" \
+    || fatal "could not query certificates"
+
+query -t crl -d pathname -d last_upd -d next_upd -d flags -i \
+    > "$WORK_DIR/query.crl" \
+    || fatal "could not query CRLs"
+
+query -t gbr -d pathname -d flags -i \
+    > "$WORK_DIR/query.gbr" \
+    || fatal "could not query GBRs"
+
+query -t roa -d pathname -d flags -i \
+    > "$WORK_DIR/query.roa" \
+    || fatal "could not query ROAs"
+
+query -t manifest -d pathname -d this_upd -d next_upd -d flags -i \
+    > "$WORK_DIR/query.mft" \
+    || fatal "could not query manifests"
+
+results > "$WORK_DIR/results" \
+    || fatal "could not run results"
+
+results -v > "$WORK_DIR/results.verbose" \
+    || fatal "could not run results (verbose)"

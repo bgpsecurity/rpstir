@@ -1,5 +1,8 @@
-dist_bin_SCRIPTS += \
-	bin/rpki-statistics/collect.sh
+pkglibexec_SCRIPTS += bin/rpki-statistics/collect-statistics
+MK_SUBST_FILES_EXEC += bin/rpki-statistics/collect-statistics
+bin/rpki-statistics/collect-statistics: \
+	$(srcdir)/bin/rpki-statistics/collect-statistics.in
+PACKAGE_NAME_BINS += collect-statistics
 
 
 noinst_SCRIPTS += bin/rpki-statistics/for-each-run.sh
