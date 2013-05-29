@@ -13,4 +13,5 @@ lib_config_libconfig_a_CPPFLAGS = \
 	-DPKGCACHEDIR='"$(pkgcachedir)"' \
 	-DPKGDATADIR='"$(pkgdatadir)"' \
 	-DPKGLOGDIR='"$(pkglogdir)"' \
+	-DPKGVARLIBDIR='"$(pkgvarlibdir)"' \
 	-DTEMPLATESDIR='"$(templatesdir)"'

@@ -253,6 +253,16 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "\"" PKGLOGDIR "\""},
+
+    // CONFIG_RPKI_STATISTICS_DIR
+    {
+     "RPKIStatisticsDir",
+     false,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGVARLIBDIR "/statistics\""},
 };
 
 

@@ -4,4 +4,5 @@ conformancetadir = $(sampletadir)/bbn_conformance
 pkgcachedir = $(localstatedir)/cache/$(PACKAGE_NAME)
 pkglogdir = $(localstatedir)/log/$(PACKAGE_NAME)
 pkgsysconfdir = $(sysconfdir)/$(PACKAGE_NAME)
+pkgvarlibdir = $(localstatedir)/lib/$(PACKAGE_NAME)
 templatesdir = $(pkgdatadir)/templates
