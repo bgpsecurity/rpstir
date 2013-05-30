@@ -40,13 +40,17 @@ test -e "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}" || {
 #     work-*/ - contents of the run, before the end time is known
 #     <start-time>~<end-time>/ - contents of the run, once the end time is known
 
+# Suppress warnings about a missing environment variable until this variable
+# can be set to a useful value below.
+export @PACKAGE_NAME_UC@_STATISTICS_COLLECTION_DIR=/nonexistent
+
 STATS_DIR="`config_get RPKIStatisticsDir`"
 
 mkdir -p \
     "$STATS_DIR/bad" \
     "$STATS_DIR/good" \
     "$STATS_DIR/tmp" \
-    || fatal "could not create stats directories under $STATS_DIR"
+    || fatal "could not create stats directories under $STATS_DIR/"
 
 LOCK_FILE="$STATS_DIR/tmp/collect.lock"
 WORK_DIR="$STATS_DIR/tmp/work-`date +%s`-`hostname`-$$"
