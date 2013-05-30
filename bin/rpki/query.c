@@ -707,8 +707,16 @@ int main(
         numDisplays = addAllFields(displays, 0);
     displays[numDisplays++] = NULL;
     clauses[numClauses++] = NULL;
-    if ((status = doQuery(displays, clauses, orderp)) < 0)
+    status = doQuery(displays, clauses, orderp);
+    if (status == ERR_SCM_NODATA)
+    {
+        LOG(LOG_DEBUG, "%s", err2string(status));
+        status = 0;
+    }
+    else if (status < 0)
+    {
         LOG(LOG_ERR, "%s", err2string(status));
+    }
     config_unload();
     CLOSE_LOG();
     return status;
