@@ -1,5 +1,3 @@
 collect-statistics
 for-each-run.sh
 run-times.py
-statistics-internal.conf
-statistics.conf

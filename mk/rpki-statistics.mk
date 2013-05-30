@@ -5,17 +5,6 @@ bin/rpki-statistics/collect-statistics: \
 PACKAGE_NAME_BINS += collect-statistics
 
 
-examples_DATA += bin/rpki-statistics/statistics.conf
-MK_SUBST_FILES += bin/rpki-statistics/statistics.conf
-bin/rpki-statistics/statistics.conf: \
-	$(srcdir)/bin/rpki-statistics/statistics.conf.in
-
-pkgdata_DATA += bin/rpki-statistics/statistics-internal.conf
-MK_SUBST_FILES += bin/rpki-statistics/statistics-internal.conf
-bin/rpki-statistics/statistics-internal.conf: \
-	$(srcdir)/bin/rpki-statistics/statistics-internal.conf.in
-
-
 noinst_SCRIPTS += bin/rpki-statistics/for-each-run.sh
 MK_SUBST_FILES_EXEC += bin/rpki-statistics/for-each-run.sh
 bin/rpki-statistics/for-each-run.sh: \
@@ -40,3 +29,14 @@ bin/rpki-statistics/for-each-run-helpers/validation-time.py: \
 noinst_SCRIPTS += bin/rpki-statistics/run-times.py
 MK_SUBST_FILES_EXEC += bin/rpki-statistics/run-times.py
 bin/rpki-statistics/run-times.py: $(srcdir)/bin/rpki-statistics/run-times.py.in
+
+
+examples_DATA += etc/statistics.conf
+MK_SUBST_FILES += etc/statistics.conf
+etc/statistics.conf: \
+	$(srcdir)/etc/statistics.conf.in
+
+pkgdata_DATA += var/statistics-internal.conf
+MK_SUBST_FILES += var/statistics-internal.conf
+var/statistics-internal.conf: \
+	$(srcdir)/var/statistics-internal.conf.in
