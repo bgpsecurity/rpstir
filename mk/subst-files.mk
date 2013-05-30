@@ -37,6 +37,7 @@ trap_errors = \
 do_subst = $(SED) \
 	-e 's,[@]abs_top_builddir[@],$(abs_top_builddir),g' \
 	-e 's,[@]abs_top_srcdir[@],$(abs_top_srcdir),g' \
+	-e 's,[@]examplesdir[@],$(examplesdir),g' \
 	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
 	-e 's,[@]pkgdatadir[@],$(pkgdatadir),g' \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
@@ -50,6 +51,7 @@ do_subst = $(SED) \
 	-e 's,[@]MKTEMP_DIR[@],$(MKTEMP_DIR),g' \
 	-e 's,[@]PACKAGE_BUGREPORT[@],$(PACKAGE_BUGREPORT),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
+	-e 's,[@]PACKAGE_NAME_UC[@],$(PACKAGE_NAME_UC),g' \
 	-e 's,[@]PACKAGE_SYS_CONF_FILE[@],$(PACKAGE_SYS_CONF_FILE),g' \
 	-e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' \
 	-e 's,[@]PACKAGE_VERSION_FULL[@],$(PACKAGE_VERSION_FULL),g' \
