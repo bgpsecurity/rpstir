@@ -36,6 +36,33 @@ mysql_cmd () {
 }
 
 
+# This function makes a script use the statistics configuration instead of
+# the normal configuration.
+setup_statistics_environment () {
+    # The builtin config file statistics-internal.conf includes the
+    # user-supplied statistics.conf, but allows scripts to influence where data
+    # is stored using environment variables.
+    export @CONFIG_ENV_VAR@="@pkgdatadir@/statistics-internal.conf"
+    export @PACKAGE_NAME_UC@_STATISTICS_CONFIG="@pkgsysconfdir@/statistics.conf"
+    test -e "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}" || {
+        echo >&2 "This script will not work without the configuration file"
+        echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}."
+        echo >&2 ""
+        echo >&2 "To create the configuration file, copy"
+        echo >&2 "@examplesdir@/statistics.conf to"
+        echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG} and edit"
+        echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}, following the comments in"
+        echo >&2 "the file."
+        exit 1
+    }
+
+    # Suppress warnings about a missing environment variable. The
+    # collect-statistics script can set this to a useful value to influence
+    # where data is stored.
+    export @PACKAGE_NAME_UC@_STATISTICS_COLLECTION_DIR=/nonexistent
+}
+
+
 ############################################################################
 # Shell function for checking return codes for error (swiped from
 # http://steve-parker.org/sh/exitcodes.shtml)

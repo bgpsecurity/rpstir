@@ -5,29 +5,19 @@
 
 @SETUP_ENVIRONMENT@
 
-
-# The builtin config file statistics-internal.conf includes the user-supplied
-# statistics.conf, but allows this script to influence where data is stored
-# using environment variables.
-export @CONFIG_ENV_VAR@="@pkgdatadir@/statistics-internal.conf"
-export @PACKAGE_NAME_UC@_STATISTICS_CONFIG="@pkgsysconfdir@/statistics.conf"
-
-test -e "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}" || {
-    echo >&2 "This script will not work without the configuration file"
-    echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}."
-    echo >&2 ""
-    echo >&2 "To create the configuration file, copy"
-    echo >&2 "@examplesdir@/statistics.conf to"
-    echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG} and edit"
-    echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}, following the comments in"
-    echo >&2 "the file."
-    echo >&2 ""
-    echo >&2 "Once that is done, this script can be used to collect data on"
+if test "$1" = "--help"; then
+    echo >&2 "This script can be used to collect data on"
     echo >&2 "the global RPKI. This is probably only useful to people who want"
     echo >&2 "to monitor the RPKI, not to people who just want their routers"
     echo >&2 "to work."
-    exit 1
-}
+    echo >&2 ""
+    echo >&2 "This script should be run periodically from Cron. See"
+    echo >&2 "@PACKAGE_NAME@-plot-statistics to analyze the results of this"
+    echo >&2 "script."
+    exit 0
+fi
+
+setup_statistics_environment
 
 
 # Directory layout of RPKIStatisticsDir:
@@ -39,10 +29,6 @@ test -e "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}" || {
 #     collect.lock - lock file so only one run happens at a time
 #     work-*/ - contents of the run, before the end time is known
 #     <start-time>~<end-time>/ - contents of the run, once the end time is known
-
-# Suppress warnings about a missing environment variable until this variable
-# can be set to a useful value below.
-export @PACKAGE_NAME_UC@_STATISTICS_COLLECTION_DIR=/nonexistent
 
 STATS_DIR="`config_get RPKIStatisticsDir`"
 
