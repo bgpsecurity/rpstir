@@ -19,24 +19,8 @@ fi
 
 setup_statistics_environment
 
-
-# Directory layout of RPKIStatisticsDir:
-#   bad/ - stats for failed runs
-#     <start-time>~<end-time>.tgz
-#   good/ - stats for successful runs
-#     <start-time>~<end-time>.tgz
-#   tmp/ - temporary work
-#     collect.lock - lock file so only one run happens at a time
-#     work-*/ - contents of the run, before the end time is known
-#     <start-time>~<end-time>/ - contents of the run, once the end time is known
-
 STATS_DIR="`config_get RPKIStatisticsDir`"
 
-mkdir -p \
-    "$STATS_DIR/bad" \
-    "$STATS_DIR/good" \
-    "$STATS_DIR/tmp" \
-    || fatal "could not create stats directories under $STATS_DIR/"
 
 LOCK_FILE="$STATS_DIR/tmp/collect.lock"
 WORK_DIR="$STATS_DIR/tmp/work-`date +%s`-`hostname`-$$"

@@ -39,6 +39,8 @@ mysql_cmd () {
 # This function makes a script use the statistics configuration instead of
 # the normal configuration.
 setup_statistics_environment () {
+    local STATS_DIR
+
     # The builtin config file statistics-internal.conf includes the
     # user-supplied statistics.conf, but allows scripts to influence where data
     # is stored using environment variables.
@@ -60,6 +62,24 @@ setup_statistics_environment () {
     # collect-statistics script can set this to a useful value to influence
     # where data is stored.
     export @PACKAGE_NAME_UC@_STATISTICS_COLLECTION_DIR=/nonexistent
+
+    # Directory layout of RPKIStatisticsDir:
+    #   bad/ - stats for failed runs
+    #     <start-time>~<end-time>.tgz
+    #   good/ - stats for successful runs
+    #     <start-time>~<end-time>.tgz
+    #   results/ - data files and plots generated from the data in bad/ and good/
+    #   tmp/ - temporary work
+    #     collect.lock - lock file so only one run happens at a time
+    #     work-*/ - contents of the run, before the end time is known
+    #     <start-time>~<end-time>/ - contents of the run, once the end time is known
+    STATS_DIR="`config_get RPKIStatisticsDir`"
+    mkdir -p \
+        "$STATS_DIR/bad" \
+        "$STATS_DIR/good" \
+        "$STATS_DIR/results" \
+        "$STATS_DIR/tmp" \
+        || fatal "could not create stats directories under $STATS_DIR/"
 }
 
 
