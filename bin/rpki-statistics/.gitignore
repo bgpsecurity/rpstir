@@ -1,3 +1,4 @@
 collect-statistics
-for-each-run.sh
-run-times.py
+plot-statistics
+stats-for-each-run.sh
+stats-run-times.py

@@ -4,31 +4,52 @@ bin/rpki-statistics/collect-statistics: \
 	$(srcdir)/bin/rpki-statistics/collect-statistics.in
 PACKAGE_NAME_BINS += collect-statistics
 
+pkglibexec_SCRIPTS += bin/rpki-statistics/plot-statistics
+MK_SUBST_FILES_EXEC += bin/rpki-statistics/plot-statistics
+bin/rpki-statistics/plot-statistics: \
+	$(srcdir)/bin/rpki-statistics/plot-statistics.in
+PACKAGE_NAME_BINS += plot-statistics
 
-noinst_SCRIPTS += bin/rpki-statistics/for-each-run.sh
-MK_SUBST_FILES_EXEC += bin/rpki-statistics/for-each-run.sh
-bin/rpki-statistics/for-each-run.sh: \
-	$(srcdir)/bin/rpki-statistics/for-each-run.sh.in
+
+pkglibexec_SCRIPTS += bin/rpki-statistics/stats-for-each-run.sh
+MK_SUBST_FILES_EXEC += bin/rpki-statistics/stats-for-each-run.sh
+bin/rpki-statistics/stats-for-each-run.sh: \
+	$(srcdir)/bin/rpki-statistics/stats-for-each-run.sh.in
+
+pkglibexec_SCRIPTS += bin/rpki-statistics/stats-run-times.py
+MK_SUBST_FILES_EXEC += bin/rpki-statistics/stats-run-times.py
+bin/rpki-statistics/stats-run-times.py: \
+	$(srcdir)/bin/rpki-statistics/stats-run-times.py.in
 
 
-noinst_SCRIPTS += \
+dist_plotexec_SCRIPTS +=  \
+	bin/rpki-statistics/plots/run-times-over-time.R \
+	bin/rpki-statistics/plots/run-times-over-time.sh \
+	bin/rpki-statistics/plots/total-objects-over-time.R
+
+plotexec_SCRIPTS += bin/rpki-statistics/plots/total-objects-over-time.sh
+MK_SUBST_FILES_EXEC += bin/rpki-statistics/plots/total-objects-over-time.sh
+bin/rpki-statistics/plots/total-objects-over-time.sh: \
+	$(srcdir)/bin/rpki-statistics/plots/total-objects-over-time.sh.in
+
+
+dist_statshelper_SCRIPTS += \
+	bin/rpki-statistics/for-each-run-helpers/parse-results.sh \
+	bin/rpki-statistics/for-each-run-helpers/rcli-important-messages.sh \
+	bin/rpki-statistics/for-each-run-helpers/rcli-specific-messages-counts.sh
+
+statshelper_SCRIPTS += \
 	bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py
 MK_SUBST_FILES_EXEC += \
 	bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py
 bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py: \
 	$(srcdir)/bin/rpki-statistics/for-each-run-helpers/download-time-per-domain.py.in
 
-
-noinst_SCRIPTS += bin/rpki-statistics/for-each-run-helpers/validation-time.py
+statshelper_SCRIPTS += bin/rpki-statistics/for-each-run-helpers/validation-time.py
 MK_SUBST_FILES_EXEC += \
 	bin/rpki-statistics/for-each-run-helpers/validation-time.py
 bin/rpki-statistics/for-each-run-helpers/validation-time.py: \
 	$(srcdir)/bin/rpki-statistics/for-each-run-helpers/validation-time.py.in
-
-
-noinst_SCRIPTS += bin/rpki-statistics/run-times.py
-MK_SUBST_FILES_EXEC += bin/rpki-statistics/run-times.py
-bin/rpki-statistics/run-times.py: $(srcdir)/bin/rpki-statistics/run-times.py.in
 
 
 examples_DATA += etc/statistics.conf

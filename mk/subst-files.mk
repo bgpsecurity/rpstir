@@ -44,7 +44,9 @@ do_subst = $(SED) \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
 	-e 's,[@]pkgsysconfdir[@],$(pkgsysconfdir),g' \
 	-e 's,[@]pkgvarlibdir[@],$(pkgvarlibdir),g' \
+	-e 's,[@]plotexecdir[@],$(plotexecdir),g' \
 	-e 's,[@]sampletadir[@],$(sampletadir),g' \
+	-e 's,[@]statshelperdir[@],$(statshelperdir),g' \
 	-e 's,[@]trap_errors[@],$(trap_errors),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \

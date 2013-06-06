@@ -1,5 +1,3 @@
 #!/bin/sh
 
-cd "$(dirname "$0")/../../.."
-
-./bin/rpki-statistics/run-times.py
+exec stats-run-times.py "$STATS_DIR/good"

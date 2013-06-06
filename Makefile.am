@@ -50,6 +50,8 @@ dist_doc_DATA =
 dist_man_MANS =
 dist_noinst_DATA =
 dist_pkgdata_DATA =
+dist_plotexec_SCRIPTS =
+dist_statshelper_SCRIPTS =
 dist_sysconf_DATA =
 examples_DATA =
 noinst_DATA =
@@ -59,6 +61,8 @@ noinst_SCRIPTS =
 pkgdata_DATA =
 pkglibexec_PROGRAMS =
 pkglibexec_SCRIPTS =
+plotexec_SCRIPTS =
+statshelper_SCRIPTS =
 
 
 ## The test environment can be used by any of the other makefiles, so it comes

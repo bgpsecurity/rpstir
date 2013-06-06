@@ -11,9 +11,10 @@ Analyze statistics on the duration of each complete run of synchronizing against
 """
 
 
-def get_times():
+def get_times(directory):
     """
-    Returns an ordered iterable of 2-tuples (start_time, end_time).
+    Returns an ordered iterable of 2-tuples (start_time, end_time) for
+    statistics results in the specified directory.
     """
 
     file_re = re.compile(
@@ -28,7 +29,7 @@ def get_times():
         """,
         re.VERBOSE)
 
-    for file_name in sorted(os.listdir('statistics')):
+    for file_name in sorted(os.listdir(directory)):
         file_name_match = file_re.match(file_name)
         if '\n' in file_name or file_name_match is None:
             sys.stderr.write("unknown file: %s\n" % file_name)
@@ -60,6 +61,9 @@ def get_times():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        sys.exit("Usage: %s <statistics data directory>" % sys.argv[0])
+
     print "Duration"
-    for start_time, stop_time in get_times():
+    for start_time, stop_time in get_times(sys.argv[1]):
         print (stop_time - start_time).total_seconds()

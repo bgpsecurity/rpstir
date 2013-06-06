@@ -1,5 +1,10 @@
 #!/bin/sh
 
+@SETUP_ENVIRONMENT@
+
+setup_statistics_environment
+
+STATS_DIR="`config_get RPKIStatisticsDir`"
 
 usage () {
     {
@@ -13,9 +18,6 @@ usage () {
 }
 
 
-. `dirname "$0"`/../../lib/util/shell_utils
-
-
 test $# -ge 1 || usage_fatal "no executable specified"
 
 # get absolute path of the executable
@@ -26,12 +28,10 @@ unset EXECUTABLE_DIR
 shift
 
 
-cd statistics || fatal "can't cd into the statistics directory"
-
 workdir="`@MKTEMP_DIR@`" || fatal "can't create temporary directory"
 
-for tarball in *.tgz; do
-    tar -xzpf ./"$tarball" -C "$workdir" || fatal "can't extract $tarball"
+for tarball in "$STATS_DIR/good"/*.tgz; do
+    tar -xzpf "$tarball" -C "$workdir" || fatal "can't extract $tarball"
 
     statsdir="$workdir"/`basename "$tarball" .tgz`
     test -d "$statsdir" || fatal "tarball $tarball doesn't have expected contents"
