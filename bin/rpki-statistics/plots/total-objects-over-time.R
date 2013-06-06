@@ -5,7 +5,7 @@ times$Start <- as.POSIXlt(times$Start)
 times$End <- as.POSIXlt(times$End)
 
 x <- times$Start + difftime(times$End, times$Start) / 2
-y <- data$CACerts + data$CRLs + data$ROAs + data$MFTs
+y <- data$CACerts + data$CRLs + data$GBRs + data$ROAs + data$MFTs
 
 png('total-objects-over-time.png', width=1600, height=1200, pointsize=24)
 plot(x, y, type="o",
