@@ -457,14 +457,23 @@ temporarily by setting $@CONFIG_ENV_VAR@, for example:
    @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
 
 In the configuration file you just created, find the parameters RPKICacheDir
-and LogDir.  Both of these directories should be created and the user from step
-2.1.1 should have full access to these directories.  For example, if the
-directories are set to their defaults and the username is @PACKAGE_NAME@ in
-group @PACKAGE_NAME@:
+and LogDir.  Both of these directories, and ${localstatedir}/lib/@PACKAGE_NAME@,
+should be created and the user from step 2.1.1 should have full access to these
+directories.  For example, if the directories are set to their defaults and the
+username is @PACKAGE_NAME@ in group @PACKAGE_NAME@:
 
-   sudo mkdir -p /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
-   sudo chown @PACKAGE_NAME@:@PACKAGE_NAME@ /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
-   sudo chmod 700 /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   sudo mkdir -p \
+       /usr/local/var/cache/@PACKAGE_NAME@ \
+       /usr/local/var/lib/@PACKAGE_NAME@ \
+       /usr/local/var/log/@PACKAGE_NAME@
+   sudo chown @PACKAGE_NAME@:@PACKAGE_NAME@ \
+       /usr/local/var/cache/@PACKAGE_NAME@ \
+       /usr/local/var/lib/@PACKAGE_NAME@ \
+       /usr/local/var/log/@PACKAGE_NAME@
+   sudo chmod 700 \
+       /usr/local/var/cache/@PACKAGE_NAME@ \
+       /usr/local/var/lib/@PACKAGE_NAME@ \
+       /usr/local/var/log/@PACKAGE_NAME@
 
 Then run @PACKAGE_NAME@-initialize to set up the database:
 
