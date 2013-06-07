@@ -1,6 +1,6 @@
 #!/bin/sh
 
-printf "%s\t%s\t%s\t%s\n" \
+printf "%s\t%s\t%s\t%s\t%s\n" \
     "CACerts" \
     "CRLs" \
     "GBRs" \
