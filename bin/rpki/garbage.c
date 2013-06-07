@@ -250,7 +250,7 @@ int main(
     certificate_validity(scmp, connect);
 
     // check for revoked certs
-    status = iterate_crl(scmp, connect, model_cfunc);
+    status = iterate_crl(scmp, connect, revoke_cert_by_serial);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error checking for revoked certificates: %s\n",

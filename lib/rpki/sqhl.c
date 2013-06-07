@@ -1614,9 +1614,9 @@ static int verifyChildCRL(
                            *((unsigned int *)(s->vec[3].valptr)), 1);
     for (i = 0; i < cf->snlen; i++)
     {
-        model_cfunc(theSCMP, conp, cf->fields[CRF_FIELD_ISSUER],
-                    cf->fields[CRF_FIELD_AKI],
-                    &((uint8_t *)cf->snlist)[SER_NUM_MAX_SZ * i]);
+        revoke_cert_by_serial(theSCMP, conp, cf->fields[CRF_FIELD_ISSUER],
+                              cf->fields[CRF_FIELD_AKI],
+                              &((uint8_t *)cf->snlist)[SER_NUM_MAX_SZ * i]);
     }
     return 0;
 }
@@ -2647,8 +2647,8 @@ int add_crl(
         uint8_t *u = (uint8_t *) cf->snlist;
         for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
-            model_cfunc(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
-                        cf->fields[CRF_FIELD_AKI], u);
+            revoke_cert_by_serial(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
+                                  cf->fields[CRF_FIELD_AKI], u);
         }
     }
     freecrf(cf);
@@ -3826,7 +3826,7 @@ int delete_object(
  * and a negative error code on failure. 
  */
 
-int model_cfunc(
+int revoke_cert_by_serial(
     scm * scmp,
     scmcon * conp,
     char *issuer,
