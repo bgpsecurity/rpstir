@@ -719,10 +719,10 @@ A.3.2 FreeBSD
 If you have trouble compiling cryptlib, you may have to comment out the
 sections in tools/ccopts.sh that enable ODBC support.
 
-A.3.3 Ubuntu 12.04-12.10 x86
+A.3.3 Ubuntu 12.04-13.04 x86
 
 These are the exact instructions for installing RPSTIR on a fresh copy
-of 32-bit Ubuntu 12.04 and Ubuntu 12.10, as of 01/18/2013.
+of 32-bit Ubuntu 12.04, 12.10 and 13.04, as of June 7, 2013.
 
 NOTE: Ubuntu 12.10 runs slowly without 3D acceleration due to the
 removal of Unity 2D.  In VirtualBox 4.2.4, fix it like so:
