@@ -476,9 +476,9 @@ struct casn *inject_casn(
     int num)
 {
     struct casn *fcasnp = &casnp[1],    // first member
-        *lcasnp,
-        *pcasnp,
-        *tcasnp;
+        *lcasnp, // last "member" (could be terminator)
+        *pcasnp, // previous
+        *tcasnp; // the
     int icount,
         ncount,
         err = 0;
@@ -877,7 +877,7 @@ Procedure
    (Now casnp points to the last item)
    Free end of chain (it can't have any attachments)
 **/
-    struct casn *ncasnp;
+    struct casn *ncasnp;  // next member
 
     while (casnp->ptr)
     {
