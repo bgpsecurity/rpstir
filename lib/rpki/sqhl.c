@@ -1540,6 +1540,8 @@ int set_cert_flag(
     return statementscm_no_data(conp, stmt);
 }
 
+// Allowed CRL extension oids
+// FIXME: move this to crl_profile_chk()
 static struct goodoid goodoids[3];
 
 static int make_goodoids(
