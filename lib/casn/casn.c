@@ -102,10 +102,11 @@ struct casn_err_struct casn_err_struct;
 /* char_table masks are:
     numeric       1              ' ' = ia5 only,
     printable     4              '0' = ia5 & visible
-    t61 (teletex) 8              '(' =  "  &t61
-    visible    0x10              '8' =  " , visible & t61
-    ia5        0x20              '<' =  " ,    "   ,   ", & printable
-                                 '=' =  "  ,  "    ,   ",     "  & numeric
+    t61 (teletex) 8              '(' = ia5 & t61
+    visible    0x10              '8' = ia5 & visible & t61
+    ia5        0x20              '<' = ia5 & visible & t61 & printable
+                                 '=' = ia5 & visible & t61 & printable & numeric
+
 as agreed by John Lowry and Charlie Gardiner on May 23, 1996! and
 corrected by CWG on May 3, 2001 */
 
