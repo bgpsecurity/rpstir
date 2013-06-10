@@ -2066,6 +2066,7 @@ static int countvalidparents(
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *roaSrch = NULL;
+static scmsrcha *invalidateCRLSrch = NULL;
 
 /*
  * callback function for invalidateChildCert
@@ -2151,10 +2152,36 @@ static int invalidate_mft(
     return 0;
 }
 
+/** callback function for invalidateChildCert */
+static int invalidate_crl(
+    scmcon * conp,
+    scmsrcha * s,
+    int idx)
+{
+    char aki[SKISIZE + 1];
+    char issuer[SUBJSIZE + 1];
+
+    (void)idx;
+
+    strncpy(aki, (char *)(s->vec[1].valptr), sizeof(aki));
+    strncpy(issuer, (char *)(s->vec[2].valptr), sizeof(issuer));
+    if (countvalidparents(conp, issuer, aki) > 0)
+    {
+        return 0;
+    }
+
+    updateValidFlags(conp, theCRLTable,
+                     *(unsigned int *)(s->vec[0].valptr),
+                     *(unsigned int *)(s->vec[3].valptr), 0);
+
+    // NOTE: Once a cert is revoked, it shouldn't become "un-revoked."
+
+    return 0;
+}
+
 /*
  * utility function for verify_children
  */
-// TODO: support CRL
 static int invalidateChildCert(
     scmcon * conp,
     PropData * data,
@@ -2170,6 +2197,7 @@ static int invalidateChildCert(
         if (sta < 0)
             return sta;
     }
+
     if (roaSrch == NULL)
     {
         roaSrch = newsrchscm(NULL, 3, 0, 1);
@@ -2180,6 +2208,22 @@ static int invalidateChildCert(
     }
     snprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+
+    if (invalidateCRLSrch == NULL)
+    {
+        invalidateCRLSrch = newsrchscm(NULL, 4, 0, 1);
+        ADDCOL(invalidateCRLSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int),
+               sta, sta);
+        ADDCOL(invalidateCRLSrch, "aki", SQL_C_CHAR, SKISIZE, sta, sta);
+        ADDCOL(invalidateCRLSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, sta);
+        ADDCOL(invalidateCRLSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
+               sta, sta);
+    }
+    snprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
+             "aki=\"%s\" AND issuer=\"%s\"", data->ski, data->subject);
+    addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+
+
     searchscm(conp, theROATable, roaSrch, NULL, invalidate_roa,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
@@ -2189,6 +2233,9 @@ static int invalidateChildCert(
 
     // reuse roaSrch for MFTs because the columns are the same
     searchscm(conp, theManifestTable, roaSrch, NULL, invalidate_mft,
+              SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
+    searchscm(conp, theCRLTable, invalidateCRLSrch, NULL, invalidate_crl,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     return 0;
@@ -4244,6 +4291,11 @@ void sqcleanup(
     {
         freesrchscm(roaSrch);
         roaSrch = NULL;
+    }
+    if (invalidateCRLSrch != NULL)
+    {
+        freesrchscm(invalidateCRLSrch);
+        invalidateCRLSrch = NULL;
     }
     if (childrenSrch != NULL)
     {
