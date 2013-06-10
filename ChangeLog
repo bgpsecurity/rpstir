@@ -1,6 +1,8 @@
 next
 
 	* Support Ghostbusters Records [RFC 6493].
+	* Fix a SQL injection when a filename in a manifest contains certain
+	  characters.
 
 0.7
 
