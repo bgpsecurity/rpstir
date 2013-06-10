@@ -2115,10 +2115,46 @@ static int invalidate_gbr(
     return 0;
 }
 
+/** callback function for invalidateChildCert */
+static int invalidate_mft(
+    scmcon * conp,
+    scmsrcha * s,
+    int idx)
+{
+    char ski[512];
+
+    (void)idx;
+
+    strncpy(ski, (char *)(s->vec[1].valptr), sizeof(ski));
+    if (countvalidparents(conp, NULL, ski) > 0)
+    {
+        return 0;
+    }
+
+    updateValidFlags(conp, theManifestTable,
+                     *(unsigned int *)(s->vec[0].valptr),
+                     *(unsigned int *)(s->vec[2].valptr), 0);
+
+    /*
+        TODO: How should invalidating a manifest affect objects listed on the
+              manifest?
+
+        Removing the ONMAN flag is too naive because another MFT could correctly
+        list the same files. This approach would be especially problematic in
+        the case of a new MFT being added before the old one is invalidated.
+
+        It's probably better to put this problem off until there's more clarity
+        from the working group about how exactly to handle manifests and all of
+        their fun corner cases.
+    */
+
+    return 0;
+}
+
 /*
  * utility function for verify_children
  */
-// TODO: support CRL and MFT
+// TODO: support CRL
 static int invalidateChildCert(
     scmcon * conp,
     PropData * data,
@@ -2149,6 +2185,10 @@ static int invalidateChildCert(
 
     // reuse roaSrch for GBRs because the columns are the same
     searchscm(conp, theGBRTable, roaSrch, NULL, invalidate_gbr,
+              SCM_SRCH_DOVALUE_ALWAYS, NULL);
+
+    // reuse roaSrch for MFTs because the columns are the same
+    searchscm(conp, theManifestTable, roaSrch, NULL, invalidate_mft,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     return 0;
