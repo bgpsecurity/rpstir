@@ -153,7 +153,7 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
+    struct CMS roa;
 
     if (argc < 2)
     {
@@ -250,7 +250,7 @@ int main(
         }
     }
     fseek(str, 0, SEEK_SET);
-    ROA(&roa, (ushort) 0);
+    CMS(&roa, (ushort) 0);
     write_objid(&roa.contentType, id_signedData);
     struct SignedData *sgdp = &roa.content.signedData;
     write_casn_num((struct casn *)&sgdp->version, 3);

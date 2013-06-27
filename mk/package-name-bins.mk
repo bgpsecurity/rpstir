@@ -3,6 +3,7 @@
 install-exec-hook: install-exec-hook-package-name-bins
 .PHONY: install-exec-hook-package-name-bins
 install-exec-hook-package-name-bins:
+	mkdir -p $(DESTDIR)$(bindir)
 	. $(srcdir)/lib/util/shell_utils; \
 	cd $(DESTDIR)$(bindir); \
 	pkglibexecdir_rel="$$(relpath "$(DESTDIR)$(pkglibexecdir)")"; \

@@ -1,7 +1,7 @@
 #!@SHELL_BASH@
 #
 
-# make_test_CMS.sh - manually create ROA/CMS for RPKI syntax conformance test
+# make_test_CMS.sh - manually create ROA/CMS/GBR for RPKI syntax conformance test
 
 @SETUP_ENVIRONMENT@
 
@@ -15,7 +15,7 @@ STRICT_CHECKS=0
 # Usage
 usage ( ) {
     usagestr="
-Usage: $0 [options] <CMS/ROA> <serial> <filestem>
+Usage: $0 [options] <CMS/ROA/GBR> <serial> <filestem>
 
 Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
@@ -26,7 +26,7 @@ Options:
   -x prefix\tPrefix (default = 'bad')
   -h        \tDisplay this help file
 
-This script creates a ROA (with embedded EE cert), prompts the user
+This script creates a ROA or GBR (with embedded EE cert), prompts the user
 multiple times to interactively edit (e.g., in order to introduce
 errors), and captures those edits in '.patch' files (output of diff
 -u).  Later, running $0 with the -P option can replay the creation
@@ -36,9 +36,9 @@ reused from the keys directory, instead of the default of generating
 new keys.
 
 This tool assumes the repository structure in the diagram below.  It
-creates only the ROA (with embedded EE cert).  In the EE cert's SIA, the
+creates only the ROA or GBR (with embedded EE cert).  In the EE cert's SIA, the
 accessMethod id-ad-signedObject will have an accessLocation of
-rsync://rpki.bbn.com/conformance/root/subjname.roa.
+rsync://rpki.bbn.com/conformance/root/subjname.[roa/gbr].
 
 NOTE: this script does NOT update the manifest issued by root.
 
@@ -56,10 +56,11 @@ NOTE: this script does NOT update the manifest issued by root.
          |     | rsync://rpki.bbn.com/conformance/root/ |    |
          |     |                                        V    |
          |     | +-------------+       +-----------------+   |
-         |     | | *ROA issued |<--+   | Manifest issued |   |
-         |     | | by Root     |   |   | by Root         |   |
-         |     | | +--------+  |   |   | root.mft        |   |
-         |     | | | EECert |  |   |   +-----------------+   |
+         |     | | *ROA/GBR    |<--+   | Manifest issued |   |
+         |     | | issued by   |   |   | by Root         |   |
+         |     | | Root        |   |   | root.mft        |   |
+         |     | | +--------+  |   |   +-----------------+   |
+         |     | | | EECert |  |   |                         |
          +----------- AIA   |  |   |                         |
                | | |  SIA ---------+       +------------+    |
                | | |  CRLDP--------------->| CRL issued |    |
@@ -71,8 +72,8 @@ NOTE: this script does NOT update the manifest issued by root.
                +---------------------------------------------+
 
 Explanation of inputs, not in original order:
-  class - ROA or CMS (i.e. whether this will be a ROA or CMS testcase)
-  filestem - subject name (and filename stem) for ROA to be created
+  class - ROA, CMS, or GBR (i.e. whether this will be a ROA, CMS, or GBR testcase)
+  filestem - subject name (and filename stem) for ROA/GBR to be created
   serial - serial number for embedded EE certificate to be created
   -P - (optional) use patch mode for automatic insertion of errors
   keyfile - (optional) local path to root key pair
@@ -82,10 +83,11 @@ Explanation of inputs, not in original order:
 
 Explanation of outputs, not in original order:
   ROA - AS/IP resources are hardcoded in goodEECert and goodROA templates
+  GBR - resources are hardcoded in goodEECertGBR and goodGBR templates
   patch files - manual edits are saved as diff output in
-                'bad<CMS/ROA><filestem>.stageN.patch' (N=0..1)
+                'bad<CMS/ROA/GBR><filestem>.stageN.patch' (N=0..1)
   key files - generated key pair for the EE cert is stored in keys directory as
-              bad<CMS/ROA><filestem>.ee.p15
+              bad<CMS/ROA/GBR><filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -105,8 +107,10 @@ PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
 KEYS_DIR="$TESTS_SRCDIR/../raw/keys"
 ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
 ROOT_CERT_PATH="$TESTS_BUILDDIR/../raw/root.cer"
-TEMPLATE_EE_RAW="$TESTS_SRCDIR/../raw/templates/goodEECert.raw"
+TEMPLATE_EE_ROA_RAW="$TESTS_SRCDIR/../raw/templates/goodEECert.raw"
 TEMPLATE_ROA_RAW="$TESTS_SRCDIR/../raw/templates/goodCMS.raw"
+TEMPLATE_EE_GBR_RAW="$TESTS_SRCDIR/../raw/templates/goodEECertGBR.raw"
+TEMPLATE_GBR_RAW="$TESTS_SRCDIR/../raw/templates/goodGBR.raw"
 CMS_SIA_DIR="rsync://rpki.bbn.com/conformance/root/"
 PREFIX="bad"
 USE_EXISTING_PATCHES=
@@ -158,6 +162,23 @@ child_name=${PREFIX}${TEST_CLASS}${FILESTEM}
 ee_name=${PREFIX}${TEST_CLASS}${FILESTEM}.ee
 ee_key_path=${KEYS_DIR}/${ee_name}.p15
 
+case "$TEST_CLASS" in
+    ROA|CMS|EE)
+        template_ee_raw="$TEMPLATE_EE_ROA_RAW"
+        template_cms_raw="$TEMPLATE_ROA_RAW"
+        output_ext=roa
+        ;;
+    GBR)
+        template_ee_raw="$TEMPLATE_EE_GBR_RAW"
+        template_cms_raw="$TEMPLATE_GBR_RAW"
+        output_ext=gbr
+        ;;
+    *)
+        echo "Error: unknown class: $TEST_CLASS" >&2
+        exit 1
+        ;;
+esac
+
 ###############################################################################
 # Check for prerequisite tools and files
 ###############################################################################
@@ -183,8 +204,8 @@ ensure_dir_exists $PATCHES_DIR
 ensure_dir_exists $KEYS_DIR
 ensure_file_exists $ROOT_KEY_PATH
 ensure_file_exists $ROOT_CERT_PATH
-ensure_file_exists $TEMPLATE_EE_RAW
-ensure_file_exists $TEMPLATE_ROA_RAW
+ensure_file_exists $template_ee_raw
+ensure_file_exists $template_cms_raw
 hash rr
 hash put_sernum
 hash put_subj
@@ -205,18 +226,18 @@ then
 fi
 
 ###############################################################################
-# Generate child EE cert and ROA
+# Generate child EE cert and ROA/GBR
 ###############################################################################
 
 cd ${OUTPUT_DIR}
 
-# $1=CMS/ROA/MFT, $2=fault type, $3 =sernum
-cp ${TEMPLATE_EE_RAW} ${ee_name}.raw
+# $1=CMS/ROA/GBR, $2=fault type, $3 =sernum
+cp ${template_ee_raw} ${ee_name}.raw
 chmod +w ${ee_name}.raw
 run "rr-0-`basename ${ee_name}`" rr <${ee_name}.raw >${ee_name}.cer
 run "put_sernum-0-`basename ${ee_name}`" put_sernum ${ee_name}.cer ${SERIAL}
 run "put_subj-0-`basename ${ee_name}`" put_subj ${ee_name}.cer ${ee_name}
-run "put_sia-0-`basename ${ee_name}`" put_sia -d -s ${CMS_SIA_DIR}${child_name}.roa ${ee_name}.cer
+run "put_sia-0-`basename ${ee_name}`" put_sia -d -s ${CMS_SIA_DIR}${child_name}.${output_ext} ${ee_name}.cer
 
 # Create new key if in manual mode (not using existing patches)
 if [ -z $USE_EXISTING_PATCHES ]
@@ -251,19 +272,19 @@ run "sign_cert-1-`basename ${ee_name}`" sign_cert ${ee_name}.cer ${ROOT_KEY_PATH
 rm ${ee_name}.raw
 echo "Successfully created ${OUTPUT_DIR}/${ee_name}.cer"
 
-# Make ROA
-echo "Making ROA"
-cp ${TEMPLATE_ROA_RAW} ${child_name}.raw
+# Make CMS
+echo "Making CMS"
+cp ${template_cms_raw} ${child_name}.raw
 chmod +w ${child_name}.raw
 
 # Stage 1: Modify encapContentInfo (to-be-signed) automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 1: Modify ROA's encapContentInfo (to-be-signed) automatically"
+    echo "Stage 1: Modify CMS's encapContentInfo (to-be-signed) automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage1.patch
     rm -f ${child_name}.orig
 else
-    echo "Stage 1: Modify ROA's encapContentInfo (to-be-signed) manually"
+    echo "Stage 1: Modify CMS's encapContentInfo (to-be-signed) manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
@@ -272,24 +293,24 @@ else
     echo "Successfully created ${PATCHES_DIR}/${child_name}.stage1.patch"
 fi
 
-# Embed EE into ROA and compute the message digest, filling in the
+# Embed EE into CMS and compute the message digest, filling in the
 # signedAttrs.  Note that this operation also computes a signature
 # using the EE private key, but this signature computation is
 # superfluous because it will get overwritten later by sign_cms.
-run "rr-2-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.roa
+run "rr-2-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.${output_ext}
 run "add_cms_cert_no_check-2-`basename ${child_name}`" \
-    add_cms_cert_no_check ${ee_name}.cer ${child_name}.roa \
-    ${ee_key_path} ${child_name}.roa
-run "dump_smart-2-`basename ${child_name}`" dump_smart ${child_name}.roa > ${child_name}.raw
+    add_cms_cert_no_check ${ee_name}.cer ${child_name}.${output_ext} \
+    ${ee_key_path} ${child_name}.${output_ext}
+run "dump_smart-2-`basename ${child_name}`" dump_smart ${child_name}.${output_ext} > ${child_name}.raw
 
-# Stage 2: Modify ROA's SignedAttributes area, automatically or manually.
+# Stage 2: Modify CMS's SignedAttributes area, automatically or manually.
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 2: Modify ROA's signedAttrs area automatically"
+    echo "Stage 2: Modify CMS's signedAttrs area automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage2.patch
     rm -f ${child_name}.raw.orig
 else
-    echo "Stage 2: Modify ROA's signedAttrs area manually"
+    echo "Stage 2: Modify CMS's signedAttrs area manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
@@ -299,18 +320,18 @@ else
 fi
 
 # Sign the potentially modified SignedAttributes area using EE private key
-run "rr-3-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.roa
-run "sign_cms-3-`basename ${child_name}`" sign_cms ${child_name}.roa ${ee_key_path}
-run "dump_smart-3-`basename ${child_name}`" dump_smart ${child_name}.roa > ${child_name}.raw
+run "rr-3-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.${output_ext}
+run "sign_cms-3-`basename ${child_name}`" sign_cms ${child_name}.${output_ext} ${ee_key_path}
+run "dump_smart-3-`basename ${child_name}`" dump_smart ${child_name}.${output_ext} > ${child_name}.raw
 
-# Stage 3: Modify ROA's not-signed portions automatically or manually
+# Stage 3: Modify CMS's not-signed portions automatically or manually
 if [ $USE_EXISTING_PATCHES ]
 then
-    echo "Stage 3: Modify ROA's not-signed portions automatically"
+    echo "Stage 3: Modify CMS's not-signed portions automatically"
     patch ${child_name}.raw ${PATCHES_DIR}/${child_name}.stage3.patch
     rm -f ${child_name}.raw.orig
 else
-    echo "Stage 3: Modify ROA's not-signed portions manually"
+    echo "Stage 3: Modify CMS's not-signed portions manually"
     cp ${child_name}.raw ${child_name}.raw.old
     ${EDITOR} ${child_name}.raw
     diff -u ${child_name}.raw.old ${child_name}.raw \
@@ -320,6 +341,6 @@ else
 fi
 
 # Convert back into binary
-run "rr-final-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.roa
+run "rr-final-`basename ${child_name}`" rr <${child_name}.raw >${child_name}.${output_ext}
 rm ${child_name}.raw
-echo "Successfully created ${OUTPUT_DIR}/${child_name}.roa"
+echo "Successfully created ${OUTPUT_DIR}/${child_name}.${output_ext}"

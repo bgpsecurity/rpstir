@@ -10,7 +10,7 @@ int main(
     int argc,
     char **argv)
 {
-    struct ROA roa;
+    struct CMS roa;
     char filename[256];
     int isPEM;
 

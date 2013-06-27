@@ -9,8 +9,12 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <locale.h>
 
 #include "roa_utils.h"
+#include "rpki-object/certificate.h"
 #include "util/cryptlib_compat.h"
 #include "util/logging.h"
 #include "util/hashutils.h"
@@ -28,7 +32,7 @@ int strict_profile_checks_cms = 0;
 #define MANIFEST_NUMBER_MAX_SIZE 20 /* in bytes */
 
 int check_sig(
-    struct ROA *rp,
+    struct CMS *rp,
     struct Certificate *certp)
 {
     CRYPT_CONTEXT pubkeyContext,
@@ -469,7 +473,7 @@ static int validateIPContents(
 }
 
 static int cmsValidate(
-    struct ROA *rp)
+    struct CMS *rp)
 {
     // validates general CMS things common to ROAs and manifests
 
@@ -494,7 +498,7 @@ static int cmsValidate(
          algorithm, id_sha256))
         return ERR_SCM_BADDA;
 
-    if ((num_certs = num_items(&rp->content.signedData.certificates.self)) > 1)
+    if ((num_certs = num_items(&rp->content.signedData.certificates.self)) != 1)
         return ERR_SCM_BADNUMCERTS;
 
     if (num_items(&rp->content.signedData.signerInfos.self) != 1)
@@ -585,29 +589,25 @@ static int cmsValidate(
     if (ret != 0)
         return ret;
 
-    // if there is a cert, check it
-    if (num_certs > 0)
-    {
-        struct Certificate *certp =
-            (struct Certificate *)member_casn(&rp->content.signedData.
-                                              certificates.self, 0);
-        if ((ret = check_cert(certp, 1)) < 0)
-            return ret;
-        if ((ret = check_sig(rp, certp)) != 0)
-            return ret;
-        // check that the cert's SKI matches that in SignerInfo
-        struct Extension *extp;
-        for (extp =
-             (struct Extension *)member_casn(&certp->toBeSigned.extensions.
-                                             self, 0);
-             extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
-             extp = (struct Extension *)next_of(&extp->self));
-        if (!extp
-            || diff_casn(&extp->extnValue.subjectKeyIdentifier,
-                         &sigInfop->sid.subjectKeyIdentifier))
-            return ERR_SCM_SIGINFOSID;
-
-    }
+    // check the cert
+    struct Certificate *certp =
+        (struct Certificate *)member_casn(&rp->content.signedData.
+                                          certificates.self, 0);
+    if ((ret = check_cert(certp, 1)) < 0)
+        return ret;
+    if ((ret = check_sig(rp, certp)) != 0)
+        return ret;
+    // check that the cert's SKI matches that in SignerInfo
+    struct Extension *extp;
+    for (extp =
+         (struct Extension *)member_casn(&certp->toBeSigned.extensions.
+                                         self, 0);
+         extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+         extp = (struct Extension *)next_of(&extp->self));
+    if (!extp
+        || diff_casn(&extp->extnValue.subjectKeyIdentifier,
+                     &sigInfop->sid.subjectKeyIdentifier))
+        return ERR_SCM_SIGINFOSID;
 
     // check that roa->content->crls == NULL
     if (size_casn(&rp->content.signedData.crls.self) > 0)
@@ -635,14 +635,14 @@ static int cmsValidate(
         if (strict_profile_checks_cms
             || diff_objid(oidp, id_rsadsi_rsaEncryption))
         {
-            LOG(LOG_ERR, "invalid signature algorithm in ROA");
+            LOG(LOG_ERR, "invalid signature algorithm in CMS");
             return ERR_SCM_BADSIGALG;
         }
         /* In conversation at IETF 85, R. Austein said that this was a
          * mistake in the specification, not the code.  We'll wait for
          * an update to the RFC before we remove this entirely.  But
          * log at debug level rather than warning. */
-        LOG(LOG_DEBUG, "deprecated signature algorithm in ROA?");
+        LOG(LOG_DEBUG, "deprecated signature algorithm in CMS?");
     }
 
     // check that the subject key identifier has proper length
@@ -937,7 +937,7 @@ static int check_mft_duplicate_filenames(
  *   stale manifest, as described in Section 6.4.
  */
 int manifestValidate(
-    struct ROA *roap,
+    struct CMS *cmsp,
     int *stalep)
 {
     /*
@@ -948,12 +948,12 @@ int manifestValidate(
      */
     int iRes;
     // step 1
-    if (diff_objid(&roap->content.signedData.encapContentInfo.eContentType,
+    if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
                    id_roa_pki_manifest))
         return ERR_SCM_BADCT;
     // step 2
     struct Manifest *manp =
-        &roap->content.signedData.encapContentInfo.eContent.manifest;
+        &cmsp->content.signedData.encapContentInfo.eContent.manifest;
     if (size_casn(&manp->self) <= 0)
         return ERR_SCM_BADCT;
     if ((iRes = check_mft_version(&manp->version.self)) < 0)
@@ -977,7 +977,7 @@ int manifestValidate(
     if (iRes < 0)
         return iRes;
     // step 7
-    iRes = cmsValidate(roap);
+    iRes = cmsValidate(cmsp);
     if (iRes < 0)
         return iRes;
     return 0;
@@ -1185,7 +1185,7 @@ static int checkIPAddrs(
  * ROA.
  */
 int roaValidate(
-    struct ROA *rp)
+    struct CMS *rp)
 {
     int iRes = 0;
     intmax_t iAS_ID = 0;
@@ -1248,7 +1248,7 @@ int roaValidate(
 #define HAS_EXTN_IPADDR 0x04
 
 int roaValidate2(
-    struct ROA *rp)
+    struct CMS *rp)
 {
     int iRes;
     int sta;
@@ -1396,4 +1396,133 @@ int roaValidate2(
     }
     // delete_casn(&cert.self);
     return iRes;
+}
+
+static int check_ghostbusters_cms(
+    struct CMS *cms)
+{
+    if (diff_objid(&cms->content.signedData.encapContentInfo.eContentType,
+                   id_ct_rpkiGhostbusters))
+    {
+        LOG(LOG_ERR, "Ghostbusters record has incorrect content type");
+        return ERR_SCM_BADCT;
+    }
+
+    return 0;
+}
+
+static int check_ghostbusters_cert(
+    struct CMS *cms)
+{
+    struct Certificate *cert =
+        &cms->content.signedData.certificates.certificate;
+
+    if (has_non_inherit_resources(cert))
+    {
+        LOG(LOG_ERR, "Ghostbusters record's EE certificate has RFC3779 "
+            "resources that are not marked inherit");
+        return ERR_SCM_NOTINHERIT;
+    }
+
+    return 0;
+}
+
+static int check_ghostbusters_content(
+    struct CMS *cms)
+{
+    unsigned char *content = NULL;
+    int content_len = 0;
+    int sta = 0;
+
+    content_len = readvsize_casn(
+        &cms->content.signedData.encapContentInfo.eContent.ghostbusters,
+        &content);
+    if (content_len < 0)
+    {
+        LOG(LOG_ERR, "Error reading ghostbusters record's content");
+        return ERR_SCM_INTERNAL;
+    }
+
+    // TODO: Verify that it's actually a valid vCard conforming to RFC6493.
+    // For now, we just verify the the content is valid UTF-8
+    // (http://tools.ietf.org/html/rfc6350#section-3.1) and has no control
+    // characters (which could mess up a user's terminal).
+
+    // backup the old locale and make sure we're using UTF-8
+    const char *old_locale = setlocale(LC_CTYPE, NULL);
+    if (setlocale(LC_CTYPE, "C.UTF-8") == NULL)
+    {
+        LOG(LOG_WARNING, "System does not support C.UTF-8 locale. Ghostbusters "
+            "records with invalid contents may be accepted.");
+        goto done;
+    }
+
+    size_t content_idx = 0;
+    wchar_t pwc;
+    size_t pwc_mb_len;
+    mbstate_t ps;
+    memset(&ps, 0, sizeof(ps));
+    while (content_idx < (size_t)content_len)
+    {
+        pwc_mb_len = mbrtowc(&pwc, (char *)content + content_idx,
+                             (size_t)content_len - content_idx, &ps);
+        if (pwc_mb_len <= 0 || pwc_mb_len > (size_t)content_len - content_idx)
+        {
+            LOG(LOG_ERR, "Invalid byte sequence in ghostbusters content");
+            sta = ERR_SCM_BADCHAR;
+            goto done;
+        }
+
+        content_idx += pwc_mb_len;
+
+        if (iswcntrl(pwc) && !iswspace(pwc))
+        {
+            LOG(LOG_ERR, "Ghostbusters content contains a control character "
+                "<U+%04" PRIXMAX ">", (uintmax_t)pwc);
+            sta = ERR_SCM_BADCHAR;
+            goto done;
+        }
+    }
+
+
+done:
+    setlocale(LC_CTYPE, old_locale);
+
+    free(content);
+
+    return sta;
+}
+
+int ghostbustersValidate(
+    struct CMS *cms)
+{
+    int sta;
+
+    sta = cmsValidate(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    // ghostbusters profile checks
+
+    sta = check_ghostbusters_cms(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    sta = check_ghostbusters_cert(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    sta = check_ghostbusters_content(cms);
+    if (sta < 0)
+    {
+        return sta;
+    }
+
+    return 0;
 }

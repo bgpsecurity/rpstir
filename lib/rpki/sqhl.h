@@ -20,7 +20,8 @@
 #define OT_CRL          2       /* DER encoded CRL */
 #define OT_ROA          3       /* DER encoded ROA */
 #define OT_MAN          4       /* manifests are only DER for now */
-#define OT_MAXBASIC     4
+#define OT_GBR          5
+#define OT_MAXBASIC     5
 
 #define OT_PEM_OFFSET   128
 
@@ -131,6 +132,15 @@ extern int add_manifest(
     unsigned int id,
     int utrust,
     int typ);
+extern int add_ghostbusters(
+    scm * scmp,
+    scmcon * conp,
+    char *outfile,
+    char *outdir,
+    char *outfull,
+    unsigned int id,
+    int utrust,
+    int typ);
 extern int add_rta(
     scm * scmp,
     scmcon * conp,
@@ -144,7 +154,7 @@ extern int iterate_crl(
     scm * scmp,
     scmcon * conp,
     crlfunc cfunc);
-extern int model_cfunc(
+extern int revoke_cert_by_serial(
     scm * scmp,
     scmcon * conp,
     char *issuer,

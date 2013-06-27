@@ -39,6 +39,7 @@ run "rr-root.crl" rr < "$CONFORMANCE_ROOT_SRCDIR/raw/root.crl.raw" > root/root.c
 # Generate all types of conformance cases
 $CFSCRIPTS/gen_all_certs.sh -P
 $CFSCRIPTS/gen_all_CMSs.sh -P
+$CFSCRIPTS/gen_all_GBRs.sh -P
 $CFSCRIPTS/gen_all_ROAs.sh -P
 $CFSCRIPTS/gen_all_CRLs.sh -P
 $CFSCRIPTS/gen_all_MFTs.sh -P
@@ -63,6 +64,6 @@ $CFSCRIPTS/gen_mft.sh \
     rsync://rpki.bbn.com/conformance/root.cer \
     "$CONFORMANCE_ROOT_SRCDIR/raw/root.p15" \
     rsync://rpki.bbn.com/conformance/root/root.crl \
-    root/*.cer root/*.roa root/*.crl
+    root/*.cer root/*.roa root/*.crl root/*.gbr
 rm root.mft.cer root.mft.p15
 mv root.mft root/

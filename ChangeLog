@@ -1,3 +1,15 @@
+0.8
+
+	* Support Ghostbusters Records [RFC 6493].
+	* Fix a SQL injection bug when a filename in a manifest contains certain
+	  characters.
+	* Fix a bug where CRLs were not being marked as invalid when their
+	  issuers became invalid and manifests were not being marked as invalid
+	  when their associated EE certificates became invalid.
+	* Modify the query client (rpstir-query) to not consider it an error
+	  when no results are returned for a query.
+	* On installation, create ${bindir} if it does not already exist.
+
 0.7
 
 	* Add preliminary support for adding files from the local cache. In the

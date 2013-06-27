@@ -127,8 +127,8 @@ int main(
     FILE *str = stdout;
     if (argc == 3 && (str = fopen(argv[2], "w")) == 0)
         fatal(2, argv[2]);
-    struct ROA roa;
-    ROA(&roa, (ushort) 0);
+    struct CMS roa;
+    CMS(&roa, (ushort) 0);
     if (get_casn_file(&roa.self, argv[1], 0) < 0)
         fatal(2, argv[1]);
     struct RouteOriginAttestation *roaip;

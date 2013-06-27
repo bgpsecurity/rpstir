@@ -12,7 +12,8 @@ root/root.crl
      root.mft
      [bad|good]Cert*.cer
      [bad|good]CMS*.roa
-     [bad|good]ROA.roa
+     [bad|good]ROA*.roa
+     [bad|good]GBR*.gbr
      CRL*.cer
      CRL*/[bad|good]CRL*.crl
           CRL*.mft
@@ -253,6 +254,17 @@ ROAs
 558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature 6482#3
 559 VersionV2                # Version V2 (int 1) 6482#3.1
                              # IP addresses exceed via inherit?
+
+Ghostbusters
+
+600 NothingWrong             # (good) nothing wrong
+601 NotVCard                 # the eContent is not valid vCard 6493#5
+    ExtraProperty            # a vCard property not listed in 6493#5 is present
+    NoContact                # none of ADR, TEL, or EMAIL are present 6493#5
+602 WrongOID                 # the wrong OID is used in both the eContentType and the content-type 6493#6
+603 IPv4NotInherit           # the EE cert has IPv4 resources not set to inherit 6493#6
+604 IPv6NotInherit           # the EE cert has IPv6 resources not set to inherit 6493#6
+605 ASNotInherit             # the EE cert has AS resources not set to inherit 6493#6
 
 CRLs
 

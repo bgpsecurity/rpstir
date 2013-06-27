@@ -2,6 +2,7 @@ add_cms_cert
 add_cms_cert_no_check
 add_key_info
 check_signature
+extract-cms-content
 extractCMScert
 extractPubKeyInfo
 extractSIA

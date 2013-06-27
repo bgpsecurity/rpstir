@@ -436,8 +436,8 @@ signature for this callback is:
     typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer, char *aki,
 		           unsigned long long sn)
 
-In almost every case, the global function model_cfunc() should be used as the
-"cfunc" argument to iterate_crl.
+In almost every case, the global function revoke_cert_by_serial()
+should be used as the "cfunc" argument to iterate_crl.
 
 2.2.5 int certificate_validity(scm *scmp, scmcon *conp)
 

@@ -36,7 +36,7 @@
 #define MAX_CONDS 10
 
 #define BAD_OBJECT_TYPE \
-  "\nBad object type; must be roa, cert, crl, man[ifest] or rpsl\n\n"
+  "\nBad object type; must be roa, cert, crl, man[ifest], gbr, or rpsl\n\n"
 
 /*
  * I hate to use all these static variables, but the problem is
@@ -54,7 +54,8 @@ static int isROA = 0,
     isCert = 0,
     isCRL = 0,
     isRPSL = 0,
-    isManifest = 0;
+    isManifest = 0,
+    isGBR = 0;
 static scm *scmp = NULL;
 static scmcon *connection = NULL;
 
@@ -72,6 +73,8 @@ struct {
     "crl", "crl"},
     {
     "manifest", "manifest"},
+    {
+    "gbr", "ghostbusters"},
     {
     "rpsl", "roa"},};
 
@@ -122,7 +125,7 @@ static int handleResults(
     if (validate)
     {
         if (!checkValidity
-            ((isROA || isRPSL || isManifest
+            ((isROA || isRPSL || isManifest || isGBR
               || isCRL) ? (char *)s->vec[valIndex].valptr : NULL,
              isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0, scmp,
              connection))
@@ -445,7 +448,7 @@ static int doQuery(
     if (validate)
     {
         valIndex = srch.nused;
-        if (isROA || isRPSL || isManifest || isCRL)
+        if (isROA || isRPSL || isManifest || isCRL || isGBR)
         {
             char *ski;
             if (isCRL)
@@ -486,7 +489,7 @@ static int listOptions(
         j;
 
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
-             (!isManifest), BAD_OBJECT_TYPE);
+             (!isManifest) && (!isGBR), BAD_OBJECT_TYPE);
     printf("\nPossible fields to display or use in clauses for a %s:\n",
            objectType);
     for (i = 0; i < getNumFields(); i++)
@@ -496,7 +499,8 @@ static int listOptions(
         if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
             ((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
             ((getFields()[i].flags & Q_FOR_CERT) && isCert) ||
-            ((getFields()[i].flags & Q_FOR_MAN) && isManifest))
+            ((getFields()[i].flags & Q_FOR_MAN) && isManifest) ||
+            ((getFields()[i].flags & Q_FOR_GBR) && isGBR))
         {
             printf("  %s: %s\n", getFields()[i].name,
                    getFields()[i].description);
@@ -528,7 +532,8 @@ static int addAllFields(
         if (((getFields()[i].flags & Q_FOR_ROA) && isROA) ||
             ((getFields()[i].flags & Q_FOR_CRL) && isCRL) ||
             ((getFields()[i].flags & Q_FOR_MAN) && isManifest) ||
-            ((getFields()[i].flags & Q_FOR_CERT) && isCert))
+            ((getFields()[i].flags & Q_FOR_CERT) && isCert) ||
+            ((getFields()[i].flags & Q_FOR_GBR) && isGBR))
         {
             displays[numDisplays++] = getFields()[i].name;
         }
@@ -570,9 +575,9 @@ static int printUsage(
     printf("  -o <filename>: print results to filename (default is screen)\n");
     printf
         ("  -l <type>: list the possible display fields for the type, where type is\n");
-    printf("     roa, cert, crl, or manifest.\n");
+    printf("     roa, cert, crl, gbr, or manifest.\n");
     printf
-        ("  -t <type>: the type of object requested: roa, cert, crl, or man[ifest]\n");
+        ("  -t <type>: the type of object requested: roa, cert, crl, gbr, or man[ifest]\n");
     printf("  -d <field>: display a field of the object (or 'all')\n");
     printf
         ("  -f <field>.<op>.<value>: filter where op is a comparison operator\n");
@@ -604,6 +609,7 @@ static void setObjectType(
     isManifest = (strcasecmp(objectType, "manifest") == 0);
     setIsManifest(isManifest);
     isRPSL = (strcasecmp(objectType, "rpsl") == 0);
+    isGBR = (strcasecmp(objectType, "gbr") == 0);
 }
 
 int main(
@@ -695,14 +701,22 @@ int main(
         numDisplays = addRPSLFields(displays);
     }
     checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
-             (!isManifest), BAD_OBJECT_TYPE);
+             (!isManifest) && (!isGBR), BAD_OBJECT_TYPE);
     checkErr(numDisplays == 0 && isRPSL == 0, "Need to display something\n");
     if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
         numDisplays = addAllFields(displays, 0);
     displays[numDisplays++] = NULL;
     clauses[numClauses++] = NULL;
-    if ((status = doQuery(displays, clauses, orderp)) < 0)
+    status = doQuery(displays, clauses, orderp);
+    if (status == ERR_SCM_NODATA)
+    {
+        LOG(LOG_DEBUG, "%s", err2string(status));
+        status = 0;
+    }
+    else if (status < 0)
+    {
         LOG(LOG_ERR, "%s", err2string(status));
+    }
     config_unload();
     CLOSE_LOG();
     return status;

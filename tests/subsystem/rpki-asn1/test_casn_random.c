@@ -6,7 +6,7 @@
 #include <rpki-asn1/extensions.h>
 #include <casn/casn.h>
 #include <rpki-asn1/certificate.h>
-#include <rpki-asn1/roa.h>
+#include <rpki-asn1/cms.h>
 #include <rpki-asn1/manifest.h>
 #include <rpki-asn1/crlv2.h>
 
@@ -50,7 +50,7 @@ int main(
     for (filename = *++argv; filename != NULL; filename = *++argv)
     {
         TEST(Certificate);
-        TEST(ROA);
+        TEST(CMS);
         TEST(Manifest);
         TEST(CertificateRevocationList);
         TEST(CRLEntry);

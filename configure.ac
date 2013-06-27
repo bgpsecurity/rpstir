@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.7, rpstir-support@bbn.com)
+AC_INIT(rpstir, 0.8, rpstir-support@bbn.com)
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
 PACKAGE_NAME_UC="RPSTIR"

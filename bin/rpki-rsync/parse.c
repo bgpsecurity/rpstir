@@ -822,6 +822,9 @@ int has_Correct_Extension(
         if (strncasecmp(hold, "crl", 3) == 0)
             return (TRUE);
 
+        if (strncasecmp(hold, "gbr", 3) == 0)
+            return (TRUE);
+
         if (strncasecmp(hold, "roa", 3) == 0)
             return (TRUE);
 
