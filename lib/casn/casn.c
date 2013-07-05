@@ -99,13 +99,16 @@ static struct casn_errors {
 
 struct casn_err_struct casn_err_struct;
 
-/*
- * char_table masks are: numeric 1 ' ' = ia5 only, printable 4 '0' = ia5 &
- * visible t61 (teletex) 8 '(' = " &t61 visible 0x10 '8' = " , visible & t61
- * ia5 0x20 '<' = " , " , ", & printable '=' = " , " , ", " & numeric as
- * agreed by John Lowry and Charlie Gardiner on May 23, 1996! and corrected by 
- * CWG on May 3, 2001 
- */
+/* char_table masks are:
+    numeric       1              ' ' = ia5 only,
+    printable     4              '0' = ia5 & visible
+    t61 (teletex) 8              '(' = ia5 & t61
+    visible    0x10              '8' = ia5 & visible & t61
+    ia5        0x20              '<' = ia5 & visible & t61 & printable
+                                 '=' = ia5 & visible & t61 & printable & numeric
+
+as agreed by John Lowry and Charlie Gardiner on May 23, 1996! and
+corrected by CWG on May 3, 2001 */
 
 char char_table[] = "\
         ( ( ((((\
@@ -123,14 +126,12 @@ char char_table[] = "\
  (((((((((((((((\
                 \
 ((((( ((((((((((\
-((((((((((((((( ",              // 0xE0 - 0xFF
-    mask_table[32] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 4, 8, 0, 0x20, 0, 0, 0, 0x10, 0, 0, 0, 0, 0
-};
-
-              /*
-               * N P T I V u r 6 A i m t 1 5 s 
-               */
+((((((((((((((( ",      // 0xE0 - 0xFF
+    mask_table[32] = {0, 0, 0, 0, 0, 0, 0,    0, 0, 0, 0,    0, 0, 0, 0, 0,
+                      0, 0, 1, 4, 8, 0, 0x20, 0, 0, 0, 0x10, 0, 0, 0, 0, 0};
+              /*            N  P  T      I              V
+                            u  r  6      A              i
+                            m  t  1      5              s */
 
 int casn_error(
     int,
@@ -475,9 +476,9 @@ struct casn *inject_casn(
     int num)
 {
     struct casn *fcasnp = &casnp[1],    // first member
-        *lcasnp,
-        *pcasnp,
-        *tcasnp;
+        *lcasnp, // last "member" (could be terminator)
+        *pcasnp, // previous
+        *tcasnp; // the
     int icount,
         ncount,
         err = 0;
@@ -876,7 +877,7 @@ Procedure
    (Now casnp points to the last item)
    Free end of chain (it can't have any attachments)
 **/
-    struct casn *ncasnp;
+    struct casn *ncasnp;  // next member
 
     while (casnp->ptr)
     {

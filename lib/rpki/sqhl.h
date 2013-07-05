@@ -154,7 +154,7 @@ extern int iterate_crl(
     scm * scmp,
     scmcon * conp,
     crlfunc cfunc);
-extern int model_cfunc(
+extern int revoke_cert_by_serial(
     scm * scmp,
     scmcon * conp,
     char *issuer,
