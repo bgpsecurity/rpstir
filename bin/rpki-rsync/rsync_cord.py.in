@@ -134,7 +134,7 @@ def thread_controller():
 #
 # Create log directories and/or rotate the logs
 #
-def rotate_logs(keep_logs):
+def rotate_logs(log_retention):
     #create the log directory if it doesn't exist
     if not os.path.exists(logDir):
         os.system("mkdir " + logDir)
@@ -150,8 +150,8 @@ def rotate_logs(keep_logs):
     num_logs = 0
     while os.path.exists(log_file(num_logs)):
         num_logs += 1
-    if not keep_logs:
-        num_logs = min(num_logs, 9)
+    if log_retention > 0:
+        num_logs = min(num_logs, log_retention)
     for log_number in xrange(num_logs, 0, -1):
         os.rename(log_file(log_number - 1), log_file(log_number))
 
@@ -177,15 +177,15 @@ def usage():
                 \t The maximum number of threads to spawn. Default is 8\n \
             \t-d\n \
                 \t A debug flag to get extra output in the log file\n \
-            \t--keep-logs\n \
-                \t Keep all logs, instead of deleting old logs\n \
+            \t--log-retention <n>\n \
+                \t Keep only the most recent <n> logs. 0 keeps all logs\n \
             \t-h --help\n \
                 \t   Shows this help information\n"
 
 
 #Parse command line args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help", "keep-logs"])
+    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help", "log-retention:"])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recoized"
@@ -196,7 +196,7 @@ except getopt.GetoptError, err:
 configFile = ""
 threadCount = 8
 debug = False
-keep_logs = False
+log_retention = 0
 
 #Parse the options
 for o, a in opts:
@@ -209,8 +209,8 @@ for o, a in opts:
         threadCount = int(a)
     elif o in ("-d"):
         debug = True
-    elif o in ("--keep-logs"):
-        keep_logs = True
+    elif o in ("--log-retention"):
+        log_retention = int(a)
     else:
         print "unhandled option"
         sys.exit(1)
@@ -276,7 +276,7 @@ for direc in eachDir:
         URIPool.put(direc)
 
 #log rotation
-rotate_logs(keep_logs)
+rotate_logs(log_retention)
 
 #Set up logging
 if debug:
