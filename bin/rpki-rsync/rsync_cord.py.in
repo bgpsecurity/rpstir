@@ -185,7 +185,7 @@ def usage():
 
 #Parse command line args
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help", "log-retention:"])
+    opts, args = getopt.getopt(sys.argv[1:], "hdc:t:", ["help", "log-retention="])
 except getopt.GetoptError, err:
     # print help information and exit:
     print str(err) # will print something like "option -a not recoized"
