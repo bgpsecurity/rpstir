@@ -23,7 +23,7 @@ Table of Contents
       2.2.3 Build the Executables
     2.3 @PACKAGE_NAME_UC@ User Account
       2.3.1 Self-Test Configuration File
-    2.4 SSH Subsystem
+    2.4 SSH Subsystem (optional)
     2.5 Self Test
     2.6 Installation
     2.7 Post-Installation Procedures
@@ -110,7 +110,7 @@ specified, the command should be run as @PACKAGE_NAME@'s user.
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
 version 1.0.1d) from http://www.openssl.org.  We recommend the default
-installation target directory /usr/local/ssl.  As of version 1.0.1d,
+installation target directory /usr/local/ssl.  As of version 1.0.1e,
 the steps were:
 
 	$ ./config enable-rfc3779
@@ -121,7 +121,11 @@ the steps were:
 
 In addition, some scripts invoke the OpenSSL executable from the
 shell.  Modify your user's PATH such that `which openssl` points to
-the custom-compiled binary that supports RFC 3779 extensions.
+the custom-compiled binary that supports RFC 3779 extensions. This can
+typically be done by adding a line like the below to the user's ~/.bashrc
+file or another file that's automatically loaded by the shell.
+
+   export PATH="/usr/local/ssl/bin:$PATH"
 
 2.1.3 MySQL and ODBC
 
@@ -161,8 +165,10 @@ DRIVERS............: /usr/local/etc/odbcinst.ini
 SYSTEM DATA SOURCES: /usr/local/etc/odbc.ini
 USER DATA SOURCES..: /home/achi/.odbc.ini
 
-Edit odbcinst.ini to use the appropriate driver depending on the
-version of the MySQL Connector.  For example:
+Some systems provide example odbcinst.ini files. For example, Ubuntu's
+libmyodbc package provides /usr/share/libmyodbc/odbcinst.ini. If your system
+provides a suitable file, use it to fill in odbcinst.ini. Otherwise, you can
+use this as an example starting point for odbcinst.ini:
 
 -----------------------------------------------------------------------------
 ;  Sample /usr/local/etc/odbcinst.ini
@@ -282,8 +288,8 @@ http://curl.haxx.se/.
 
 2.1.9 Syslog
 
-A syslog daemon is probably already installed.  However, on some systems syslog
-has poor performance by default.  See
+A syslog daemon is almost definitely already installed.  However, on some
+systems syslog has poor performance by default.  See
 http://stackoverflow.com/questions/208098/can-syslog-performance-be-improved
 for more information. If you're ok with the chance of losing some log messages
 if the system crashes, consider configuring your syslog daemon to not
@@ -377,7 +383,7 @@ your production database.  It is strongly recommended to use a different
 database for testing than for production use.
 
 
-2.4 SSH Subsystem
+2.4 SSH Subsystem (optional)
 
 If you plan to use the rpki-rtr server as an SSH subsystem, you will need
 to run @PACKAGE_NAME@-rpki-rtr-daemon and set up an ssh subsystem
@@ -607,6 +613,7 @@ given if you type @PACKAGE_NAME@-query without any arguments.
     $ @PACKAGE_NAME@-query -t crl -d all            # display all fields of valid CRLs
     $ @PACKAGE_NAME@-query -t roa -d pathname -d flags # display path+flags of valid roas
     $ @PACKAGE_NAME@-query -t man -d all -i # display all fields of valid/unknown manifests
+    $ @PACKAGE_NAME@-query -t man -d all -f filename.eq.foo.mft # find all manifests named "foo.mft"
 
 3.2.3 Log Files
 
