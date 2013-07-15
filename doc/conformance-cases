@@ -60,8 +60,9 @@ CA Certificates
     Cpol2oid2correct    # Two correct Cert Policy OIDs 6487#4.8.9 6484#1.2
     CpolBadOid          # One incorrect Cert Policy OID 6487#4.8.9 6484#1.2
 113 CpolNoCrit          # CertPolicy extension, crit bit unset 6487#4.8.9
-    CpolQualCps         # (good) correct Cert Policy OID with a certification practice statement (CPS) qualifier 6487#4.8.9 5280#4.2.1.4
-    CpolQualCpsUnotice  # (good) correct Cert Policy OID with CPS and user notice qualifiers 6487#4.8.9 5280#4.2.1.4
+    CpolQualCps         # (good) correct Cert Policy OID with a certification practice statement (CPS) qualifier 6487#4.8.9 5280#4.2.1.4 draft-ietf-sidr-policy-qualifiers-00#2
+    CpolQualCpsUnotice  # correct Cert Policy OID with CPS and user notice qualifiers 6487#4.8.9 5280#4.2.1.4 draft-ietf-sidr-policy-qualifiers-00#2
+    CpolQualUnotice     # correct Cert Policy OID with user notice qualifier 6487#4.8.9 5280#4.2.1.4 draft-ietf-sidr-policy-qualifiers-00#2
 114 CRLDP2DistPt        # (good) CRL Dist Pt has 2 Dist points 6487#4.8.6
 115 CRLDPCrit           # CRL Dist Pt marked critical 6487#4.8.6
 116 CRLDPCrlIssuer      # CRL Dist Pt has CRL Issuer 6487#4.8.6
