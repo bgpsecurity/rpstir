@@ -22,10 +22,14 @@ from optparse import OptionParser
 # Parse command line options
 #
 
-parser = OptionParser()
+description = """\
+Show a summary of objects in the RPKI cache. This includes the number of valid,
+invalid, and unknown-state objects of each type.
+"""
+parser = OptionParser(description=description)
 parser.add_option("-v", "--verbose",
                   action="store_true", dest="verbose", default=False,
-                  help="output lists of valid/invalid/unknown objects")
+                  help="output lists of valid/invalid/unknown objects in addition to counts")
 (options, args) = parser.parse_args()
 
 #
