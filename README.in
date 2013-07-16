@@ -190,8 +190,8 @@ slightly confusing: the user, password, and database name are actually
 ignored because they will be overridden by @PACKAGE_NAME@.  However,
 depending on whether your database user has a password, in future steps
 below you will need to remember to set your DatabaseDSN configuration
-option to choose the DSN that is expecting a password (e.g. "myodbc3")
-or no password (e.g. "myodbc3-np").  Here is an example of a working
+option to choose the DSN that is expecting a password (e.g. "myodbc")
+or no password (e.g. "myodbc-np").  Here is an example of a working
 odbc.ini that corresponds to the odbcinst.ini above:
 
 -----------------------------------------------------------------------------
@@ -201,10 +201,10 @@ odbc.ini that corresponds to the odbcinst.ini above:
 ;
 
 [ODBC Data Sources]
-myodbc3     = {MyODBC 3.51 Driver DSN}
-myodbc3-np  = {MyODBC 3.51 Driver DSN for users without password}
+myodbc      = {MyODBC 3.51 Driver DSN}
+myodbc-np   = {MyODBC 3.51 Driver DSN for users without password}
 
-[myodbc3]
+[myodbc]
 Driver       = myodbcConn
 Description  = Connector/ODBC 3.51 Driver DSN
 SERVER       = localhost
@@ -215,7 +215,7 @@ Database     = arbitrarydbname
 OPTION       = 3
 SOCKET       =
 
-[myodbc3-np]
+[myodbc-np]
 Driver       = myodbcConn
 Description  = Connector/ODBC 3.51 Driver DSN
 SERVER       = localhost
