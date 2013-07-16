@@ -321,6 +321,8 @@ Manifests
 775 MFTNextUpdUTC            # nextUpdate in UTC 6486#4.2
 776 MFTNextUpdPast           # nextUpdate in past (stale manifest, good/bad depends on config) 6486#4.2.1
     MFTUpdCrossed            # thisUpdate postdates nextUpdate 6486#4.4
+    MFTStartCrossed          # thisUpdate predates EE notBefore 6486#5.1
+    MFTEndCrossed            # nextUpdate postdates EE notAfter 6486#5.1
 777 MFTHashAlg               # wrong hash algorithm (SHA1) 6486#4.2.1,6485#2
     MFTHashAlgSameLength     # wrong hash algorithm, but with the same output length as SHA-256 6486#4.2.1,6485#2
 779 MFTFileHashShort         # too short hash of a file 6486#4.2.1,6485#2
