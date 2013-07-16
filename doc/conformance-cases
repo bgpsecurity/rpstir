@@ -119,7 +119,7 @@ CA Certificates
     SIANoRepo           # SIA has no id-ad-caRepository 6487#4.8.8
 150 SKIHash             # incorrect subject key identifier 6487#4.8.2
 151 SKILong             # SKI length 21 octets 6487#4.8.2
-    SKIShort            # SKI length 19 octets 6487#4.8.2
+194 SKIShort            # SKI length 19 octets 6487#4.8.2
 152 SubjectOID          # subject name is not id_commonName 6487#4.5
 153 Subject2ComName     # subject name has 2 common names (same set) 6487#4.5
 154 SubjectUtf          # subject name has utf name 6487#4.5
