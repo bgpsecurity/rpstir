@@ -175,8 +175,8 @@ use this as an example starting point for odbcinst.ini:
 
 [myodbcConn]
 Description             = MySQL odbc driver for Linux & Win32
-Driver          = /usr/local/lib/libmyodbc3.so
-Setup           = /usr/local/lib/libmyodbc3S.so
+Driver          = /usr/local/lib/libmyodbc3.so ; could also be called libmyodbc.so
+Setup           = /usr/local/lib/libmyodbc3S.so ; could also be called libmyodbcS.so or libodbcmyS.so
 UsageCount              = 1
 
 [ODBC]
