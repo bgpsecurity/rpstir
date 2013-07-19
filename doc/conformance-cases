@@ -249,12 +249,13 @@ ROAs
     IPv6DupPrefixSameMaxLen   # (good) IPv6 two copies of same prefix, same maxlength 6482#3.3
     IPv4DupPrefixDiffMaxLen   # (good) IPv4 two copies of same prefix, different maxlength 6482#3.3
     IPv6DupPrefixDiffMaxLen   # (good) IPv6 two copies of same prefix, different maxlength 6482#3.3
+562 IPv4Inherit              # IPv4 uses inherit (errata 3166)
+563 IPv6Inherit              # IPv6 uses inherit (errata 3166)
 556 IP2Big                   # ROA eContent IP prefixes exceed EE IP resources 6482#4
     <enumerate overlap cases> # all interactions btw 3779 and 6482 (at least 13 cases)
 557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature 6482#3
 558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature 6482#3
 559 VersionV2                # Version V2 (int 1) 6482#3.1
-                             # IP addresses exceed via inherit?
 
 Ghostbusters
 

@@ -19,6 +19,7 @@
 #include <util/hashutils.h>
 #include <util/logging.h>
 #include <time.h>
+#include <strings.h>
 
 char *msgs[] = {
     "Finished %s OK\n",
@@ -498,13 +499,13 @@ int main(
         skistat = (char)0;
     if (argc > 4)
     {
-        if (argv[4][0] == 'b')
+        if (index(argv[4], 'b') != NULL)
             bad = 1;
-        else if (argv[4][0] == 'e')
+        else if (index(argv[4], 'e') != NULL)
             explicitIPAS = 1;   // copy addresses
-        else if (argv[4][0] == 'n')
+        else if (index(argv[4], 'n') != NULL)
             explicitIPAS = -1;  // no IP or AS extensions
-        else if (argv[4][0] == 'x')
+        else if (index(argv[4], 'x') != NULL)
             skistat = 'x';
         else
             fatal(13, argv[4]);
