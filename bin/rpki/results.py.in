@@ -40,7 +40,8 @@ parser.add_option("-n", "--list-not-accepted",
 
 repo_path = Popen(["config_get", "RPKICacheDir"], stdout=PIPE) \
     .communicate()[0].strip().rstrip("/")
-print "Using local repository path: " + repo_path
+if not (options.listURIsNotAccepted or options.listURIsAccepted):
+	print "Using local repository path: " + repo_path
 if not os.path.exists(repo_path):
     print >>sys.stderr, "Local repository does not exist (%s)" % repo_path
 
@@ -70,6 +71,72 @@ def is_in_directory(base_dir, file_list):
         if not f.startswith(prefix):
             return False
     return True
+
+if options.verbose and (options.listURIsNotAccepted or options.listURIsAccepted) \
+	or (options.listURIsNotAccepted and options.listURIsAccepted):
+	sys.exit("only one option supported")
+
+if options.listURIsAccepted or options.listURIsNotAccepted:
+	db_validated_gbrs = find_validated_objects_in_db("gbr")
+	db_validated_mfts = find_validated_objects_in_db("man")
+	db_validated_roas = find_validated_objects_in_db("roa")
+	db_validated_crls = find_validated_objects_in_db("crl")
+	db_validated_certs = find_validated_objects_in_db("cert")
+	if options.listURIsAccepted:
+		accepted = db_validated_gbrs + db_validated_mfts + db_validated_roas + db_validated_crls
+		for string in db_validated_certs:
+			if string.find("EEcertificates") == -1:
+				accepted.append(string)
+		if len(accepted) == 0:
+			print "None"
+		accepted.sort()
+		for string in accepted:
+			print "rsync:/" + string.replace(repo_path, "")
+		sys.exit()
+
+	if options.listURIsNotAccepted:
+		all_gbr_files = []
+		all_gbr_files.extend(find_files_with_extension(repo_path,
+							       "gbr"))
+		db_all_gbrs = find_all_objects_in_db("gbr")
+		db_unknown_gbrs = list(set(db_all_gbrs) - set(db_validated_gbrs))
+		invalid_gbrs = list(set(all_gbr_files) - set(db_all_gbrs))
+
+		all_mft_files = []
+		all_mft_files.extend(find_files_with_extension(repo_path,
+							       "mft"))
+		db_all_mfts = find_all_objects_in_db("man")
+		db_unknown_mfts = list(set(db_all_mfts) - set(db_validated_mfts))
+		invalid_mfts = list(set(all_mft_files) - set(db_all_mfts))
+
+		all_roa_files = find_files_with_extension(repo_path, "roa")
+		db_all_roas = find_all_objects_in_db("roa")
+		db_unknown_roas = list(set(db_all_roas) - set(db_validated_roas))
+		invalid_roas = list(set(all_roa_files) - set(db_all_roas))
+
+		all_crl_files = find_files_with_extension(repo_path, "crl")
+		db_all_crls = find_all_objects_in_db("crl")
+		db_unknown_crls = list(set(db_all_crls) - set(db_validated_crls))
+		invalid_crls = list(set(all_crl_files) - set(db_all_crls))
+
+		not_accepted = db_unknown_gbrs + invalid_gbrs + db_unknown_mfts + invalid_mfts + \
+			db_unknown_roas + invalid_roas + db_unknown_crls + invalid_crls
+		db_all_certs = find_all_objects_in_db("cert")
+		db_unknown_certs = list(set(db_all_certs) - set(db_validated_certs))
+		for string in db_unknown_certs:
+			if string.find("EEcertificates") == -1:
+				not_accepted.append(string)
+		all_cert_files = find_files_with_extension(repo_path, "cer")
+		invalid_certs = list(set(all_cert_files) - set(db_all_certs))
+		for string in invalid_certs:
+			if string.find("EEcertificates") == -1:
+				not_accepted.append(string)
+		if len(not_accepted) == 0:
+			print "None"
+		not_accepted.sort()
+		for string in not_accepted:
+			print "rsync:/" + string.replace(repo_path, "")
+		sys.exit()
 
 #
 # Results for certificates
@@ -329,40 +396,6 @@ if options.verbose:
         print "\nGhostbusters in the database but not found in " + \
               "local repository path:\n", \
               "\n".join(db_gbrs_outside_repo_path)
-
-if options.listURIsAccepted:
-	print
-	print "-" * 79
-	print "List Accepted"
-	print "-" * 79
-	accepted = db_validated_gbrs + db_validated_mfts + db_validated_roas + db_validated_crls
-	for string in db_validated_certs:
-		if string.find("EEcertificates") == -1:
-			accepted.append(string)
-	if len(accepted) == 0:
-		print "None"
-	accepted.sort()
-	for string in accepted:
-		print "rsync:/" + string.replace(repo_path, "")
-
-if options.listURIsNotAccepted:
-	print
-	print "-" * 79
-	print "List Not Accepted"
-	print "-" * 79
-	not_accepted = db_unknown_gbrs + invalid_gbrs + db_unknown_mfts + invalid_mfts + \
-		db_unknown_roas + invalid_roas + db_unknown_crls + invalid_crls
-	for string in db_unknown_certs:
-		if string.find("EEcertificates") == -1:
-			not_accepted.append(string)
-	for string in invalid_certs:
-		if string.find("EEcertificates") == -1:
-			not_accepted.append(string)
-	if len(not_accepted) == 0:
-		print "None"
-	not_accepted.sort()
-	for string in not_accepted:
-		print "rsync:/" + string.replace(repo_path, "")
 
 # Informational message
 if not options.verbose:
