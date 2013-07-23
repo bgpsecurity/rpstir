@@ -88,7 +88,7 @@ if options.listURIsAccepted or options.listURIsNotAccepted:
 			if string.find("EEcertificates") == -1:
 				accepted.append(string)
 		if len(accepted) == 0:
-			print "None"
+			sys.exit()
 		accepted.sort()
 		for string in accepted:
 			print "rsync:/" + string.replace(repo_path, "")
@@ -132,7 +132,7 @@ if options.listURIsAccepted or options.listURIsNotAccepted:
 			if string.find("EEcertificates") == -1:
 				not_accepted.append(string)
 		if len(not_accepted) == 0:
-			print "None"
+			sys.exit()
 		not_accepted.sort()
 		for string in not_accepted:
 			print "rsync:/" + string.replace(repo_path, "")
