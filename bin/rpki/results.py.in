@@ -26,6 +26,12 @@ parser = OptionParser()
 parser.add_option("-v", "--verbose",
                   action="store_true", dest="verbose", default=False,
                   help="output lists of valid/invalid/unknown objects")
+parser.add_option("-a", "--list-accepted",
+		  action="store_true", dest="listURIsAccepted", default=False,
+		  help="list accepted objects") 
+parser.add_option("-n", "--list-not-accepted",
+		  action="store_true", dest="listURIsNotAccepted", default=False,
+		  help="list not-accepted objects") 
 (options, args) = parser.parse_args()
 
 #
@@ -324,6 +330,39 @@ if options.verbose:
               "local repository path:\n", \
               "\n".join(db_gbrs_outside_repo_path)
 
+if options.listURIsAccepted:
+	print
+	print "-" * 79
+	print "List Accepted"
+	print "-" * 79
+	accepted = db_validated_gbrs + db_validated_mfts + db_validated_roas + db_validated_crls
+	for string in db_validated_certs:
+		if string.find("EEcertificates") == -1:
+			accepted.append(string)
+	if len(accepted) == 0:
+		print "None"
+	accepted.sort()
+	for string in accepted:
+		print "rsync:/" + string.replace(repo_path, "")
+
+if options.listURIsNotAccepted:
+	print
+	print "-" * 79
+	print "List Not Accepted"
+	print "-" * 79
+	not_accepted = db_unknown_gbrs + invalid_gbrs + db_unknown_mfts + invalid_mfts + \
+		db_unknown_roas + invalid_roas + db_unknown_crls + invalid_crls
+	for string in db_unknown_certs:
+		if string.find("EEcertificates") == -1:
+			not_accepted.append(string)
+	for string in invalid_certs:
+		if string.find("EEcertificates") == -1:
+			not_accepted.append(string)
+	if len(not_accepted) == 0:
+		print "None"
+	not_accepted.sort()
+	for string in not_accepted:
+		print "rsync:/" + string.replace(repo_path, "")
 
 # Informational message
 if not options.verbose:
