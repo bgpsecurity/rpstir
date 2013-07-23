@@ -82,19 +82,17 @@ if options.listURIsAccepted or options.listURIsNotAccepted:
 	db_validated_roas = find_validated_objects_in_db("roa")
 	db_validated_crls = find_validated_objects_in_db("crl")
 	db_validated_certs = find_validated_objects_in_db("cert")
+	uriList = None
 	if options.listURIsAccepted:
-		accepted = db_validated_gbrs + db_validated_mfts + db_validated_roas + db_validated_crls
+		uriList = db_validated_gbrs + db_validated_mfts + db_validated_roas + db_validated_crls
 		for string in db_validated_certs:
 			if string.find("EEcertificates") == -1:
-				accepted.append(string)
-		if len(accepted) == 0:
+				uriList.append(string)
+		if len(uriList) == 0:
 			sys.exit()
-		accepted.sort()
-		for string in accepted:
-			print "rsync:/" + string.replace(repo_path, "")
-		sys.exit()
+		uriList.sort()
 
-	if options.listURIsNotAccepted:
+	elif options.listURIsNotAccepted:
 		all_gbr_files = []
 		all_gbr_files.extend(find_files_with_extension(repo_path,
 							       "gbr"))
@@ -119,24 +117,25 @@ if options.listURIsAccepted or options.listURIsNotAccepted:
 		db_unknown_crls = list(set(db_all_crls) - set(db_validated_crls))
 		invalid_crls = list(set(all_crl_files) - set(db_all_crls))
 
-		not_accepted = db_unknown_gbrs + invalid_gbrs + db_unknown_mfts + invalid_mfts + \
+		uriList = db_unknown_gbrs + invalid_gbrs + db_unknown_mfts + invalid_mfts + \
 			db_unknown_roas + invalid_roas + db_unknown_crls + invalid_crls
 		db_all_certs = find_all_objects_in_db("cert")
 		db_unknown_certs = list(set(db_all_certs) - set(db_validated_certs))
 		for string in db_unknown_certs:
 			if string.find("EEcertificates") == -1:
-				not_accepted.append(string)
+				uriList.append(string)
 		all_cert_files = find_files_with_extension(repo_path, "cer")
 		invalid_certs = list(set(all_cert_files) - set(db_all_certs))
 		for string in invalid_certs:
 			if string.find("EEcertificates") == -1:
-				not_accepted.append(string)
-		if len(not_accepted) == 0:
+				uriList.append(string)
+		if len(uriList) == 0:
 			sys.exit()
-		not_accepted.sort()
-		for string in not_accepted:
-			print "rsync:/" + string.replace(repo_path, "")
-		sys.exit()
+		uriList.sort()
+	for string in uriList:
+		if string.startswith(repo_path):
+			print "rsync:/" + string.replace(repo_path, "", 1)
+	sys.exit()
 
 #
 # Results for certificates
