@@ -86,7 +86,7 @@ if options.listURIsAccepted or options.listURIsNotAccepted:
 	if options.listURIsAccepted:
 		uriList = db_validated_gbrs + db_validated_mfts + db_validated_roas + db_validated_crls
 		for string in db_validated_certs:
-			if string.find(repo_path + "EEcertificates") == -1:
+			if string.startswith(repo_path + "EEcertificates") == -1:
 				uriList.append(string)
 		if len(uriList) == 0:
 			sys.exit()
@@ -122,12 +122,12 @@ if options.listURIsAccepted or options.listURIsNotAccepted:
 		db_all_certs = find_all_objects_in_db("cert")
 		db_unknown_certs = list(set(db_all_certs) - set(db_validated_certs))
 		for string in db_unknown_certs:
-			if string.find(repo_path + "EEcertificates") == -1:
+			if string.startswith(repo_path + "EEcertificates") == -1:
 				uriList.append(string)
 		all_cert_files = find_files_with_extension(repo_path, "cer")
 		invalid_certs = list(set(all_cert_files) - set(db_all_certs))
 		for string in invalid_certs:
-			if string.find(repo_path + "EEcertificates") == -1:
+			if string.startswith(repo_path + "EEcertificates") == -1:
 				uriList.append(string)
 		if len(uriList) == 0:
 			sys.exit()
@@ -151,7 +151,7 @@ all_cert_files = find_files_with_extension(repo_path, "cer")
 ca_cert_files = []
 ee_cert_files = []
 for f in all_cert_files:
-    if f.find(repo_path + "EEcertificates") != -1:
+    if f.startswith(repo_path + "EEcertificates") != -1:
         ee_cert_files.append(f)
     else:
         ca_cert_files.append(f)
