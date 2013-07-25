@@ -6,9 +6,14 @@
 	* Fix a bug where CRLs were not being marked as invalid when their
 	  issuers became invalid and manifests were not being marked as invalid
 	  when their associated EE certificates became invalid.
-	* Modify the query client (rpstir-query) to not consider it an error
+	* Fix the query client (rpstir-query) to not consider it an error
 	  when no results are returned for a query.
+	* Require ROA EE certificates to explicitly specify IP resources.
+	  That is, disallow RFC 3779 "inherit" bit in ROA EE certificates.
+	* Add functionality to rpstir-results for outputting simple lists
+	  of good and bad URIs, to simplify comparison testing.
 	* On installation, create ${bindir} if it does not already exist.
+	* Improve README based on user feedback.
 
 0.7
 
