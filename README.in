@@ -547,7 +547,12 @@ This section describes some of your options for getting more information about
 3.2.1 Validation Report (@PACKAGE_NAME@-results)
 
 If you want an overview of @PACKAGE_NAME@'s cached view of the RPKI, you can
-use @PACKAGE_NAME@-results.
+use
+
+   @PACKAGE_NAME@-results
+
+This should have some non-zero values for the validated objects if the 
+@PACKAGE_NAME@-synchronize ran successfully.
 
 At a basic level, every object is in one of three states: fully
 validated to a trust anchor, unknown, and definitely invalid.  Valid
