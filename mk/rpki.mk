@@ -806,6 +806,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertAIA2AccessDescHtRs.stage0.patch \
 	tests/conformance/raw/patches/goodCertAIA2AccessDescHtRs.stage1.patch \
 	tests/conformance/raw/patches/goodCertAIA2AccessDescHtRs.stage2.patch \
+	tests/conformance/raw/patches/goodCertAIA2AccessDescRsRs.stage0.patch
+	tests/conformance/raw/patches/goodCertAIA2AccessDescRsRs.stage1.patch
+	tests/conformance/raw/patches/goodCertAIA2AccessDescRsRs.stage2.patch
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage0.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage1.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage2.patch \

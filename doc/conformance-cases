@@ -42,7 +42,7 @@ created.
 CA Certificates
 
 101 AIA2AccessDescHtRs  # (good) AIA with two access descriptions (http+rsync) 6487#4.8.7
-    AIA2AccessDescRsRs  # (good) AIA with two access descriptions (2 rsync) 6487#4.8.7
+195 AIA2AccessDescRsRs  # (good) AIA with two access descriptions (2 rsync) 6487#4.8.7
 102 AIABadAccess        # wrong accessMethod for rsync URI 6487#4.8.7
 103 AIAAccessLoc        # single HTTP accessLoc, no rsync 6487#4.8.7
 104 AIACrit             # wrongly mark AIA extension as critical 6487#4.8.7
