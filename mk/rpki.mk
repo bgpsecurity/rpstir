@@ -472,6 +472,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertAKIHash.stage0.patch \
 	tests/conformance/raw/patches/badCertAKIHash.stage1.patch \
 	tests/conformance/raw/patches/badCertAKIHash.stage2.patch \
+	tests/conformance/raw/patches/badCertAKILong.stage0.patch \
+	tests/conformance/raw/patches/badCertAKILong.stage1.patch \
+	tests/conformance/raw/patches/badCertAKILong.stage2.patch \
 	tests/conformance/raw/patches/badCertAKIShort.stage0.patch \
 	tests/conformance/raw/patches/badCertAKIShort.stage1.patch \
 	tests/conformance/raw/patches/badCertAKIShort.stage2.patch \

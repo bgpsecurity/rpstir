@@ -48,7 +48,7 @@ CA Certificates
 104 AIACrit             # wrongly mark AIA extension as critical 6487#4.8.7
 105 AKIHash             # AKI doesn't match parent SKI -- NOTE: not syntax check 6487#4.8.3
 106 AKIShort            # AKI is too short 6487#4.8.3
-    AKILong             # AKI is too long 6487#4.8.3
+196 AKILong             # AKI is too long 6487#4.8.3
     AKIHasACI           # AKI has authorityCertIssuer present  6487#4.8.3
     AKIHasACSN          # AKI has authorityCertSerialNumber present  6487#4.8.3
 107 UnkExtension        # unrecognized non-critical extension (PolicyMappings) 6487#1,4.8,8
