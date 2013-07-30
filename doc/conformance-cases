@@ -49,7 +49,7 @@ CA Certificates
 105 AKIHash             # AKI doesn't match parent SKI -- NOTE: not syntax check 6487#4.8.3
 106 AKIShort            # AKI is too short 6487#4.8.3
 196 AKILong             # AKI is too long 6487#4.8.3
-197 AKIHasACI           # AKI has authorityCertIssuer present  6487#4.8.3
+197 AKIHasACI           # AKI has authorityCertIssuer present  6487#4.8.3 TODO: Not sure if broken
     AKIHasACSN          # AKI has authorityCertSerialNumber present  6487#4.8.3
 107 UnkExtension        # unrecognized non-critical extension (PolicyMappings) 6487#1,4.8,8
     UnkExtensionCrit    # unrecognized critical extension (PolicyMappings) 5280#4.2
@@ -58,7 +58,7 @@ CA Certificates
 111 BasicConstrPathLth  # BasicConstr path length present 6487#4.8.1
 112 Cpol2oid1correct    # One correct, one incorrect Cert Policy OID 6487#4.8.9 6484#1.2
     Cpol2oid2correct    # Two correct Cert Policy OIDs 6487#4.8.9 6484#1.2
-    CpolBadOid          # One incorrect Cert Policy OID 6487#4.8.9 6484#1.2
+198 CpolBadOid          # One incorrect Cert Policy OID 6487#4.8.9 6484#1.2
 113 CpolNoCrit          # CertPolicy extension, crit bit unset 6487#4.8.9
     CpolQualCps         # (good) correct Cert Policy OID with a certification practice statement (CPS) qualifier 6487#4.8.9 5280#4.2.1.4 draft-ietf-sidr-policy-qualifiers-00#2
     CpolQualCpsUnotice  # correct Cert Policy OID with CPS and user notice qualifiers 6487#4.8.9 5280#4.2.1.4 draft-ietf-sidr-policy-qualifiers-00#2

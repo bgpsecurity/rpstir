@@ -505,6 +505,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertCpol2oid1correct.stage0.patch \
 	tests/conformance/raw/patches/badCertCpol2oid1correct.stage1.patch \
 	tests/conformance/raw/patches/badCertCpol2oid1correct.stage2.patch \
+	tests/conformance/raw/patches/badCertCpolBadOid.stage0.patch \
+	tests/conformance/raw/patches/badCertCpolBadOid.stage1.patch \
+	tests/conformance/raw/patches/badCertCpolBadOid.stage2.patch \
 	tests/conformance/raw/patches/badCertCpolNoCrit.stage0.patch \
 	tests/conformance/raw/patches/badCertCpolNoCrit.stage1.patch \
 	tests/conformance/raw/patches/badCertCpolNoCrit.stage2.patch \
