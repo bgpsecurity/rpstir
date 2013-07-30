@@ -1,0 +1,12 @@
+--- badCertAKIHasACI.raw.old	2013-07-30 12:17:07.360403045 -0400
++++ badCertAKIHasACI.raw	2013-07-30 12:21:45.180761874 -0400
+@@ -39,6 +39,9 @@
+                     ocw seq ctx+0x00
+                                 0xD27F6E783B2B5CE535940D54C0A6F38F
+                                 0x5B7804D4
++                    ocw seq ctx+0x01
++                                seq ctx+0x4
++                                    "/home/rpstir/authority"
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+                     ocw bit 0x0106

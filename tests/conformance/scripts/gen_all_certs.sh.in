@@ -164,6 +164,7 @@ ${single_cert_cmd} 104 AIACrit
 ${single_cert_cmd} 105 AKIHash
 ${single_cert_cmd} 106 AKIShort
 ${single_cert_cmd} 196 AKILong
+${single_cert_cmd} 197 AKIHasACI
 ${single_cert_cmd} 107 UnkExtension
 ${single_cert_cmd} 109 BasicConstrNoCA
 ${single_cert_cmd} 110 BasicConstrNoCrit
