@@ -827,6 +827,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage0.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage1.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage2.patch \
+	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage0.patch \
+	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage1.patch \
+	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage2.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage0.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodCertSerNumMax.stage2.patch \
