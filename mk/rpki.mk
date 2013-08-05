@@ -583,6 +583,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertPubKeyExp.stage0.patch \
 	tests/conformance/raw/patches/badCertPubKeyExp.stage1.patch \
 	tests/conformance/raw/patches/badCertPubKeyExp.stage2.patch \
+	tests/conformance/raw/patches/badCertPubKeyLong.stage0.patch \
+	tests/conformance/raw/patches/badCertPubKeyLong.stage1.patch \
+	tests/conformance/raw/patches/badCertPubKeyLong.stage2.patch \
 	tests/conformance/raw/patches/badCertPubKeyShort.stage0.patch \
 	tests/conformance/raw/patches/badCertPubKeyShort.stage1.patch \
 	tests/conformance/raw/patches/badCertPubKeyShort.stage2.patch \

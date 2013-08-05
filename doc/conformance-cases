@@ -88,7 +88,7 @@ CA Certificates
 135 PubKeyAlg           # wrong SubjectPublicKey algorithm 6485#3.1 Is this right???
 136 PubKeyExp           # wrong SubjectPublicKey exponent 6485#3
 137 PubKeyShort         # SubjectPublicKey is 2047-bit 6485#3
-    PubKeyLong          # SubjectPublicKey is 2049-bit 6485#3
+199 PubKeyLong          # SubjectPublicKey is 2049-bit 6485#3
 138 ResourcesASNoCrit   # AS number extension not critical 6487#4.8.11
 139 ResourcesBadAFI     # invalid IP address family 6487#4.8.10, IANA address-family-numbers
 140 ResourcesBadASOrder # AS numbers out of order 3779 (but full set is pending)

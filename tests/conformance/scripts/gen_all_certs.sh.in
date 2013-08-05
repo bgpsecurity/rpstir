@@ -192,6 +192,7 @@ ${single_cert_cmd} 134 OuterSigAlg
 ${single_cert_cmd} 135 PubKeyAlg
 ${single_cert_cmd} 136 PubKeyExp
 ${single_cert_cmd} 137 PubKeyShort
+${single_cert_cmd} 199 PubKeyLong
 ${single_cert_cmd} 138 ResourcesASNoCrit
 ${single_cert_cmd} 139 ResourcesBadAFI
 ${single_cert_cmd} 140 ResourcesBadASOrder
