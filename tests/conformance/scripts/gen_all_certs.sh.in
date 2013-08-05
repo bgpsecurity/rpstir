@@ -202,6 +202,7 @@ ${single_cert_cmd} 143 ResourcesIPNoCrit
 ${single_cert_cmd} 144 ResourcesNone
 ${single_cert_cmd} 145 ResourcesSAFI
 ${single_cert_cmd} 147 SIARepoNoRsync
+${single_cert_cmd} 200 SIAMFTNoRsync
 ${single_cert_cmd} 148 SIAAccessMethod
 ${single_cert_cmd} 150 SKIHash
 ${single_cert_cmd} 151 SKILong

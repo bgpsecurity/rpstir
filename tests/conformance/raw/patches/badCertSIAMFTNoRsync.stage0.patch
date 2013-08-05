@@ -1,0 +1,11 @@
+--- badCertSIAMFTNoRsync.raw.old	2013-08-05 14:51:40.851747329 -0400
++++ badCertSIAMFTNoRsync.raw	2013-08-05 14:52:04.574473763 -0400
+@@ -59,7 +59,7 @@
+                                     "y/"
+                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                 ctx+0x06
+-                                    "rsync://rpki.bbn.com/conformance/root/empt"
++                                    "http://rpki.bbn.com/conformance/root/empt"
+                                     "y/doesNotExist.mft"
+                 seq oid 2.5.29.32 /* id_certificatePolicies */
+                     boo 0xFF

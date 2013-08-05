@@ -625,6 +625,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertSIAAccessMethod.stage0.patch \
 	tests/conformance/raw/patches/badCertSIAAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/badCertSIAAccessMethod.stage2.patch \
+	tests/conformance/raw/patches/badCertSIAMFTNoRsync.stage0.patch \
+	tests/conformance/raw/patches/badCertSIAMFTNoRsync.stage1.patch \
+	tests/conformance/raw/patches/badCertSIAMFTNoRsync.stage2.patch \
 	tests/conformance/raw/patches/badCertSIARepoNoRsync.stage0.patch \
 	tests/conformance/raw/patches/badCertSIARepoNoRsync.stage1.patch \
 	tests/conformance/raw/patches/badCertSIARepoNoRsync.stage2.patch \
