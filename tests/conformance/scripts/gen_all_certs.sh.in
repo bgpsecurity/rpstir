@@ -209,6 +209,7 @@ ${single_cert_cmd} -x good 203 SIARepoHtRs
 ${single_cert_cmd} -x good 204 SIAMFTHtRs
 ${single_cert_cmd} 148 SIAAccessMethod
 ${single_cert_cmd} 205 SIANoMFT
+${single_cert_cmd} 206 SIANoRepo
 ${single_cert_cmd} 150 SKIHash
 ${single_cert_cmd} 151 SKILong
 ${single_cert_cmd} 194 SKIShort

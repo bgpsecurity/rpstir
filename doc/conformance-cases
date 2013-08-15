@@ -116,7 +116,7 @@ CA Certificates
     SIAMFTHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-rpkiManifest 6487#4.8.8
 148 SIAAccessMethod     # SIA has bad access method in addition to good accessMethods 6487#4.8.8
 205 SIANoMFT            # SIA has no id-ad-rpkiManifest 6487#4.8.8
-    SIANoRepo           # SIA has no id-ad-caRepository 6487#4.8.8
+206 SIANoRepo           # SIA has no id-ad-caRepository 6487#4.8.8
 150 SKIHash             # incorrect subject key identifier 6487#4.8.2
 151 SKILong             # SKI length 21 octets 6487#4.8.2
 194 SKIShort            # SKI length 19 octets 6487#4.8.2
