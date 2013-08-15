@@ -830,6 +830,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertSIAMFT2Rsync.stage0.patch \
 	tests/conformance/raw/patches/goodCertSIAMFT2Rsync.stage1.patch \
 	tests/conformance/raw/patches/goodCertSIAMFT2Rsync.stage2.patch \
+	tests/conformance/raw/patches/goodCertSIAMFTHtRs.stage0.patch \
+	tests/conformance/raw/patches/goodCertSIAMFTHtRs.stage1.patch \
+	tests/conformance/raw/patches/goodCertSIAMFTHtRs.stage2.patch \
 	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage0.patch \
 	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage1.patch \
 	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage2.patch \

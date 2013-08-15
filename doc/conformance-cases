@@ -111,7 +111,7 @@ CA Certificates
 201 SIARepo2Rsync       # (good) SIA has 2 rsync locators for id-ad-caRepository 6487#4.8.8
 202 SIAMFT2Rsync        # (good) SIA has 2 rsync locators for id-ad-rpkiManifest 6487#4.8.8
 203 SIARepoHtRs         # (good) SIA has http+rsync locators for id-ad-caRepository 6487#4.8.8
-    SIAMFTHtRs          # (good) SIA has http+rsync locators for id-ad-rpkiManifest 6487#4.8.8
+204 SIAMFTHtRs          # (good) SIA has http+rsync locators for id-ad-rpkiManifest 6487#4.8.8
     SIARepoHasNonURI    # (good) SIA has rsync+non-URI locators for id-ad-caRepository 6487#4.8.8
     SIAMFTHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-rpkiManifest 6487#4.8.8
 148 SIAAccessMethod     # SIA has bad access method in addition to good accessMethods 6487#4.8.8

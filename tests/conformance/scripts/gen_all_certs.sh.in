@@ -206,6 +206,7 @@ ${single_cert_cmd} 200 SIAMFTNoRsync
 ${single_cert_cmd} -x good 201 SIARepo2Rsync
 ${single_cert_cmd} -x good 202 SIAMFT2Rsync
 ${single_cert_cmd} -x good 203 SIARepoHtRs
+${single_cert_cmd} -x good 204 SIAMFTHtRs
 ${single_cert_cmd} 148 SIAAccessMethod
 ${single_cert_cmd} 150 SKIHash
 ${single_cert_cmd} 151 SKILong
