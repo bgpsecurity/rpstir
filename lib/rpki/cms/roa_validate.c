@@ -1080,6 +1080,21 @@ static int checkIPAddrs(
 
     struct ROAIPAddressFamily *roaFamilyp;
     struct IPAddressFamilyA *certFamilyp;
+
+    // make sure none of the cert families are marked inherit
+    for (certFamilyp =
+        (struct IPAddressFamilyA *)member_casn(&certIpAddrBlockp->self, 0);
+        certFamilyp;
+        certFamilyp = (struct IPAddressFamilyA *)next_of(&certFamilyp->self))
+    {
+        if (size_casn(&certFamilyp->ipAddressChoice.inherit))
+        {
+            LOG(LOG_ERR,
+                "ROA's EE certificate has IP resources marked inherit");
+            return ERR_SCM_ROAIPMISMATCH;
+        }
+    }
+
     // for each ROA family, see if it is in cert
     for (roaFamilyp =
          (struct ROAIPAddressFamily *)member_casn(&roaIPAddrBlocksp->self, 0);
@@ -1097,9 +1112,6 @@ static int checkIPAddrs(
                 (&certFamilyp->addressFamily, &roaFamilyp->addressFamily))
                 continue;
             matchedCertFamily = 1;
-            // now at matching families. If inheriting, skip it
-            if (size_casn(&certFamilyp->ipAddressChoice.inherit))
-                break;
             // for each ROA entry, see if it is in cert 
             const int roaNumPrefixes = num_items(&roaFamilyp->addresses.self);
             struct certrange *roaRanges =
