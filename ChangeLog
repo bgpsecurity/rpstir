@@ -1,3 +1,9 @@
+next
+
+	* Add a pseudo-random factor to the calculation of how long to wait
+	  before retrying an rsync connection. This should help prevent many
+	  relying parties from hitting the same server at the same time.
+
 0.8
 
 	* Support Ghostbusters Records [RFC 6493].

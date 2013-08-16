@@ -3819,7 +3819,7 @@ static int rescert_sig_algs_chk(
         uint8_t bit_mask;
         for (bit_mask = 0x80;
             bit_mask > 0 && (pubkey_modulus_buf[0] & bit_mask) == 0;
-            bit_mask >> 1)
+            bit_mask >>= 1)
         {
             --modulus_bit_length;
         }
