@@ -229,6 +229,7 @@ ${single_cert_cmd} 165 Version1
 ${single_cert_cmd} 166 Version2
 ${single_cert_cmd} 167 Version4
 ${single_cert_cmd} 168 SerNum
+${single_cert_cmd} 207 SerNum0
 ${single_cert_cmd} 169 AIA2x
 ${single_cert_cmd} 170 SIA2x
 ${single_cert_cmd} 171 NoAIA
