@@ -483,6 +483,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertAKIShort.stage0.patch \
 	tests/conformance/raw/patches/badCertAKIShort.stage1.patch \
 	tests/conformance/raw/patches/badCertAKIShort.stage2.patch \
+	tests/conformance/raw/patches/badCertBadSig.stage0.patch \
+	tests/conformance/raw/patches/badCertBadSig.stage1.patch \
+	tests/conformance/raw/patches/badCertBadSig.stage2.patch \
 	tests/conformance/raw/patches/badCertBasicConstrNoCA.stage0.patch \
 	tests/conformance/raw/patches/badCertBasicConstrNoCA.stage1.patch \
 	tests/conformance/raw/patches/badCertBasicConstrNoCA.stage2.patch \

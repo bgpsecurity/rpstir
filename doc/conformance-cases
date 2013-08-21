@@ -165,7 +165,7 @@ CA Certificates
 189 SubjectSet2SerNums  # subject name has 2 serial numbers (same set) 6487#4.5
     IssuerSeq2SerNums   # issuer name has 2 serial numbers (split across sets) 6487#4.4
     SubjectSeq2SerNums  # subject name has 2 serial numbers (split across sets) 6487#4.5
-    BadSig              # signature is invalid 5280#4.1.1.3
+208 BadSig              # signature is invalid 5280#4.1.1.3
 
 
 CMS signed objects, generic (using ROAs)
