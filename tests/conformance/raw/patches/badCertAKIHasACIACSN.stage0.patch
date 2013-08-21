@@ -4,12 +4,12 @@
                      ocw seq ctx+0x00
                                  0xD27F6E783B2B5CE535940D54C0A6F38F
                                  0x5B7804D4
-+                            ctx+0x01
-+                                seq ctx+0x04
-+                                        seq set seq oid 2.5.4.3 /* id_commonName */
-+                                                    prt "root"
++                            ctx+0x21
++                                ctx+0x24
++                                    seq set seq oid 2.5.4.3 /* id_commonName */
++                                                prt "root"
 +                            ctx+0x02
-+                                int 0x01
++                                0x01
                  seq oid 2.5.29.15 /* id_keyUsage */
                      boo 0xFF
                      ocw bit 0x0106
