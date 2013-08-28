@@ -154,6 +154,7 @@ ${single_CMS_cmd} CMS 514 2Certs
 ${single_CMS_cmd} CMS 515 Version2
 ${single_CMS_cmd} CMS 516 Version4
 ${single_CMS_cmd} CMS 517 DigestAlgSameWrong
+${single_CMS_cmd} CMS 546 DigestAlgWrongOuter
 ${single_CMS_cmd} CMS 518 2DigestAlgs
 ${single_CMS_cmd} CMS 519 NoDigestAlgs
 ${single_CMS_cmd} CMS 520 HasCRL

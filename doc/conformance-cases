@@ -177,7 +177,7 @@ CMS signed objects, generic (using ROAs)
 515 Version2                 # version 2 6488#2.1.1
 516 Version4                 # version 4 6488#2.1.1
 517 DigestAlgSameWrong       # wrong digest algorithm (same in both places) 6488#2.1.2 6485#2
-    DigestAlgWrongOuter      # wrong digest algorithm (in SignedData) 6488#2.1.2 6485#2
+546 DigestAlgWrongOuter      # wrong digest algorithm (in SignedData) 6488#2.1.2 6485#2
 518 2DigestAlgs              # two digest algorithms 6488#2.1.2
 519 NoDigestAlgs             # no digest algorithm 6488#2.1.2
 520 HasCRL                   # has a CRL 6488#2.1.5

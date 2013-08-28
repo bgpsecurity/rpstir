@@ -1,0 +1,11 @@
+--- badCMSDigestAlgWrongOuter.raw.old	2013-08-28 13:55:59.399417294 -0400
++++ badCMSDigestAlgWrongOuter.raw	2013-08-28 16:42:41.952374521 -0400
+@@ -108,7 +108,7 @@
+                     ctx+0x00
+                         0xEF45568C1C5EED80E1698073C11DE7F1
+                         0x29A5208C
+-                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++                    seq oid 2.16.840.1.101.3.4.2.2 /* id_sha384 */
+                         nul 
+                     ctx+0x20
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */

@@ -202,6 +202,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badCMS2DigestAlgs.ee.p15 \
 	tests/conformance/raw/keys/badCMSContentType.ee.p15 \
 	tests/conformance/raw/keys/badCMSDigestAlgSameWrong.ee.p15 \
+	tests/conformance/raw/keys/badCMSDigestAlgWrongOuter.ee.p15 \
 	tests/conformance/raw/keys/badCMSHasCRL.ee.p15 \
 	tests/conformance/raw/keys/badCMSNoCerts.ee.p15 \
 	tests/conformance/raw/keys/badCMSNoDigestAlgs.ee.p15 \
@@ -289,6 +290,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCMSDigestAlgSameWrong.stage1.patch \
 	tests/conformance/raw/patches/badCMSDigestAlgSameWrong.stage2.patch \
 	tests/conformance/raw/patches/badCMSDigestAlgSameWrong.stage3.patch \
+	tests/conformance/raw/patches/badCMSDigestAlgWrongOuter.ee.stage0.patch \
+	tests/conformance/raw/patches/badCMSDigestAlgWrongOuter.stage1.patch \
+	tests/conformance/raw/patches/badCMSDigestAlgWrongOuter.stage2.patch \
+	tests/conformance/raw/patches/badCMSDigestAlgWrongOuter.stage3.patch \
 	tests/conformance/raw/patches/badCMSHasCRL.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMSHasCRL.stage1.patch \
 	tests/conformance/raw/patches/badCMSHasCRL.stage2.patch \
