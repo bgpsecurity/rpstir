@@ -1,0 +1,12 @@
+--- badCMSSigInfoAttrsSigTime2Val.raw.old	2013-08-30 16:31:05.350178716 -0400
++++ badCMSSigInfoAttrsSigTime2Val.raw	2013-08-30 16:33:22.959405710 -0400
+@@ -111,6 +111,9 @@
+                     seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                         nul 
+                     ctx+0x20
++                        seq oid 1.2.840.113549.1.9.16.2.46 /* binsigtime */
++                            set int 0x0123456789
++                                int 0x1234567890
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+                             set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                         seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */

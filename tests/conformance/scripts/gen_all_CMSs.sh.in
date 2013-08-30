@@ -176,6 +176,7 @@ ${single_CMS_cmd} CMS 536 SigInfoAttrs2SigTime
 ${single_CMS_cmd} CMS 537 SigInfoAttrs2BinSigTime
 ${single_CMS_cmd} CMS 549 SigInfoAttrsContType2Val
 ${single_CMS_cmd} CMS 564 SigInfoAttrsMsgDigest2Val
+${single_CMS_cmd} CMS 565 SigInfoAttrsSigTime2Val
 ${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs
 ${single_CMS_cmd} CMS 539 SigInfoNoSig
 ${single_CMS_cmd} CMS 540 SigInfo2Sig
