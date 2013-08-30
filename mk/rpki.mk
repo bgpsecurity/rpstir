@@ -215,6 +215,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badCMSSigInfoAttrsContTypeOid.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrsNoContType.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrsNoMsgDigest.ee.p15 \
+	tests/conformance/raw/keys/badCMSSigInfoAttrsWrongDigest.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoBadSid.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoHashAlg.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoNoAttrs.ee.p15 \
@@ -342,6 +343,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCMSSigInfoAttrsNoMsgDigest.stage1.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrsNoMsgDigest.stage2.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrsNoMsgDigest.stage3.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsWrongDigest.ee.stage0.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsWrongDigest.stage1.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsWrongDigest.stage2.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsWrongDigest.stage3.patch \
 	tests/conformance/raw/patches/badCMSSigInfoBadSid.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMSSigInfoBadSid.stage1.patch \
 	tests/conformance/raw/patches/badCMSSigInfoBadSid.stage2.patch \

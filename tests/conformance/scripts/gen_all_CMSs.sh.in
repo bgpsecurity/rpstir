@@ -169,6 +169,7 @@ ${single_CMS_cmd} CMS 529 SigInfoNoAttrs
 ${single_CMS_cmd} CMS 530 SigInfoAttrsNoContType
 ${single_CMS_cmd} CMS 531 SigInfoAttrsContTypeOid
 ${single_CMS_cmd} CMS 533 SigInfoAttrsNoMsgDigest
+${single_CMS_cmd} CMS 548 SigInfoAttrsWrongDigest
 ${single_CMS_cmd} CMS 534 SigInfoAttrs2ContType
 ${single_CMS_cmd} CMS 535 SigInfoAttrs2MsgDigest
 ${single_CMS_cmd} CMS 536 SigInfoAttrs2SigTime

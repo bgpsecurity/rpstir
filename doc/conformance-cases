@@ -194,7 +194,7 @@ CMS signed objects, generic (using ROAs)
 530 SigInfoAttrsNoContType   # no content type in Signer Info 6488#2.1.6.4.1
 531 SigInfoAttrsContTypeOid  # content type OID does not match eContentType 6488#2.1.6.4.1
 533 SigInfoAttrsNoMsgDigest  # no message digest 6488#2.1.6.4.2
-    SigInfoAttrsWrongDigest  # incorrect SHA-256 message digest 6488#2.1.6.4.2
+548 SigInfoAttrsWrongDigest  # incorrect SHA-256 message digest 6488#2.1.6.4.2
 534 SigInfoAttrs2ContType    # duplicate content type attributes 6488#2.1.6.4
 535 SigInfoAttrs2MsgDigest   # duplicate digest attributes 6488#2.1.6.4
 536 SigInfoAttrs2SigTime     # duplicate signing time attributes 6488#2.1.6.4
