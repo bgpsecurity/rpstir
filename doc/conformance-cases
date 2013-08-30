@@ -199,7 +199,7 @@ CMS signed objects, generic (using ROAs)
 535 SigInfoAttrs2MsgDigest   # duplicate digest attributes 6488#2.1.6.4
 536 SigInfoAttrs2SigTime     # duplicate signing time attributes 6488#2.1.6.4
 537 SigInfoAttrs2BinSigTime  # duplicate binary signing time attributes 6488#2.1.6.4
-    SigInfoAttrsContType2Val    # duplicate content type attribute values 6488#2.1.6.4
+549 SigInfoAttrsContType2Val    # duplicate content type attribute values 6488#2.1.6.4
     SigInfoAttrsMsgDigest2Val   # duplicate digest attribute values 6488#2.1.6.4
     SigInfoAttrsSigTime2Val     # duplicate signing time attribute values 6488#2.1.6.4
     SigInfoAttrsBinSigTime2Val  # duplicate binary signing time attribute values 6488#2.1.6.4
