@@ -193,5 +193,6 @@ ${single_CMS_cmd} CMS 543 SigInfoNoHashAlg
 # Generate EE certificate cases (embedded in ROAs)
 ###############################################################################
 
+${single_CMS_cmd} EE 572 HasBasicConstraints
 ${single_CMS_cmd} EE 544 KeyUsageCABits
 ${single_CMS_cmd} EE 545 SIAWrongAccessMethod

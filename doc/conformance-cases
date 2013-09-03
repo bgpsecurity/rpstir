@@ -216,7 +216,7 @@ CMS signed objects, generic (using ROAs)
 
 EE Certificates (embedded in ROAs)
 
-    HasBasicConstraints      # basic constraints extension present 6487#4.8.1
+572 HasBasicConstraints      # basic constraints extension present 6487#4.8.1
 544 KeyUsageCABits           # KU has only keyCertSign and CRLSign (like CA) 6487#4.8.4
     KeyUsageNoDigitalSig     # KU missing digitalSignature bit 6487#4.8.4
     KeyUsageHasKeyCertSign   # KU has digitalSignature and keyCertSign 6487#4.8.4
