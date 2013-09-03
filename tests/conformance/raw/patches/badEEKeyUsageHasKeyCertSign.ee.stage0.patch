@@ -1,0 +1,11 @@
+--- badEEKeyUsageHasKeyCertSign.ee.raw.old	2013-09-03 16:36:51.311193772 -0400
++++ badEEKeyUsageHasKeyCertSign.ee.raw	2013-09-03 16:38:40.064565394 -0400
+@@ -38,7 +38,7 @@
+                                 0x5B7804D4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+-                    ocw bit 0x0780
++                    ocw bit 0x0284
+                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20
