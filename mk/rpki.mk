@@ -239,6 +239,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badCMSVersion2.ee.p15 \
 	tests/conformance/raw/keys/badCMSVersion4.ee.p15 \
 	tests/conformance/raw/keys/badEEHasBasicConstraints.ee.p15 \
+	tests/conformance/raw/keys/badEEHasCABasicConstraint.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageCABits.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageHasKeyCertSign.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageNoDigitalSig.ee.p15 \
@@ -773,6 +774,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badEEHasBasicConstraints.stage1.patch \
 	tests/conformance/raw/patches/badEEHasBasicConstraints.stage2.patch \
 	tests/conformance/raw/patches/badEEHasBasicConstraints.stage3.patch \
+	tests/conformance/raw/patches/badEEHasCABasicConstraint.ee.stage0.patch \
+	tests/conformance/raw/patches/badEEHasCABasicConstraint.stage1.patch \
+	tests/conformance/raw/patches/badEEHasCABasicConstraint.stage2.patch \
+	tests/conformance/raw/patches/badEEHasCABasicConstraint.stage3.patch \
 	tests/conformance/raw/patches/badEEKeyUsageCABits.ee.stage0.patch \
 	tests/conformance/raw/patches/badEEKeyUsageCABits.stage1.patch \
 	tests/conformance/raw/patches/badEEKeyUsageCABits.stage2.patch \
