@@ -1,0 +1,11 @@
+--- badEEKeyUsageNoDigitalSig.ee.raw.old	2013-09-03 15:10:31.157559217 -0400
++++ badEEKeyUsageNoDigitalSig.ee.raw	2013-09-03 15:22:08.586760148 -0400
+@@ -38,7 +38,7 @@
+                                 0x5B7804D4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+-                    ocw bit 0x0780
++                    ocw bit 0x00
+                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20
