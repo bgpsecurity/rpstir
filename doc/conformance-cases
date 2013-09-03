@@ -204,7 +204,7 @@ CMS signed objects, generic (using ROAs)
 565 SigInfoAttrsSigTime2Val     # duplicate signing time attribute values 6488#2.1.6.4
 566 SigInfoAttrsBinSigTime2Val  # duplicate binary signing time attribute values 6488#2.1.6.4
 567 SigInfoAttrsContType0Val    # empty set of content type attribute values 6488#2.1.6.4
-    SigInfoAttrsMsgDigest0Val   # empty set of digest attribute values 6488#2.1.6.4
+568 SigInfoAttrsMsgDigest0Val   # empty set of digest attribute values 6488#2.1.6.4
     SigInfoAttrsSigTime0Val     # empty set of signing time attribute values 6488#2.1.6.4
     SigInfoAttrsBinSigTime0Val  # empty set of binary signing time attribute values 6488#2.1.6.4
 538 SigInfoUnSigAttrs        # has unsigned attribute 6488#2.1.6.7
