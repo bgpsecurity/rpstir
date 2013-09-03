@@ -212,6 +212,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badCMSSigInfoAttrs2ContType.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrs2MsgDigest.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrs2SigTime.ee.p15 \
+	tests/conformance/raw/keys/badCMSSigInfoAttrsBinSigTime0Val.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrsBinSigTime2Val.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrsContType0Val.ee.p15 \
 	tests/conformance/raw/keys/badCMSSigInfoAttrsContType2Val.ee.p15 \
@@ -337,6 +338,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCMSSigInfoAttrs2SigTime.stage1.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrs2SigTime.stage2.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrs2SigTime.stage3.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime0Val.ee.stage0.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime0Val.stage1.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime0Val.stage2.patch \
+	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime0Val.stage3.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime2Val.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime2Val.stage1.patch \
 	tests/conformance/raw/patches/badCMSSigInfoAttrsBinSigTime2Val.stage2.patch \
