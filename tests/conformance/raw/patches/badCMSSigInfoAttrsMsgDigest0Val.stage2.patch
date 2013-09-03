@@ -6,7 +6,7 @@
                          seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
 -                            set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
 -                                    0x234CB1D2DD939DB9BC65DAC7014366E4
-+                            set oct 0x00
++                            set
                      seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
                          nul 
                      oct 0x43285B6A777B54B0AD2D336FE4F841C0
