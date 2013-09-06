@@ -249,6 +249,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badEEKeyUsageNoDigitalSig.ee.p15 \
 	tests/conformance/raw/keys/badEESIAExtraAccessMethod.ee.p15 \
 	tests/conformance/raw/keys/badEESIAExtraWrongAccessMethod.ee.p15 \
+	tests/conformance/raw/keys/badEESIANoRsync.ee.p15 \
 	tests/conformance/raw/keys/badEESIAWrongAccessMethod.ee.p15 \
 	tests/conformance/raw/keys/badGBRASNotInherit.ee.p15 \
 	tests/conformance/raw/keys/badGBRIPv4NotInherit.ee.p15 \
@@ -820,6 +821,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.stage2.patch \
 	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.stage3.patch \
+	tests/conformance/raw/patches/badEESIANoRsync.ee.stage0.patch \
+	tests/conformance/raw/patches/badEESIANoRsync.stage1.patch \
+	tests/conformance/raw/patches/badEESIANoRsync.stage2.patch \
+	tests/conformance/raw/patches/badEESIANoRsync.stage3.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.ee.stage0.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage2.patch \

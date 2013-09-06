@@ -1,0 +1,11 @@
+--- badEESIANoRsync.ee.raw.old	2013-09-06 16:08:57.342628298 -0400
++++ badEESIANoRsync.ee.raw	2013-09-06 16:10:25.839284975 -0400
+@@ -52,7 +52,7 @@
+                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                     ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                 ctx+0x06
+-                                    "rsync://rpki.bbn.com/conformance/root/badE"
++                                    "http://rpki.bbn.com/conformance/root/badE"
+                                     "ESIANoRsync.roa"
+                 seq oid 2.5.29.32 /* id_certificatePolicies */
+                     boo 0xFF

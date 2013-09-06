@@ -146,7 +146,7 @@ ensure_file_exists "${single_CMS_script}"
 
 ###############################################################################
 # Generate CMS cases
-###############################################################################
+##############################################################################
 
 ${single_CMS_cmd} CMS 512 ContentType
 ${single_CMS_cmd} CMS 513 NoCerts
@@ -205,3 +205,4 @@ ${single_CMS_cmd} EE 581 HasEKU
 ${single_CMS_cmd} EE 545 SIAWrongAccessMethod
 ${single_CMS_cmd} EE 579 SIAExtraAccessMethod
 ${single_CMS_cmd} EE 580 SIAExtraWrongAccessMethod
+${single_CMS_cmd} EE 582 SIANoRsync
