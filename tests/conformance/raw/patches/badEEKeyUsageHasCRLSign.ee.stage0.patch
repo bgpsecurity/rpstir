@@ -1,0 +1,11 @@
+--- badEEKeyUsageHasCRLSign.ee.raw.old	2013-09-06 10:33:01.768380983 -0400
++++ badEEKeyUsageHasCRLSign.ee.raw	2013-09-06 10:43:29.442238357 -0400
+@@ -38,7 +38,7 @@
+                                 0x5B7804D4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+-                    ocw bit 0x0780
++                    ocw bit 0x0182
+                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20

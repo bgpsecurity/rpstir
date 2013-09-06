@@ -222,7 +222,7 @@ EE Certificates (embedded in ROAs)
 573 KeyUsageNoDigitalSig     # KU missing digitalSignature bit 6487#4.8.4
 574 KeyUsageHasKeyCertSign   # KU has digitalSignature and keyCertSign but no CA basic constraint 6487#4.8.4
 576 KeyUsageHasKeyCertSignCABool   # KU has digitalSignature and keyCertSign and CA basic constraint 6487#4.8.4
-    KeyUsageHasCRLSign       # KU has digitalSignature and CRLSign 6487#4.8.4
+577 KeyUsageHasCRLSign       # KU has digitalSignature and CRLSign 6487#4.8.4
     KeyUsageHasNonRepu       # KU has digitalSignature and nonRepudiation 6487#4.8.4
     HasEKU                   # Has EKU 6487#4.8.5
 545 SIAWrongAccessMethod     # improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2

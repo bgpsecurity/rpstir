@@ -199,4 +199,5 @@ ${single_CMS_cmd} EE 544 KeyUsageCABits
 ${single_CMS_cmd} EE 573 KeyUsageNoDigitalSig
 ${single_CMS_cmd} EE 574 KeyUsageHasKeyCertSign
 ${single_CMS_cmd} EE 576 KeyUsageHasKeyCertSignCABool
+${single_CMS_cmd} EE 577 KeyUsageHasCRLSign
 ${single_CMS_cmd} EE 545 SIAWrongAccessMethod

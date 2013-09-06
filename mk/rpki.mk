@@ -241,6 +241,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badEEHasBasicConstraints.ee.p15 \
 	tests/conformance/raw/keys/badEEHasCABasicConstraint.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageCABits.ee.p15 \
+	tests/conformance/raw/keys/badEEKeyUsageHasCRLSign.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageHasKeyCertSign.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageHasKeyCertSignCABool.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageNoDigitalSig.ee.p15 \
@@ -783,6 +784,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badEEKeyUsageCABits.stage1.patch \
 	tests/conformance/raw/patches/badEEKeyUsageCABits.stage2.patch \
 	tests/conformance/raw/patches/badEEKeyUsageCABits.stage3.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasCRLSign.ee.stage0.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasCRLSign.stage1.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasCRLSign.stage2.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasCRLSign.stage3.patch \
 	tests/conformance/raw/patches/badEEKeyUsageHasKeyCertSign.ee.stage0.patch \
 	tests/conformance/raw/patches/badEEKeyUsageHasKeyCertSign.stage1.patch \
 	tests/conformance/raw/patches/badEEKeyUsageHasKeyCertSign.stage2.patch \
