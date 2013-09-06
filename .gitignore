@@ -14,6 +14,7 @@ conf*.dir/
 config.status
 configure
 TAGS
+tags
 *.swp
 .~lock.*#
 rpstir-*.tar.gz
