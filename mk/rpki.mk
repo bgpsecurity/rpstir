@@ -289,6 +289,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAFamilyLth.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
 	tests/conformance/raw/keys/goodEESIA2Rsync.ee.p15 \
+	tests/conformance/raw/keys/goodEESIAHtRs.ee.p15 \
 	tests/conformance/raw/keys/goodGBRNothingWrong.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
 	tests/conformance/raw/keys/goodMFTNumZero.mft.p15 \
@@ -979,6 +980,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodEESIA2Rsync.stage1.patch \
 	tests/conformance/raw/patches/goodEESIA2Rsync.stage2.patch \
 	tests/conformance/raw/patches/goodEESIA2Rsync.stage3.patch \
+	tests/conformance/raw/patches/goodEESIAHtRs.ee.stage0.patch \
+	tests/conformance/raw/patches/goodEESIAHtRs.stage1.patch \
+	tests/conformance/raw/patches/goodEESIAHtRs.stage2.patch \
+	tests/conformance/raw/patches/goodEESIAHtRs.stage3.patch \
 	tests/conformance/raw/patches/goodGBRNothingWrong.ee.stage0.patch \
 	tests/conformance/raw/patches/goodGBRNothingWrong.stage1.patch \
 	tests/conformance/raw/patches/goodGBRNothingWrong.stage2.patch \

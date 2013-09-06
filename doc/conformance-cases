@@ -230,7 +230,7 @@ EE Certificates (embedded in ROAs)
 580 SIAExtraWrongAccessMethod # extra, improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
 582 SIANoRsync       # SIA has no rsync locator for id-ad-signedObject 6487#4.8.8.2
 583 SIA2Rsync        # (good) SIA has 2 rsync locators for id-ad-signedObject 6487#4.8.8.2
-    SIAHtRs          # (good) SIA has http+rsync locators for id-ad-signedObject 6487#4.8.8.2
+584 SIAHtRs          # (good) SIA has http+rsync locators for id-ad-signedObject 6487#4.8.8.2
     SIAHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-signedObject 6487#4.8.8.2
     BadSig                   # signature is invalid 5280#4.1.1.3
 

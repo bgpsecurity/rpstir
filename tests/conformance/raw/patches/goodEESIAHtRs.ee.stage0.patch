@@ -1,0 +1,13 @@
+--- goodEESIAHtRs.ee.raw.old	2013-09-06 16:23:22.803757400 -0400
++++ goodEESIAHtRs.ee.raw	2013-09-06 16:24:19.202471244 -0400
+@@ -52,6 +52,10 @@
+                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                     ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                 ctx+0x06
++                                    "http://rpki.bbn.com/conformance/root/good"
++                                    "EESIAHtRs.roa"
++                            seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
++                                ctx+0x06
+                                     "rsync://rpki.bbn.com/conformance/root/good"
+                                     "EESIAHtRs.roa"
+                 seq oid 2.5.29.32 /* id_certificatePolicies */

@@ -207,3 +207,4 @@ ${single_CMS_cmd} EE 579 SIAExtraAccessMethod
 ${single_CMS_cmd} EE 580 SIAExtraWrongAccessMethod
 ${single_CMS_cmd} EE 582 SIANoRsync
 ${single_CMS_cmd} -x good EE 583 SIA2Rsync
+${single_CMS_cmd} -x good EE 584 SIAHtRs
