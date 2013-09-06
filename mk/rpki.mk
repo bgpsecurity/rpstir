@@ -246,6 +246,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badEEKeyUsageHasKeyCertSignCABool.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageHasNonRepu.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageNoDigitalSig.ee.p15 \
+	tests/conformance/raw/keys/badEESIAExtraAccessMethod.ee.p15 \
 	tests/conformance/raw/keys/badEESIAWrongAccessMethod.ee.p15 \
 	tests/conformance/raw/keys/badGBRASNotInherit.ee.p15 \
 	tests/conformance/raw/keys/badGBRIPv4NotInherit.ee.p15 \
@@ -805,6 +806,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badEEKeyUsageNoDigitalSig.stage1.patch \
 	tests/conformance/raw/patches/badEEKeyUsageNoDigitalSig.stage2.patch \
 	tests/conformance/raw/patches/badEEKeyUsageNoDigitalSig.stage3.patch \
+	tests/conformance/raw/patches/badEESIAExtraAccessMethod.ee.stage0.patch \
+	tests/conformance/raw/patches/badEESIAExtraAccessMethod.stage1.patch \
+	tests/conformance/raw/patches/badEESIAExtraAccessMethod.stage2.patch \
+	tests/conformance/raw/patches/badEESIAExtraAccessMethod.stage3.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.ee.stage0.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/badEESIAWrongAccessMethod.stage2.patch \
