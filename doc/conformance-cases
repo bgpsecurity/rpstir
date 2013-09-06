@@ -227,7 +227,7 @@ EE Certificates (embedded in ROAs)
     HasEKU                   # Has EKU 6487#4.8.5
 545 SIAWrongAccessMethod     # improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
 579 SIAExtraAccessMethod     # extra copy of accessMethod (id-ad-signedObject) in SIA 6487#4.8.8.2
-    SIAExtraWrongAccessMethod # extra, improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
+580 SIAExtraWrongAccessMethod # extra, improper accessMethod (id-ad-rpkiManifest) in SIA 6487#4.8.8.2
     SIANoRsync       # SIA has no rsync locator for id-ad-signedObject 6487#4.8.8.2
     SIA2Rsync        # (good) SIA has 2 rsync locators for id-ad-signedObject 6487#4.8.8.2
     SIAHtRs          # (good) SIA has http+rsync locators for id-ad-signedObject 6487#4.8.8.2

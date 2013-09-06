@@ -996,6 +996,11 @@ EXTRA_DIST += \
 	tests/conformance/raw/templates/goodEECertGBR.raw \
 	tests/conformance/raw/templates/goodGBR.raw \
 	tests/conformance/raw/templates/goodROA.raw \
+	tests/conformance/raw/keys/badEESIAExtraWrongAccessMethod.ee.p15 \
+	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.ee.stage0.patch \
+	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.stage1.patch \
+	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.stage2.patch \
+	tests/conformance/raw/patches/badEESIAExtraWrongAccessMethod.stage3.patch \
 	tests/conformance/scripts/conformance.conf 
 
 check_SCRIPTS += tests/conformance/scripts/gen_all.sh

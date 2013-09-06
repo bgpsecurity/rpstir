@@ -1,0 +1,14 @@
+--- badEESIAExtraWrongAccessMethod.ee.raw.old	2013-09-06 11:19:20.019675651 -0400
++++ badEESIAExtraWrongAccessMethod.ee.raw	2013-09-06 11:19:41.186321058 -0400
+@@ -49,6 +49,11 @@
+                     ocw seq seq oid 1.3.6.1.5.5.7.48.2 /* id_ad_caIssuers */
+                                 ctx+0x06
+                                     "rsync://rpki.bbn.com/conformance/root.cer"
++                seq oid 1.3.6.1.5.5.7.1.10 /* id_pe_subjectInfoAccess */
++                    ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
++                                ctx+0x06
++                                    "rsync://rpki.bbn.com/conformance/root/badE"
++                                    "ESIAExtraWrongAccessMethod.roa"
+                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                     ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                 ctx+0x06
