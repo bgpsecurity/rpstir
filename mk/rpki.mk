@@ -244,6 +244,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badEEKeyUsageHasCRLSign.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageHasKeyCertSign.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageHasKeyCertSignCABool.ee.p15 \
+	tests/conformance/raw/keys/badEEKeyUsageHasNonRepu.ee.p15 \
 	tests/conformance/raw/keys/badEEKeyUsageNoDigitalSig.ee.p15 \
 	tests/conformance/raw/keys/badEESIAWrongAccessMethod.ee.p15 \
 	tests/conformance/raw/keys/badGBRASNotInherit.ee.p15 \
@@ -796,6 +797,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badEEKeyUsageHasKeyCertSignCABool.stage1.patch \
 	tests/conformance/raw/patches/badEEKeyUsageHasKeyCertSignCABool.stage2.patch \
 	tests/conformance/raw/patches/badEEKeyUsageHasKeyCertSignCABool.stage3.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasNonRepu.ee.stage0.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasNonRepu.stage1.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasNonRepu.stage2.patch \
+	tests/conformance/raw/patches/badEEKeyUsageHasNonRepu.stage3.patch \
 	tests/conformance/raw/patches/badEEKeyUsageNoDigitalSig.ee.stage0.patch \
 	tests/conformance/raw/patches/badEEKeyUsageNoDigitalSig.stage1.patch \
 	tests/conformance/raw/patches/badEEKeyUsageNoDigitalSig.stage2.patch \

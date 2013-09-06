@@ -1,0 +1,11 @@
+--- badEEKeyUsageHasNonRepu.ee.raw.old	2013-09-06 10:47:30.528583568 -0400
++++ badEEKeyUsageHasNonRepu.ee.raw	2013-09-06 10:47:57.532406308 -0400
+@@ -38,7 +38,7 @@
+                                 0x5B7804D4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+-                    ocw bit 0x0780
++                    ocw bit 0x06C0
+                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20
