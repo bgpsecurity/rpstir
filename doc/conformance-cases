@@ -245,7 +245,7 @@ ROAs
 553 Family                   # invalid family 6482#3.3
 554 FamilyLth                # family name too long 6482#3.3
     IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
-    IPv6PrefixLong           # IPv4 prefix greater than 128 bits 6482#3.3
+    IPv6PrefixLong           # IPv6 prefix greater than 128 bits 6482#3.3
 555 IPv4MaxLthLong            # IP max length too long (greater than 32) 6482#3.3
     IPv4MaxLthShort           # IP max length shorter than prefix length 6482#3.3
     IPv6MaxLthLong            # IP max length too long (greater than 128) 6482#3.3
