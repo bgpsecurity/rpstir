@@ -158,6 +158,7 @@ ${single_ROA_cmd} ROA 553 Family
 ${single_ROA_cmd} ROA 554 FamilyLth
 ${single_ROA_cmd} ROA 555 IPv4MaxLthLong
 ${single_ROA_cmd} ROA 585 IPv4MaxLthShort
+${single_ROA_cmd} ROA 586 IPv6MaxLthLong
 ${single_ROA_cmd} ROA 562 IPv4Inherit
 ${single_ROA_cmd} ROA 563 IPv6Inherit
 ${single_ROA_cmd} ROA 556 IP2Big
