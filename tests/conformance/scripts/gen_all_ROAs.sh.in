@@ -160,6 +160,7 @@ ${single_ROA_cmd} ROA 555 IPv4MaxLthLong
 ${single_ROA_cmd} ROA 585 IPv4MaxLthShort
 ${single_ROA_cmd} ROA 586 IPv6MaxLthLong
 ${single_ROA_cmd} ROA 587 IPv6LthShort
+${single_ROA_cmd} ROA 588 IPv4DupPrefixSameMaxLen
 ${single_ROA_cmd} ROA 562 IPv4Inherit
 ${single_ROA_cmd} ROA 563 IPv6Inherit
 ${single_ROA_cmd} ROA 556 IP2Big

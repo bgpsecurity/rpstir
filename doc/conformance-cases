@@ -250,7 +250,7 @@ ROAs
 585 IPv4MaxLthShort           # IP max length shorter than prefix length 6482#3.3
 586 IPv6MaxLthLong            # IP max length too long (greater than 128) 6482#3.3
 587 IPv6MaxLthShort           # IP max length shorter than prefix length 6482#3.3
-    IPv4DupPrefixSameMaxLen   # (good) IPv4 two copies of same prefix, same maxlength 6482#3.3
+588 IPv4DupPrefixSameMaxLen   # (good) IPv4 two copies of same prefix, same maxlength 6482#3.3
     IPv6DupPrefixSameMaxLen   # (good) IPv6 two copies of same prefix, same maxlength 6482#3.3
     IPv4DupPrefixDiffMaxLen   # (good) IPv4 two copies of same prefix, different maxlength 6482#3.3
     IPv6DupPrefixDiffMaxLen   # (good) IPv6 two copies of same prefix, different maxlength 6482#3.3
