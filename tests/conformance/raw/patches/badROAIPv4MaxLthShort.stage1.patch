@@ -1,0 +1,10 @@
+--- badROAIPv4MaxLthShort.raw.old	2013-09-13 10:45:01.663317281 -0400
++++ badROAIPv4MaxLthShort.raw	2013-09-13 10:45:28.892176432 -0400
+@@ -8,6 +8,7 @@
+                     ocw seq int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+                                     seq seq bit 0x000101
++                                            int 23
+                                 seq oct 0x0002
+                                     seq seq bit 0x00010201
+             ctx+0x20
