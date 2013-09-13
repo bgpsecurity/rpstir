@@ -1,0 +1,10 @@
+--- badROAIPv6LthShort.raw.old	2013-09-13 13:40:38.928434847 -0400
++++ badROAIPv6LthShort.raw	2013-09-13 13:41:12.705475516 -0400
+@@ -10,6 +10,7 @@
+                                     seq seq bit 0x000101
+                                 seq oct 0x0002
+                                     seq seq bit 0x00010201
++                                            int 31
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 
