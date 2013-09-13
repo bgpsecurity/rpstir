@@ -282,6 +282,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4Inherit.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4MaxLthLong.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4MaxLthShort.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6Inherit.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6LthShort.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6MaxLthLong.ee.p15 \
@@ -942,6 +943,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4MaxLthShort.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4MaxLthShort.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4MaxLthShort.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6Inherit.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6Inherit.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6Inherit.stage2.patch \
