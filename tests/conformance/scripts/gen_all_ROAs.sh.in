@@ -149,23 +149,24 @@ ensure_file_exists "${single_ROA_script}"
 # Generate ROA cases
 ###############################################################################
 
-#${single_ROA_cmd} -x good ROA 550 NothingWrong
-#${single_ROA_cmd} ROA 551 ASIDSmall
-#${single_ROA_cmd} ROA 552 ASIDLarge
-#${single_ROA_cmd} -x good ROA 560 ASIDZero
-#${single_ROA_cmd} -x good ROA 561 ASIDMax
-#${single_ROA_cmd} ROA 553 Family
-#${single_ROA_cmd} ROA 554 FamilyLth
-#${single_ROA_cmd} ROA 555 IPv4MaxLthLong
-#${single_ROA_cmd} ROA 585 IPv4MaxLthShort
-#${single_ROA_cmd} ROA 586 IPv6MaxLthLong
-#${single_ROA_cmd} ROA 587 IPv6LthShort
-#${single_ROA_cmd} ROA 588 IPv4DupPrefixSameMaxLen
-#${single_ROA_cmd} ROA 589 IPv6DupPrefixSameMaxLen
+${single_ROA_cmd} -x good ROA 550 NothingWrong
+${single_ROA_cmd} ROA 551 ASIDSmall
+${single_ROA_cmd} ROA 552 ASIDLarge
+${single_ROA_cmd} -x good ROA 560 ASIDZero
+${single_ROA_cmd} -x good ROA 561 ASIDMax
+${single_ROA_cmd} ROA 553 Family
+${single_ROA_cmd} ROA 554 FamilyLth
+${single_ROA_cmd} ROA 555 IPv4MaxLthLong
+${single_ROA_cmd} ROA 585 IPv4MaxLthShort
+${single_ROA_cmd} ROA 586 IPv6MaxLthLong
+${single_ROA_cmd} ROA 587 IPv6LthShort
+${single_ROA_cmd} ROA 588 IPv4DupPrefixSameMaxLen
+${single_ROA_cmd} ROA 589 IPv6DupPrefixSameMaxLen
 ${single_ROA_cmd} ROA 590 IPv4DupPrefixDiffMaxLen
-#${single_ROA_cmd} ROA 562 IPv4Inherit
-#${single_ROA_cmd} ROA 563 IPv6Inherit
-#${single_ROA_cmd} ROA 556 IP2Big
-#${single_ROA_cmd} ROA 557 VersionV1Explicit
-#${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
-#${single_ROA_cmd} ROA 559 VersionV2
+${single_ROA_cmd} ROA 591 IPv6DupPrefixDiffMaxLen
+${single_ROA_cmd} ROA 562 IPv4Inherit
+${single_ROA_cmd} ROA 563 IPv6Inherit
+${single_ROA_cmd} ROA 556 IP2Big
+${single_ROA_cmd} ROA 557 VersionV1Explicit
+${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
+${single_ROA_cmd} ROA 559 VersionV2

@@ -1,0 +1,10 @@
+--- badROAIPv6DupPrefixDiffMaxLen.raw.old	2013-09-13 17:20:06.872606600 -0400
++++ badROAIPv6DupPrefixDiffMaxLen.raw	2013-09-13 17:20:15.757872094 -0400
+@@ -10,6 +10,7 @@
+                                     seq seq bit 0x000101
+                                 seq oct 0x0002
+                                     seq seq bit 0x00010201
++                                        seq bit 0x000102011
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 
