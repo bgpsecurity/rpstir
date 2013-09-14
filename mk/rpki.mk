@@ -255,6 +255,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badGBRExtraProperty.ee.p15 \
 	tests/conformance/raw/keys/badGBRIPv4NotInherit.ee.p15 \
 	tests/conformance/raw/keys/badGBRIPv6NotInherit.ee.p15 \
+	tests/conformance/raw/keys/badGBRNoContact.ee.p15 \
 	tests/conformance/raw/keys/badGBRNotVCard.ee.p15 \
 	tests/conformance/raw/keys/badGBRWrongOID.ee.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileOneHash.mft.p15 \
@@ -855,6 +856,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badGBRIPv6NotInherit.stage1.patch \
 	tests/conformance/raw/patches/badGBRIPv6NotInherit.stage2.patch \
 	tests/conformance/raw/patches/badGBRIPv6NotInherit.stage3.patch \
+	tests/conformance/raw/patches/badGBRNoContact.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRNoContact.stage1.patch \
+	tests/conformance/raw/patches/badGBRNoContact.stage2.patch \
+	tests/conformance/raw/patches/badGBRNoContact.stage3.patch \
 	tests/conformance/raw/patches/badGBRNotVCard.ee.stage0.patch \
 	tests/conformance/raw/patches/badGBRNotVCard.stage1.patch \
 	tests/conformance/raw/patches/badGBRNotVCard.stage2.patch \
