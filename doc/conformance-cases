@@ -266,7 +266,7 @@ Ghostbusters
 
 600 NothingWrong             # (good) nothing wrong
 601 NotVCard                 # the eContent is not valid vCard 6493#5
-    ExtraProperty            # a vCard property not listed in 6493#5 is present
+606 ExtraProperty            # a vCard property not listed in 6493#5 is present
     NoContact                # none of ADR, TEL, or EMAIL are present 6493#5
 602 WrongOID                 # the wrong OID is used in both the eContentType and the content-type 6493#6
 603 IPv4NotInherit           # the EE cert has IPv4 resources not set to inherit 6493#6

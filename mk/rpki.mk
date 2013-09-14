@@ -252,6 +252,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badEESIANoRsync.ee.p15 \
 	tests/conformance/raw/keys/badEESIAWrongAccessMethod.ee.p15 \
 	tests/conformance/raw/keys/badGBRASNotInherit.ee.p15 \
+	tests/conformance/raw/keys/badGBRExtraProperty.ee.p15 \
 	tests/conformance/raw/keys/badGBRIPv4NotInherit.ee.p15 \
 	tests/conformance/raw/keys/badGBRIPv6NotInherit.ee.p15 \
 	tests/conformance/raw/keys/badGBRNotVCard.ee.p15 \
@@ -842,6 +843,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badGBRASNotInherit.stage1.patch \
 	tests/conformance/raw/patches/badGBRASNotInherit.stage2.patch \
 	tests/conformance/raw/patches/badGBRASNotInherit.stage3.patch \
+	tests/conformance/raw/patches/badGBRExtraProperty.ee.stage0.patch \
+	tests/conformance/raw/patches/badGBRExtraProperty.stage1.patch \
+	tests/conformance/raw/patches/badGBRExtraProperty.stage2.patch \
+	tests/conformance/raw/patches/badGBRExtraProperty.stage3.patch \
 	tests/conformance/raw/patches/badGBRIPv4NotInherit.ee.stage0.patch \
 	tests/conformance/raw/patches/badGBRIPv4NotInherit.stage1.patch \
 	tests/conformance/raw/patches/badGBRIPv4NotInherit.stage2.patch \
