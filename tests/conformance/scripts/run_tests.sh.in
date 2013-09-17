@@ -2,9 +2,9 @@
 
 # whitespace separated list of files to ignore the results from
 IGNORE="
-	badGBRNotVCard.gbr
 	badGBRExtraProperty.gbr
 	badGBRNoContact.gbr
+	badGBRNotVCard.gbr
 "
 
 @SETUP_ENVIRONMENT@
