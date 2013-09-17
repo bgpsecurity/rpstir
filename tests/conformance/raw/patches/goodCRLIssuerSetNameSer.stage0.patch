@@ -1,0 +1,11 @@
+--- goodCRLIssuerSetNameSer.crl.raw.old	2013-09-17 13:38:00.072775430 -0400
++++ goodCRLIssuerSetNameSer.crl.raw	2013-09-17 13:38:23.509491883 -0400
+@@ -3,6 +3,8 @@
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "CRLIssuerSetNameSer"
++                seq oid 2.5.4.5 /* id_serialNumber */
++                    prt "10"
+         utc "110411185728Z"
+         utc "460515185928Z"
+         ctx+0x20

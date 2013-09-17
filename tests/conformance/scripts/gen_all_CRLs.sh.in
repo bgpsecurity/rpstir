@@ -184,6 +184,7 @@ ${single_CRL_cmd} 678 CRLIssuerSeq2SerNums
 ${single_CRL_cmd} 679 CRLIssuerSerNum
 ${single_CRL_cmd} -x good 681 CRLIssuerSeqNameSer
 ${single_CRL_cmd} -x good 682 CRLIssuerSeqSerName
+${single_CRL_cmd} -x good 683 CRLIssuerSetNameSer
 ${single_CRL_cmd} 650 CRLThisUpdateTyp
 ${single_CRL_cmd} 651 CRLNextUpdatePast
 ${single_CRL_cmd} 652 CRLNextUpdateTyp
