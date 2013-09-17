@@ -301,7 +301,7 @@ CRLs
 657 CRLNoAKI                 # has no authority key identifier extension 6487#5
 658 CRLNoCRLNum              # has no CRL number 6487#5
 659 CRLEntryReason           # entry has a revocation reason 6487#5
-    CRLEntryHasExtension     # entry has a CRL entry extension CertificateIssuer 6487#5
+680 CRLEntryHasExtension     # entry has a CRL entry extension CertificateIssuer 6487#5
 669 CRLNumber2Big            # has too long a CRL number 5280#5.2.3
 673 CRLNumberMax             # (good) has the maximum allowed 20-octet CRL number 5280#5.2.3
 674 CRLNumberZero            # (good) CRL number is zero 5280#5.2.3

@@ -1,0 +1,13 @@
+--- badCRLEntryHasExtension.crl.raw.old	2013-09-17 11:01:38.987957708 -0400
++++ badCRLEntryHasExtension.crl.raw	2013-09-17 11:02:32.045551507 -0400
+@@ -6,7 +6,9 @@
+         utc "110411185728Z"
+         utc "460515185928Z"
+         ctx+0x20
+-            seq seq oid 2.5.29.20 /* id_cRLNumber */
++            seq seq oid 2.5.29.29 /* id_certificateIssuer */
++                    ocw seq ctx+0x01 "issuer name"
++                seq oid 2.5.29.20 /* id_cRLNumber */
+                     ocw int 0x01 /* 1 */ 
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00

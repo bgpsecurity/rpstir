@@ -130,6 +130,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLBadDateSec.p15 \
 	tests/conformance/raw/keys/CRLDeltaCRLInd.mft.p15 \
 	tests/conformance/raw/keys/CRLDeltaCRLInd.p15 \
+	tests/conformance/raw/keys/CRLEntryHasExtension.mft.p15 \
+	tests/conformance/raw/keys/CRLEntryHasExtension.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.mft.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.p15 \
 	tests/conformance/raw/keys/CRLEntrySerNumMax.mft.p15 \
@@ -478,6 +480,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRL2CRLNums.stage1.patch \
 	tests/conformance/raw/patches/badCRLDeltaCRLInd.stage0.patch \
 	tests/conformance/raw/patches/badCRLDeltaCRLInd.stage1.patch \
+	tests/conformance/raw/patches/badCRLEntryHasExtension.stage0.patch \
+	tests/conformance/raw/patches/badCRLEntryHasExtension.stage1.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage0.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage1.patch \
 	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage0.patch \
