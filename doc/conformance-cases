@@ -286,7 +286,7 @@ CRLs
 646 CRLIssuerUTF             # issuer name in utf not printable string 6487#5 6487#4.4
 647 CRLIssuer2Seq            # issuer name has 2 common names (same set) 6487#5 6487#4.4
 648 CRLIssuerSet2SerNums     # issuer name has 2 serial numbers (same set) 6487#5 6487#4.4
-    CRLIssuerSeq2SerNums     # issuer name has 2 serial numbers (split across sets) 6487#5 6487#4.4
+678 CRLIssuerSeq2SerNums     # issuer name has 2 serial numbers (split across sets) 6487#5 6487#4.4
     CRLIssuerSerNum          # issuer name has only a serial number 6487#5 6487#4.4
     CRLIssuerSeqNameSer      # (good) issuer with name before serial number (2 sets) 6487#5 6487#4.4
     CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
