@@ -280,7 +280,7 @@ CRLs
 676 CRLVersion2              # CRL version v3 (integer value 2) 6487#5
 642 CRLSigAlgInner           # wrong signature algorithm ID in toBeSigned 6487#5 6485#2
 643 CRLSigAlgOuter           # wrong outer signature algorithm ID 6487#5 6485#2
-    CRLSigAlgMatchButWrong   # matching inner/outer signature algorithm IDs, but wrong 6487#5 6485#2
+677 CRLSigAlgMatchButWrong   # matching inner/outer signature algorithm IDs, but wrong 6487#5 6485#2
 644 CRLIssuerOID             # wrong OID for issuer name 6487#5 6487#4.4
 645 CRLIssuer2Sets           # issuer name has 2 sets with common names 6487#5 6487#4.4
 646 CRLIssuerUTF             # issuer name in utf not printable string 6487#5 6487#4.4

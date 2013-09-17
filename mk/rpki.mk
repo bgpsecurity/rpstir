@@ -170,6 +170,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLNumberZero.p15 \
 	tests/conformance/raw/keys/CRLSigAlgInner.mft.p15 \
 	tests/conformance/raw/keys/CRLSigAlgInner.p15 \
+	tests/conformance/raw/keys/CRLSigAlgMatchButWrong.mft.p15 \
+	tests/conformance/raw/keys/CRLSigAlgMatchButWrong.p15 \
 	tests/conformance/raw/keys/CRLSigAlgOuter.mft.p15 \
 	tests/conformance/raw/keys/CRLSigAlgOuter.p15 \
 	tests/conformance/raw/keys/CRLThisUpdateTyp.mft.p15 \
@@ -506,6 +508,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRLNumberNeg.stage1.patch \
 	tests/conformance/raw/patches/badCRLSigAlgInner.stage0.patch \
 	tests/conformance/raw/patches/badCRLSigAlgInner.stage1.patch \
+	tests/conformance/raw/patches/badCRLSigAlgMatchButWrong.stage0.patch \
+	tests/conformance/raw/patches/badCRLSigAlgMatchButWrong.stage1.patch \
 	tests/conformance/raw/patches/badCRLSigAlgOuter.stage0.patch \
 	tests/conformance/raw/patches/badCRLSigAlgOuter.stage1.patch \
 	tests/conformance/raw/patches/badCRLThisUpdateTyp.stage0.patch \

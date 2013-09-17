@@ -1,0 +1,11 @@
+--- badCRLSigAlgMatchButWrong.crl.raw.old	2013-09-17 10:01:55.759139748 -0400
++++ badCRLSigAlgMatchButWrong.crl.raw	2013-09-17 10:02:28.030073380 -0400
+@@ -12,7 +12,7 @@
+                     ocw seq ctx+0x00
+                                 0x6BDBD82B036B0316E82D2EFC8DB9FC2E
+                                 0xEC1BFCE8
+-    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
++    seq oid 1.2.840.113549.1.1.12 /* id_sha_384WithRSAEncryption */
+         nul 
+     bit 0x0016AA286353D7EDACCF5B57D0DC9E01EB0B21DC2923697F3D834E7BDC252EAF
+         0xCFC250A09B43DF59DFF500B82258DB893D6656FA5A7223F888697C45918C4885

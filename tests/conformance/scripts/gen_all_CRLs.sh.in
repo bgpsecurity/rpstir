@@ -174,6 +174,7 @@ ${single_CRL_cmd} 641 CRLVersion0
 ${single_CRL_cmd} 676 CRLVersion2
 ${single_CRL_cmd} 642 CRLSigAlgInner
 ${single_CRL_cmd} 643 CRLSigAlgOuter
+${single_CRL_cmd} 677 CRLSigAlgMatchButWrong
 ${single_CRL_cmd} 644 CRLIssuerOID
 ${single_CRL_cmd} 645 CRLIssuer2Sets
 ${single_CRL_cmd} 646 CRLIssuerUTF
