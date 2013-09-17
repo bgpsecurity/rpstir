@@ -178,6 +178,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLUpdatesCrossed.p15 \
 	tests/conformance/raw/keys/CRLVersion0.mft.p15 \
 	tests/conformance/raw/keys/CRLVersion0.p15 \
+	tests/conformance/raw/keys/CRLVersion2.mft.p15 \
+	tests/conformance/raw/keys/CRLVersion2.p15 \
 	tests/conformance/raw/keys/MFTDuplicateFileOneHash.p15 \
 	tests/conformance/raw/keys/MFTDuplicateFileTwoHashes.p15 \
 	tests/conformance/raw/keys/MFTFileHashLong.p15 \
@@ -512,6 +514,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRLUpdatesCrossed.stage1.patch \
 	tests/conformance/raw/patches/badCRLVersion0.stage0.patch \
 	tests/conformance/raw/patches/badCRLVersion0.stage1.patch \
+	tests/conformance/raw/patches/badCRLVersion2.stage0.patch \
+	tests/conformance/raw/patches/badCRLVersion2.stage1.patch \
 	tests/conformance/raw/patches/badCert2AKI.stage0.patch \
 	tests/conformance/raw/patches/badCert2AKI.stage1.patch \
 	tests/conformance/raw/patches/badCert2AKI.stage2.patch \

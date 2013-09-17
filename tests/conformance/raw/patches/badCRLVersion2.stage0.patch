@@ -1,0 +1,8 @@
+--- badCRLVersion2.crl.raw.old	2013-09-17 09:56:57.124454080 -0400
++++ badCRLVersion2.crl.raw	2013-09-17 09:57:17.705080264 -0400
+@@ -1,4 +1,4 @@
+-seq seq int 0x01 /* 1 */ 
++seq seq int 0x02 /* 2 */ 
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+         seq set seq oid 2.5.4.3 /* id_commonName */

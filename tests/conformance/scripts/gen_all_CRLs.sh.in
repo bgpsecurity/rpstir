@@ -171,6 +171,7 @@ ensure_file_exists "${single_CRL_script}"
 
 ${single_CRL_cmd} 640 CRLNoVersion
 ${single_CRL_cmd} 641 CRLVersion0
+${single_CRL_cmd} 676 CRLVersion2
 ${single_CRL_cmd} 642 CRLSigAlgInner
 ${single_CRL_cmd} 643 CRLSigAlgOuter
 ${single_CRL_cmd} 644 CRLIssuerOID
