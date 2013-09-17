@@ -1,0 +1,13 @@
+--- goodCRLIssuerSeqSerName.crl.raw.old	2013-09-17 13:16:58.379320416 -0400
++++ goodCRLIssuerSeqSerName.crl.raw	2013-09-17 13:17:41.471629749 -0400
+@@ -1,7 +1,9 @@
+ seq seq int 0x01 /* 1 */ 
+         seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+             nul 
+-        seq set seq oid 2.5.4.3 /* id_commonName */
++        seq set seq oid 2.5.4.5 /* id_serialNumber */
++                    prt "10"
++            set seq oid 2.5.4.3 /* id_commonName */
+                     prt "CRLIssuerSeqSerName"
+         utc "110411185728Z"
+         utc "460515185928Z"

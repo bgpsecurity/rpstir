@@ -152,6 +152,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLIssuerSeq2SerNums.p15 \
 	tests/conformance/raw/keys/CRLIssuerSeqNameSer.mft.p15 \
 	tests/conformance/raw/keys/CRLIssuerSeqNameSer.p15 \
+	tests/conformance/raw/keys/CRLIssuerSeqSerName.mft.p15 \
+	tests/conformance/raw/keys/CRLIssuerSeqSerName.p15 \
 	tests/conformance/raw/keys/CRLIssuerSerNum.mft.p15 \
 	tests/conformance/raw/keys/CRLIssuerSerNum.p15 \
 	tests/conformance/raw/keys/CRLIssuerSet2SerNums.mft.p15 \
@@ -1017,6 +1019,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodCRLIssuerSeqNameSer.stage0.patch \
 	tests/conformance/raw/patches/goodCRLIssuerSeqNameSer.stage1.patch \
+	tests/conformance/raw/patches/goodCRLIssuerSeqSerName.stage0.patch \
+	tests/conformance/raw/patches/goodCRLIssuerSeqSerName.stage1.patch \
 	tests/conformance/raw/patches/goodCRLNumberMax.stage0.patch \
 	tests/conformance/raw/patches/goodCRLNumberMax.stage1.patch \
 	tests/conformance/raw/patches/goodCRLNumberZero.stage0.patch \

@@ -289,7 +289,7 @@ CRLs
 678 CRLIssuerSeq2SerNums     # issuer name has 2 serial numbers (split across sets) 6487#5 6487#4.4
 679 CRLIssuerSerNum          # issuer name has only a serial number 6487#5 6487#4.4
 681 CRLIssuerSeqNameSer      # (good) issuer with name before serial number (2 sets) 6487#5 6487#4.4
-    CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
+682 CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
     CRLIssuerSetNameSer      # (good) issuer with serial number and name (1 set) 6487#5 6487#4.4
 650 CRLThisUpdateTyp         # wrong type of date in thisUpdate (should be UTC) 5280#5.1.2.4
 651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK) 5280#5.1.2.5
