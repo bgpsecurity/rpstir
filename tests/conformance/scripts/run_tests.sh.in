@@ -1,7 +1,11 @@
 #!/bin/sh -e
 
 # whitespace separated list of files to ignore the results from
-IGNORE="badGBRNotVCard.gbr"
+IGNORE="
+	badGBRNotVCard.gbr
+	badGBRExtraProperty.gbr
+	badGBRNoContact.gbr
+"
 
 @SETUP_ENVIRONMENT@
 
