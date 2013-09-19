@@ -338,7 +338,9 @@ Manifests
 783 MFTDuplicateFileOneHash  # duplicate file name with same hash 6486#4.2.1
 784 MFTDuplicateFileTwoHashes # duplicate filename with diff hash 6486#4.2.1
 788 MFTUnkownFileExtension   # (good) file name has an unrecognized extension 6486#4.2.1
-TODO: enumerate cases of MFT EE rfc3779 resources. All resources present should be set to inherit, but it's unclear if all possible resources (AS, IPv4, IPv6) have to be present in the first place.
+    MFTIPv4NotInherit        # the EE cert has IPv4 resources not set to inherit 6486#5.1
+    MFTIPv6NotInherit        # the EE cert has IPv6 resources not set to inherit 6486#5.1
+    MFTASNotInherit          # the EE cert has AS resources not set to inherit 6486#5.1
 
 
 Trust Anchor (self-signed) certificates
