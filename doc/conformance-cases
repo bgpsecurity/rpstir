@@ -256,8 +256,97 @@ ROAs
 591 IPv6DupPrefixDiffMaxLen   # (good) IPv6 two copies of same prefix, different maxlength 6482#3.3
 562 IPv4Inherit              # IPv4 uses inherit (errata 3166)
 563 IPv6Inherit              # IPv6 uses inherit (errata 3166)
-556 IP2Big                   # ROA eContent IP prefixes exceed EE IP resources 6482#4
-    <enumerate overlap cases> # all interactions btw 3779 and 6482 (at least 13 cases)
+    IPv4OnlyPrefixBelowPrefixGap                # EE has one IPv4 prefix; ROA has one below it with a gap in between 6482#4
+    IPv4OnlyPrefixBelowPrefixNoGap              # EE has one IPv4 prefix; ROA has one directly below it 6482#4
+    IPv4OnlyPrefixBelowRangeGap                 # EE has one IPv4 range; ROA has one prefix below it with a gap in between 6482#4
+    IPv4OnlyPrefixBelowRangeNoGap               # EE has one IPv4 prefix; ROA has one prefix directly below it 6482#4
+    IPv4OnlyPrefixAbovePrefixGap                # like IPv4OnlyPrefixBelowPrefixGap, but the ROA's prefix is above the EE's prefix 6482#4
+    IPv4OnlyPrefixAbovePrefixNoGap              # like IPv4OnlyPrefixBelowPrefixNoGap, but the ROA's is above 6482#4
+    IPv4OnlyPrefixAboveRangeGap                 # like IPv4OnlyPrefixBelowRangeGap, but the ROA's is above 6482#4
+    IPv4OnlyPrefixAboveRangeNoGap               # like IPv4OnlyPrefixBelowRangeNoGap, but the ROA's is above 6482#4
+    IPv4OnlyPrefixBetweenPrefixPrefixBothGaps   # EE has two IPv4 prefixes; ROA has a prefix in the middle with gaps on both sides 6482#4
+    IPv4OnlyPrefixBetweenPrefixPrefixNoGaps     # EE has two IPv4 prefixes; ROA has a prefix in the middle, directly adjacent to both EE prefixes 6482#4
+    IPv4OnlyPrefixBetweenPrefixPrefixLowGap     # EE has two IPv4 prefixes; ROA has a prefix in the middle, adjacent only to the higher EE prefix 6482#4
+    IPv4OnlyPrefixBetweenPrefixPrefixHighGap    # EE has two IPv4 prefixes; ROA has a prefix in the middle, adjacent only to the lower EE prefix 6482#4
+    IPv4OnlyPrefixBetweenPrefixRangeNoGaps      # like IPv4OnlyPrefixBetweenPrefixPrefixNoGaps, but the higher EE prefix is a range instead 6482#4
+    IPv4OnlyPrefixBetweenRangePrefixNoGaps      # like IPv4OnlyPrefixBetweenPrefixPrefixNoGaps, but the lower EE prefix is a range instead 6482#4
+    IPv4OnlyPrefixBetweenRangeRangeNoGaps       # like IPv4OnlyPrefixBetweenPrefixPrefixNoGaps, but both EE prefixes are ranges instead 6482#4
+    IPv4OnlyPrefixTouchRanges                   # EE has two IPv4 ranges; ROA has one prefix from the top of the lower range to the bottom of the upper range 6482#4
+    IPv4OnlyPrefixSpanPrefixes                  # EE has two IPv4 prefixes; ROA has one prefix from the bottom of the EE's lower prefix to the top of the EE's upper prefix 6482#4
+    IPv4OnlyPrefixSpanRanges                    # EE has two IPv4 ranges; ROA has one prefix from the middle of the lower range to the middle of the upper range 6482#4
+    IPv4OnlyPrefixSupersetLowRange              # ROA has an IPv4 prefix; EE has a range of min(prefix) to max(prefix)-1 6482#4
+    IPv4OnlyPrefixSupersetHighRange             # ROA has an IPv4 prefix; EE has a range of min(prefix)+1 to max(prefix) 6482#4
+    IPv4OnlyPrefixSupersetLowPrefix             # ROA has an IPv4 prefix; EE has the bottom half of the prefix 6482#4
+    IPv4OnlyPrefixSupersetHighPrefix            # ROA has an IPv4 prefix; EE has the top half of the prefix 6482#4
+    IPv4OnlyPrefixOverlapLowRange               # ROA has an IPv4 prefix; EE has a range from min(prefix)-1 to max(prefix)-1 6482#4
+    IPv4OnlyPrefixOverlapHighRange              # ROA has an IPv4 prefix; EE has a range from min(prefix)+1 to max(prefix)+1 6482#4
+    IPv4ExtraPrefixBelowPrefix                  # EE has one IPv4 prefix; ROA has one equal prefix and one disjoint prefix below 6482#4
+    IPv4ExtraPrefixBelowRange                   # EE has one IPv4 range; ROA has one subset prefix and one disjoint prefix below 6482#4
+    IPv4ExtraPrefixAbovePrefix                  # EE has one IPv4 prefix; ROA has one equal prefix and one disjoint prefix above 6482#4
+    IPv4ExtraPrefixAboveRange                   # EE has one IPv4 range; ROA has one subset prefix and one disjoint prefix above 6482#4
+    IPv4PrefixEqualPrefix                       # (good) ROA and EE have a single, identical IPv4 prefix 6482#4
+    IPv4PrefixesEqualRange                      # (good) EE has a single IPv4 range; ROA has a set of maximal prefixes covering the range 6482#4
+    IPv4PrefixesEqualPrefixes                   # (good) EE has two IPv4 prefixes; ROA has two identical prefixes 6482#4
+    IPv4PrefixesEqualRanges                     # (good) EE has two IPv4 ranges; ROA has a set of maximal prefixes covering the ranges 6482#4
+    IPv4ExtraPrefixInPrefix                     # (good) EE has a single IPv4 prefix; ROA has one equal prefix and one smaller prefix 6482#4
+    IPv4ExtraPrefixInRange                      # (good) like IPv4PrefixesEqualRange, but the ROA has an additional, smaller prefix 6482#4
+    IPv4ExtraSubPrefixInPrefixMiddle            # (good) like IPv4PrefixEqualPrefix, with an extra ROA prefix in the middle of the existing ROA prefix 6482#4
+    IPv4ExtraSubPrefixInRangeMiddle             # (good) like IPv4PrefixesEqualRange, with an extra ROA prefix in the middle of one of the existing ROA prefixes 6482#4
+    IPv4OnlyPrefixInPrefixLow                   # (good) EE has a single IPv4 prefix; ROA has one smaller prefix at the bottom 6482#4
+    IPv4OnlyPrefixInPrefixMiddle                # (good) EE has a single IPv4 prefix; ROA has one smaller prefix in the middle 6482#4
+    IPv4OnlyPrefixInPrefixHigh                  # (good) EE has a single IPv4 prefix; ROA has one smaller prefix at the top 6482#4
+    IPv4OnlyPrefixInRangeLow                    # (good) EE has a single IPv4 range; ROA has one prefix at the bottom of the range 6482#4
+    IPv4OnlyPrefixInRangeMiddle                 # (good) EE has a single IPv4 range; ROA has one prefix in the middle of the range 6482#4
+    IPv4OnlyPrefixInRangeHigh                   # (good) EE has a single IPv4 range; ROA has one prefix at the top of the range 6482#4
+    IPv4OnlyPrefixesInPrefixesMiddle            # (good) EE has two IPv4 prefixes; ROA has two prefixes, one in the middle of each 6482#4
+    IPv4OnlyPrefixesInRangesMiddle              # (good) EE has two IPv4 ranges; ROA has two prefixes, one in the middle of each 6482#4
+    IPv6OnlyPrefixBelowPrefixGap                # EE has one IPv6 prefix; ROA has one below it with a gap in between 6482#4
+    IPv6OnlyPrefixBelowPrefixNoGap              # EE has one IPv6 prefix; ROA has one directly below it 6482#4
+    IPv6OnlyPrefixBelowRangeGap                 # EE has one IPv6 range; ROA has one prefix below it with a gap in between 6482#4
+    IPv6OnlyPrefixBelowRangeNoGap               # EE has one IPv6 prefix; ROA has one prefix directly below it 6482#4
+    IPv6OnlyPrefixAbovePrefixGap                # like IPv6OnlyPrefixBelowPrefixGap, but the ROA's prefix is above the EE's prefix 6482#4
+    IPv6OnlyPrefixAbovePrefixNoGap              # like IPv6OnlyPrefixBelowPrefixNoGap, but the ROA's is above 6482#4
+    IPv6OnlyPrefixAboveRangeGap                 # like IPv6OnlyPrefixBelowRangeGap, but the ROA's is above 6482#4
+    IPv6OnlyPrefixAboveRangeNoGap               # like IPv6OnlyPrefixBelowRangeNoGap, but the ROA's is above 6482#4
+    IPv6OnlyPrefixBetweenPrefixPrefixBothGaps   # EE has two IPv6 prefixes; ROA has a prefix in the middle with gaps on both sides 6482#4
+    IPv6OnlyPrefixBetweenPrefixPrefixNoGaps     # EE has two IPv6 prefixes; ROA has a prefix in the middle, directly adjacent to both EE prefixes 6482#4
+    IPv6OnlyPrefixBetweenPrefixPrefixLowGap     # EE has two IPv6 prefixes; ROA has a prefix in the middle, adjacent only to the higher EE prefix 6482#4
+    IPv6OnlyPrefixBetweenPrefixPrefixHighGap    # EE has two IPv6 prefixes; ROA has a prefix in the middle, adjacent only to the lower EE prefix 6482#4
+    IPv6OnlyPrefixBetweenPrefixRangeNoGaps      # like IPv6OnlyPrefixBetweenPrefixPrefixNoGaps, but the higher EE prefix is a range instead 6482#4
+    IPv6OnlyPrefixBetweenRangePrefixNoGaps      # like IPv6OnlyPrefixBetweenPrefixPrefixNoGaps, but the lower EE prefix is a range instead 6482#4
+    IPv6OnlyPrefixBetweenRangeRangeNoGaps       # like IPv6OnlyPrefixBetweenPrefixPrefixNoGaps, but both EE prefixes are ranges instead 6482#4
+    IPv6OnlyPrefixTouchRanges                   # EE has two IPv6 ranges; ROA has one prefix from the top of the lower range to the bottom of the upper range 6482#4
+    IPv6OnlyPrefixSpanPrefixes                  # EE has two IPv6 prefixes; ROA has one prefix from the bottom of the EE's lower prefix to the top of the EE's upper prefix 6482#4
+    IPv6OnlyPrefixSpanRanges                    # EE has two IPv6 ranges; ROA has one prefix from the middle of the lower range to the middle of the upper range 6482#4
+    IPv6OnlyPrefixSupersetLowRange              # ROA has an IPv6 prefix; EE has a range of min(prefix) to max(prefix)-1 6482#4
+    IPv6OnlyPrefixSupersetHighRange             # ROA has an IPv6 prefix; EE has a range of min(prefix)+1 to max(prefix) 6482#4
+    IPv6OnlyPrefixSupersetLowPrefix             # ROA has an IPv6 prefix; EE has the bottom half of the prefix 6482#4
+    IPv6OnlyPrefixSupersetHighPrefix            # ROA has an IPv6 prefix; EE has the top half of the prefix 6482#4
+    IPv6OnlyPrefixOverlapLowRange               # ROA has an IPv6 prefix; EE has a range from min(prefix)-1 to max(prefix)-1 6482#4
+    IPv6OnlyPrefixOverlapHighRange              # ROA has an IPv6 prefix; EE has a range from min(prefix)+1 to max(prefix)+1 6482#4
+    IPv6ExtraPrefixBelowPrefix                  # EE has one IPv6 prefix; ROA has one equal prefix and one disjoint prefix below 6482#4
+    IPv6ExtraPrefixBelowRange                   # EE has one IPv6 range; ROA has one subset prefix and one disjoint prefix below 6482#4
+    IPv6ExtraPrefixAbovePrefix                  # EE has one IPv6 prefix; ROA has one equal prefix and one disjoint prefix above 6482#4
+    IPv6ExtraPrefixAboveRange                   # EE has one IPv6 range; ROA has one subset prefix and one disjoint prefix above 6482#4
+    IPv6PrefixEqualPrefix                       # (good) ROA and EE have a single, identical IPv6 prefix 6482#4
+    IPv6PrefixesEqualRange                      # (good) EE has a single IPv6 range; ROA has a set of maximal prefixes covering the range 6482#4
+    IPv6PrefixesEqualPrefixes                   # (good) EE has two IPv6 prefixes; ROA has two identical prefixes 6482#4
+    IPv6PrefixesEqualRanges                     # (good) EE has two IPv6 ranges; ROA has a set of maximal prefixes covering the ranges 6482#4
+    IPv6ExtraPrefixInPrefix                     # (good) EE has a single IPv6 prefix; ROA has one equal prefix and one smaller prefix 6482#4
+    IPv6ExtraPrefixInRange                      # (good) like IPv6PrefixesEqualRange, but the ROA has an additional, smaller prefix 6482#4
+    IPv6ExtraSubPrefixInPrefixMiddle            # (good) like IPv6PrefixEqualPrefix, with an extra ROA prefix in the middle of the existing ROA prefix 6482#4
+    IPv6ExtraSubPrefixInRangeMiddle             # (good) like IPv6PrefixesEqualRange, with an extra ROA prefix in the middle of one of the existing ROA prefixes 6482#4
+    IPv6OnlyPrefixInPrefixLow                   # (good) EE has a single IPv6 prefix; ROA has one smaller prefix at the bottom 6482#4
+    IPv6OnlyPrefixInPrefixMiddle                # (good) EE has a single IPv6 prefix; ROA has one smaller prefix in the middle 6482#4
+    IPv6OnlyPrefixInPrefixHigh                  # (good) EE has a single IPv6 prefix; ROA has one smaller prefix at the top 6482#4
+    IPv6OnlyPrefixInRangeLow                    # (good) EE has a single IPv6 range; ROA has one prefix at the bottom of the range 6482#4
+    IPv6OnlyPrefixInRangeMiddle                 # (good) EE has a single IPv6 range; ROA has one prefix in the middle of the range 6482#4
+    IPv6OnlyPrefixInRangeHigh                   # (good) EE has a single IPv6 range; ROA has one prefix at the top of the range 6482#4
+    IPv6OnlyPrefixesInPrefixesMiddle            # (good) EE has two IPv6 prefixes; ROA has two prefixes, one in the middle of each 6482#4
+    IPv6OnlyPrefixesInRangesMiddle              # (good) EE has two IPv6 ranges; ROA has two prefixes, one in the middle of each 6482#4
+    IPv4GoodIPv6Bad                             # EE has one IPv4 prefix and one IPv6 prefix; ROA has an equal IPv4 prefix and a superset IPv6 prefix 6482#4
+    IPv6GoodIPv4Bad                             # EE has one IPv4 prefix and one IPv6 prefix; ROA has a superset IPv4 prefix and an equal IPv6 prefix 6482#4
+    ComplexResources                            # (good) EE has an assortment of IPv4 and IPv6 prefixes and ranges; ROA has an assortment of prefixes that form a strict subset 6482#4
 557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature 6482#3
 558 VersionV1ExplicitBadSig  # explicit V1 version (int 0) applied after signature 6482#3
 559 VersionV2                # Version V2 (int 1) 6482#3.1
