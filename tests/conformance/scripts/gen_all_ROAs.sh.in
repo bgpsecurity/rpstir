@@ -172,6 +172,7 @@ ${single_ROA_cmd} ROA 595 IPv4OnlyPrefixBetweenPrefixRangeNoGaps
 ${single_ROA_cmd} ROA 596 IPv4OnlyPrefixSpanPrefixes
 ${single_ROA_cmd} ROA 597 IPv4OnlyPrefixSupersetLowPrefix
 ${single_ROA_cmd} ROA 598 IPv4OnlyPrefixSupersetHighPrefix
+${single_ROA_cmd} ROA 599 IPv4ExtraPrefixBelowPrefix
 ${single_ROA_cmd} ROA 556 IP2Big
 ${single_ROA_cmd} ROA 557 VersionV1Explicit
 ${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
