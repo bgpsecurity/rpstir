@@ -1,0 +1,13 @@
+--- goodROAIPv4OnlyPrefixInPrefixLow.raw.old	2013-09-25 13:48:45.094820607 -0400
++++ goodROAIPv4OnlyPrefixInPrefixLow.raw	2013-09-25 13:49:07.473504951 -0400
+@@ -7,9 +7,7 @@
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+-                                    seq seq bit 0x000101
+-                                seq oct 0x0002
+-                                    seq seq bit 0x00010201
++                                    seq seq bit 0x0001010
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 
