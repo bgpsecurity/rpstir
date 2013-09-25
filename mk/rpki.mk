@@ -333,6 +333,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4ExtraSubPrefixInPrefixMiddle.ee.p15 \ 
 	tests/conformance/raw/keys/goodROAIPv4PrefixEqualPrefix.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PrefixesEqualPrefixes.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
@@ -1132,6 +1133,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAASIDZero.stage1.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage2.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.stage2.patch \
