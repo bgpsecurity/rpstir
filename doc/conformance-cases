@@ -277,7 +277,7 @@ ROAs
     IPv4ExtraPrefixBelowRange                   # EE has one IPv4 range; ROA has one subset prefix and one disjoint prefix below 6482#4
 608 IPv4ExtraPrefixAbovePrefix                  # EE has one IPv4 prefix; ROA has one equal prefix and one disjoint prefix above 6482#4
     IPv4ExtraPrefixAboveRange                   # EE has one IPv4 range; ROA has one subset prefix and one disjoint prefix above 6482#4
-    IPv4PrefixEqualPrefix                       # (good) ROA and EE have a single, identical IPv4 prefix 6482#4
+609 IPv4PrefixEqualPrefix                       # (good) ROA and EE have a single, identical IPv4 prefix 6482#4
     IPv4PrefixesEqualRange                      # (good) EE has a single IPv4 range; ROA has a set of maximal prefixes covering the range 6482#4
     IPv4PrefixesEqualPrefixes                   # (good) EE has two IPv4 prefixes; ROA has two identical prefixes 6482#4
     IPv4PrefixesEqualRanges                     # (good) EE has two IPv4 ranges; ROA has a set of maximal prefixes covering the ranges 6482#4
