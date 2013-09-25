@@ -334,6 +334,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4ExtraSubPrefixInPrefixMiddle.ee.p15 \ 
+	tests/conformance/raw/keys/goodROAIPv4OnlyPrefixInPrefixHigh.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4OnlyPrefixInPrefixLow.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PrefixEqualPrefix.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PrefixesEqualPrefixes.ee.p15 \
@@ -1138,6 +1139,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage2.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.stage2.patch \
