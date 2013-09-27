@@ -320,6 +320,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6MaxLthLong.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPrefixAbovePrefixNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPrefixBelowPrefixNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1Explicit.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1ExplicitBadSig.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV2.ee.p15 \
@@ -1069,6 +1070,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.stage3.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage2.patch \
