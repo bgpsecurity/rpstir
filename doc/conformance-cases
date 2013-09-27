@@ -287,7 +287,7 @@ ROAs
 613 IPv4OnlyPrefixInPrefixHigh                  # (good) EE has a single IPv4 prefix; ROA has one smaller prefix at the top 6482#4
     IPv4OnlyPrefixInRangeLow                    # (good) EE has a single IPv4 range; ROA has one prefix at the bottom of the range 6482#4
     IPv4OnlyPrefixInRangeHigh                   # (good) EE has a single IPv4 range; ROA has one prefix at the top of the range 6482#4
-    IPv4OnlyPrefixesInPrefixesMiddle            # (good) EE has two IPv4 prefixes; ROA has two prefixes, one in the middle of each 6482#4
+614 IPv4OnlyPrefixesInPrefixesMiddle            # (good) EE has two IPv4 prefixes; ROA has two prefixes, one in the middle of each 6482#4
     IPv4OnlyPrefixesInRangesMiddle              # (good) EE has two IPv4 ranges; ROA has two prefixes, one in the middle of each 6482#4
     IPv6OnlyPrefixBelowPrefixNoGap              # EE has one IPv6 prefix; ROA has one directly below it 6482#4
     IPv6OnlyPrefixBelowRangeNoGap               # EE has one IPv6 prefix; ROA has one prefix directly below it 6482#4
