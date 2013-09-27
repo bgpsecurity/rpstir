@@ -181,6 +181,7 @@ ${single_ROA_cmd} -x good ROA 612 IPv4OnlyPrefixInPrefixLow
 ${single_ROA_cmd} -x good ROA 613 IPv4OnlyPrefixInPrefixHigh
 ${single_ROA_cmd} -x good ROA 614 IPv4OnlyPrefixesInPrefixesMiddle
 ${single_ROA_cmd} ROA 615 IPv6OnlyPrefixBelowPrefixNoGap
+${single_ROA_cmd} ROA 616 IPv6OnlyPrefixAbovePrefixNoGap
 ${single_ROA_cmd} ROA 556 IP2Big
 ${single_ROA_cmd} ROA 557 VersionV1Explicit
 ${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
