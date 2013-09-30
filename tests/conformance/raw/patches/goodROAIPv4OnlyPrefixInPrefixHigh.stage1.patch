@@ -7,7 +7,7 @@
 -                                    seq seq bit 0x000101
 -                                seq oct 0x0002
 -                                    seq seq bit 0x00010201
-+                                    seq seq bit 0x0301018
++                                    seq seq bit 0x07010180
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 
