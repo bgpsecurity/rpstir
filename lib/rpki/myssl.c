@@ -4341,6 +4341,8 @@ static int crl_entry_chk(
         return ERR_SCM_INTERNAL;
 
     uint8_t snum[CRL_MAX_SNUM_LTH];
+    int snum_length;
+    int i;
 
     // Forbid CRLEntryExtensions
     if (size_casn(&entryp->extensions.self) > 0)
@@ -4348,20 +4350,39 @@ static int crl_entry_chk(
         LOG(LOG_ERR, "Revocation entry has extension(s)");
         return ERR_SCM_CRLENTRYEXT;
     }
+
     // check serial number
     if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH)
     {
         LOG(LOG_ERR, "Revoked serial number too long");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (read_casn(&entryp->userCertificate, snum) <= 0)
+
+    snum_length = read_casn(&entryp->userCertificate, snum);
+    if (snum_length <= 0)
     {
         LOG(LOG_ERR, "Invalid revoked serial number");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (snum[0] & 0x80)
+
+    if (snum[0] & 0x80)
     {
         LOG(LOG_ERR, "Negative revoked serial number");
+        return ERR_SCM_BADREVSNUM;
+    }
+
+    bool snum_is_zero = true;
+    for (i = 0; i < snum_length; ++i)
+    {
+        if (snum[i] != 0)
+        {
+            snum_is_zero = false;
+            break;
+        }
+    }
+    if (snum_is_zero)
+    {
+        LOG(LOG_ERR, "Revoked serial number is zero");
         return ERR_SCM_BADREVSNUM;
     }
 
