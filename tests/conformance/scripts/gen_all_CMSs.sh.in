@@ -203,7 +203,7 @@ ${single_CMS_cmd} EE 577 KeyUsageHasCRLSign
 ${single_CMS_cmd} EE 578 KeyUsageHasNonRepu
 ${single_CMS_cmd} EE 581 HasEKU
 ${single_CMS_cmd} EE 545 SIAWrongAccessMethod
-${single_CMS_cmd} EE 579 SIAExtraAccessMethod
+${single_CMS_cmd} -x good EE 579 SIAExtraAccessMethod
 ${single_CMS_cmd} EE 580 SIAExtraWrongAccessMethod
 ${single_CMS_cmd} EE 582 SIANoRsync
 ${single_CMS_cmd} -x good EE 583 SIA2Rsync
