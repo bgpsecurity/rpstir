@@ -3872,6 +3872,8 @@ static int rescert_sig_algs_chk(
 static int rescert_serial_number_chk(
     struct Certificate *certp)
 {
+    int i;
+
     int bytes_to_read = vsize_casn(&certp->toBeSigned.serialNumber);
     if (bytes_to_read > SER_NUM_MAX_SZ)
     {
@@ -3895,6 +3897,22 @@ static int rescert_serial_number_chk(
         LOG(LOG_ERR, "serial number is negative");
         free(sernump);
         return (ERR_SCM_BADSERNUM);
+    }
+
+    bool is_zero = true;
+    for (i = 0; i < bytes_read; ++i)
+    {
+        if (sernump[i] != 0)
+        {
+            is_zero = false;
+            break;
+        }
+    }
+    if (is_zero)
+    {
+        LOG(LOG_ERR, "serial number is zero");
+        free(sernump);
+        return ERR_SCM_BADSERNUM;
     }
 
     free(sernump);
