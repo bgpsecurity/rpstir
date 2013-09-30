@@ -24,10 +24,19 @@ root/root.crl
           [bad|good]MFT*.mft
       :
       :
+     NAM*.cer
+     NAM*/[bad|good]CRL*.crl
+          [bad|good]MFT*.mft
+          [bad|good]Cert*.cer
+      :
+      :
 
 We chose to give each CRL and MFT test case its own subdirectory; this
 is because we wanted to test the way a validator handles individual
-files, not how it handles a convoluted repository structure.
+files, not how it handles a convoluted repository structure. Additionally,
+some tests of issuer fields (in CRLs and certificates) have their own
+subdirectories (NAM*) so that the issuer field being tested can match the
+parent's subject field.
 
 In theory, a conforming RPKI validator should reject any file whose
 filename begins with "bad", and accept any file that begins with
@@ -76,9 +85,6 @@ CA Certificates
 123 IssuerUtf           # issuer name has utf name 6487#4.4
 124 Issuer2SetComName   # issuer name has 2 sets with common names 6487#4.4
 125 IssuerSerNum        # issuer name has only a serial number 6487#4.4
-    IssuerSeqNameSer    # (good) issuer with name before serial number (2 sets) 6487#4.4
-    IssuerSeqSerName    # (good) issuer with serial number before name (2 sets) 6487#4.4
-    IssuerSetNameSer    # (good) issuer with serial number and name (1 set) 6487#4.4
 126 IssUID              # has issuer unique ID 6487#4
 127 KUsageExtra         # has disallowed key usage bit (nonRepudiation) 6487#4.8.4
     KUsageDigitalSig    # has disallowed key usage bit (digitalSignature) 6487#4.8.4
@@ -355,9 +361,6 @@ CRLs
 648 CRLIssuerSet2SerNums     # issuer name has 2 serial numbers (same set) 6487#5 6487#4.4
 678 CRLIssuerSeq2SerNums     # issuer name has 2 serial numbers (split across sets) 6487#5 6487#4.4
 679 CRLIssuerSerNum          # issuer name has only a serial number 6487#5 6487#4.4
-681 CRLIssuerSeqNameSer      # (good) issuer with name before serial number (2 sets) 6487#5 6487#4.4
-682 CRLIssuerSeqSerName      # (good) issuer with serial number before name (2 sets) 6487#5 6487#4.4
-683 CRLIssuerSetNameSer      # (good) issuer with serial number and name (1 set) 6487#5 6487#4.4
 650 CRLThisUpdateTyp         # wrong type of date in thisUpdate (should be UTC) 5280#5.1.2.4
 651 CRLNextUpdatePast        # next update is in the past (STALE CRL, maybe OK) 5280#5.1.2.5
 652 CRLNextUpdateTyp         # wrong type of date in next update (should be UTC) 5280#5.1.2.5
@@ -409,6 +412,20 @@ Manifests
     MFTIPv6NotInherit        # the EE cert has IPv6 resources not set to inherit 6486#5.1
     MFTASNotInherit          # the EE cert has AS resources not set to inherit 6486#5.1
 
+Name tests
+
+    NAMSeqNameSer            # subject with name before serial number (2 sets) 6487#4.4, 6487#4.5
+       MFTMatch              # (good) MFT's EE's issuer matches parent's subject 6487#4.4
+       CRLMatch              # (good) CRL's issuer matches parent's subject 6487#5 6487#4.4
+       CertMatch             # (good) CA Cert's issuer matches parent's subject 6487#4.4
+    NAMSeqSerName            # subject with serial number before name (2 sets) 6487#4.4, 6487#4.5
+       MFTMatch              # (good) MFT's EE's issuer matches parent's subject 6487#4.4
+       CRLMatch              # (good) CRL's issuer matches parent's subject 6487#5 6487#4.4
+       CertMatch             # (good) CA Cert's issuer matches parent's subject 6487#4.4
+    NAMSetNameSer            # subject with serial number and name (1 set) 6487#4.4, 6487#4.5
+       MFTMatch              # (good) MFT's EE's issuer matches parent's subject 6487#4.4
+       CRLMatch              # (good) CRL's issuer matches parent's subject 6487#5 6487#4.4
+       CertMatch             # (good) CA Cert's issuer matches parent's subject 6487#4.4
 
 Trust Anchor (self-signed) certificates
 
