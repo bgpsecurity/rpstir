@@ -1,4 +1,6 @@
-#!/bin/sh -e
+#!@SHELL_BASH@ -e
+
+shopt -s nullglob
 
 # whitespace separated list of files to ignore the results from
 IGNORE="
