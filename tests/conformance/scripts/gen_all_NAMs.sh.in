@@ -35,3 +35,6 @@ fi
 
 
 # Generate name cases
+$X 900 NAMSeqNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+$X 901 NAMSeqSerName goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+$X 902 NAMSetNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer

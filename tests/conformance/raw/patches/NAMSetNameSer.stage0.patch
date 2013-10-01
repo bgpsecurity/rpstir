@@ -1,0 +1,11 @@
+--- /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSetNameSer.raw.old	2013-10-01 16:33:13.930894271 -0400
++++ /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSetNameSer.raw	2013-10-01 16:34:12.906891804 -0400
+@@ -9,6 +9,8 @@
+             utc "460515185928Z"
+         seq set seq oid 2.5.4.3 /* id_commonName */
+                     prt "NAMSetNameSer"
++                seq oid 2.5.4.5
++                    prt "12345"
+         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                 nul 
+             bit 0x003082010A0282010100B8AAB3A8CF79

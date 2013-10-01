@@ -414,15 +414,15 @@ Manifests
 
 Name tests
 
-    NAMSeqNameSer            # subject with name before serial number (2 sets) 6487#4.4, 6487#4.5
+900 NAMSeqNameSer            # subject with name before serial number (2 sets) 6487#4.4, 6487#4.5
        MFTMatch              # (good) MFT's EE's issuer matches parent's subject 6487#4.4
        CRLMatch              # (good) CRL's issuer matches parent's subject 6487#5 6487#4.4
        CertMatch             # (good) CA Cert's issuer matches parent's subject 6487#4.4
-    NAMSeqSerName            # subject with serial number before name (2 sets) 6487#4.4, 6487#4.5
+901 NAMSeqSerName            # subject with serial number before name (2 sets) 6487#4.4, 6487#4.5
        MFTMatch              # (good) MFT's EE's issuer matches parent's subject 6487#4.4
        CRLMatch              # (good) CRL's issuer matches parent's subject 6487#5 6487#4.4
        CertMatch             # (good) CA Cert's issuer matches parent's subject 6487#4.4
-    NAMSetNameSer            # subject with serial number and name (1 set) 6487#4.4, 6487#4.5
+902 NAMSetNameSer            # subject with serial number and name (1 set) 6487#4.4, 6487#4.5
        MFTMatch              # (good) MFT's EE's issuer matches parent's subject 6487#4.4
        CRLMatch              # (good) CRL's issuer matches parent's subject 6487#5 6487#4.4
        CertMatch             # (good) CA Cert's issuer matches parent's subject 6487#4.4

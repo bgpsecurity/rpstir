@@ -218,6 +218,15 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/MFTVersion0.p15 \
 	tests/conformance/raw/keys/MFTVersion1.p15 \
 	tests/conformance/raw/keys/MFTWrongType.p15 \
+	tests/conformance/raw/keys/NAMSeqNameSer-goodCertMatch.cer.p15 \
+	tests/conformance/raw/keys/NAMSeqNameSer-goodMFTMatch.mft.p15 \
+	tests/conformance/raw/keys/NAMSeqNameSer.p15 \
+	tests/conformance/raw/keys/NAMSeqSerName-goodCertMatch.cer.p15 \
+	tests/conformance/raw/keys/NAMSeqSerName-goodMFTMatch.mft.p15 \
+	tests/conformance/raw/keys/NAMSeqSerName.p15 \
+	tests/conformance/raw/keys/NAMSetNameSer-goodCertMatch.cer.p15 \
+	tests/conformance/raw/keys/NAMSetNameSer-goodMFTMatch.mft.p15 \
+	tests/conformance/raw/keys/NAMSetNameSer.p15 \
 	tests/conformance/raw/keys/badCMS2Certs.ee.p15 \
 	tests/conformance/raw/keys/badCMS2DigestAlgs.ee.p15 \
 	tests/conformance/raw/keys/badCMSContentType.ee.p15 \
@@ -346,6 +355,18 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAIPv4PrefixEqualPrefix.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PrefixesEqualPrefixes.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
+	tests/conformance/raw/patches/NAMSeqNameSer-goodCRLMatch.crl.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqNameSer-goodCertMatch.cer.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqNameSer-goodMFTMatch.mft.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqNameSer.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqSerName-goodCRLMatch.crl.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqSerName-goodCertMatch.cer.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqSerName-goodMFTMatch.mft.stage0.patch \
+	tests/conformance/raw/patches/NAMSeqSerName.stage0.patch \
+	tests/conformance/raw/patches/NAMSetNameSer-goodCRLMatch.crl.stage0.patch \
+	tests/conformance/raw/patches/NAMSetNameSer-goodCertMatch.cer.stage0.patch \
+	tests/conformance/raw/patches/NAMSetNameSer-goodMFTMatch.mft.stage0.patch \
+	tests/conformance/raw/patches/NAMSetNameSer.stage0.patch \
 	tests/conformance/raw/patches/badCMS2Certs.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMS2Certs.stage1.patch \
 	tests/conformance/raw/patches/badCMS2Certs.stage2.patch \
