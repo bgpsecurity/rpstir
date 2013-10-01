@@ -43,6 +43,7 @@ $CFSCRIPTS/gen_all_GBRs.sh -P
 $CFSCRIPTS/gen_all_ROAs.sh -P
 $CFSCRIPTS/gen_all_CRLs.sh -P
 $CFSCRIPTS/gen_all_MFTs.sh -P
+$CFSCRIPTS/gen_all_NAMs.sh -P
 
 # Copy to output directory
 cd "$CONFORMANCE_ROOT_BUILDDIR"

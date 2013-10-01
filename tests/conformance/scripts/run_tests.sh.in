@@ -152,6 +152,18 @@ for MFT_CERT in MFT*.cer; do
 	fi
 done
 
+for NAM_CERT in NAM*.cer; do
+	NAM_NAME=`basename "$NAM_CERT" .cer`
+	reset_db
+	add_file good -f "$NAM_CERT"
+	for file in "$NAM_NAME"/good*; do
+		add_file good -f "$file"
+	done
+	for file in "$NAM_NAME"/bad*; do
+		add_file bad -f "$file"
+	done
+done
+
 if test -n "$FAILED"; then
 	echo "Failed but should pass:" >&2
 	list_files "    " "$FAILED" >&2

@@ -1228,6 +1228,10 @@ check_SCRIPTS += tests/conformance/scripts/gen_all_MFTs.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_MFTs.sh
 tests/conformance/scripts/gen_all_MFTs.sh: $(srcdir)/tests/conformance/scripts/gen_all_MFTs.sh.in
 
+check_SCRIPTS += tests/conformance/scripts/gen_all_NAMs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_NAMs.sh
+tests/conformance/scripts/gen_all_NAMs.sh: $(srcdir)/tests/conformance/scripts/gen_all_NAMs.sh.in
+
 check_SCRIPTS += tests/conformance/scripts/gen_all_ROAs.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_ROAs.sh
 tests/conformance/scripts/gen_all_ROAs.sh: $(srcdir)/tests/conformance/scripts/gen_all_ROAs.sh.in
@@ -1259,6 +1263,10 @@ tests/conformance/scripts/make_test_MFT.sh: $(srcdir)/tests/conformance/scripts/
 check_SCRIPTS += tests/conformance/scripts/make_test_cert.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_cert.sh
 tests/conformance/scripts/make_test_cert.sh: $(srcdir)/tests/conformance/scripts/make_test_cert.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/make_test_name.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_name.sh
+tests/conformance/scripts/make_test_name.sh: $(srcdir)/tests/conformance/scripts/make_test_name.sh.in
 
 
 check_SCRIPTS += tests/conformance/scripts/run_tests.sh
