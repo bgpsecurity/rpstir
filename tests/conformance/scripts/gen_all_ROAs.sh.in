@@ -186,6 +186,7 @@ ${single_ROA_cmd} ROA 617 IPv6OnlyPrefixBetweenPrefixPrefixNoGaps
 ${single_ROA_cmd} ROA 618 IPv6OnlyPrefixSpanPrefixes
 ${single_ROA_cmd} ROA 619 IPv6OnlyPrefixSupersetLowPrefix
 ${single_ROA_cmd} ROA 620 IPv6OnlyPrefixSupersetHighPrefix
+${single_ROA_cmd} ROA 621 IPv6ExtraPrefixBelowPrefix
 ${single_ROA_cmd} ROA 556 IP2Big
 ${single_ROA_cmd} ROA 557 VersionV1Explicit
 ${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig

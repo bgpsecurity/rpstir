@@ -312,7 +312,7 @@ ROAs
 620 IPv6OnlyPrefixSupersetHighPrefix            # ROA has an IPv6 prefix; EE has the top half of the prefix 6482#4
     IPv6OnlyPrefixOverlapLowRange               # ROA has an IPv6 prefix; EE has a range from min(prefix)-1 to max(prefix)-1 6482#4
     IPv6OnlyPrefixOverlapHighRange              # ROA has an IPv6 prefix; EE has a range from min(prefix)+1 to max(prefix)+1 6482#4
-    IPv6ExtraPrefixBelowPrefix                  # EE has one IPv6 prefix; ROA has one equal prefix and one disjoint prefix below 6482#4
+621 IPv6ExtraPrefixBelowPrefix                  # EE has one IPv6 prefix; ROA has one equal prefix and one disjoint prefix below 6482#4
     IPv6ExtraPrefixBelowRange                   # EE has one IPv6 range; ROA has one subset prefix and one disjoint prefix below 6482#4
     IPv6ExtraPrefixAbovePrefix                  # EE has one IPv6 prefix; ROA has one equal prefix and one disjoint prefix above 6482#4
     IPv6ExtraPrefixAboveRange                   # EE has one IPv6 range; ROA has one subset prefix and one disjoint prefix above 6482#4
