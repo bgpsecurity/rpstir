@@ -351,6 +351,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAIPv4PrefixEqualPrefix.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PrefixesEqualPrefixes.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6PrefixEqualPrefix.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6PrefixesEqualPrefixes.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
 	tests/conformance/raw/patches/NAMSeqNameSer-goodCRLMatch.crl.stage0.patch \
 	tests/conformance/raw/patches/NAMSeqNameSer-goodCertMatch.cer.stage0.patch \
@@ -1214,6 +1215,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.stage2.patch \
 	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.stage3.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage1.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage2.patch \
