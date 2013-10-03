@@ -317,6 +317,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSupersetLowPrefix.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6DupPrefixDiffMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6DupPrefixSameMaxLen.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6ExtraPrefixAbovePrefix.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPrefixBelowPrefix.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6Inherit.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6MaxLthLong.ee.p15 \
@@ -1065,6 +1066,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.stage2.patch \
