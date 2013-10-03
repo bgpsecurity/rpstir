@@ -322,7 +322,7 @@ ROAs
     IPv6PrefixesEqualRanges                     # (good) EE has two IPv6 ranges; ROA has a set of maximal prefixes covering the ranges 6482#4
 625 IPv6ExtraSubPrefixInPrefixMiddle            # (good) like IPv6PrefixEqualPrefix, with an extra ROA prefix in the middle of the existing ROA prefix 6482#4
     IPv6ExtraSubPrefixInRangeMiddle             # (good) like IPv6PrefixesEqualRange, with an extra ROA prefix in the middle of one of the existing ROA prefixes 6482#4
-    IPv6OnlyPrefixInPrefixLow                   # (good) EE has a single IPv6 prefix; ROA has one smaller prefix at the bottom 6482#4
+626 IPv6OnlyPrefixInPrefixLow                   # (good) EE has a single IPv6 prefix; ROA has one smaller prefix at the bottom 6482#4
     IPv6OnlyPrefixInPrefixHigh                  # (good) EE has a single IPv6 prefix; ROA has one smaller prefix at the top 6482#4
     IPv6OnlyPrefixInRangeLow                    # (good) EE has a single IPv6 range; ROA has one prefix at the bottom of the range 6482#4
     IPv6OnlyPrefixInRangeHigh                   # (good) EE has a single IPv6 range; ROA has one prefix at the top of the range 6482#4
