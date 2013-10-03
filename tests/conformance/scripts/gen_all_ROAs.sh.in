@@ -192,6 +192,7 @@ ${single_ROA_cmd} -x good ROA 623 IPv6PrefixEqualPrefix
 ${single_ROA_cmd} -x good ROA 624 IPv6PrefixesEqualPrefixes
 ${single_ROA_cmd} -x good ROA 625 IPv6ExtraSubPrefixInPrefixMiddle
 ${single_ROA_cmd} -x good ROA 626 IPv6OnlyPrefixInPrefixLow
+${single_ROA_cmd} -x good ROA 627 IPv6OnlyPrefixInPrefixHigh
 ${single_ROA_cmd} ROA 556 IP2Big
 ${single_ROA_cmd} ROA 557 VersionV1Explicit
 ${single_ROA_cmd} ROA 558 VersionV1ExplicitBadSig
