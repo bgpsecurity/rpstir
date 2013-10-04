@@ -265,7 +265,7 @@ ROAs
 593 IPv4OnlyPrefixBelowPrefixNoGap              # EE has one IPv4 prefix; ROA has one directly below it 6482#4
 631 IPv4OnlyPrefixBelowRangeNoGap               # EE has one IPv4 range; ROA has one prefix directly below it 6482#4
 594 IPv4OnlyPrefixAbovePrefixNoGap              # like IPv4OnlyPrefixBelowPrefixNoGap, but the ROA's is above 6482#4
-    IPv4OnlyPrefixAboveRangeNoGap               # like IPv4OnlyPrefixBelowRangeNoGap, but the ROA's is above 6482#4
+632 IPv4OnlyPrefixAboveRangeNoGap               # like IPv4OnlyPrefixBelowRangeNoGap, but the ROA's is above 6482#4
 595 IPv4OnlyPrefixBetweenPrefixPrefixNoGaps     # EE has two IPv4 prefixes; ROA has a prefix in the middle, directly adjacent to both EE prefixes 6482#4
     IPv4OnlyPrefixBetweenPrefixRangeNoGaps      # like IPv4OnlyPrefixBetweenPrefixPrefixNoGaps, but the higher EE prefix is a range instead 6482#4
     IPv4OnlyPrefixBetweenRangePrefixNoGaps      # like IPv4OnlyPrefixBetweenPrefixPrefixNoGaps, but the lower EE prefix is a range instead 6482#4
