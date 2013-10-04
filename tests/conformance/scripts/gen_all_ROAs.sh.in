@@ -170,7 +170,7 @@ ${single_ROA_cmd} ROA 593 IPv4OnlyPrefixBelowPrefixNoGap
 ${single_ROA_cmd} ROA 631 IPv4OnlyPrefixBelowRangeNoGap
 ${single_ROA_cmd} ROA 594 IPv4OnlyPrefixAbovePrefixNoGap
 ${single_ROA_cmd} ROA 632 IPv4OnlyPrefixAboveRangeNoGap
-${single_ROA_cmd} ROA 595 IPv4OnlyPrefixBetweenPrefixRangeNoGaps
+${single_ROA_cmd} ROA 595 IPv4OnlyPrefixBetweenPrefixPrefixNoGaps
 ${single_ROA_cmd} ROA 596 IPv4OnlyPrefixSpanPrefixes
 ${single_ROA_cmd} ROA 597 IPv4OnlyPrefixSupersetLowPrefix
 ${single_ROA_cmd} ROA 598 IPv4OnlyPrefixSupersetHighPrefix

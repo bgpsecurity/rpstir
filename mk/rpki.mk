@@ -313,8 +313,12 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixAbovePrefixNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixAboveRangeNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBelowPrefixNoGap.ee.p15 \
+<<<<<<< HEAD
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBelowRangeNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.ee.p15 \
+=======
+	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.ee.p15 \
+>>>>>>> f854db2508db7a8f272bad8feccd5ac600f58afb
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSpanPrefixes.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSupersetHighPrefix.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSupersetLowPrefix.ee.p15 \
@@ -1060,6 +1064,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.stage3.patch \
+<<<<<<< HEAD
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.stage2.patch \
@@ -1068,6 +1073,12 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.stage3.patch \
+=======
+	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.stage3.patch \
+>>>>>>> f854db2508db7a8f272bad8feccd5ac600f58afb
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.stage2.patch \
