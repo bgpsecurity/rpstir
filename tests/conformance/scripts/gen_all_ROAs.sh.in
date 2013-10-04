@@ -167,6 +167,7 @@ ${single_ROA_cmd} ROA 591 IPv6DupPrefixDiffMaxLen
 ${single_ROA_cmd} ROA 562 IPv4Inherit
 ${single_ROA_cmd} ROA 563 IPv6Inherit
 ${single_ROA_cmd} ROA 593 IPv4OnlyPrefixBelowPrefixNoGap
+${single_ROA_cmd} ROA 594 IPv4OnlyPrefixBelowRangeNoGap
 ${single_ROA_cmd} ROA 594 IPv4OnlyPrefixAbovePrefixNoGap
 ${single_ROA_cmd} ROA 595 IPv4OnlyPrefixBetweenPrefixRangeNoGaps
 ${single_ROA_cmd} ROA 596 IPv4OnlyPrefixSpanPrefixes
