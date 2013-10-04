@@ -172,6 +172,7 @@ ${single_ROA_cmd} ROA 594 IPv4OnlyPfxAbovePfxNoGap
 ${single_ROA_cmd} ROA 632 IPv4OnlyPfxAboveRangeNoGap
 ${single_ROA_cmd} ROA 595 IPv4OnlyPfxBetweenPfxPfxNoGaps
 ${single_ROA_cmd} ROA 633 IPv4OnlyPfxBetweenPfxRangeNoGaps
+${single_ROA_cmd} ROA 634 IPv4OnlyPfxBetweenRangePfxNoGaps
 ${single_ROA_cmd} ROA 596 IPv4OnlyPfxSpanPfxes
 ${single_ROA_cmd} ROA 597 IPv4OnlyPfxSupersetLowPfx
 ${single_ROA_cmd} ROA 598 IPv4OnlyPfxSupersetHighPfx
