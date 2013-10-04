@@ -267,7 +267,7 @@ ROAs
 594 IPv4OnlyPfxAbovePfxNoGap              # like IPv4OnlyPfxBelowPfxNoGap, but the ROA's is above 6482#4
 632 IPv4OnlyPfxAboveRangeNoGap            # like IPv4OnlyPfxBelowRangeNoGap, but the ROA's is above 6482#4
 595 IPv4OnlyPfxBetweenPfxPfxNoGaps        # EE has two IPv4 prefixes; ROA has a prefix in the middle, directly adjacent to both EE prefixes 6482#4
-    IPv4OnlyPfxBetweenPfxRangeNoGaps      # like IPv4OnlyPfxBetweenPfxPfxNoGaps, but the higher EE prefix is a range instead 6482#4
+633 IPv4OnlyPfxBetweenPfxRangeNoGaps      # like IPv4OnlyPfxBetweenPfxPfxNoGaps, but the higher EE prefix is a range instead 6482#4
     IPv4OnlyPfxBetweenRangePfxNoGaps      # like IPv4OnlyPfxBetweenPfxPfxNoGaps, but the lower EE prefix is a range instead 6482#4
     IPv4OnlyPfxBetweenRangeRangeNoGaps    # like IPv4OnlyPfxBetweenPfxPfxNoGaps, but both EE prefixes are ranges instead 6482#4
     IPv4OnlyPfxTouchRanges                # EE has two IPv4 ranges; ROA has one prefix from the top of the lower range to the bottom of the upper range 6482#4
