@@ -304,38 +304,38 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIP2Big.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4DupPrefixDiffMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4DupPrefixSameMaxLen.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4ExtraPrefixAbovePrefix.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4ExtraPrefixBelowPrefix.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4ExtraPfxAbovePfx.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4ExtraPfxBelowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4GoodIPv6Bad.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4Inherit.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4MaxLthLong.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4MaxLthShort.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixAbovePrefixNoGap.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixAboveRangeNoGap.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBelowPrefixNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxAbovePfxNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxAboveRangeNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxBelowPfxNoGap.ee.p15 \
 <<<<<<< HEAD
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBelowRangeNoGap.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxBelowRangeNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxBetweenPfxRangeNoGaps.ee.p15 \
 =======
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxBetweenPfxPfxNoGaps.ee.p15 \
 >>>>>>> f854db2508db7a8f272bad8feccd5ac600f58afb
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSpanPrefixes.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSupersetHighPrefix.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4OnlyPrefixSupersetLowPrefix.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxSpanPfxes.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetHighPfx.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6DupPrefixDiffMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6DupPrefixSameMaxLen.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6ExtraPrefixAbovePrefix.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6ExtraPrefixBelowPrefix.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6ExtraPfxAbovePfx.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6ExtraPfxBelowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6GoodIPv4Bad.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6Inherit.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6MaxLthLong.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6MaxLthShort.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6OnlyPrefixAbovePrefixNoGap.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6OnlyPrefixBelowPrefixNoGap.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6OnlyPrefixSpanPrefixes.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6OnlyPrefixSupersetHighPrefix.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6OnlyPrefixSupersetLowPrefix.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxAbovePfxNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxBelowPfxNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxBetweenPfxPfxNoGaps.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxSpanPfxes.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetHighPfx.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1Explicit.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1ExplicitBadSig.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV2.ee.p15 \
@@ -352,18 +352,18 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv4ExtraSubPrefixInPrefixMiddle.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv4OnlyPrefixInPrefixHigh.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv4OnlyPrefixInPrefixLow.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv4OnlyPrefixesInPrefixesMiddle.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv4PrefixEqualPrefix.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv4PrefixesEqualPrefixes.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv6ExtraSubPrefixInPrefixMiddle.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv6OnlyPrefixInPrefixHigh.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv6OnlyPrefixInPrefixLow.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv6OnlyPrefixesInPrefixesMiddle.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv6PrefixEqualPrefix.ee.p15 \
-	tests/conformance/raw/keys/goodROAIPv6PrefixesEqualPrefixes.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4ExtraSubPfxInPfxMiddle.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4OnlyPfxInPfxHigh.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4OnlyPfxInPfxLow.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4OnlyPfxesInPfxesMiddle.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4PfxEqualPfx.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4PfxesEqualPfxes.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6ExtraSubPfxInPfxMiddle.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6OnlyPfxInPfxHigh.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6OnlyPfxInPfxLow.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6OnlyPfxesInPfxesMiddle.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6PfxEqualPfx.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6PfxesEqualPfxes.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
 	tests/conformance/raw/patches/NAMSeqNameSer-goodCRLMatch.crl.stage0.patch \
 	tests/conformance/raw/patches/NAMSeqNameSer-goodCertMatch.cer.stage0.patch \
@@ -1028,14 +1028,14 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixAbovePrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixAbovePrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixAbovePrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixAbovePrefix.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixBelowPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixBelowPrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixBelowPrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4ExtraPrefixBelowPrefix.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv4GoodIPv6Bad.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv4GoodIPv6Bad.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4GoodIPv6Bad.stage2.patch \
@@ -1052,45 +1052,45 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4MaxLthShort.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4MaxLthShort.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4MaxLthShort.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAbovePrefixNoGap.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAbovePrefixNoGap.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAbovePrefixNoGap.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAbovePrefixNoGap.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAboveRangeNoGap.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAboveRangeNoGap.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAboveRangeNoGap.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixAboveRangeNoGap.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowPrefixNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAbovePfxNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAbovePfxNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAbovePfxNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAbovePfxNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAboveRangeNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAboveRangeNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAboveRangeNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxAboveRangeNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowPfxNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowPfxNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowPfxNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowPfxNoGap.stage3.patch \
 <<<<<<< HEAD
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBelowRangeNoGap.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixRangeNoGaps.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowRangeNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowRangeNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowRangeNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBelowRangeNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxRangeNoGaps.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxRangeNoGaps.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxRangeNoGaps.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxRangeNoGaps.stage3.patch \
 =======
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixBetweenPrefixPrefixNoGaps.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxPfxNoGaps.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxPfxNoGaps.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxPfxNoGaps.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxBetweenPfxPfxNoGaps.stage3.patch \
 >>>>>>> f854db2508db7a8f272bad8feccd5ac600f58afb
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSpanPrefixes.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetHighPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetHighPrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetHighPrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetHighPrefix.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetLowPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetLowPrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetLowPrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4OnlyPrefixSupersetLowPrefix.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSpanPfxes.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSpanPfxes.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSpanPfxes.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSpanPfxes.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetHighPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetHighPfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetHighPfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetHighPfx.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetLowPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetLowPfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetLowPfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4OnlyPfxSupersetLowPfx.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.stage2.patch \
@@ -1099,14 +1099,14 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixAbovePrefix.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6ExtraPrefixBelowPrefix.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxBelowPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxBelowPfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxBelowPfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6ExtraPfxBelowPfx.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6GoodIPv4Bad.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6GoodIPv4Bad.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6GoodIPv4Bad.stage2.patch \
@@ -1123,30 +1123,30 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6MaxLthShort.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6MaxLthShort.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6MaxLthShort.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixAbovePrefixNoGap.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixAbovePrefixNoGap.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixAbovePrefixNoGap.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixAbovePrefixNoGap.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBelowPrefixNoGap.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixBetweenPrefixPrefixNoGaps.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSpanPrefixes.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSpanPrefixes.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSpanPrefixes.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSpanPrefixes.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetHighPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetHighPrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetHighPrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetHighPrefix.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetLowPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetLowPrefix.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetLowPrefix.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6OnlyPrefixSupersetLowPrefix.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenPfxPfxNoGaps.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenPfxPfxNoGaps.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenPfxPfxNoGaps.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenPfxPfxNoGaps.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSpanPfxes.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSpanPfxes.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSpanPfxes.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSpanPfxes.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.stage3.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage2.patch \
@@ -1222,54 +1222,54 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAASIDZero.stage1.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage2.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv4ExtraSubPrefixInPrefixMiddle.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixHigh.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixInPrefixLow.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixesInPrefixesMiddle.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixesInPrefixesMiddle.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixesInPrefixesMiddle.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv4OnlyPrefixesInPrefixesMiddle.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixEqualPrefix.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixesEqualPrefixes.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixesEqualPrefixes.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixesEqualPrefixes.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv4PrefixesEqualPrefixes.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv6ExtraSubPrefixInPrefixMiddle.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv6ExtraSubPrefixInPrefixMiddle.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv6ExtraSubPrefixInPrefixMiddle.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv6ExtraSubPrefixInPrefixMiddle.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixHigh.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixHigh.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixHigh.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixHigh.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixLow.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixLow.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixLow.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixInPrefixLow.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixesInPrefixesMiddle.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixesInPrefixesMiddle.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixesInPrefixesMiddle.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv6OnlyPrefixesInPrefixesMiddle.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixEqualPrefix.stage3.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.ee.stage0.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.stage1.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.stage2.patch \
-	tests/conformance/raw/patches/goodROAIPv6PrefixesEqualPrefixes.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxLow.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxLow.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxLow.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxLow.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxesInPfxesMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxesInPfxesMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxesInPfxesMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4OnlyPfxesInPfxesMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxEqualPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxEqualPfx.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxEqualPfx.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxEqualPfx.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxesEqualPfxes.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxesEqualPfxes.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxesEqualPfxes.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4PfxesEqualPfxes.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxHigh.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxHigh.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxHigh.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxHigh.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxLow.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxLow.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxLow.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxInPfxLow.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.stage3.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage1.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage2.patch \

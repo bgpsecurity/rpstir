@@ -166,36 +166,36 @@ ${single_ROA_cmd} ROA 590 IPv4DupPrefixDiffMaxLen
 ${single_ROA_cmd} ROA 591 IPv6DupPrefixDiffMaxLen
 ${single_ROA_cmd} ROA 562 IPv4Inherit
 ${single_ROA_cmd} ROA 563 IPv6Inherit
-${single_ROA_cmd} ROA 593 IPv4OnlyPrefixBelowPrefixNoGap
-${single_ROA_cmd} ROA 631 IPv4OnlyPrefixBelowRangeNoGap
-${single_ROA_cmd} ROA 594 IPv4OnlyPrefixAbovePrefixNoGap
-${single_ROA_cmd} ROA 632 IPv4OnlyPrefixAboveRangeNoGap
-${single_ROA_cmd} ROA 595 IPv4OnlyPrefixBetweenPrefixPrefixNoGaps
-${single_ROA_cmd} ROA 596 IPv4OnlyPrefixSpanPrefixes
-${single_ROA_cmd} ROA 597 IPv4OnlyPrefixSupersetLowPrefix
-${single_ROA_cmd} ROA 598 IPv4OnlyPrefixSupersetHighPrefix
-${single_ROA_cmd} ROA 599 IPv4ExtraPrefixBelowPrefix
-${single_ROA_cmd} ROA 608 IPv4ExtraPrefixAbovePrefix
-${single_ROA_cmd} -x good ROA 609 IPv4PrefixEqualPrefix
-${single_ROA_cmd} -x good ROA 610 IPv4PrefixesEqualPrefixes
-${single_ROA_cmd} -x good ROA 611 IPv4ExtraSubPrefixInPrefixMiddle
-${single_ROA_cmd} -x good ROA 612 IPv4OnlyPrefixInPrefixLow
-${single_ROA_cmd} -x good ROA 613 IPv4OnlyPrefixInPrefixHigh
-${single_ROA_cmd} -x good ROA 614 IPv4OnlyPrefixesInPrefixesMiddle
-${single_ROA_cmd} ROA 615 IPv6OnlyPrefixBelowPrefixNoGap
-${single_ROA_cmd} ROA 616 IPv6OnlyPrefixAbovePrefixNoGap
-${single_ROA_cmd} ROA 617 IPv6OnlyPrefixBetweenPrefixPrefixNoGaps
-${single_ROA_cmd} ROA 618 IPv6OnlyPrefixSpanPrefixes
-${single_ROA_cmd} ROA 619 IPv6OnlyPrefixSupersetLowPrefix
-${single_ROA_cmd} ROA 620 IPv6OnlyPrefixSupersetHighPrefix
-${single_ROA_cmd} ROA 621 IPv6ExtraPrefixBelowPrefix
-${single_ROA_cmd} ROA 622 IPv6ExtraPrefixAbovePrefix
-${single_ROA_cmd} -x good ROA 623 IPv6PrefixEqualPrefix
-${single_ROA_cmd} -x good ROA 624 IPv6PrefixesEqualPrefixes
-${single_ROA_cmd} -x good ROA 625 IPv6ExtraSubPrefixInPrefixMiddle
-${single_ROA_cmd} -x good ROA 626 IPv6OnlyPrefixInPrefixLow
-${single_ROA_cmd} -x good ROA 627 IPv6OnlyPrefixInPrefixHigh
-${single_ROA_cmd} -x good ROA 628 IPv6OnlyPrefixesInPrefixesMiddle
+${single_ROA_cmd} ROA 593 IPv4OnlyPfxBelowPfxNoGap
+${single_ROA_cmd} ROA 631 IPv4OnlyPfxBelowRangeNoGap
+${single_ROA_cmd} ROA 594 IPv4OnlyPfxAbovePfxNoGap
+${single_ROA_cmd} ROA 632 IPv4OnlyPfxAboveRangeNoGap
+${single_ROA_cmd} ROA 595 IPv4OnlyPfxBetweenPfxPfxNoGaps
+${single_ROA_cmd} ROA 596 IPv4OnlyPfxSpanPfxes
+${single_ROA_cmd} ROA 597 IPv4OnlyPfxSupersetLowPfx
+${single_ROA_cmd} ROA 598 IPv4OnlyPfxSupersetHighPfx
+${single_ROA_cmd} ROA 599 IPv4ExtraPfxBelowPfx
+${single_ROA_cmd} ROA 608 IPv4ExtraPfxAbovePfx
+${single_ROA_cmd} -x good ROA 609 IPv4PfxEqualPfx
+${single_ROA_cmd} -x good ROA 610 IPv4PfxesEqualPfxes
+${single_ROA_cmd} -x good ROA 611 IPv4ExtraSubPfxInPfxMiddle
+${single_ROA_cmd} -x good ROA 612 IPv4OnlyPfxInPfxLow
+${single_ROA_cmd} -x good ROA 613 IPv4OnlyPfxInPfxHigh
+${single_ROA_cmd} -x good ROA 614 IPv4OnlyPfxesInPfxesMiddle
+${single_ROA_cmd} ROA 615 IPv6OnlyPfxBelowPfxNoGap
+${single_ROA_cmd} ROA 616 IPv6OnlyPfxAbovePfxNoGap
+${single_ROA_cmd} ROA 617 IPv6OnlyPfxBetweenPfxPfxNoGaps
+${single_ROA_cmd} ROA 618 IPv6OnlyPfxSpanPfxes
+${single_ROA_cmd} ROA 619 IPv6OnlyPfxSupersetLowPfx
+${single_ROA_cmd} ROA 620 IPv6OnlyPfxSupersetHighPfx
+${single_ROA_cmd} ROA 621 IPv6ExtraPfxBelowPfx
+${single_ROA_cmd} ROA 622 IPv6ExtraPfxAbovePfx
+${single_ROA_cmd} -x good ROA 623 IPv6PfxEqualPfx
+${single_ROA_cmd} -x good ROA 624 IPv6PfxesEqualPfxes
+${single_ROA_cmd} -x good ROA 625 IPv6ExtraSubPfxInPfxMiddle
+${single_ROA_cmd} -x good ROA 626 IPv6OnlyPfxInPfxLow
+${single_ROA_cmd} -x good ROA 627 IPv6OnlyPfxInPfxHigh
+${single_ROA_cmd} -x good ROA 628 IPv6OnlyPfxesInPfxesMiddle
 ${single_ROA_cmd} ROA 629 IPv4GoodIPv6Bad
 ${single_ROA_cmd} ROA 630 IPv6GoodIPv4Bad
 ${single_ROA_cmd} ROA 556 IP2Big
