@@ -328,7 +328,7 @@ ROAs
     IPv6OnlyPrefixInRangeHigh                   # (good) EE has a single IPv6 range; ROA has one prefix at the top of the range 6482#4
 628 IPv6OnlyPrefixesInPrefixesMiddle            # (good) EE has two IPv6 prefixes; ROA has two prefixes, one in the middle of each 6482#4
     IPv6OnlyPrefixesInRangesMiddle              # (good) EE has two IPv6 ranges; ROA has two prefixes, one in the middle of each 6482#4
-    IPv4GoodIPv6Bad                             # EE has one IPv4 prefix and one IPv6 prefix; ROA has an equal IPv4 prefix and a superset IPv6 prefix 6482#4
+629 IPv4GoodIPv6Bad                             # EE has one IPv4 prefix and one IPv6 prefix; ROA has an equal IPv4 prefix and a superset IPv6 prefix 6482#4
     IPv6GoodIPv4Bad                             # EE has one IPv4 prefix and one IPv6 prefix; ROA has a superset IPv4 prefix and an equal IPv6 prefix 6482#4
     ComplexResources                            # (good) EE has an assortment of IPv4 and IPv6 prefixes and ranges; ROA has an assortment of prefixes that form a strict subset 6482#4
 557 VersionV1Explicit        # explicit V1 version (int 0) applied before signature 6482#3
