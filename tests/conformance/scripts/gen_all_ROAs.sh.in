@@ -182,6 +182,7 @@ ${single_ROA_cmd} ROA 639 IPv4OnlyPfxSupersetHighRange
 ${single_ROA_cmd} ROA 597 IPv4OnlyPfxSupersetLowPfx
 ${single_ROA_cmd} ROA 598 IPv4OnlyPfxSupersetHighPfx
 ${single_ROA_cmd} ROA 686 IPv4OnlyPfxOverlapLowRange
+${single_ROA_cmd} ROA 687 IPv4OnlyPfxOverlapHighRange
 ${single_ROA_cmd} ROA 599 IPv4ExtraPfxBelowPfx
 ${single_ROA_cmd} ROA 608 IPv4ExtraPfxAbovePfx
 ${single_ROA_cmd} -x good ROA 609 IPv4PfxEqualPfx
