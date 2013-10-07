@@ -306,6 +306,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4ExtraPfxAbovePfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4ExtraPfxBelowPfx.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4ExtraPfxBelowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4GoodIPv6Bad.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4Inherit.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4MaxLthLong.ee.p15 \
@@ -1041,6 +1042,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowPfx.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowRange.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowRange.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowRange.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4ExtraPfxBelowRange.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv4GoodIPv6Bad.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv4GoodIPv6Bad.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4GoodIPv6Bad.stage2.patch \
