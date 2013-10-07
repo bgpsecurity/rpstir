@@ -178,6 +178,7 @@ ${single_ROA_cmd} ROA 636 IPv4OnlyPfxTouchRanges
 ${single_ROA_cmd} ROA 596 IPv4OnlyPfxSpanPfxes
 ${single_ROA_cmd} ROA 637 IPv4OnlyPfxSpanRanges
 ${single_ROA_cmd} ROA 638 IPv4OnlyPfxSupersetLowRange
+${single_ROA_cmd} ROA 639 IPv4OnlyPfxSupersetHighRange
 ${single_ROA_cmd} ROA 597 IPv4OnlyPfxSupersetLowPfx
 ${single_ROA_cmd} ROA 598 IPv4OnlyPfxSupersetHighPfx
 ${single_ROA_cmd} ROA 599 IPv4ExtraPfxBelowPfx
