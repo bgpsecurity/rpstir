@@ -272,7 +272,7 @@ ROAs
 635 IPv4OnlyPfxBetweenRangeRangeNoGaps    # like IPv4OnlyPfxBetweenPfxPfxNoGaps, but both EE prefixes are ranges instead 6482#4
 636 IPv4OnlyPfxTouchRanges                # EE has two IPv4 ranges; ROA has one prefix from the top of the lower range to the bottom of the upper range 6482#4
 596 IPv4OnlyPfxSpanPfxes                  # EE has two IPv4 prefixes; ROA has one prefix from the bottom of the EE's lower prefix to the top of the EE's upper prefix 6482#4
-    IPv4OnlyPfxSpanRanges                 # EE has two IPv4 ranges; ROA has one prefix from the middle of the lower range to the middle of the upper range 6482#4
+637 IPv4OnlyPfxSpanRanges                 # EE has two IPv4 ranges; ROA has one prefix from the middle of the lower range to the middle of the upper range 6482#4
     IPv4OnlyPfxSupersetLowRange           # ROA has an IPv4 prefix; EE has a range of min(prefix) to max(prefix)-1 6482#4
     IPv4OnlyPfxSupersetHighRange          # ROA has an IPv4 prefix; EE has a range of min(prefix)+1 to max(prefix) 6482#4
 597 IPv4OnlyPfxSupersetLowPfx             # ROA has an IPv4 prefix; EE has the bottom half of the prefix 6482#4
