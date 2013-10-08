@@ -360,6 +360,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4ExtraSubPfxInPfxMiddle.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4ExtraSubPfxInRangeMiddle.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4OnlyPfxInPfxHigh.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4OnlyPfxInPfxLow.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4OnlyPfxesInPfxesMiddle.ee.p15 \
@@ -1272,6 +1273,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage2.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInRangeMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInRangeMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInRangeMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInRangeMiddle.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4OnlyPfxInPfxHigh.stage2.patch \

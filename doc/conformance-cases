@@ -288,7 +288,7 @@ ROAs
 610 IPv4PfxesEqualPfxes                   # (good) EE has two IPv4 prefixes; ROA has two identical prefixes 6482#4
 691 IPv4PfxesEqualRanges                  # (good) EE has two IPv4 ranges; ROA has a set of maximal prefixes covering the ranges 6482#4
 611 IPv4ExtraSubPfxInPfxMiddle            # (good) like IPv4PfxEqualPfx, with an extra ROA prefix in the middle of the existing ROA prefix 6482#4
-    IPv4ExtraSubPfxInRangeMiddle          # (good) like IPv4PfxesEqualRange, with an extra ROA prefix in the middle of one of the existing ROA prefixes 6482#4
+692 IPv4ExtraSubPfxInRangeMiddle          # (good) like IPv4PfxesEqualRange, with an extra ROA prefix in the middle of one of the existing ROA prefixes 6482#4
 612 IPv4OnlyPfxInPfxLow                   # (good) EE has a single IPv4 prefix; ROA has one smaller prefix at the bottom 6482#4
 613 IPv4OnlyPfxInPfxHigh                  # (good) EE has a single IPv4 prefix; ROA has one smaller prefix at the top 6482#4
     IPv4OnlyPfxInRangeLow                 # (good) EE has a single IPv4 range; ROA has one prefix at the bottom of the range 6482#4
