@@ -190,6 +190,7 @@ ${single_ROA_cmd} ROA 689 IPv4ExtraPfxAboveRange
 ${single_ROA_cmd} -x good ROA 609 IPv4PfxEqualPfx
 ${single_ROA_cmd} -x good ROA 690 IPv4PfxesEqualRange
 ${single_ROA_cmd} -x good ROA 610 IPv4PfxesEqualPfxes
+${single_ROA_cmd} -x good ROA 691 IPv4PfxesEqualRanges
 ${single_ROA_cmd} -x good ROA 611 IPv4ExtraSubPfxInPfxMiddle
 ${single_ROA_cmd} -x good ROA 612 IPv4OnlyPfxInPfxLow
 ${single_ROA_cmd} -x good ROA 613 IPv4OnlyPfxInPfxHigh
