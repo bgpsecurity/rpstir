@@ -202,6 +202,7 @@ ${single_ROA_cmd} -x good ROA 695 IPv4OnlyPfxesInRangesMiddle
 ${single_ROA_cmd} ROA 615 IPv6OnlyPfxBelowPfxNoGap
 ${single_ROA_cmd} ROA 696 IPv6OnlyPfxBelowRangeNoGap
 ${single_ROA_cmd} ROA 616 IPv6OnlyPfxAbovePfxNoGap
+${single_ROA_cmd} ROA 697 IPv6OnlyPfxAboveRangeNoGap
 ${single_ROA_cmd} ROA 617 IPv6OnlyPfxBetweenPfxPfxNoGaps
 ${single_ROA_cmd} ROA 618 IPv6OnlyPfxSpanPfxes
 ${single_ROA_cmd} ROA 619 IPv6OnlyPfxSupersetLowPfx

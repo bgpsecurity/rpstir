@@ -298,7 +298,7 @@ ROAs
 615 IPv6OnlyPfxBelowPfxNoGap              # EE has one IPv6 prefix; ROA has one directly below it 6482#4
 696 IPv6OnlyPfxBelowRangeNoGap            # EE has one IPv6 prefix; ROA has one prefix directly below it 6482#4
 616 IPv6OnlyPfxAbovePfxNoGap              # like IPv6OnlyPfxBelowPfxNoGap, but the ROA's is above 6482#4
-    IPv6OnlyPfxAboveRangeNoGap            # like IPv6OnlyPfxBelowRangeNoGap, but the ROA's is above 6482#4
+697 IPv6OnlyPfxAboveRangeNoGap            # like IPv6OnlyPfxBelowRangeNoGap, but the ROA's is above 6482#4
 617 IPv6OnlyPfxBetweenPfxPfxNoGaps        # EE has two IPv6 prefixes; ROA has a prefix in the middle, directly adjacent to both EE prefixes 6482#4
     IPv6OnlyPfxBetweenPfxRangeNoGaps      # like IPv6OnlyPfxBetweenPfxPfxNoGaps, but the higher EE prefix is a range instead 6482#4
     IPv6OnlyPfxBetweenRangePfxNoGaps      # like IPv6OnlyPfxBetweenPfxPfxNoGaps, but the lower EE prefix is a range instead 6482#4

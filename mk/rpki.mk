@@ -338,6 +338,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6MaxLthLong.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6MaxLthShort.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxAbovePfxNoGap.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxAboveRangeNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxBelowPfxNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxBelowRangeNoGap.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxBetweenPfxPfxNoGaps.ee.p15 \
@@ -1178,6 +1179,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxAbovePfxNoGap.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAboveRangeNoGap.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAboveRangeNoGap.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAboveRangeNoGap.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxAboveRangeNoGap.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxBelowPfxNoGap.stage2.patch \
