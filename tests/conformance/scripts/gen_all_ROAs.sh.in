@@ -160,10 +160,10 @@ ${single_ROA_cmd} ROA 555 IPv4MaxLthLong
 ${single_ROA_cmd} ROA 585 IPv4MaxLthShort
 ${single_ROA_cmd} ROA 586 IPv6MaxLthLong
 ${single_ROA_cmd} ROA 587 IPv6MaxLthShort
-${single_ROA_cmd} ROA 588 IPv4DupPrefixSameMaxLen
-${single_ROA_cmd} ROA 589 IPv6DupPrefixSameMaxLen
-${single_ROA_cmd} ROA 590 IPv4DupPrefixDiffMaxLen
-${single_ROA_cmd} ROA 591 IPv6DupPrefixDiffMaxLen
+${single_ROA_cmd} -x good ROA 588 IPv4DupPrefixSameMaxLen
+${single_ROA_cmd} -x good ROA 589 IPv6DupPrefixSameMaxLen
+${single_ROA_cmd} -x good ROA 590 IPv4DupPrefixDiffMaxLen
+${single_ROA_cmd} -x good ROA 591 IPv6DupPrefixDiffMaxLen
 ${single_ROA_cmd} ROA 562 IPv4Inherit
 ${single_ROA_cmd} ROA 563 IPv6Inherit
 ${single_ROA_cmd} ROA 593 IPv4OnlyPfxBelowPfxNoGap

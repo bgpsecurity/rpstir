@@ -302,8 +302,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAFamily.ee.p15 \
 	tests/conformance/raw/keys/badROAFamilyLth.ee.p15 \
 	tests/conformance/raw/keys/badROAIP2Big.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4DupPrefixDiffMaxLen.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv4DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4ExtraPfxAbovePfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4ExtraPfxAboveRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4ExtraPfxBelowPfx.ee.p15 \
@@ -329,8 +327,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxTouchRanges.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6DupPrefixDiffMaxLen.ee.p15 \
-	tests/conformance/raw/keys/badROAIPv6DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAbovePfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxBelowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6GoodIPv4Bad.ee.p15 \
@@ -359,6 +355,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4DupPrefixDiffMaxLen.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv4DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4ExtraSubPfxInPfxMiddle.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4ExtraSubPfxInRangeMiddle.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4OnlyPfxInPfxHigh.ee.p15 \
@@ -371,6 +369,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAIPv4PfxesEqualPfxes.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PfxesEqualRange.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4PfxesEqualRanges.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6DupPrefixDiffMaxLen.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6ExtraSubPfxInPfxMiddle.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6OnlyPfxInPfxHigh.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6OnlyPfxInPfxLow.ee.p15 \
@@ -1033,14 +1033,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIP2Big.stage1.patch \
 	tests/conformance/raw/patches/badROAIP2Big.stage2.patch \
 	tests/conformance/raw/patches/badROAIP2Big.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixDiffMaxLen.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixDiffMaxLen.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixDiffMaxLen.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixDiffMaxLen.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv4DupPrefixSameMaxLen.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4ExtraPfxAbovePfx.stage2.patch \
@@ -1141,14 +1133,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4OnlyPfxTouchRanges.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPfxTouchRanges.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPfxTouchRanges.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixDiffMaxLen.stage3.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.ee.stage0.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage1.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage2.patch \
-	tests/conformance/raw/patches/badROAIPv6DupPrefixSameMaxLen.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage2.patch \
@@ -1272,6 +1256,14 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAASIDZero.stage1.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage2.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixSameMaxLen.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixSameMaxLen.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixSameMaxLen.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv4DupPrefixSameMaxLen.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4ExtraSubPfxInPfxMiddle.stage2.patch \
@@ -1320,6 +1312,14 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAIPv4PfxesEqualRanges.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4PfxesEqualRanges.stage2.patch \
 	tests/conformance/raw/patches/goodROAIPv4PfxesEqualRanges.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixDiffMaxLen.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixDiffMaxLen.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixDiffMaxLen.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixDiffMaxLen.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixSameMaxLen.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixSameMaxLen.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixSameMaxLen.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6DupPrefixSameMaxLen.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv6ExtraSubPfxInPfxMiddle.stage2.patch \
