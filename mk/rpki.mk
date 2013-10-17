@@ -390,6 +390,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAIPv6OnlyPfxesInPfxesMiddle.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6PfxEqualPfx.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6PfxesEqualPfxes.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6PfxesEqualRange.ee.p15 \
 	tests/conformance/raw/keys/goodROANothingWrong.ee.p15 \
 	tests/conformance/raw/patches/NAMSeqNameSer-goodCRLMatch.crl.stage0.patch \
 	tests/conformance/raw/patches/NAMSeqNameSer-goodCertMatch.cer.stage0.patch \
@@ -1409,6 +1410,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.stage2.patch \
 	tests/conformance/raw/patches/goodROAIPv6PfxesEqualPfxes.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualRange.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualRange.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualRange.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6PfxesEqualRange.stage3.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage1.patch \
 	tests/conformance/raw/patches/goodROANothingWrong.stage2.patch \

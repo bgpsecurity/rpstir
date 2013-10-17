@@ -317,7 +317,7 @@ ROAs
 622 IPv6ExtraPfxAbovePfx                  # EE has one IPv6 prefix; ROA has one equal prefix and one disjoint prefix above 6482#4
 708 IPv6ExtraPfxAboveRange                # EE has one IPv6 range; ROA has one subset prefix and one disjoint prefix above 6482#4
 623 IPv6PfxEqualPfx                       # (good) ROA and EE have a single, identical IPv6 prefix 6482#4
-    IPv6PfxesEqualRange                   # (good) EE has a single IPv6 range; ROA has a set of maximal prefixes covering the range 6482#4
+709 IPv6PfxesEqualRange                   # (good) EE has a single IPv6 range; ROA has a set of maximal prefixes covering the range 6482#4
 624 IPv6PfxesEqualPfxes                   # (good) EE has two IPv6 prefixes; ROA has two identical prefixes 6482#4
     IPv6PfxesEqualRanges                  # (good) EE has two IPv6 ranges; ROA has a set of maximal prefixes covering the ranges 6482#4
 625 IPv6ExtraSubPfxInPfxMiddle            # (good) like IPv6PfxEqualPfx, with an extra ROA prefix in the middle of the existing ROA prefix 6482#4

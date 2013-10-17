@@ -221,6 +221,7 @@ ${single_ROA_cmd} ROA 707 IPv6ExtraPfxBelowRange
 ${single_ROA_cmd} ROA 622 IPv6ExtraPfxAbovePfx
 ${single_ROA_cmd} ROA 708 IPv6ExtraPfxAboveRange
 ${single_ROA_cmd} -x good ROA 623 IPv6PfxEqualPfx
+${single_ROA_cmd} -x good ROA 709 IPv6PfxesEqualRange
 ${single_ROA_cmd} -x good ROA 624 IPv6PfxesEqualPfxes
 ${single_ROA_cmd} -x good ROA 625 IPv6ExtraSubPfxInPfxMiddle
 ${single_ROA_cmd} -x good ROA 626 IPv6OnlyPfxInPfxLow
