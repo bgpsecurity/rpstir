@@ -1,6 +1,6 @@
---- goodROAIPv6PfxesEqualRange.raw.old	2013-10-17 14:34:15.547499275 -0400
-+++ goodROAIPv6PfxesEqualRange.raw	2013-10-17 14:35:38.946062756 -0400
-@@ -6,10 +6,9 @@
+--- goodROAIPv6PfxesEqualRange.raw.old	2013-10-17 15:28:54.171310876 -0400
++++ goodROAIPv6PfxesEqualRange.raw	2013-10-17 15:29:54.805174910 -0400
+@@ -6,10 +6,11 @@
              seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
                  ctx+0x20
                      ocw seq int 0x08 /* 8 */ 
@@ -9,8 +9,10 @@
 -                                seq oct 0x0002
 -                                    seq seq bit 0x00010201
 +                            seq seq oct 0x0002
-+                                    seq seq bit 0x0101020100000000000000000000000000
-+                                        seq bit 0x0001020100000000000000000000000002
++                                    seq seq bit 0x0401020110
++                                        seq bit 0x0501020120
++                                        seq bit 0x0601020140
++                                        seq bit 0x0701020180
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 
