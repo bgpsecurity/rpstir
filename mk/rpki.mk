@@ -341,6 +341,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxBetweenPfxRangeNoGaps.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxBetweenRangePfxNoGaps.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxBetweenRangeRangeNoGaps.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxOverlapHighRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxOverlapLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSpanPfxes.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSpanRanges.ee.p15 \
@@ -1199,6 +1200,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenRangeRangeNoGaps.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenRangeRangeNoGaps.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxBetweenRangeRangeNoGaps.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapHighRange.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapHighRange.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapHighRange.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapHighRange.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapLowRange.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapLowRange.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxOverlapLowRange.stage2.patch \
