@@ -436,4 +436,3 @@ Trust Anchor (self-signed) certificates
 102 RootNameDiff            # Subject and Issuer don't match (tricky, will be interpreted as non-self-signed) 5280#3.2
     RootBadAIA              # AIA is present in the trust anchor 6487#4.8.7
     RootBadSig              # signature is invalid 5280#4.1.1.3
-TODO: change serial numbers
