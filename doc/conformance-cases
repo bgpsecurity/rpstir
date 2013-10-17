@@ -303,7 +303,7 @@ ROAs
 698 IPv6OnlyPfxBetweenPfxRangeNoGaps      # like IPv6OnlyPfxBetweenPfxPfxNoGaps, but the higher EE prefix is a range instead 6482#4
 699 IPv6OnlyPfxBetweenRangePfxNoGaps      # like IPv6OnlyPfxBetweenPfxPfxNoGaps, but the lower EE prefix is a range instead 6482#4
 700 IPv6OnlyPfxBetweenRangeRangeNoGaps    # like IPv6OnlyPfxBetweenPfxPfxNoGaps, but both EE prefixes are ranges instead 6482#4
-    IPv6OnlyPfxTouchRanges                # EE has two IPv6 ranges; ROA has one prefix from the top of the lower range to the bottom of the upper range 6482#4
+701 IPv6OnlyPfxTouchRanges                # EE has two IPv6 ranges; ROA has one prefix from the top of the lower range to the bottom of the upper range 6482#4
 618 IPv6OnlyPfxSpanPfxes                  # EE has two IPv6 prefixes; ROA has one prefix from the bottom of the EE's lower prefix to the top of the EE's upper prefix 6482#4
     IPv6OnlyPfxSpanRanges                 # EE has two IPv6 ranges; ROA has one prefix from the middle of the lower range to the middle of the upper range 6482#4
     IPv6OnlyPfxSupersetLowRange           # ROA has an IPv6 prefix; EE has a range of min(prefix) to max(prefix)-1 6482#4
