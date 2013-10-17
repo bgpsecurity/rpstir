@@ -1,11 +1,13 @@
---- /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSetNameSer.raw.old	2013-10-01 16:33:13.930894271 -0400
-+++ /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSetNameSer.raw	2013-10-01 16:34:12.906891804 -0400
-@@ -9,6 +9,8 @@
+--- /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSetNameSer.raw.old	2013-10-17 19:32:45.712627854 -0400
++++ /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSetNameSer.raw	2013-10-17 19:33:25.504626190 -0400
+@@ -7,7 +7,9 @@
+                     prt "root"
+         seq utc "110411185728Z"
              utc "460515185928Z"
-         seq set seq oid 2.5.4.3 /* id_commonName */
-                     prt "NAMSetNameSer"
-+                seq oid 2.5.4.5
+-        seq set seq oid 2.5.4.3 /* id_commonName */
++        seq set seq oid 2.5.4.5
 +                    prt "12345"
++                seq oid 2.5.4.3 /* id_commonName */
+                     prt "NAMSetNameSer"
          seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                  nul 
-             bit 0x003082010A0282010100B8AAB3A8CF79
