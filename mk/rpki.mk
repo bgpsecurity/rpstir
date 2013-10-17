@@ -368,6 +368,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/goodROAASIDMax.ee.p15 \
 	tests/conformance/raw/keys/goodROAASIDZero.ee.p15 \
+	tests/conformance/raw/keys/goodROAComplexResources.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4DupPrefixDiffMaxLen.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4DupPrefixSameMaxLen.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv4ExtraSubPfxInPfxMiddle.ee.p15 \
@@ -1327,6 +1328,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAASIDZero.stage1.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage2.patch \
 	tests/conformance/raw/patches/goodROAASIDZero.stage3.patch \
+	tests/conformance/raw/patches/goodROAComplexResources.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAComplexResources.stage1.patch \
+	tests/conformance/raw/patches/goodROAComplexResources.stage2.patch \
+	tests/conformance/raw/patches/goodROAComplexResources.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv4DupPrefixDiffMaxLen.stage2.patch \
