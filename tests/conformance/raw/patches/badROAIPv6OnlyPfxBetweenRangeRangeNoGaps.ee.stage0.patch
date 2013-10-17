@@ -12,7 +12,7 @@
 +                                seq seq bit 0x0001020101
 +                                        bit 0x01010200
 +                                    seq bit 0x00010203
-+                                        bit 0x0101020300
++                                        bit 0x0101020310
                  seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
                      boo 0xFF
                      ocw seq ctx+0x20
