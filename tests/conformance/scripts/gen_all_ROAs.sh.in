@@ -217,6 +217,7 @@ ${single_ROA_cmd} ROA 620 IPv6OnlyPfxSupersetHighPfx
 ${single_ROA_cmd} ROA 705 IPv6OnlyPfxOverlapLowRange
 ${single_ROA_cmd} ROA 706 IPv6OnlyPfxOverlapHighRange
 ${single_ROA_cmd} ROA 621 IPv6ExtraPfxBelowPfx
+${single_ROA_cmd} ROA 707 IPv6ExtraPfxBelowRange
 ${single_ROA_cmd} ROA 622 IPv6ExtraPfxAbovePfx
 ${single_ROA_cmd} -x good ROA 623 IPv6PfxEqualPfx
 ${single_ROA_cmd} -x good ROA 624 IPv6PfxesEqualPfxes
