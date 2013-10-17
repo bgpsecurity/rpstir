@@ -1,11 +1,11 @@
---- badROAIPv6GoodIPv4Bad.raw.old	2013-10-04 09:38:27.024060397 -0400
-+++ badROAIPv6GoodIPv4Bad.raw	2013-10-04 09:38:37.491379194 -0400
-@@ -9,7 +9,7 @@
+--- badROAIPv6GoodIPv4Bad.raw.old	2013-10-17 17:15:56.048971205 -0400
++++ badROAIPv6GoodIPv4Bad.raw	2013-10-17 17:16:28.876969832 -0400
+@@ -7,7 +7,7 @@
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 
                              seq seq oct 0x0001
-                                     seq seq bit 0x000101
+-                                    seq seq bit 0x000101
++                                    seq seq bit 0x010100
                                  seq oct 0x0002
--                                    seq seq bit 0x00010201
-+                                    seq seq bit 0x00010203
+                                     seq seq bit 0x00010201
              ctx+0x20
-                 seq seq ctx+0x20
-                             int 0x02 /* 2 */ 
