@@ -211,6 +211,7 @@ ${single_ROA_cmd} ROA 701 IPv6OnlyPfxTouchRanges
 ${single_ROA_cmd} ROA 618 IPv6OnlyPfxSpanPfxes
 ${single_ROA_cmd} ROA 702 IPv6OnlyPfxSpanRanges
 ${single_ROA_cmd} ROA 703 IPv6OnlyPfxSupersetLowRange
+${single_ROA_cmd} ROA 704 IPv6OnlyPfxSupersetHighRange
 ${single_ROA_cmd} ROA 619 IPv6OnlyPfxSupersetLowPfx
 ${single_ROA_cmd} ROA 620 IPv6OnlyPfxSupersetHighPfx
 ${single_ROA_cmd} ROA 621 IPv6ExtraPfxBelowPfx

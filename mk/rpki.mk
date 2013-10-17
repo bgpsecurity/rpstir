@@ -344,6 +344,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSpanPfxes.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSpanRanges.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetHighPfx.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetHighRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxTouchRanges.ee.p15 \
@@ -1209,6 +1210,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighPfx.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighRange.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighRange.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighRange.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetHighRange.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxSupersetLowPfx.stage2.patch \
