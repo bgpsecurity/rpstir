@@ -391,6 +391,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/goodROAIPv6OnlyPfxInRangeHigh.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6OnlyPfxInRangeLow.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6OnlyPfxesInPfxesMiddle.ee.p15 \
+	tests/conformance/raw/keys/goodROAIPv6OnlyPfxesInRangesMiddle.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6PfxEqualPfx.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6PfxesEqualPfxes.ee.p15 \
 	tests/conformance/raw/keys/goodROAIPv6PfxesEqualRange.ee.p15 \
@@ -1418,6 +1419,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.stage2.patch \
 	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInPfxesMiddle.stage3.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInRangesMiddle.ee.stage0.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInRangesMiddle.stage1.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInRangesMiddle.stage2.patch \
+	tests/conformance/raw/patches/goodROAIPv6OnlyPfxesInRangesMiddle.stage3.patch \
 	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.ee.stage0.patch \
 	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.stage1.patch \
 	tests/conformance/raw/patches/goodROAIPv6PfxEqualPfx.stage2.patch \
