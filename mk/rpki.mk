@@ -902,6 +902,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertUnkExtension.stage0.patch \
 	tests/conformance/raw/patches/badCertUnkExtension.stage1.patch \
 	tests/conformance/raw/patches/badCertUnkExtension.stage2.patch \
+	tests/conformance/raw/patches/badCertUnkExtensionCrit.stage0.patch \
+	tests/conformance/raw/patches/badCertUnkExtensionCrit.stage1.patch \
+	tests/conformance/raw/patches/badCertUnkExtensionCrit.stage2.patch \
 	tests/conformance/raw/patches/badCertValCrossed.stage0.patch \
 	tests/conformance/raw/patches/badCertValCrossed.stage1.patch \
 	tests/conformance/raw/patches/badCertValCrossed.stage2.patch \

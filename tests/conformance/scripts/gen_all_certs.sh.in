@@ -168,6 +168,7 @@ ${single_cert_cmd} 197 AKIHasACIACSN
 ${single_cert_cmd} 209 AKIHasACI
 ${single_cert_cmd} 210 AKIHasACSN
 ${single_cert_cmd} 107 UnkExtension
+${single_cert_cmd} 215 UnkExtensionCrit
 ${single_cert_cmd} 109 BasicConstrNoCA
 ${single_cert_cmd} 110 BasicConstrNoCrit
 ${single_cert_cmd} 111 BasicConstrPathLth
