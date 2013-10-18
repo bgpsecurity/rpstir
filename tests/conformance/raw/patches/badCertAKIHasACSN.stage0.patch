@@ -1,0 +1,11 @@
+--- badCertAKIHasACSN.raw.old	2013-10-18 12:48:25.572978499 -0400
++++ badCertAKIHasACSN.raw	2013-10-18 12:49:00.496032728 -0400
+@@ -39,6 +39,8 @@
+                     ocw seq ctx+0x00
+                                 0xD27F6E783B2B5CE535940D54C0A6F38F
+                                 0x5B7804D4
++                            ctx+0x02
++                                0x01
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+                     ocw bit 0x0106

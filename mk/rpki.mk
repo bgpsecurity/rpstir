@@ -672,6 +672,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertAKIHasACIACSN.stage0.patch \
 	tests/conformance/raw/patches/badCertAKIHasACIACSN.stage1.patch \
 	tests/conformance/raw/patches/badCertAKIHasACIACSN.stage2.patch \
+	tests/conformance/raw/patches/badCertAKIHasACSN.stage0.patch \
+	tests/conformance/raw/patches/badCertAKIHasACSN.stage1.patch \
+	tests/conformance/raw/patches/badCertAKIHasACSN.stage2.patch \
 	tests/conformance/raw/patches/badCertAKIHash.stage0.patch \
 	tests/conformance/raw/patches/badCertAKIHash.stage1.patch \
 	tests/conformance/raw/patches/badCertAKIHash.stage2.patch \
