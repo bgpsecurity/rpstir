@@ -4,3 +4,4 @@ badRootBadAKI.cer
 badRootBadCRLDP.cer
 badRootNameDiff.cer
 goodRootAKIMatches.cer
+goodRootAKIOmitted.cer
