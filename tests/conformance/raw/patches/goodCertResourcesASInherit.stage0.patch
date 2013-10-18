@@ -1,0 +1,12 @@
+--- goodCertResourcesASInherit.raw.old	2013-10-18 18:19:14.810106297 -0400
++++ goodCertResourcesASInherit.raw	2013-10-18 18:19:45.755060842 -0400
+@@ -73,8 +73,7 @@
+                 seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                     boo 0xFF
+                     ocw seq ctx+0x20
+-                                seq seq int 0x01 /* 1 */ 
+-                                        int 0x0100 /* 256 */ 
++                                nul
+     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+         nul 
+     bit 0x00910EF051F3145B530E9AA827C38273D242F69876B55BB00090C5E65B345E94

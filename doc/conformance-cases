@@ -108,7 +108,7 @@ CA Certificates
 145 ResourcesSAFI       # IP addresses has SAFI digit 6487#4.8.10
 218 ResourcesIP6Inherit # (good) inherit IPv6 resources only, others explicit 6487#4.8.10
 219 ResourcesIP4Inherit # (good) inherit IPv4 resources only, others explicit 6487#4.8.10
-    ResourcesASInherit  # (good) inherit AS resources only, others explicit 6487#4.8.11
+220 ResourcesASInherit  # (good) inherit AS resources only, others explicit 6487#4.8.11
     ResourcesAllInherit # (good) inherit all resources 6487#4.8.10
     ResourcesIP6InhOnly # (good) inherit IPv6 resources only, others not present 6487#4.8.10
     ResourcesIP4InhOnly # (good) inherit IPv4 resources only, others not present 6487#4.8.10
