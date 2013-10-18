@@ -213,6 +213,7 @@ ${single_cert_cmd} 145 ResourcesSAFI
 ${single_cert_cmd} -x good 218 ResourcesIP6Inherit
 ${single_cert_cmd} -x good 219 ResourcesIP4Inherit
 ${single_cert_cmd} -x good 220 ResourcesASInherit
+${single_cert_cmd} -x good 221 ResourcesAllInherit
 ${single_cert_cmd} 147 SIARepoNoRsync
 ${single_cert_cmd} 200 SIAMFTNoRsync
 ${single_cert_cmd} -x good 201 SIARepo2Rsync

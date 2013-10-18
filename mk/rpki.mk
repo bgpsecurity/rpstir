@@ -1318,6 +1318,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertResourcesASInherit.stage0.patch \
 	tests/conformance/raw/patches/goodCertResourcesASInherit.stage1.patch \
 	tests/conformance/raw/patches/goodCertResourcesASInherit.stage2.patch \
+	tests/conformance/raw/patches/goodCertResourcesAllInherit.stage0.patch \
+	tests/conformance/raw/patches/goodCertResourcesAllInherit.stage1.patch \
+	tests/conformance/raw/patches/goodCertResourcesAllInherit.stage2.patch \
 	tests/conformance/raw/patches/goodCertResourcesIP4Inherit.stage0.patch \
 	tests/conformance/raw/patches/goodCertResourcesIP4Inherit.stage1.patch \
 	tests/conformance/raw/patches/goodCertResourcesIP4Inherit.stage2.patch \
