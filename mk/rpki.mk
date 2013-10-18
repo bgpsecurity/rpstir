@@ -103,9 +103,13 @@ dist_conformanceta_DATA = \
 EXTRA_DIST += tests/conformance/rfc3779
 
 EXTRA_DIST += \
+	tests/conformance/raw/badRootBadAIA.raw \
 	tests/conformance/raw/badRootBadAKI.raw \
 	tests/conformance/raw/badRootBadCRLDP.raw \
+	tests/conformance/raw/badRootBadSig.raw \
 	tests/conformance/raw/badRootNameDiff.raw \
+	tests/conformance/raw/goodRootAKIMatches.raw \
+	tests/conformance/raw/goodRootAKIOmitted.raw \
 	tests/conformance/raw/keys/CRL2CRLNums.mft.p15 \
 	tests/conformance/raw/keys/CRL2CRLNums.p15 \
 	tests/conformance/raw/keys/CRLBadDate21000229.mft.p15 \
