@@ -112,7 +112,7 @@ CA Certificates
 221 ResourcesAllInherit # (good) inherit all resources 6487#4.8.10
 222 ResourcesIP6InhOnly # (good) inherit IPv6 resources only, others not present 6487#4.8.10
 223 ResourcesIP4InhOnly # (good) inherit IPv4 resources only, others not present 6487#4.8.10
-    ResourcesASInhOnly  # (good) inherit AS resources only, others not present 6487#4.8.11
+224 ResourcesASInhOnly  # (good) inherit AS resources only, others not present 6487#4.8.11
 147 SIARepoNoRsync      # SIA has no rsync locator for id-ad-caRepository 6487#4.8.8
 200 SIAMFTNoRsync       # SIA has no rsync locator for id-ad-rpkiManifest 6487#4.8.8
 201 SIARepo2Rsync       # (good) SIA has 2 rsync locators for id-ad-caRepository 6487#4.8.8
