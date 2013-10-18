@@ -2676,18 +2676,25 @@ static int rescert_aia_chk(
         }
     }
 
-    if (info_flag == 0)
+    if (ct == TA_CERT)
     {
-        if (ct == TA_CERT)
-        {                       /* MUST be omitted if TA, checked elsewhere. */
+        if (info_flag == 0)
+        {
             ret = 0;
-            goto skip;
         }
         else
         {
-            LOG(LOG_ERR, "[aia] missing aia extension");
-            return (ERR_SCM_NOAIA);
+            LOG(LOG_ERR, "[aia] AIA present in TA cert");
+            ret = ERR_SCM_AIATA;
         }
+
+        goto skip;
+    }
+
+    if (info_flag == 0)
+    {
+        LOG(LOG_ERR, "[aia] missing aia extension");
+        return (ERR_SCM_NOAIA);
     }
     else if (info_flag > 1)
     {

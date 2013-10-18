@@ -166,7 +166,8 @@
 #define ERR_SCM_REVOKED     -157        /* Object has been revoked */
 #define ERR_SCM_NOTINHERIT  -158        /* Non-inherit resources present */
 #define ERR_SCM_BADCHAR     -159        /* Invalid character sequence */
-#define ERR_SCM_MAXERR      -159
+#define ERR_SCM_AIATA       -160        /* AIA found in TA cert */
+#define ERR_SCM_MAXERR      -160
 
 /*
  * macro that prints an error string and call return if a condition is true 

@@ -177,6 +177,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Object has been revoked",  /* ERR_SCM_REVOKED */
     "Non-inherit resources present", /* ERR_SCM_NOTINHERIT */
     "Invalid character sequence", /* ERR_SCM_BADCHAR */
+    "AIA in TA cert", /* ERR_SCM_AIATA */
 };
 
 char *err2string(
