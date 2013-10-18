@@ -1315,6 +1315,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertCpolQualCps.stage0.patch \
 	tests/conformance/raw/patches/goodCertCpolQualCps.stage1.patch \
 	tests/conformance/raw/patches/goodCertCpolQualCps.stage2.patch \
+	tests/conformance/raw/patches/goodCertResourcesIP4Inherit.stage0.patch \
+	tests/conformance/raw/patches/goodCertResourcesIP4Inherit.stage1.patch \
+	tests/conformance/raw/patches/goodCertResourcesIP4Inherit.stage2.patch \
 	tests/conformance/raw/patches/goodCertResourcesIP6Inherit.stage0.patch \
 	tests/conformance/raw/patches/goodCertResourcesIP6Inherit.stage1.patch \
 	tests/conformance/raw/patches/goodCertResourcesIP6Inherit.stage2.patch \
