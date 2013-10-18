@@ -1289,6 +1289,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage0.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage1.patch \
 	tests/conformance/raw/patches/goodCertCRLDP2DistPt.stage2.patch \
+	tests/conformance/raw/patches/goodCertCpolQualCps.stage0.patch \
+	tests/conformance/raw/patches/goodCertCpolQualCps.stage1.patch \
+	tests/conformance/raw/patches/goodCertCpolQualCps.stage2.patch \
 	tests/conformance/raw/patches/goodCertSIAMFT2Rsync.stage0.patch \
 	tests/conformance/raw/patches/goodCertSIAMFT2Rsync.stage1.patch \
 	tests/conformance/raw/patches/goodCertSIAMFT2Rsync.stage2.patch \

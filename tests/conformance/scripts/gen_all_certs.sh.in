@@ -175,6 +175,7 @@ ${single_cert_cmd} 112 Cpol2oid1correct
 ${single_cert_cmd} 211 Cpol2oid2correct
 ${single_cert_cmd} 198 CpolBadOid
 ${single_cert_cmd} 113 CpolNoCrit
+${single_cert_cmd} -x good 212 CpolQualCps
 ${single_cert_cmd} -x good 114 CRLDP2DistPt
 ${single_cert_cmd} 115 CRLDPCrit
 ${single_cert_cmd} 116 CRLDPCrlIssuer
