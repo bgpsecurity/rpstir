@@ -430,7 +430,7 @@ Name tests
 Trust Anchor (self-signed) certificates
 
 100 RootBadAKI              # AKI does not match SKI 6487#4.8.3
-    RootAKIMatches          # (good) AKI present, matches SKI 6487#4.8.3
+103 RootAKIMatches          # (good) AKI present, matches SKI 6487#4.8.3
     RootAKIOmitted          # (good) AKI omitted 6487#4.8.3
 101 RootBadCRLDP            # CRLDP is present in the trust anchor 6487#4.8.6
 102 RootNameDiff            # Subject and Issuer don't match (tricky, will be interpreted as non-self-signed) 5280#3.2

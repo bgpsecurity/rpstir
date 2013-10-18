@@ -116,6 +116,11 @@ for BAD_ROOT in badRoot*.cer; do
 	add_file bad -F "$BAD_ROOT"
 done
 
+for GOOD_ROOT in goodRoot*.cer; do
+	reset_db
+	add_file good -F "$GOOD_ROOT"
+done
+
 cd root
 
 for GOOD_SINGLE_FILE in good*; do
