@@ -764,6 +764,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertIssuerUtf.stage0.patch \
 	tests/conformance/raw/patches/badCertIssuerUtf.stage1.patch \
 	tests/conformance/raw/patches/badCertIssuerUtf.stage2.patch \
+	tests/conformance/raw/patches/badCertKUsageDigitalSig.stage0.patch \
+	tests/conformance/raw/patches/badCertKUsageDigitalSig.stage1.patch \
+	tests/conformance/raw/patches/badCertKUsageDigitalSig.stage2.patch \
 	tests/conformance/raw/patches/badCertKUsageExtra.stage0.patch \
 	tests/conformance/raw/patches/badCertKUsageExtra.stage1.patch \
 	tests/conformance/raw/patches/badCertKUsageExtra.stage2.patch \

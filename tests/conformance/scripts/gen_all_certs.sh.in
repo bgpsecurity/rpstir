@@ -193,6 +193,7 @@ ${single_cert_cmd} 124 Issuer2SetComName
 ${single_cert_cmd} 125 IssuerSerNum
 ${single_cert_cmd} 126 IssUID
 ${single_cert_cmd} 127 KUsageExtra
+${single_cert_cmd} 217 KUsageDigitalSig
 ${single_cert_cmd} 128 KUsageNoCertSign
 ${single_cert_cmd} 129 KUsageNoCrit
 ${single_cert_cmd} 131 KUsageNoCRLSign

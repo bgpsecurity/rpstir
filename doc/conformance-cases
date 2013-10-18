@@ -87,7 +87,7 @@ CA Certificates
 125 IssuerSerNum        # issuer name has only a serial number 6487#4.4
 126 IssUID              # has issuer unique ID 6487#4
 127 KUsageExtra         # has disallowed key usage bit (nonRepudiation) 6487#4.8.4
-    KUsageDigitalSig    # has disallowed key usage bit (digitalSignature) 6487#4.8.4
+217 KUsageDigitalSig    # has disallowed key usage bit (digitalSignature) 6487#4.8.4
 128 KUsageNoCertSign    # lacks bit for signing certificates 6487#4.8.4
 129 KUsageNoCrit        # key usage extension not critical 6487#4.8.4
 131 KUsageNoCRLSign     # lacks bit for signing CRLs 6487#4.8.4
