@@ -1,0 +1,11 @@
+--- badCertBothSigAlg.raw.old	2013-10-18 17:49:44.294061893 -0400
++++ badCertBothSigAlg.raw	2013-10-18 17:49:55.897407843 -0400
+@@ -75,7 +75,7 @@
+                     ocw seq ctx+0x20
+                                 seq seq int 0x01 /* 1 */ 
+                                         int 0x0100 /* 256 */ 
+-    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
++    seq oid 1.2.840.113549.1.1.12 /* id_sha_256WithRSAEncryption */
+         nul 
+     bit 0x008BE9516558172EE6BD9C9B8A6AE070C86A361BB5E80C75421E387F5120E856
+         0x41C119EE83468F66AE274FECE822E7EFC8A97FFE461FEDAB234F7424E51B1C24

@@ -185,6 +185,7 @@ ${single_cert_cmd} 116 CRLDPCrlIssuer
 ${single_cert_cmd} 118 CRLDPReasons
 ${single_cert_cmd} 119 EKU
 ${single_cert_cmd} 120 InnerSigAlg
+${single_cert_cmd} 216 BothSigAlg
 ${single_cert_cmd} 121 IssuerOID
 ${single_cert_cmd} 122 Issuer2ComName
 ${single_cert_cmd} 123 IssuerUtf

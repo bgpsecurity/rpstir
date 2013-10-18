@@ -704,6 +704,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertBasicConstrPathLth.stage0.patch \
 	tests/conformance/raw/patches/badCertBasicConstrPathLth.stage1.patch \
 	tests/conformance/raw/patches/badCertBasicConstrPathLth.stage2.patch \
+	tests/conformance/raw/patches/badCertBothSigAlg.stage0.patch \
+	tests/conformance/raw/patches/badCertBothSigAlg.stage1.patch \
+	tests/conformance/raw/patches/badCertBothSigAlg.stage2.patch \
 	tests/conformance/raw/patches/badCertCRLDPCrit.stage0.patch \
 	tests/conformance/raw/patches/badCertCRLDPCrit.stage1.patch \
 	tests/conformance/raw/patches/badCertCRLDPCrit.stage2.patch \
