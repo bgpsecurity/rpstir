@@ -28,7 +28,7 @@ mkdir -p raw/root
 
 # Build trust anchors
 cd "$CONFORMANCE_ROOT_BUILDDIR/raw"
-for f in badRootBadAKI badRootBadCRLDP badRootNameDiff root
+for f in badRootBadAIA badRootBadAKI badRootBadCRLDP badRootBadSig badRootNameDiff goodRootAKIMatches goodRootAKIOmitted root
 do
     run "rr-$f" rr < "$CONFORMANCE_ROOT_SRCDIR/raw/$f.raw" > $f.cer
 done

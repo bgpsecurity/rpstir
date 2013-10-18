@@ -1,19 +1,29 @@
 --- goodROAComplexResources.raw.old	2013-10-17 16:32:55.351271787 -0400
 +++ goodROAComplexResources.raw	2013-10-17 16:34:47.451718512 -0400
-@@ -8,8 +8,16 @@
+@@ -8,8 +8,25 @@
                      ocw seq int 0x08 /* 8 */ 
                              seq seq oct 0x0001
                                      seq seq bit 0x000101
-+                                        seq bit 0x04010210
++                                            int 23
 +                                        seq bit 0x05010220
-+                                        seq bit 0x06010240
++                                        seq bit 0x03010240
++                                            int 22
 +                                        seq bit 0x07010280
++                                        seq bit 0x010142
++                                            int 17
                                  seq oct 0x0002
-                                     seq seq bit 0x00010201
+-                                    seq seq bit 0x00010201
++                                    seq seq bit 0x0001020117
++                                        seq bit 0x0001020142
++                                            int 44
 +                                        seq bit 0x0401020210
 +                                        seq bit 0x0501020220
-+                                        seq bit 0x0601020240
 +                                        seq bit 0x0701020280
++                                            int 26
++                                        seq bit 0x00010221010221
++                                        seq bit 0x00010257
++                                            int 48
++                                        seq bit 0x00010258
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 

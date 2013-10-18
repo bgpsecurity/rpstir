@@ -9,14 +9,14 @@
 -                                seq oct 0x0002
 -                                    seq seq bit 0x00010201
 +                            seq seq oct 0x0002
-+                                    seq seq bit 0x0001020110
-+                                        seq bit 0x0001020120
-+                                        seq bit 0x0001020140
-+                                        seq bit 0x0001020180
-+                                        seq bit 0x0001020310
-+                                        seq bit 0x0001020320
-+                                        seq bit 0x0001020340
-+                                        seq bit 0x0001020380
++                                    seq seq bit 0x0401020110
++                                        seq bit 0x0501020120
++                                        seq bit 0x0601020140
++                                        seq bit 0x0701020180
++                                        seq bit 0x0401020310
++                                        seq bit 0x0501020320
++                                        seq bit 0x0601020340
++                                        seq bit 0x0701020380
              ctx+0x20
                  seq seq ctx+0x20
                              int 0x02 /* 2 */ 

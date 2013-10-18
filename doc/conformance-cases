@@ -296,7 +296,7 @@ ROAs
 614 IPv4OnlyPfxesInPfxesMiddle            # (good) EE has two IPv4 prefixes; ROA has two prefixes, one in the middle of each 6482#4
 695 IPv4OnlyPfxesInRangesMiddle           # (good) EE has two IPv4 ranges; ROA has two prefixes, one in the middle of each 6482#4
 615 IPv6OnlyPfxBelowPfxNoGap              # EE has one IPv6 prefix; ROA has one directly below it 6482#4
-696 IPv6OnlyPfxBelowRangeNoGap            # EE has one IPv6 prefix; ROA has one prefix directly below it 6482#4
+696 IPv6OnlyPfxBelowRangeNoGap            # EE has one IPv6 range; ROA has one prefix directly below it 6482#4
 616 IPv6OnlyPfxAbovePfxNoGap              # like IPv6OnlyPfxBelowPfxNoGap, but the ROA's is above 6482#4
 697 IPv6OnlyPfxAboveRangeNoGap            # like IPv6OnlyPfxBelowRangeNoGap, but the ROA's is above 6482#4
 617 IPv6OnlyPfxBetweenPfxPfxNoGaps        # EE has two IPv6 prefixes; ROA has a prefix in the middle, directly adjacent to both EE prefixes 6482#4
@@ -430,10 +430,9 @@ Name tests
 Trust Anchor (self-signed) certificates
 
 100 RootBadAKI              # AKI does not match SKI 6487#4.8.3
-    RootAKIMatches          # (good) AKI present, matches SKI 6487#4.8.3
-    RootAKIOmitted          # (good) AKI omitted 6487#4.8.3
+103 RootAKIMatches          # (good) AKI present, matches SKI 6487#4.8.3
+104 RootAKIOmitted          # (good) AKI omitted 6487#4.8.3
 101 RootBadCRLDP            # CRLDP is present in the trust anchor 6487#4.8.6
 102 RootNameDiff            # Subject and Issuer don't match (tricky, will be interpreted as non-self-signed) 5280#3.2
-    RootBadAIA              # AIA is present in the trust anchor 6487#4.8.7
-    RootBadSig              # signature is invalid 5280#4.1.1.3
-TODO: change serial numbers
+105 RootBadAIA              # AIA is present in the trust anchor 6487#4.8.7
+106 RootBadSig              # signature is invalid 5280#4.1.1.3

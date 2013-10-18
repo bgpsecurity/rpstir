@@ -94,18 +94,26 @@ dist_sampleta_DATA = \
 	etc/sample-ta/ripe-ncc-root.tal
 
 dist_conformanceta_DATA = \
-	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
-	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
+	etc/sample-ta/bbn_conformance/badRootBadAIA.tal \
 	etc/sample-ta/bbn_conformance/badRootBadAKI.tal \
+	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
+	etc/sample-ta/bbn_conformance/badRootBadSig.tal \
+	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
+	etc/sample-ta/bbn_conformance/goodRootAKIMatches.tal \
+	etc/sample-ta/bbn_conformance/goodRootAKIOmitted.tal \
 	etc/sample-ta/bbn_conformance/root.tal
 
 
 EXTRA_DIST += tests/conformance/rfc3779
 
 EXTRA_DIST += \
+	tests/conformance/raw/badRootBadAIA.raw \
 	tests/conformance/raw/badRootBadAKI.raw \
 	tests/conformance/raw/badRootBadCRLDP.raw \
+	tests/conformance/raw/badRootBadSig.raw \
 	tests/conformance/raw/badRootNameDiff.raw \
+	tests/conformance/raw/goodRootAKIMatches.raw \
+	tests/conformance/raw/goodRootAKIOmitted.raw \
 	tests/conformance/raw/keys/CRL2CRLNums.mft.p15 \
 	tests/conformance/raw/keys/CRL2CRLNums.p15 \
 	tests/conformance/raw/keys/CRLBadDate21000229.mft.p15 \
