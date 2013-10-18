@@ -1,7 +1,9 @@
 root/
 root.cer
+badRootBadAIA.cer
 badRootBadAKI.cer
 badRootBadCRLDP.cer
+badRootBadSig.cer
 badRootNameDiff.cer
 goodRootAKIMatches.cer
 goodRootAKIOmitted.cer
