@@ -94,9 +94,13 @@ dist_sampleta_DATA = \
 	etc/sample-ta/ripe-ncc-root.tal
 
 dist_conformanceta_DATA = \
-	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
-	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
+	etc/sample-ta/bbn_conformance/badRootBadAIA.tal \
 	etc/sample-ta/bbn_conformance/badRootBadAKI.tal \
+	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
+	etc/sample-ta/bbn_conformance/badRootBadSig.tal \
+	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
+	etc/sample-ta/bbn_conformance/goodRootAKIMatches.tal \
+	etc/sample-ta/bbn_conformance/goodRootAKIOmitted.tal \
 	etc/sample-ta/bbn_conformance/root.tal
 
 
