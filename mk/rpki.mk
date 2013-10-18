@@ -720,6 +720,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertCpolNoCrit.stage0.patch \
 	tests/conformance/raw/patches/badCertCpolNoCrit.stage1.patch \
 	tests/conformance/raw/patches/badCertCpolNoCrit.stage2.patch \
+	tests/conformance/raw/patches/badCertCpolQualCpsUnotice.stage0.patch \
+	tests/conformance/raw/patches/badCertCpolQualCpsUnotice.stage1.patch \
+	tests/conformance/raw/patches/badCertCpolQualCpsUnotice.stage2.patch \
 	tests/conformance/raw/patches/badCertEKU.stage0.patch \
 	tests/conformance/raw/patches/badCertEKU.stage1.patch \
 	tests/conformance/raw/patches/badCertEKU.stage2.patch \
