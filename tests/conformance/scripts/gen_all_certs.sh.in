@@ -215,6 +215,7 @@ ${single_cert_cmd} -x good 219 ResourcesIP4Inherit
 ${single_cert_cmd} -x good 220 ResourcesASInherit
 ${single_cert_cmd} -x good 221 ResourcesAllInherit
 ${single_cert_cmd} -x good 222 ResourcesIP6InhOnly
+${single_cert_cmd} -x good 223 ResourcesIP4InhOnly
 ${single_cert_cmd} 147 SIARepoNoRsync
 ${single_cert_cmd} 200 SIAMFTNoRsync
 ${single_cert_cmd} -x good 201 SIARepo2Rsync
