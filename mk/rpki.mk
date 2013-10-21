@@ -369,6 +369,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
 	tests/conformance/raw/keys/goodEESIA2Rsync.ee.p15 \
 	tests/conformance/raw/keys/goodEESIAExtraAccessMethod.ee.p15 \
+	tests/conformance/raw/keys/goodEESIAHasNonURI.ee.p15 \
 	tests/conformance/raw/keys/goodEESIAHtRs.ee.p15 \
 	tests/conformance/raw/keys/goodGBRNothingWrong.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
@@ -1365,6 +1366,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodEESIAExtraAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/goodEESIAExtraAccessMethod.stage2.patch \
 	tests/conformance/raw/patches/goodEESIAExtraAccessMethod.stage3.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.ee.stage0.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.stage1.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.stage2.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.stage3.patch \
 	tests/conformance/raw/patches/goodEESIAHtRs.ee.stage0.patch \
 	tests/conformance/raw/patches/goodEESIAHtRs.stage1.patch \
 	tests/conformance/raw/patches/goodEESIAHtRs.stage2.patch \
