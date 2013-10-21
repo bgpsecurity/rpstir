@@ -2800,14 +2800,10 @@ static int get_cert_type(
 /**=============================================================================
  * @brief Check correctness of SIA.
  *
- * @param x - X509*
- * @param ct - integer representing certificate type
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
 static int rescert_sia_chk(
-    X509 * x,
-    int ct,
     struct Certificate *certp)
 {
     int count = -1;
@@ -3992,7 +3988,7 @@ int rescert_profile_chk(
     if (ret < 0)
         return (ret);
 
-    ret = rescert_sia_chk(x, ct, certp);
+    ret = rescert_sia_chk(certp);
     LOG(LOG_DEBUG, "rescert_sia_chk");
     if (ret < 0)
         return (ret);
