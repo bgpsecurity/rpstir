@@ -234,21 +234,21 @@ EE Certificates (embedded in ROAs)
 582 SIANoRsync       # SIA has no rsync locator for id-ad-signedObject 6487#4.8.8.2
 583 SIA2Rsync        # (good) SIA has 2 rsync locators for id-ad-signedObject 6487#4.8.8.2
 584 SIAHtRs          # (good) SIA has http+rsync locators for id-ad-signedObject 6487#4.8.8.2
-    SIAHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-signedObject 6487#4.8.8.2
-    BadSig                   # signature is invalid 5280#4.1.1.3
+716 SIAHasNonURI     # (good) SIA has rsync+non-URI locators for id-ad-signedObject 6487#4.8.8.2
+717 BadSig                   # signature is invalid 5280#4.1.1.3
 
 ROAs
 
 550 NothingWrong             # (good) nothing wrong
-    WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
+718 WrongType                # wrong eContentType (and signedAttrs content-type) 6482#2
 551 ASIDSmall                # AS number out of bounds (too low) 6482#3.2
 552 ASIDLarge                # AS number out of bounds (too high) 6482#3.2
 560 ASIDZero                 # (good) AS 0 is allowed 6482#3.2, 6483#5, 6491
 561 ASIDMax                  # (good) AS 2^32-1 is allowed 6482#3.2, 4893#7
 553 Family                   # invalid family 6482#3.3
 554 FamilyLth                # family name too long 6482#3.3
-    IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
-    IPv6PrefixLong           # IPv6 prefix greater than 128 bits 6482#3.3
+719 IPv4PrefixLong           # IPv4 prefix greater than 32 bits 6482#3.3
+720 IPv6PrefixLong           # IPv6 prefix greater than 128 bits 6482#3.3
 555 IPv4MaxLthLong            # IP max length too long (greater than 32) 6482#3.3
 585 IPv4MaxLthShort           # IP max length shorter than prefix length 6482#3.3
 586 IPv6MaxLthLong            # IP max length too long (greater than 128) 6482#3.3

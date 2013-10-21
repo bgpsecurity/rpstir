@@ -5,7 +5,7 @@
                                      "y/"
                              seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
 +                                ctx+0x07
-+                                    0x0001010101
++                                    0x01010101
 +                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                  ctx+0x06
                                      "rsync://rpki.bbn.com/conformance/root/empt"

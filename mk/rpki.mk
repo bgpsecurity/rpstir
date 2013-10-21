@@ -269,6 +269,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badCMSSigInfoWrongSigAlg.ee.p15 \
 	tests/conformance/raw/keys/badCMSVersion2.ee.p15 \
 	tests/conformance/raw/keys/badCMSVersion4.ee.p15 \
+	tests/conformance/raw/keys/badEEBadSig.ee.p15 \
 	tests/conformance/raw/keys/badEEHasBasicConstraints.ee.p15 \
 	tests/conformance/raw/keys/badEEHasCABasicConstraint.ee.p15 \
 	tests/conformance/raw/keys/badEEHasEKU.ee.p15 \
@@ -335,6 +336,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxTouchRanges.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4PrefixLong.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAbovePfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAboveRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxBelowPfx.ee.p15 \
@@ -360,15 +362,18 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowPfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxTouchRanges.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6PrefixLong.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1Explicit.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1ExplicitBadSig.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV2.ee.p15 \
+	tests/conformance/raw/keys/badROAWrongType.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAASID.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamily.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamilyLth.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAIP2Big.ee.p15 \
 	tests/conformance/raw/keys/goodEESIA2Rsync.ee.p15 \
 	tests/conformance/raw/keys/goodEESIAExtraAccessMethod.ee.p15 \
+	tests/conformance/raw/keys/goodEESIAHasNonURI.ee.p15 \
 	tests/conformance/raw/keys/goodEESIAHtRs.ee.p15 \
 	tests/conformance/raw/keys/goodGBRNothingWrong.ee.p15 \
 	tests/conformance/raw/keys/goodMFTNumMax.mft.p15 \
@@ -944,6 +949,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertVersionNeg.stage0.patch \
 	tests/conformance/raw/patches/badCertVersionNeg.stage1.patch \
 	tests/conformance/raw/patches/badCertVersionNeg.stage2.patch \
+	tests/conformance/raw/patches/badEEBadSig.ee.stage0.patch \
+	tests/conformance/raw/patches/badEEBadSig.stage1.patch \
+	tests/conformance/raw/patches/badEEBadSig.stage2.patch \
+	tests/conformance/raw/patches/badEEBadSig.stage3.patch \
 	tests/conformance/raw/patches/badEEHasBasicConstraints.ee.stage0.patch \
 	tests/conformance/raw/patches/badEEHasBasicConstraints.stage1.patch \
 	tests/conformance/raw/patches/badEEHasBasicConstraints.stage2.patch \
@@ -1191,6 +1200,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4OnlyPfxTouchRanges.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPfxTouchRanges.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4OnlyPfxTouchRanges.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4PrefixLong.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage2.patch \
@@ -1291,6 +1304,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxTouchRanges.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxTouchRanges.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6OnlyPfxTouchRanges.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6PrefixLong.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage3.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage2.patch \
@@ -1303,6 +1320,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAVersionV2.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV2.stage2.patch \
 	tests/conformance/raw/patches/badROAVersionV2.stage3.patch \
+	tests/conformance/raw/patches/badROAWrongType.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAWrongType.stage1.patch \
+	tests/conformance/raw/patches/badROAWrongType.stage2.patch \
+	tests/conformance/raw/patches/badROAWrongType.stage3.patch \
 	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage0.patch \
 	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodCRLNumberMax.stage0.patch \
@@ -1371,6 +1392,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodEESIAExtraAccessMethod.stage1.patch \
 	tests/conformance/raw/patches/goodEESIAExtraAccessMethod.stage2.patch \
 	tests/conformance/raw/patches/goodEESIAExtraAccessMethod.stage3.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.ee.stage0.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.stage1.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.stage2.patch \
+	tests/conformance/raw/patches/goodEESIAHasNonURI.stage3.patch \
 	tests/conformance/raw/patches/goodEESIAHtRs.ee.stage0.patch \
 	tests/conformance/raw/patches/goodEESIAHtRs.stage1.patch \
 	tests/conformance/raw/patches/goodEESIAHtRs.stage2.patch \
