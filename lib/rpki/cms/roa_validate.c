@@ -589,6 +589,20 @@ static int cmsValidate(
     if (ret != 0)
         return ret;
 
+    // make sure there are no disallowed signed attributes
+    for (attrp = (struct Attribute *)member_casn(&sigInfop->signedAttrs.self, 0);
+        attrp != NULL;
+        attrp = (struct Attribute *)next_of(&attrp->self))
+    {
+        if (diff_objid(&attrp->attrType, id_contentTypeAttr) &&
+            diff_objid(&attrp->attrType, id_messageDigestAttr) &&
+            diff_objid(&attrp->attrType, id_signingTimeAttr) &&
+            diff_objid(&attrp->attrType, id_binSigningTimeAttr))
+        {
+            return ERR_SCM_INVALSATTR;
+        }
+    }
+
     // check the cert
     struct Certificate *certp =
         (struct Certificate *)member_casn(&rp->content.signedData.

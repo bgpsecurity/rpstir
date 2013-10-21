@@ -167,7 +167,8 @@
 #define ERR_SCM_NOTINHERIT  -158        /* Non-inherit resources present */
 #define ERR_SCM_BADCHAR     -159        /* Invalid character sequence */
 #define ERR_SCM_AIATA       -160        /* AIA found in TA cert */
-#define ERR_SCM_MAXERR      -160
+#define ERR_SCM_INVALSATTR  -161        /* Invalid signed attribute */
+#define ERR_SCM_MAXERR      -161
 
 /*
  * macro that prints an error string and call return if a condition is true 

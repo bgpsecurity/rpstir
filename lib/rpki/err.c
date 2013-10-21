@@ -178,6 +178,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Non-inherit resources present", /* ERR_SCM_NOTINHERIT */
     "Invalid character sequence", /* ERR_SCM_BADCHAR */
     "AIA in TA cert", /* ERR_SCM_AIATA */
+    "Invalid signed attribute", /* ERR_SCM_INVALSATTR */
 };
 
 char *err2string(
