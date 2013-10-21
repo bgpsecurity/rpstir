@@ -224,6 +224,7 @@ ${single_cert_cmd} -x good 202 SIAMFT2Rsync
 ${single_cert_cmd} -x good 203 SIARepoHtRs
 ${single_cert_cmd} -x good 204 SIAMFTHtRs
 ${single_cert_cmd} -x good 225 SIARepoHasNonURI
+${single_cert_cmd} -x good 226 SIAMFTHasNonURI
 ${single_cert_cmd} 148 SIAAccessMethod
 ${single_cert_cmd} 205 SIANoMFT
 ${single_cert_cmd} 206 SIANoRepo
