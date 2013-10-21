@@ -1345,6 +1345,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage0.patch \
 	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage1.patch \
 	tests/conformance/raw/patches/goodCertSIARepo2Rsync.stage2.patch \
+	tests/conformance/raw/patches/goodCertSIARepoHasNonURI.stage0.patch \
+	tests/conformance/raw/patches/goodCertSIARepoHasNonURI.stage1.patch \
+	tests/conformance/raw/patches/goodCertSIARepoHasNonURI.stage2.patch \
 	tests/conformance/raw/patches/goodCertSIARepoHtRs.stage0.patch \
 	tests/conformance/raw/patches/goodCertSIARepoHtRs.stage1.patch \
 	tests/conformance/raw/patches/goodCertSIARepoHtRs.stage2.patch \
