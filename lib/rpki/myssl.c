@@ -2860,7 +2860,8 @@ static int rescert_sia_chk(
         uchar *uri_mft = 0;
         for (; adp; adp = (struct AccessDescription *)next_of(&adp->self))
         {
-            if (!diff_objid(&adp->accessMethod, id_ad_caRepository))
+            if (!diff_objid(&adp->accessMethod, id_ad_caRepository) &&
+                size_casn((struct casn *)&adp->accessLocation.url))
             {
                 size = vsize_casn((struct casn *)&adp->accessLocation.url);
                 uri_repo = calloc(1, size + 1);
@@ -2872,7 +2873,8 @@ static int rescert_sia_chk(
                 free(uri_repo);
                 uri_repo = NULL;
             }
-            else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest))
+            else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest) &&
+                size_casn((struct casn *)&adp->accessLocation.url))
             {
                 size = vsize_casn((struct casn *)&adp->accessLocation.url);
                 uri_mft = calloc(1, size + 1);
@@ -2905,15 +2907,18 @@ static int rescert_sia_chk(
         {
             if (!diff_objid(&adp->accessMethod, id_ad_signedObject))
             {
-                size = vsize_casn((struct casn *)&adp->accessLocation.url);
-                uri_obj = calloc(1, size + 1);
-                if (!uri_obj)
-                    return ERR_SCM_NOMEM;
-                read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
-                if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
-                    found_uri_obj_rsync = 1;
-                free(uri_obj);
-                uri_obj = NULL;
+                if (size_casn((struct casn *)&adp->accessLocation.url))
+                {
+                    size = vsize_casn((struct casn *)&adp->accessLocation.url);
+                    uri_obj = calloc(1, size + 1);
+                    if (!uri_obj)
+                        return ERR_SCM_NOMEM;
+                    read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
+                    if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
+                        found_uri_obj_rsync = 1;
+                    free(uri_obj);
+                    uri_obj = NULL;
+                }
             }
             else
             {
@@ -3102,6 +3107,8 @@ static int rescert_cert_policy_chk(
     X509_EXTENSION *ex = NULL;
     CERTIFICATEPOLICIES *ex_cpols = NULL;
     POLICYINFO *policy;
+    POLICYQUALINFO *policy_qual;
+    int policy_qual_nid;
     char policy_id_str[32];
     char *oid_policy_id = "1.3.6.1.5.5.7.14.2"; // http://tools.ietf.org/html/rfc6484#section-1.2
     int policy_id_len = strlen(oid_policy_id);
@@ -3176,6 +3183,27 @@ static int rescert_cert_policy_chk(
         LOG(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
         ret = ERR_SCM_BADOID;
         goto skip;
+    }
+
+    if (policy->qualifiers)
+    {
+        if (sk_POLICYQUALINFO_num(policy->qualifiers) > 1)
+        {
+            LOG(LOG_ERR, "[policy] too many policy qualifiers");
+            ret = ERR_SCM_POLICYQ;
+            goto skip;
+        }
+
+
+        policy_qual = sk_POLICYQUALINFO_value(policy->qualifiers, 0);
+        policy_qual_nid = OBJ_obj2nid(policy_qual->pqualid);
+
+        if (policy_qual_nid != NID_id_qt_cps)
+        {
+            LOG(LOG_ERR, "[policy] invalid policy qualifier ID, only CPS is allowed");
+            ret = ERR_SCM_POLICYQ;
+            goto skip;
+        }
     }
 
   skip:
