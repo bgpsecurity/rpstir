@@ -209,3 +209,4 @@ ${single_CMS_cmd} EE 582 SIANoRsync
 ${single_CMS_cmd} -x good EE 583 SIA2Rsync
 ${single_CMS_cmd} -x good EE 584 SIAHtRs
 ${single_CMS_cmd} -x good EE 716 SIAHasNonURI
+${single_CMS_cmd} EE 717 BadSig
