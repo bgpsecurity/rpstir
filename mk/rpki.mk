@@ -364,6 +364,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAVersionV1Explicit.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1ExplicitBadSig.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV2.ee.p15 \
+	tests/conformance/raw/keys/badROAWrongType.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAASID.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamily.ee.p15 \
 	tests/conformance/raw/keys/badROAbadROAFamilyLth.ee.p15 \
@@ -1303,6 +1304,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAVersionV2.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV2.stage2.patch \
 	tests/conformance/raw/patches/badROAVersionV2.stage3.patch \
+	tests/conformance/raw/patches/badROAWrongType.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAWrongType.stage1.patch \
+	tests/conformance/raw/patches/badROAWrongType.stage2.patch \
+	tests/conformance/raw/patches/badROAWrongType.stage3.patch \
 	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage0.patch \
 	tests/conformance/raw/patches/goodCRLEntrySerNumMax.stage1.patch \
 	tests/conformance/raw/patches/goodCRLNumberMax.stage0.patch \

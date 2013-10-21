@@ -150,6 +150,7 @@ ensure_file_exists "${single_ROA_script}"
 ###############################################################################
 
 ${single_ROA_cmd} -x good ROA 550 NothingWrong
+${single_ROA_cmd} ROA 718 WrongType
 ${single_ROA_cmd} ROA 551 ASIDSmall
 ${single_ROA_cmd} ROA 552 ASIDLarge
 ${single_ROA_cmd} -x good ROA 560 ASIDZero
