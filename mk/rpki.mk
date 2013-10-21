@@ -899,6 +899,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCertSubjectOID.stage0.patch \
 	tests/conformance/raw/patches/badCertSubjectOID.stage1.patch \
 	tests/conformance/raw/patches/badCertSubjectOID.stage2.patch \
+	tests/conformance/raw/patches/badCertSubjectSeq2SerNums.stage0.patch \
+	tests/conformance/raw/patches/badCertSubjectSeq2SerNums.stage1.patch \
+	tests/conformance/raw/patches/badCertSubjectSeq2SerNums.stage2.patch \
 	tests/conformance/raw/patches/badCertSubjectSerNum.stage0.patch \
 	tests/conformance/raw/patches/badCertSubjectSerNum.stage1.patch \
 	tests/conformance/raw/patches/badCertSubjectSerNum.stage2.patch \
