@@ -132,9 +132,6 @@ CA Certificates
 154 SubjectUtf          # subject name has utf name 6487#4.5
 155 Subject2SetComName  # subject name has 2 sets with common names 6487#4.5
 156 SubjectSerNum       # subject name has only a serial number 6487#4.5
-    SubjectSeqNameSer   # (good) subject with name before serial number (2 sets) 6487#4.5
-    SubjectSeqSerName   # (good) subject with serial number before name (2 sets) 6487#4.5
-    SubjectSetNameSer   # (good) subject with serial number and name (1 set) 6487#4.5
 157 SubjUID             # has subject unique ID 6487#4
 158 ValCrossed          # beginning validity date > ending date 6487#4.6
 159 ValFromFuture       # starting validity date is in future 6487#4.6.1
