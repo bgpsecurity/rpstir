@@ -231,6 +231,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/NAMSetNameSer.p15 \
 	tests/conformance/raw/keys/badCMS2Certs.ee.p15 \
 	tests/conformance/raw/keys/badCMS2DigestAlgs.ee.p15 \
+	tests/conformance/raw/keys/badCMS2SigInfo.ee.p15 \
 	tests/conformance/raw/keys/badCMSContentType.ee.p15 \
 	tests/conformance/raw/keys/badCMSDigestAlgSameWrong.ee.p15 \
 	tests/conformance/raw/keys/badCMSDigestAlgWrongOuter.ee.p15 \
@@ -431,6 +432,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCMS2DigestAlgs.stage1.patch \
 	tests/conformance/raw/patches/badCMS2DigestAlgs.stage2.patch \
 	tests/conformance/raw/patches/badCMS2DigestAlgs.stage3.patch \
+	tests/conformance/raw/patches/badCMS2SigInfo.ee.stage0.patch \
+	tests/conformance/raw/patches/badCMS2SigInfo.stage1.patch \
+	tests/conformance/raw/patches/badCMS2SigInfo.stage2.patch \
+	tests/conformance/raw/patches/badCMS2SigInfo.stage3.patch \
 	tests/conformance/raw/patches/badCMSContentType.ee.stage0.patch \
 	tests/conformance/raw/patches/badCMSContentType.stage1.patch \
 	tests/conformance/raw/patches/badCMSContentType.stage2.patch \
