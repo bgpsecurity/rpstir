@@ -193,7 +193,7 @@ CMS signed objects, generic (using ROAs)
 527 SigInfoBadSid            # bad Signer Identifier (wrong SKI) 6488#2.1.6.2
 528 SigInfoHashAlg           # wrong digest algorithm (in SignerInfo) 6488#2.1.6.3 6485#2
 529 SigInfoNoAttrs           # no set of attributes in SignerInfo 6488#2.1.6.4
-    SigInfoForbiddenAttr     # extra, forbidden attribute 6488#2.1.6.4
+722 SigInfoForbiddenAttr     # extra, forbidden attribute 6488#2.1.6.4
 530 SigInfoAttrsNoContType   # no content type in Signer Info 6488#2.1.6.4.1
 531 SigInfoAttrsContTypeOid  # content type OID does not match eContentType 6488#2.1.6.4.1
 533 SigInfoAttrsNoMsgDigest  # no message digest 6488#2.1.6.4.2

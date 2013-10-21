@@ -1,0 +1,11 @@
+--- badCMSSigInfoForbiddenAttr.raw.old	2013-10-21 18:34:01.746629067 -0400
++++ badCMSSigInfoForbiddenAttr.raw	2013-10-21 18:51:31.726585154 -0400
+@@ -116,6 +116,8 @@
+                         seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+                             set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
+                                     0x234CB1D2DD939DB9BC65DAC7014366E4
++                        seq oid 1.2.840.113549.1.9.15 /* smimeCapabilities */
++                            set seq seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                         nul 
+                     oct 0x507866A3EA8BA7079B24B060A9693F16

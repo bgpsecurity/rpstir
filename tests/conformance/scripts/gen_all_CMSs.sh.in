@@ -167,6 +167,7 @@ ${single_CMS_cmd} CMS 526 SigInfoWrongSid
 ${single_CMS_cmd} CMS 527 SigInfoBadSid
 ${single_CMS_cmd} CMS 528 SigInfoHashAlg
 ${single_CMS_cmd} CMS 529 SigInfoNoAttrs
+${single_CMS_cmd} CMS 722 SigInfoForbiddenAttr
 ${single_CMS_cmd} CMS 530 SigInfoAttrsNoContType
 ${single_CMS_cmd} CMS 531 SigInfoAttrsContTypeOid
 ${single_CMS_cmd} CMS 533 SigInfoAttrsNoMsgDigest
