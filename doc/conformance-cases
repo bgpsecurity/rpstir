@@ -185,7 +185,7 @@ CMS signed objects, generic (using ROAs)
 519 NoDigestAlgs             # no digest algorithm 6488#2.1.2
 520 HasCRL                   # has a CRL 6488#2.1.5
 521 NoSigInfo                # empty set of SignerInfos 6488#2.1
-    2SigInfo                 # multiple SignerInfo objects in set 6488#2.1
+721 2SigInfo                 # multiple SignerInfo objects in set 6488#2.1
 523 SigInfoVersion           # wrong Signer Info version (2) 6488#2.1.6.1
 524 SigInfoVersion4          # wrong Signer Info version (4) 6488#2.1.6.1
 525 SigInfoNoSid             # no Signer Identifier 6488#2.1.6.2
