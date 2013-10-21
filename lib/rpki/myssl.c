@@ -3102,6 +3102,8 @@ static int rescert_cert_policy_chk(
     X509_EXTENSION *ex = NULL;
     CERTIFICATEPOLICIES *ex_cpols = NULL;
     POLICYINFO *policy;
+    POLICYQUALINFO *policy_qual;
+    int policy_qual_nid;
     char policy_id_str[32];
     char *oid_policy_id = "1.3.6.1.5.5.7.14.2"; // http://tools.ietf.org/html/rfc6484#section-1.2
     int policy_id_len = strlen(oid_policy_id);
@@ -3176,6 +3178,27 @@ static int rescert_cert_policy_chk(
         LOG(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
         ret = ERR_SCM_BADOID;
         goto skip;
+    }
+
+    if (policy->qualifiers)
+    {
+        if (sk_POLICYQUALINFO_num(policy->qualifiers) > 1)
+        {
+            LOG(LOG_ERR, "[policy] too many policy qualifiers");
+            ret = ERR_SCM_POLICYQ;
+            goto skip;
+        }
+
+
+        policy_qual = sk_POLICYQUALINFO_value(policy->qualifiers, 0);
+        policy_qual_nid = OBJ_obj2nid(policy_qual->pqualid);
+
+        if (policy_qual_nid != NID_id_qt_cps)
+        {
+            LOG(LOG_ERR, "[policy] invalid policy qualifier ID, only CPS is allowed");
+            ret = ERR_SCM_POLICYQ;
+            goto skip;
+        }
     }
 
   skip:

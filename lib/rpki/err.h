@@ -81,7 +81,7 @@
 #define ERR_SCM_BADSIA      -73 /* SIA not a URI */
 #define ERR_SCM_NOPOLICY    -74 /* missing policy extension */
 #define ERR_SCM_DUPPOLICY   -75 /* duplicate policy extension */
-#define ERR_SCM_POLICYQ     -76 /* policy qualifiers shouldn't be present */
+#define ERR_SCM_POLICYQ     -76 /* invalid policy qualifiers */
 #define ERR_SCM_BADOID      -77 /* invalid/unexpected OID */
 #define ERR_SCM_NOIPAS      -78 /* missing IP or AS# resources */
 #define ERR_SCM_DUPIP       -79 /* duplicate IP resource extension */
