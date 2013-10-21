@@ -2860,7 +2860,8 @@ static int rescert_sia_chk(
         uchar *uri_mft = 0;
         for (; adp; adp = (struct AccessDescription *)next_of(&adp->self))
         {
-            if (!diff_objid(&adp->accessMethod, id_ad_caRepository))
+            if (!diff_objid(&adp->accessMethod, id_ad_caRepository) &&
+                size_casn((struct casn *)&adp->accessLocation.url))
             {
                 size = vsize_casn((struct casn *)&adp->accessLocation.url);
                 uri_repo = calloc(1, size + 1);
@@ -2872,7 +2873,8 @@ static int rescert_sia_chk(
                 free(uri_repo);
                 uri_repo = NULL;
             }
-            else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest))
+            else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest) &&
+                size_casn((struct casn *)&adp->accessLocation.url))
             {
                 size = vsize_casn((struct casn *)&adp->accessLocation.url);
                 uri_mft = calloc(1, size + 1);
@@ -2905,15 +2907,18 @@ static int rescert_sia_chk(
         {
             if (!diff_objid(&adp->accessMethod, id_ad_signedObject))
             {
-                size = vsize_casn((struct casn *)&adp->accessLocation.url);
-                uri_obj = calloc(1, size + 1);
-                if (!uri_obj)
-                    return ERR_SCM_NOMEM;
-                read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
-                if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
-                    found_uri_obj_rsync = 1;
-                free(uri_obj);
-                uri_obj = NULL;
+                if (size_casn((struct casn *)&adp->accessLocation.url))
+                {
+                    size = vsize_casn((struct casn *)&adp->accessLocation.url);
+                    uri_obj = calloc(1, size + 1);
+                    if (!uri_obj)
+                        return ERR_SCM_NOMEM;
+                    read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
+                    if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
+                        found_uri_obj_rsync = 1;
+                    free(uri_obj);
+                    uri_obj = NULL;
+                }
             }
             else
             {
