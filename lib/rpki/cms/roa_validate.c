@@ -996,6 +996,16 @@ int manifestValidate(
     if (iRes < 0)
         return iRes;
 
+    struct Certificate *cert =
+        &cms->content.signedData.certificates.certificate;
+
+    if (has_non_inherit_resources(cert))
+    {
+        LOG(LOG_ERR, "Manifest's EE certificate has RFC3779 resources "
+            "that are not marked inherit");
+        return ERR_SCM_NOTINHERIT;
+    }
+
     return 0;
 }
 
