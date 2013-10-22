@@ -193,4 +193,4 @@ ${single_MFT_cmd} 787 MFTNumTooBig
 ${single_MFT_cmd} -x good 788 MFTUnkownFileExtension
 ${single_MFT_cmd} 792 MFTUnkownFileExtension
 ${single_MFT_cmd} 793 MFTIPv6NotInherit
-${single_MFT_cmd} 795 MFTASNotInherit
+${single_MFT_cmd} 794 MFTASNotInherit
