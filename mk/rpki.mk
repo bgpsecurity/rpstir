@@ -310,6 +310,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badMFTStartCrossed.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdFuture.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdUTC.mft.p15 \
+	tests/conformance/raw/keys/badMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/badMFTUpdCrossed.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion0.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion1.mft.p15 \
@@ -1093,6 +1094,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.stage1.patch \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.stage2.patch \
+	tests/conformance/raw/patches/badMFTUnkownFileExtension.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTUnkownFileExtension.stage1.patch \
+	tests/conformance/raw/patches/badMFTUnkownFileExtension.stage2.patch \
 	tests/conformance/raw/patches/badMFTUpdCrossed.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTUpdCrossed.stage1.patch \
 	tests/conformance/raw/patches/badMFTUpdCrossed.stage2.patch \
