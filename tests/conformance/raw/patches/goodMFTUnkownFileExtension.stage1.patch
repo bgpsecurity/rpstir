@@ -1,12 +1,6 @@
 --- goodMFTUnkownFileExtension.raw.old	2013-04-04 16:25:10.776709090 -0400
 +++ goodMFTUnkownFileExtension.raw	2013-04-04 16:26:46.600705082 -0400
-@@ -10,6 +10,10 @@
-                             gen "20460515185928Z"
-                             oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
-                             seq seq ia5 "MFTUnkownFileExtension.crl"
-                                     bit 0x00C6ABA04024BC547159CBA93651CF9E
-                                         0x80D2934538F1A4F3846E290166396D48
-                                         0xA1
+@@ -16,3 +16,7 @@
 +                                seq ia5 "foo.nul"
 +                                    bit 0x00E3B0C44298FC1C149AFBF4C8996FB9
 +                                        0x2427AE41E4649B934CA495991B7852B8
