@@ -210,6 +210,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/MFTHashAlg.p15 \
 	tests/conformance/raw/keys/MFTHashAlgSameLength.p15 \
 	tests/conformance/raw/keys/MFTHashOctetStr.p15 \
+	tests/conformance/raw/keys/MFTIPv4NotInherit.p15 \
 	tests/conformance/raw/keys/MFTIPv6NotInherit.p15 \
 	tests/conformance/raw/keys/MFTNegNum.p15 \
 	tests/conformance/raw/keys/MFTNextUpdPast.p15 \
@@ -307,6 +308,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badMFTHashAlg.mft.p15 \
 	tests/conformance/raw/keys/badMFTHashAlgSameLength.mft.p15 \
 	tests/conformance/raw/keys/badMFTHashOctetStr.mft.p15 \
+	tests/conformance/raw/keys/badMFTIPv4NotInherit.mft.p15 \
 	tests/conformance/raw/keys/badMFTIPv6NotInherit.mft.p15 \
 	tests/conformance/raw/keys/badMFTNegNum.mft.p15 \
 	tests/conformance/raw/keys/badMFTNextUpdPast.mft.p15 \
@@ -316,7 +318,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badMFTStartCrossed.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdFuture.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdUTC.mft.p15 \
-	tests/conformance/raw/keys/badMFTUnkownFileExtension.mft.p15 \
 	tests/conformance/raw/keys/badMFTUpdCrossed.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion0.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion1.mft.p15 \
@@ -1082,6 +1083,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTHashOctetStr.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTHashOctetStr.stage1.patch \
 	tests/conformance/raw/patches/badMFTHashOctetStr.stage2.patch \
+	tests/conformance/raw/patches/badMFTIPv4NotInherit.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTIPv4NotInherit.stage1.patch \
+	tests/conformance/raw/patches/badMFTIPv4NotInherit.stage2.patch \
 	tests/conformance/raw/patches/badMFTIPv6NotInherit.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTIPv6NotInherit.stage1.patch \
 	tests/conformance/raw/patches/badMFTIPv6NotInherit.stage2.patch \
@@ -1109,9 +1113,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.stage1.patch \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.stage2.patch \
-	tests/conformance/raw/patches/badMFTUnkownFileExtension.ee.stage0.patch \
-	tests/conformance/raw/patches/badMFTUnkownFileExtension.stage1.patch \
-	tests/conformance/raw/patches/badMFTUnkownFileExtension.stage2.patch \
 	tests/conformance/raw/patches/badMFTUpdCrossed.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTUpdCrossed.stage1.patch \
 	tests/conformance/raw/patches/badMFTUpdCrossed.stage2.patch \
