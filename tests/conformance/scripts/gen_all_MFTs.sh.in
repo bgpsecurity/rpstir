@@ -181,6 +181,7 @@ ${single_MFT_cmd} 789 MFTUpdCrossed
 ${single_MFT_cmd} 790 MFTStartCrossed
 ${single_MFT_cmd} 791 MFTEndCrossed
 ${single_MFT_cmd} 777 MFTHashAlg
+${single_MFT_cmd} 795 MFTHashAlgSameLength
 ${single_MFT_cmd} 779 MFTFileHashShort
 ${single_MFT_cmd} 780 MFTFileHashLong
 ${single_MFT_cmd} 781 MFTFileNotIA5

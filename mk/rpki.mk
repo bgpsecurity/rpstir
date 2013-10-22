@@ -208,6 +208,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/MFTFileHashShort.p15 \
 	tests/conformance/raw/keys/MFTFileNotIA5.p15 \
 	tests/conformance/raw/keys/MFTHashAlg.p15 \
+	tests/conformance/raw/keys/MFTHashAlgSameLength.p15 \
 	tests/conformance/raw/keys/MFTHashOctetStr.p15 \
 	tests/conformance/raw/keys/MFTIPv6NotInherit.p15 \
 	tests/conformance/raw/keys/MFTNegNum.p15 \
@@ -304,6 +305,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badMFTFileHashShort.mft.p15 \
 	tests/conformance/raw/keys/badMFTFileNotIA5.mft.p15 \
 	tests/conformance/raw/keys/badMFTHashAlg.mft.p15 \
+	tests/conformance/raw/keys/badMFTHashAlgSameLength.mft.p15 \
 	tests/conformance/raw/keys/badMFTHashOctetStr.mft.p15 \
 	tests/conformance/raw/keys/badMFTIPv6NotInherit.mft.p15 \
 	tests/conformance/raw/keys/badMFTNegNum.mft.p15 \
@@ -1074,6 +1076,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTHashAlg.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTHashAlg.stage1.patch \
 	tests/conformance/raw/patches/badMFTHashAlg.stage2.patch \
+	tests/conformance/raw/patches/badMFTHashAlgSameLength.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTHashAlgSameLength.stage1.patch \
+	tests/conformance/raw/patches/badMFTHashAlgSameLength.stage2.patch \
 	tests/conformance/raw/patches/badMFTHashOctetStr.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTHashOctetStr.stage1.patch \
 	tests/conformance/raw/patches/badMFTHashOctetStr.stage2.patch \

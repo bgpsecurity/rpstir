@@ -397,7 +397,7 @@ Manifests
 790 MFTStartCrossed          # thisUpdate predates EE notBefore 6486#5.1
 791 MFTEndCrossed            # nextUpdate postdates EE notAfter 6486#5.1
 777 MFTHashAlg               # wrong hash algorithm (SHA1) 6486#4.2.1,6485#2
-    MFTHashAlgSameLength     # wrong hash algorithm, but with the same output length as SHA-256 6486#4.2.1,6485#2
+795 MFTHashAlgSameLength     # wrong hash algorithm, but with the same output length as SHA-256 6486#4.2.1,6485#2
 779 MFTFileHashShort         # too short hash of a file 6486#4.2.1,6485#2
 780 MFTFileHashLong          # too long hash of a file 6486#4.2.1,6485#2
 781 MFTFileNotIA5            # file name not IA5 6486#4.2
