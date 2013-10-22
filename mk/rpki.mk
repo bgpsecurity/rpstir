@@ -1592,7 +1592,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/templates/goodEECertGBR.raw \
 	tests/conformance/raw/templates/goodGBR.raw \
 	tests/conformance/raw/templates/goodROA.raw \
-	tests/conformance/scripts/.gen_all_certs.sh.swo \
 	tests/conformance/scripts/conformance.conf 
 
 check_SCRIPTS += tests/conformance/scripts/gen_all.sh
