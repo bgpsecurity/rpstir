@@ -1,0 +1,11 @@
+--- badMFTEndCrossed.raw.old	2013-10-22 10:46:00.712927562 -0400
++++ badMFTEndCrossed.raw	2013-10-22 10:46:25.734695171 -0400
+@@ -21,7 +21,7 @@
+                         seq set seq oid 2.5.4.3  /* id_commonName */
+                                     prt 'MFTEndCrossed'
+                         seq utc '110411185728Z'
+-                            utc '460515185928Z'
++                            utc '470515185928Z'
+                         seq set seq oid 2.5.4.3  /* id_commonName */
+                                     prt 'MFTEndCrossed-mf'
+                                         't-ee'

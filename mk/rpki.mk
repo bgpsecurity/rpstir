@@ -202,6 +202,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLVersion2.p15 \
 	tests/conformance/raw/keys/MFTDuplicateFileOneHash.p15 \
 	tests/conformance/raw/keys/MFTDuplicateFileTwoHashes.p15 \
+	tests/conformance/raw/keys/MFTEndCrossed.p15 \
 	tests/conformance/raw/keys/MFTFileHashLong.p15 \
 	tests/conformance/raw/keys/MFTFileHashShort.p15 \
 	tests/conformance/raw/keys/MFTFileNotIA5.p15 \
@@ -295,6 +296,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badGBRWrongOID.ee.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileOneHash.mft.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileTwoHashes.mft.p15 \
+	tests/conformance/raw/keys/badMFTEndCrossed.mft.p15 \
 	tests/conformance/raw/keys/badMFTFileHashLong.mft.p15 \
 	tests/conformance/raw/keys/badMFTFileHashShort.mft.p15 \
 	tests/conformance/raw/keys/badMFTFileNotIA5.mft.p15 \
@@ -1049,6 +1051,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTDuplicateFileTwoHashes.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileTwoHashes.stage1.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileTwoHashes.stage2.patch \
+	tests/conformance/raw/patches/badMFTEndCrossed.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTEndCrossed.stage1.patch \
+	tests/conformance/raw/patches/badMFTEndCrossed.stage2.patch \
 	tests/conformance/raw/patches/badMFTFileHashLong.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTFileHashLong.stage1.patch \
 	tests/conformance/raw/patches/badMFTFileHashLong.stage2.patch \
