@@ -407,7 +407,7 @@ Manifests
 788 MFTUnkownFileExtension   # (good) file name has an unrecognized extension 6486#4.2.1
 792 MFTIPv4NotInherit        # the EE cert has IPv4 resources not set to inherit 6486#5.1
 793 MFTIPv6NotInherit        # the EE cert has IPv6 resources not set to inherit 6486#5.1
-    MFTASNotInherit          # the EE cert has AS resources not set to inherit 6486#5.1
+794 MFTASNotInherit          # the EE cert has AS resources not set to inherit 6486#5.1
 
 Name tests
 

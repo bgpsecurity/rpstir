@@ -200,6 +200,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLVersion0.p15 \
 	tests/conformance/raw/keys/CRLVersion2.mft.p15 \
 	tests/conformance/raw/keys/CRLVersion2.p15 \
+	tests/conformance/raw/keys/MFTASNotInherit.p15 \
 	tests/conformance/raw/keys/MFTDuplicateFileOneHash.p15 \
 	tests/conformance/raw/keys/MFTDuplicateFileTwoHashes.p15 \
 	tests/conformance/raw/keys/MFTEndCrossed.p15 \
@@ -295,6 +296,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badGBRNoContact.ee.p15 \
 	tests/conformance/raw/keys/badGBRNotVCard.ee.p15 \
 	tests/conformance/raw/keys/badGBRWrongOID.ee.p15 \
+	tests/conformance/raw/keys/badMFTASNotInherit.mft.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileOneHash.mft.p15 \
 	tests/conformance/raw/keys/badMFTDuplicateFileTwoHashes.mft.p15 \
 	tests/conformance/raw/keys/badMFTEndCrossed.mft.p15 \
@@ -1048,6 +1050,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badGBRWrongOID.stage1.patch \
 	tests/conformance/raw/patches/badGBRWrongOID.stage2.patch \
 	tests/conformance/raw/patches/badGBRWrongOID.stage3.patch \
+	tests/conformance/raw/patches/badMFTASNotInherit.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTASNotInherit.stage1.patch \
+	tests/conformance/raw/patches/badMFTASNotInherit.stage2.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileOneHash.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileOneHash.stage1.patch \
 	tests/conformance/raw/patches/badMFTDuplicateFileOneHash.stage2.patch \
