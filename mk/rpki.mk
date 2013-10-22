@@ -217,6 +217,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/MFTThisUpdFuture.p15 \
 	tests/conformance/raw/keys/MFTThisUpdUTC.p15 \
 	tests/conformance/raw/keys/MFTUnkownFileExtension.p15 \
+	tests/conformance/raw/keys/MFTUpdCrossed.p15 \
 	tests/conformance/raw/keys/MFTVersion0.p15 \
 	tests/conformance/raw/keys/MFTVersion1.p15 \
 	tests/conformance/raw/keys/MFTWrongType.p15 \
@@ -305,6 +306,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badMFTNumTooBig.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdFuture.mft.p15 \
 	tests/conformance/raw/keys/badMFTThisUpdUTC.mft.p15 \
+	tests/conformance/raw/keys/badMFTUpdCrossed.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion0.mft.p15 \
 	tests/conformance/raw/keys/badMFTVersion1.mft.p15 \
 	tests/conformance/raw/keys/badMFTWrongType.mft.p15 \
@@ -1081,6 +1083,9 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.stage1.patch \
 	tests/conformance/raw/patches/badMFTThisUpdUTC.stage2.patch \
+	tests/conformance/raw/patches/badMFTUpdCrossed.ee.stage0.patch \
+	tests/conformance/raw/patches/badMFTUpdCrossed.stage1.patch \
+	tests/conformance/raw/patches/badMFTUpdCrossed.stage2.patch \
 	tests/conformance/raw/patches/badMFTVersion0.ee.stage0.patch \
 	tests/conformance/raw/patches/badMFTVersion0.stage1.patch \
 	tests/conformance/raw/patches/badMFTVersion0.stage2.patch \

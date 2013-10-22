@@ -177,6 +177,7 @@ ${single_MFT_cmd} 773 MFTThisUpdUTC
 ${single_MFT_cmd} 774 MFTThisUpdFuture
 ${single_MFT_cmd} 775 MFTNextUpdUTC
 ${single_MFT_cmd} 776 MFTNextUpdPast
+${single_MFT_cmd} 789 MFTUpdCrossed
 ${single_MFT_cmd} 777 MFTHashAlg
 ${single_MFT_cmd} 779 MFTFileHashShort
 ${single_MFT_cmd} 780 MFTFileHashLong

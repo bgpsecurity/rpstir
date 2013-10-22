@@ -393,7 +393,7 @@ Manifests
 774 MFTThisUpdFuture         # thisUpdate in future 6486#4.2.1
 775 MFTNextUpdUTC            # nextUpdate in UTC 6486#4.2
 776 MFTNextUpdPast           # nextUpdate in past (stale manifest, good/bad depends on config) 6486#4.2.1
-    MFTUpdCrossed            # thisUpdate postdates nextUpdate 6486#4.4
+789 MFTUpdCrossed            # thisUpdate postdates nextUpdate 6486#4.4
     MFTStartCrossed          # thisUpdate predates EE notBefore 6486#5.1
     MFTEndCrossed            # nextUpdate postdates EE notAfter 6486#5.1
 777 MFTHashAlg               # wrong hash algorithm (SHA1) 6486#4.2.1,6485#2
