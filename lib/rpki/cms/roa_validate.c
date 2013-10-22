@@ -954,46 +954,48 @@ int manifestValidate(
     struct CMS *cmsp,
     int *stalep)
 {
-    /*
-     * Procedure: Step 1 Check that content type is id-ct-rpkiManifest 2 Check 
-     * version 3 Check manifest number 4 Check dates 5 Check the hash
-     * algorithm 6 Check the list of files and hashes 7 Check general CMS
-     * structure 
-     */
     int iRes;
-    // step 1
+
+    // Check that content type is id-ct-rpkiManifest
     if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
                    id_roa_pki_manifest))
         return ERR_SCM_BADCT;
-    // step 2
+
+    // Check version
     struct Manifest *manp =
         &cmsp->content.signedData.encapContentInfo.eContent.manifest;
     if (size_casn(&manp->self) <= 0)
         return ERR_SCM_BADCT;
     if ((iRes = check_mft_version(&manp->version.self)) < 0)
         return iRes;
-    // step 3
+
+    // Check manifest number
     if ((iRes = check_mft_number(&manp->manifestNumber)) < 0)
         return iRes;
-    // step 4
+
+    // Check dates
     if ((iRes = check_mft_dates(manp, stalep)) < 0)
         return iRes;
-    // step 5
+
+    // Check the hash algorithm
     if (diff_objid(&manp->fileHashAlg, id_sha256))
     {
         LOG(LOG_ERR, "Incorrect hash algorithm");
         return ERR_SCM_BADHASHALG;
     }
-    // step 6
+
+    // Check the list of files and hashes
     if ((iRes = check_mft_filenames(&manp->fileList)) < 0)
         return iRes;
     iRes = check_mft_duplicate_filenames(manp);
     if (iRes < 0)
         return iRes;
-    // step 7
+
+    // Check general CMS structure
     iRes = cmsValidate(cmsp);
     if (iRes < 0)
         return iRes;
+
     return 0;
 }
 
