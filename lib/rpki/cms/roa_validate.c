@@ -756,32 +756,67 @@ static int check_mft_number(
 
 static int check_mft_dates(
     struct Manifest *manp,
+    struct Certificate *certp,
     int *stalep)
 {
     time_t now;
     time(&now);
-    int64_t thisUpdate,
-        nextUpdate;
+
+    int64_t thisUpdate;
+    int64_t nextUpdate;
+    int64_t notBefore;
+    int64_t notAfter;
+
     if (read_casn_time(&manp->thisUpdate, &thisUpdate) < 0)
     {
-        LOG(LOG_ERR, "This update is invalid");
+        LOG(LOG_ERR, "Manifest's thisUpdate is invalid");
         return ERR_SCM_INVALDT;
     }
+
     if (thisUpdate > now)
     {
-        LOG(LOG_ERR, "This update in the future");
+        LOG(LOG_ERR, "Manifest's thisUpdate is in the future");
         return ERR_SCM_INVALDT;
     }
+
     if (read_casn_time(&manp->nextUpdate, &nextUpdate) < 0)
     {
-        LOG(LOG_ERR, "Next update is invalid");
+        LOG(LOG_ERR, "Manifest's nextUpdate is invalid");
         return ERR_SCM_INVALDT;
     }
+
     if (nextUpdate < thisUpdate)
     {
-        LOG(LOG_ERR, "Next update earlier than this update");
+        LOG(LOG_ERR, "Manifest's nextUpdate is earlier than thisUpdate");
         return ERR_SCM_INVALDT;
     }
+
+    if (read_casn_time(&certp->toBeSigned.validity.notBefore, &notBefore) < 0)
+    {
+        LOG(LOG_ERR, "Manifest's EE's notBefore is invalid");
+        return ERR_SCM_INVALDT;
+    }
+
+    if (thisUpdate < notBefore)
+    {
+        LOG(LOG_ERR,
+            "Manifest's thisUpdate is before its EE certificate's validity");
+        return ERR_SCM_INVALDT;
+    }
+
+    if (read_casn_time(&certp->toBeSigned.validity.notAfter, &notAfter) < 0)
+    {
+        LOG(LOG_ERR, "Manifest's EE's notAfter is invalid");
+        return ERR_SCM_INVALDT;
+    }
+
+    if (nextUpdate > notAfter)
+    {
+        LOG(LOG_ERR,
+            "Manifest's nextUpdate is after its EE certificate's validity");
+        return ERR_SCM_INVALDT;
+    }
+
     if (now > nextUpdate)
     {
         *stalep = 1;
@@ -790,6 +825,7 @@ static int check_mft_dates(
     {
         *stalep = 0;
     }
+
     return 0;
 }
 
@@ -973,10 +1009,6 @@ int manifestValidate(
     if ((iRes = check_mft_number(&manp->manifestNumber)) < 0)
         return iRes;
 
-    // Check dates
-    if ((iRes = check_mft_dates(manp, stalep)) < 0)
-        return iRes;
-
     // Check the hash algorithm
     if (diff_objid(&manp->fileHashAlg, id_sha256))
     {
@@ -998,6 +1030,10 @@ int manifestValidate(
 
     struct Certificate *cert =
         &cms->content.signedData.certificates.certificate;
+
+    // Check dates
+    if ((iRes = check_mft_dates(manp, cert, stalep)) < 0)
+        return iRes;
 
     if (has_non_inherit_resources(cert))
     {
