@@ -791,7 +791,7 @@ static int check_mft_dates(
         return ERR_SCM_INVALDT;
     }
 
-    if (read_casn_time(&certp->toBeSigned.validity.notBefore, &notBefore) < 0)
+    if (read_casn_time(&certp->toBeSigned.validity.notBefore.self, &notBefore) < 0)
     {
         LOG(LOG_ERR, "Manifest's EE's notBefore is invalid");
         return ERR_SCM_INVALDT;
@@ -804,7 +804,7 @@ static int check_mft_dates(
         return ERR_SCM_INVALDT;
     }
 
-    if (read_casn_time(&certp->toBeSigned.validity.notAfter, &notAfter) < 0)
+    if (read_casn_time(&certp->toBeSigned.validity.notAfter.self, &notAfter) < 0)
     {
         LOG(LOG_ERR, "Manifest's EE's notAfter is invalid");
         return ERR_SCM_INVALDT;
