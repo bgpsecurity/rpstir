@@ -1,4 +1,4 @@
-next
+0.9
 
 	* Add a pseudo-random factor to the calculation of how long to wait
 	  before retrying an rsync connection. This should help prevent many
