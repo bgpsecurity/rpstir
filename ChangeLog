@@ -1,5 +1,11 @@
 0.9
 
+	* Add many more conformance test cases. (See doc/conformance-cases for
+	  the full list.) These test cases can be used by relying party
+	  software to test compliance with published RFCs and Internet-Drafts.
+	  Additionally, relying party software that passes the tests can be
+	  used to test the output of a Certification Authority.
+	* Fix bugs found by the above test cases.
 	* Add a pseudo-random factor to the calculation of how long to wait
 	  before retrying an rsync connection. This should help prevent many
 	  relying parties from hitting the same server at the same time.
