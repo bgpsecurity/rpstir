@@ -1,0 +1,11 @@
+--- badCRLEntrySerNum0.crl.raw.old	2013-09-17 13:47:54.691929645 -0400
++++ badCRLEntrySerNum0.crl.raw	2013-09-17 13:48:22.911791143 -0400
+@@ -5,6 +5,8 @@
+                     prt "CRLEntrySerNum0"
+         utc "110411185728Z"
+         utc "460515185928Z"
++        seq seq int 0x00
++                utc "110411185728Z"
+         ctx+0x20
+             seq seq oid 2.5.29.20 /* id_cRLNumber */
+                     ocw int 0x01 /* 1 */ 

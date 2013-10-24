@@ -1,0 +1,16 @@
+--- badROAIPv6OnlyPfxAboveRangeNoGap.ee.raw.old	2013-10-14 09:06:50.250423416 -0400
++++ badROAIPv6OnlyPfxAboveRangeNoGap.ee.raw	2013-10-14 09:08:35.284571178 -0400
+@@ -59,10 +59,9 @@
+                     ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                 seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                     boo 0xFF
+-                    ocw seq seq oct 0x0001
+-                                seq bit 0x000101
+-                            seq oct 0x0002
+-                                seq bit 0x00010201
++                    ocw seq seq oct 0x0002
++                                seq seq bit 0x0001020101
++                                        bit 0x01010200
+                 seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                     boo 0xFF
+                     ocw seq ctx+0x20

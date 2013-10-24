@@ -1,0 +1,11 @@
+--- badCertAKILong.raw.old	2013-07-30 11:42:13.044702049 -0400
++++ badCertAKILong.raw	2013-07-30 11:42:42.673593872 -0400
+@@ -38,7 +38,7 @@
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
+                                 0xD27F6E783B2B5CE535940D54C0A6F38F
+-                                0x5B7804D4
++                                0x5B7804D4A4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+                     ocw bit 0x0106

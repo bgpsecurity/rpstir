@@ -2676,18 +2676,25 @@ static int rescert_aia_chk(
         }
     }
 
-    if (info_flag == 0)
+    if (ct == TA_CERT)
     {
-        if (ct == TA_CERT)
-        {                       /* MUST be omitted if TA, checked elsewhere. */
+        if (info_flag == 0)
+        {
             ret = 0;
-            goto skip;
         }
         else
         {
-            LOG(LOG_ERR, "[aia] missing aia extension");
-            return (ERR_SCM_NOAIA);
+            LOG(LOG_ERR, "[aia] AIA present in TA cert");
+            ret = ERR_SCM_AIATA;
         }
+
+        goto skip;
+    }
+
+    if (info_flag == 0)
+    {
+        LOG(LOG_ERR, "[aia] missing aia extension");
+        return (ERR_SCM_NOAIA);
     }
     else if (info_flag > 1)
     {
@@ -2793,14 +2800,10 @@ static int get_cert_type(
 /**=============================================================================
  * @brief Check correctness of SIA.
  *
- * @param x - X509*
- * @param ct - integer representing certificate type
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
 static int rescert_sia_chk(
-    X509 * x,
-    int ct,
     struct Certificate *certp)
 {
     int count = -1;
@@ -2853,7 +2856,8 @@ static int rescert_sia_chk(
         uchar *uri_mft = 0;
         for (; adp; adp = (struct AccessDescription *)next_of(&adp->self))
         {
-            if (!diff_objid(&adp->accessMethod, id_ad_caRepository))
+            if (!diff_objid(&adp->accessMethod, id_ad_caRepository) &&
+                size_casn((struct casn *)&adp->accessLocation.url))
             {
                 size = vsize_casn((struct casn *)&adp->accessLocation.url);
                 uri_repo = calloc(1, size + 1);
@@ -2865,7 +2869,8 @@ static int rescert_sia_chk(
                 free(uri_repo);
                 uri_repo = NULL;
             }
-            else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest))
+            else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest) &&
+                size_casn((struct casn *)&adp->accessLocation.url))
             {
                 size = vsize_casn((struct casn *)&adp->accessLocation.url);
                 uri_mft = calloc(1, size + 1);
@@ -2898,15 +2903,18 @@ static int rescert_sia_chk(
         {
             if (!diff_objid(&adp->accessMethod, id_ad_signedObject))
             {
-                size = vsize_casn((struct casn *)&adp->accessLocation.url);
-                uri_obj = calloc(1, size + 1);
-                if (!uri_obj)
-                    return ERR_SCM_NOMEM;
-                read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
-                if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
-                    found_uri_obj_rsync = 1;
-                free(uri_obj);
-                uri_obj = NULL;
+                if (size_casn((struct casn *)&adp->accessLocation.url))
+                {
+                    size = vsize_casn((struct casn *)&adp->accessLocation.url);
+                    uri_obj = calloc(1, size + 1);
+                    if (!uri_obj)
+                        return ERR_SCM_NOMEM;
+                    read_casn((struct casn *)&adp->accessLocation.url, uri_obj);
+                    if (!strncasecmp((char *)uri_obj, RSYNC_PREFIX, 8))
+                        found_uri_obj_rsync = 1;
+                    free(uri_obj);
+                    uri_obj = NULL;
+                }
             }
             else
             {
@@ -2924,155 +2932,7 @@ static int rescert_sia_chk(
         }
     }
 
-
-    /*
-     * -----------------------------------------------------------------------------
-     * Above this comment uses the casn library. Below this comment uses the openssl
-     * library.
-     * ----------------------------------------------------------------------------- 
-     */
-    int sinfo_flag = 0,
-        uri_flag = 0;
-    int i;
-    int ex_nid;
-    int ret = 0;
-    size_t len = 0;
-    AUTHORITY_INFO_ACCESS *sia = NULL;
-    ACCESS_DESCRIPTION *adesc = NULL;
-    X509_EXTENSION *ex;
-    static const unsigned char sia_dir_oid[] =
-        { 0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x05 };
-    static const unsigned char sia_ee_oid[] =
-        { 0x2b, 0x6, 0x1, 0x5, 0x5, 0x7, 0x30, 0x0b };
-    const int sia_dir_oid_len = sizeof(sia_dir_oid);
-    const int sia_ee_oid_len = sizeof(sia_ee_oid);
-    int crit = INT_MIN;
-    int idx = INT_MIN;
-
-    for (i = 0; i < X509_get_ext_count(x); i++)
-    {
-        ex = X509_get_ext(x, i);
-        ex_nid = OBJ_obj2nid(X509_EXTENSION_get_object(ex));
-
-        if (ex_nid == NID_sinfo_access)
-        {
-            sinfo_flag++;
-
-            if (X509_EXTENSION_get_critical(ex))
-            {
-                LOG(LOG_ERR, "[sia] marked critical, violation");
-                ret = ERR_SCM_CEXT;
-                goto skip;
-            }
-        }
-    }
-
-    if (sinfo_flag == 0)
-    {
-        if (ct == EE_CERT)
-        {                       /* MAY be omitted if not CA */
-            ret = 0;
-            goto skip;
-        }
-        else
-        {
-            LOG(LOG_ERR, "[sia] missing sia extension");
-            return (ERR_SCM_NOSIA);
-        }
-    }
-    else if (sinfo_flag > 1)
-    {
-        LOG(LOG_ERR, "[sia] multiple sia extensions");
-        return (ERR_SCM_DUPSIA);
-    }
-
-    /*
-     * we should be here if NID_sinfo_access was found, it was not marked
-     * critical, and there was only one instance of it.
-     * 
-     * Rob's code from rcynic shows how to get the URI out of the sia... so
-     * lifting his teachings.  Though he should be using strncasecmp rather
-     * than strncmp as I don't think there are any specifications requiring
-     * the URI to be case sensitive. Additionally, there were no checks in his 
-     * code to make sure that the RSYNC URI MUST use a trailing '/' in the
-     * URI.
-     * 
-     */
-
-    sia = X509_get_ext_d2i(x, NID_sinfo_access, &crit, &idx);
-    if (!sia)
-    {
-        LOG(LOG_ERR, "[sia] could not retrieve sia extension");
-        return (ERR_SCM_NOSIA);
-    }
-
-    for (i = 0; i < sk_ACCESS_DESCRIPTION_num(sia); i++)
-    {
-        adesc = sk_ACCESS_DESCRIPTION_value(sia, i);
-        if (!adesc)
-        {
-            LOG(LOG_ERR, "[sia] error retrieving access description");
-            ret = ERR_SCM_NOSIA;
-            goto skip;
-        }
-        /*
-         * URI form of object identification in SIA 
-         */
-        if (adesc->location->type != GEN_URI)
-        {
-            LOG(LOG_ERR, "[sia] access type of non GEN_URI found");
-            ret = ERR_SCM_BADSIA;
-            goto skip;
-        }
-
-        int is_dir_oid = (adesc->method->length == sia_dir_oid_len &&
-                          !memcmp(adesc->method->data, sia_dir_oid,
-                                  sia_dir_oid_len));
-        int is_ee_oid = (adesc->method->length == sia_ee_oid_len
-                         && !memcmp(adesc->method->data, sia_ee_oid,
-                                    sia_ee_oid_len));
-        if ((is_dir_oid || is_ee_oid)
-            &&
-            (!strncasecmp
-             ((char *)adesc->location->d.uniformResourceIdentifier->data,
-              RSYNC_PREFIX, RSYNC_PREFIX_LEN)))
-        {
-            // if it's a dir oid, make sure it ends in a '/'
-            if (is_dir_oid)
-            {
-                char *dir =
-                    (char *)adesc->location->d.uniformResourceIdentifier->data;
-                len = strlen(dir);
-                /*
-                 * don't want a wrap case if len comes back 0 
-                 */
-                if (len == 0 || dir[len - 1] != '/')
-                {
-                    ret = (!len) ? ERR_SCM_NOSIA : ERR_SCM_BADSIA;
-                    goto skip;
-                }
-            }
-            ++uri_flag;
-        }
-    }
-
-    if (uri_flag == 0)
-    {
-        LOG(LOG_ERR, "[sia] no sia name of type URI rsync");
-        ret = ERR_SCM_BADSIA;
-        goto skip;
-    }
-    else
-    {
-        ret = 0;
-        goto skip;
-    }
-
-  skip:
-    LOG(LOG_DEBUG, "[sia] jump to return...");
-    if (sia)
-        sk_ACCESS_DESCRIPTION_pop_free(sia, ACCESS_DESCRIPTION_free);
-    return (ret);
+    return 0;
 }
 
 /*************************************************************
@@ -3095,6 +2955,8 @@ static int rescert_cert_policy_chk(
     X509_EXTENSION *ex = NULL;
     CERTIFICATEPOLICIES *ex_cpols = NULL;
     POLICYINFO *policy;
+    POLICYQUALINFO *policy_qual;
+    int policy_qual_nid;
     char policy_id_str[32];
     char *oid_policy_id = "1.3.6.1.5.5.7.14.2"; // http://tools.ietf.org/html/rfc6484#section-1.2
     int policy_id_len = strlen(oid_policy_id);
@@ -3169,6 +3031,27 @@ static int rescert_cert_policy_chk(
         LOG(LOG_ERR, "[policy] OID Policy Identifier value incorrect");
         ret = ERR_SCM_BADOID;
         goto skip;
+    }
+
+    if (policy->qualifiers)
+    {
+        if (sk_POLICYQUALINFO_num(policy->qualifiers) > 1)
+        {
+            LOG(LOG_ERR, "[policy] too many policy qualifiers");
+            ret = ERR_SCM_POLICYQ;
+            goto skip;
+        }
+
+
+        policy_qual = sk_POLICYQUALINFO_value(policy->qualifiers, 0);
+        policy_qual_nid = OBJ_obj2nid(policy_qual->pqualid);
+
+        if (policy_qual_nid != NID_id_qt_cps)
+        {
+            LOG(LOG_ERR, "[policy] invalid policy qualifier ID, only CPS is allowed");
+            ret = ERR_SCM_POLICYQ;
+            goto skip;
+        }
     }
 
   skip:
@@ -4105,7 +3988,7 @@ int rescert_profile_chk(
     if (ret < 0)
         return (ret);
 
-    ret = rescert_sia_chk(x, ct, certp);
+    ret = rescert_sia_chk(certp);
     LOG(LOG_DEBUG, "rescert_sia_chk");
     if (ret < 0)
         return (ret);
@@ -4341,6 +4224,8 @@ static int crl_entry_chk(
         return ERR_SCM_INTERNAL;
 
     uint8_t snum[CRL_MAX_SNUM_LTH];
+    int snum_length;
+    int i;
 
     // Forbid CRLEntryExtensions
     if (size_casn(&entryp->extensions.self) > 0)
@@ -4348,20 +4233,39 @@ static int crl_entry_chk(
         LOG(LOG_ERR, "Revocation entry has extension(s)");
         return ERR_SCM_CRLENTRYEXT;
     }
+
     // check serial number
     if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH)
     {
         LOG(LOG_ERR, "Revoked serial number too long");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (read_casn(&entryp->userCertificate, snum) <= 0)
+
+    snum_length = read_casn(&entryp->userCertificate, snum);
+    if (snum_length <= 0)
     {
         LOG(LOG_ERR, "Invalid revoked serial number");
         return ERR_SCM_BADREVSNUM;
     }
-    else if (snum[0] & 0x80)
+
+    if (snum[0] & 0x80)
     {
         LOG(LOG_ERR, "Negative revoked serial number");
+        return ERR_SCM_BADREVSNUM;
+    }
+
+    bool snum_is_zero = true;
+    for (i = 0; i < snum_length; ++i)
+    {
+        if (snum[i] != 0)
+        {
+            snum_is_zero = false;
+            break;
+        }
+    }
+    if (snum_is_zero)
+    {
+        LOG(LOG_ERR, "Revoked serial number is zero");
         return ERR_SCM_BADREVSNUM;
     }
 

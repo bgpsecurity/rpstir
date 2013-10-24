@@ -171,13 +171,17 @@ ensure_file_exists "${single_CRL_script}"
 
 ${single_CRL_cmd} 640 CRLNoVersion
 ${single_CRL_cmd} 641 CRLVersion0
+${single_CRL_cmd} 676 CRLVersion2
 ${single_CRL_cmd} 642 CRLSigAlgInner
 ${single_CRL_cmd} 643 CRLSigAlgOuter
+${single_CRL_cmd} 677 CRLSigAlgMatchButWrong
 ${single_CRL_cmd} 644 CRLIssuerOID
 ${single_CRL_cmd} 645 CRLIssuer2Sets
 ${single_CRL_cmd} 646 CRLIssuerUTF
 ${single_CRL_cmd} 647 CRLIssuer2Seq
 ${single_CRL_cmd} 648 CRLIssuerSet2SerNums
+${single_CRL_cmd} 678 CRLIssuerSeq2SerNums
+${single_CRL_cmd} 679 CRLIssuerSerNum
 ${single_CRL_cmd} 650 CRLThisUpdateTyp
 ${single_CRL_cmd} 651 CRLNextUpdatePast
 ${single_CRL_cmd} 652 CRLNextUpdateTyp
@@ -188,8 +192,11 @@ ${single_CRL_cmd} 656 CRLDeltaCRLInd
 ${single_CRL_cmd} 657 CRLNoAKI
 ${single_CRL_cmd} 658 CRLNoCRLNum
 ${single_CRL_cmd} 659 CRLEntryReason
+${single_CRL_cmd} 680 CRLEntryHasExtension
 ${single_CRL_cmd} 669 CRLNumber2Big
 ${single_CRL_cmd} 670 CRL2CRLNums
+${single_CRL_cmd} 684 CRLEntrySerNumNeg
+${single_CRL_cmd} 685 CRLEntrySerNum0
 ${single_CRL_cmd} -x good 671 CRLEntrySerNumMax
 ${single_CRL_cmd} 672 CRLEntrySerNumTooBig
 ${single_CRL_cmd} -x good 673 CRLNumberMax

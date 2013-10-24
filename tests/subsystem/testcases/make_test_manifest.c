@@ -193,7 +193,7 @@ int main(
         now += timediff;
     }
     write_casn_time(&manp->thisUpdate, now);
-    now += (30 * 24 * 3600);
+    now += (29 * 24 * 3600);
     write_casn_time(&manp->nextUpdate, now);
     write_objid(&manp->fileHashAlg, id_sha256);
 

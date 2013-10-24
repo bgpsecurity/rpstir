@@ -1,0 +1,13 @@
+--- badCertAKIHasACI.raw.old	2013-10-18 11:08:34.991463902 -0400
++++ badCertAKIHasACI.raw	2013-10-18 12:45:54.580421520 -0400
+@@ -39,6 +39,10 @@
+                     ocw seq ctx+0x00
+                                 0xD27F6E783B2B5CE535940D54C0A6F38F
+                                 0x5B7804D4
++                            ctx+0x21
++                                ctx+0x24
++                                    seq set seq oid 2.5.4.3
++                                                prt "root"
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+                     ocw bit 0x0106

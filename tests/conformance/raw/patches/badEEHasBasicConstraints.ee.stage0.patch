@@ -1,0 +1,11 @@
+--- badEEHasBasicConstraints.ee.raw.old	2013-09-03 15:05:35.598636252 -0400
++++ badEEHasBasicConstraints.ee.raw	2013-09-03 15:06:17.991916553 -0400
+@@ -32,6 +32,8 @@
+             seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                     ocw oct 0x0A5315891BAF49909D9E2DC5F80FD924
+                             0x78CB207C
++                seq oid 2.5.29.19 /* id_basic */
++                    ocw seq
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
+                                 0xD27F6E783B2B5CE535940D54C0A6F38F
