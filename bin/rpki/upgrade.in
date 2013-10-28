@@ -14,8 +14,11 @@ usage () {
 }
 
 
-upgrade_from_0_7 ()
-{
+upgrade_from_0_8 () {
+    return 0
+}
+
+upgrade_from_0_7 () {
     echo "Adding SKI index to the manifest table. This may take a few minutes."
     echo "ALTER TABLE rpki_manifest ADD KEY ski (ski);" \
         | mysql_cmd || \
@@ -47,7 +50,8 @@ upgrade_from_0_7 ()
     find "`config_get RPKICacheDir`" -type f -name \*.gbr -print \
         | rcli -l
 
-    return 0
+    upgrade_from_0_8
+    return $?
 }
 
 
@@ -71,6 +75,10 @@ case "$OLD_VERSION" in
 
     0.7)
         upgrade_from_0_7 || exit $?
+        ;;
+
+    0.8)
+        upgrade_from_0_8 || exit $?
         ;;
 
     "@PACKAGE_VERSION@")
