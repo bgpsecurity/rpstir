@@ -28,7 +28,6 @@ Table of Contents
     2.5 Self Test
     2.6 Installation
     2.7 Post-Installation Procedures
-      2.7.1 First Time Installation
     2.8 Upgrade Procedure
 3. Running the RPKI Software
     3.1 Normal Operation
@@ -442,8 +441,6 @@ create cache and log directories.
 
 
 2.7 Post-Installation Procedures
-
-2.7.1 First Time Installation
 
 If this is the first time you've installed @PACKAGE_NAME@ (i.e. if this is not
 an upgrade), there are some initialization steps.
