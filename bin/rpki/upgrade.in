@@ -18,8 +18,7 @@ usage () {
 # messages until the end of the script so the user is more likely to notice
 # them.
 MSGS=""
-add_msg ()
-{
+add_msg () {
     local FORMAT
 
     # format string for printf
@@ -34,8 +33,7 @@ add_msg ()
         MSGS="$MSGS$(printf "\n\n\n$FORMAT" "$@")"
     fi
 }
-show_msgs ()
-{
+show_msgs () {
     if test -z "$MSGS"; then
         return 0
     else
