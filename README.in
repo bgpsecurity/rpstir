@@ -142,7 +142,7 @@ http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
 recommended.  Install the MySQL database server, client, and client
 libraries, at least version @MIN_MYSQL_VERSION@, from the package manager or
 http://mysql.org.  Install the MySQL Connector/ODBC driver, at least
-version 3.51, from the package manager or mysql.org.
+version @MIN_MYSQL_ODBC_VERSION@, from the package manager or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
