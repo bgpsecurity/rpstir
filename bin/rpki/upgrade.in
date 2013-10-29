@@ -53,6 +53,14 @@ show_msgs () {
 
 
 upgrade_from_0_8 () {
+    echo "Attempting to create @pkgvarlibdir@."
+    mkdir -p "@pkgvarlibdir@" && chmod 700 "@pkgvarlibdir@" \
+        || add_msg "%s\n%s\n%s\n%s" \
+            "Creating @pkgvarlibdir@ failed." \
+            "Please run the following commands as root:" \
+            "    mkdir -p \"@pkgvarlibdir@\"" \
+            "    chmod 700 \"@pkgvarlibdir@\""
+
     return 0
 }
 
@@ -87,14 +95,6 @@ upgrade_from_0_7 () {
     echo "Adding Ghostbusters Records to the database."
     find "`config_get RPKICacheDir`" -type f -name \*.gbr -print \
         | rcli -l
-
-    echo "Attempting to create @pkgvarlibdir@."
-    mkdir -p "@pkgvarlibdir@" && chmod 700 "@pkgvarlibdir@" \
-        || add_msg "%s\n%s\n%s\n%s" \
-            "Creating @pkgvarlibdir@ failed." \
-            "Please run the following commands as root:" \
-            "    mkdir -p \"@pkgvarlibdir@\"" \
-            "    chmod 700 \"@pkgvarlibdir@\""
 
     upgrade_from_0_8
     return $?
