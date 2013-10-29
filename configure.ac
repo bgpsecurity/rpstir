@@ -260,6 +260,16 @@ if test "$ac_cv_sizeof_int" != 4 -o "$ac_cv_sizeof_long" != 4 -o "$ac_cv_sizeof_
 	AC_MSG_WARN([currently only 32-bit targets are supported])
 fi
 
+OPENSSL_VERSION="1.0.1d"
+MYSQL_VERSION="5.1"
+MYSQL_ODBC_VERSION="3.51"
+RSYNC_VERSION="2.6.9"
+PYTHON_VERSION="2.6"
+AC_SUBST([OPENSSL_VERSION])
+AC_SUBST([MYSQL_VERSION])
+AC_SUBST([MYSQL_ODBC_VERSION])
+AC_SUBST([RSYNC_VERSION])
+AC_SUBST([PYTHON_VERSION])
 
 AC_CONFIG_FILES([
     Makefile
