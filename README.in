@@ -502,11 +502,10 @@ Then run @PACKAGE_NAME@-initialize to set up the database:
 
 Consider backing up your configuration and data before upgrading @PACKAGE_NAME@.
 
-Upgrading @PACKAGE_NAME@ only requires upgrading dependency versions to 
-those in section 2.1.0, compiling source, and following these instructions.
-
-To upgrade from a previous release, run @PACKAGE_NAME@-upgrade with the version
-number of the previous release. For example, to upgrade from version 0.7, run:
+To upgrade @PACKAGE_NAME@, first upgrade the dependencies to the versions in
+section 2.1.0. Then compile (section 2.2) and install (section 2.6) @PACKAGE_NAME@.
+Run @PACKAGE_NAME@-upgrade with the version number of the previous release. For
+example, to upgrade from version 0.7, run:
 
    $ @PACKAGE_NAME@-upgrade 0.7
 
