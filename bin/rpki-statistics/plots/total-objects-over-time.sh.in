@@ -1,0 +1,17 @@
+#!/bin/sh
+
+printf "%s\t%s\t%s\t%s\t%s\n" \
+    "CACerts" \
+    "CRLs" \
+    "GBRs" \
+    "ROAs" \
+    "MFTs"
+
+stats-for-each-run.sh \
+    "@statshelperdir@/parse-results.sh" \
+    all \
+    "CA cert files" \
+    "Total crl files" \
+    "Total ghostbusters files" \
+    "Total roa files" \
+    "Total manifest files"

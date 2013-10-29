@@ -8,6 +8,7 @@ Table of Contents
 1. Organization of this document
 2. Installation
     2.1 Prerequisites
+      2.1.0 Version Requirements
       2.1.1 User Account
       2.1.2 OpenSSL
       2.1.3 MySQL and ODBC
@@ -27,8 +28,7 @@ Table of Contents
     2.5 Self Test
     2.6 Installation
     2.7 Post-Installation Procedures
-      2.7.1 First Time Installation
-      2.7.2 Upgrading
+    2.8 Upgrade Procedure
 3. Running the RPKI Software
     3.1 Normal Operation
       3.1.1 Note About Cron Jobs
@@ -93,6 +93,13 @@ manager, you may need to look for a -dev or -devel version of each
 package. These versions generally contain header files that are needed
 to build @PACKAGE_NAME@.
 
+2.1.0 Version Requirements
+      OpenSSL (Section 2.1.2) at least @MIN_OPENSSL_VERSION@
+      MySQL (Section 2.1.3) at least @MIN_MYSQL_VERSION@
+      ODBC mySql Connector (Section 2.1.3) at least @MIN_MYSQL_ODBC_VERSION@
+      rsync (Section 2.1.5) at least @MIN_RSYNC_VERSION@ 
+      Python (Section 2.1.6) at least @MIN_PYTHON_VERSION@ 
+
 2.1.1 User Account
 
 You must establish a user account from which you can build and run @PACKAGE_NAME@.
@@ -109,7 +116,7 @@ specified, the command should be run as @PACKAGE_NAME@'s user.
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
-version 1.0.1d) from http://www.openssl.org.  We recommend the default
+version @MIN_OPENSSL_VERSION@) from http://www.openssl.org.  We recommend the default
 installation target directory /usr/local/ssl.  As of version 1.0.1e,
 the steps were:
 
@@ -132,9 +139,9 @@ file or another file that's automatically loaded by the shell.
 Install unixODBC from your operating system's package manager or
 http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
 recommended.  Install the MySQL database server, client, and client
-libraries, at least version 5.1, from the package manager or
+libraries, at least version @MIN_MYSQL_VERSION@, from the package manager or
 http://mysql.org.  Install the MySQL Connector/ODBC driver, at least
-version 3.51, from the package manager or mysql.org.
+version @MIN_MYSQL_ODBC_VERSION@, from the package manager or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
@@ -263,14 +270,14 @@ and Linux. We do not currently think that this is cause for concern.
 
 2.1.5 rsync
 
-Your rsync should be at least version 2.6.9, as earlier versions do
+Your rsync should be at least version @MIN_RSYNC_VERSION@, as earlier versions do
 not necessarily support the necessary flags.  Check your version with
 rsync --version, and install from rsync.samba.org.  We recommend the
 latest version due to security and bug fixes.
 
 2.1.6 Python
 
-Install python, at least version 2.6.  Python is likely available in
+Install python, at least version @MIN_PYTHON_VERSION@.  Python is likely available in
 your operating system's package manager and is also available at
 http://python.org/download/.
 
@@ -435,8 +442,6 @@ create cache and log directories.
 
 2.7 Post-Installation Procedures
 
-2.7.1 First Time Installation
-
 If this is the first time you've installed @PACKAGE_NAME@ (i.e. if this is not
 an upgrade), there are some initialization steps.
 
@@ -468,14 +473,23 @@ temporarily by setting $@CONFIG_ENV_VAR@, for example:
    $ @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
 
 In the configuration file you just created, find the parameters RPKICacheDir
-and LogDir.  Both of these directories should be created and the user from step
-2.1.1 should have full access to these directories.  For example, if the
-directories are set to their defaults and the username is @PACKAGE_NAME@ in
-group @PACKAGE_NAME@:
+and LogDir.  Both of these directories, and ${localstatedir}/lib/@PACKAGE_NAME@,
+should be created and the user from step 2.1.1 should have full access to these
+directories.  For example, if the directories are set to their defaults and the
+username is @PACKAGE_NAME@ in group @PACKAGE_NAME@:
 
-   # mkdir -p /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
-   # chown @PACKAGE_NAME@:@PACKAGE_NAME@ /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
-   # chmod 700 /usr/local/var/cache/@PACKAGE_NAME@ /usr/local/var/log/@PACKAGE_NAME@
+   # mkdir -p \
+       /usr/local/var/cache/@PACKAGE_NAME@ \
+       /usr/local/var/lib/@PACKAGE_NAME@ \
+       /usr/local/var/log/@PACKAGE_NAME@
+   # chown @PACKAGE_NAME@:@PACKAGE_NAME@ \
+       /usr/local/var/cache/@PACKAGE_NAME@ \
+       /usr/local/var/lib/@PACKAGE_NAME@ \
+       /usr/local/var/log/@PACKAGE_NAME@
+   # chmod 700 \
+       /usr/local/var/cache/@PACKAGE_NAME@ \
+       /usr/local/var/lib/@PACKAGE_NAME@ \
+       /usr/local/var/log/@PACKAGE_NAME@
 
 Then run @PACKAGE_NAME@-initialize to set up the database:
 
@@ -484,12 +498,14 @@ Then run @PACKAGE_NAME@-initialize to set up the database:
                                   #          Do not do this if you're upgrading
                                   #          and want to save your old data.
 
-2.7.2 Upgrading
+2.8 Upgrading
 
 Consider backing up your configuration and data before upgrading @PACKAGE_NAME@.
 
-To upgrade from a previous release, run @PACKAGE_NAME@-upgrade with the version
-number of the previous release. For example, to upgrade from version 0.7, run:
+To upgrade @PACKAGE_NAME@, first upgrade the dependencies to the versions in
+section 2.1.0. Then compile (section 2.2) and install (section 2.6) @PACKAGE_NAME@.
+Run @PACKAGE_NAME@-upgrade with the version number of the previous release. For
+example, to upgrade from version 0.7, run:
 
    $ @PACKAGE_NAME@-upgrade 0.7
 

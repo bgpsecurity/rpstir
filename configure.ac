@@ -19,6 +19,24 @@ AM_SILENT_RULES
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
 
+PACKAGE_VERSION_FULL="$(
+    cd "$srcdir" &&
+    git describe --tags --long --always --dirty ||
+    echo "$PACKAGE_VERSION")"
+AC_SUBST([PACKAGE_VERSION_FULL])
+AC_DEFINE_UNQUOTED([PACKAGE_VERSION_FULL], ["$PACKAGE_VERSION_FULL"])
+
+MIN_OPENSSL_VERSION="1.0.1d"
+MIN_MYSQL_VERSION="5.1"
+MIN_MYSQL_ODBC_VERSION="3.51"
+MIN_RSYNC_VERSION="2.6.9"
+MIN_PYTHON_VERSION="2.6"
+AC_SUBST([MIN_OPENSSL_VERSION])
+AC_SUBST([MIN_MYSQL_VERSION])
+AC_SUBST([MIN_MYSQL_ODBC_VERSION])
+AC_SUBST([MIN_RSYNC_VERSION])
+AC_SUBST([MIN_PYTHON_VERSION])
+
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.
@@ -252,7 +270,6 @@ AC_CHECK_SIZEOF([void *])
 if test "$ac_cv_sizeof_int" != 4 -o "$ac_cv_sizeof_long" != 4 -o "$ac_cv_sizeof_void_p" != 4; then
 	AC_MSG_WARN([currently only 32-bit targets are supported])
 fi
-
 
 AC_CONFIG_FILES([
     Makefile
