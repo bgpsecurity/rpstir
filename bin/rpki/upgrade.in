@@ -138,3 +138,6 @@ case "$OLD_VERSION" in
 esac
 
 show_msgs || exit $?
+
+echo
+echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."
