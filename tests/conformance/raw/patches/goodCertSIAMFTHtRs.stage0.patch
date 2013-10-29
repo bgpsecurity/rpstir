@@ -1,0 +1,13 @@
+--- goodCertSIAMFTHtRs.raw.old	2013-08-20 14:26:53.889099617 -0400
++++ goodCertSIAMFTHtRs.raw	2013-08-20 14:27:26.383088498 -0400
+@@ -59,6 +59,10 @@
+                                     "y/"
+                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                 ctx+0x06
++                                    "http://rpki.bbn.com/conformance/root/empt"
++                                    "y1/doesNotExist.mft"
++                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
++                                ctx+0x06
+                                     "rsync://rpki.bbn.com/conformance/root/empt"
+                                     "y/doesNotExist.mft"
+                 seq oid 2.5.29.32 /* id_certificatePolicies */

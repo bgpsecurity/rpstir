@@ -589,6 +589,20 @@ static int cmsValidate(
     if (ret != 0)
         return ret;
 
+    // make sure there are no disallowed signed attributes
+    for (attrp = (struct Attribute *)member_casn(&sigInfop->signedAttrs.self, 0);
+        attrp != NULL;
+        attrp = (struct Attribute *)next_of(&attrp->self))
+    {
+        if (diff_objid(&attrp->attrType, id_contentTypeAttr) &&
+            diff_objid(&attrp->attrType, id_messageDigestAttr) &&
+            diff_objid(&attrp->attrType, id_signingTimeAttr) &&
+            diff_objid(&attrp->attrType, id_binSigningTimeAttr))
+        {
+            return ERR_SCM_INVALSATTR;
+        }
+    }
+
     // check the cert
     struct Certificate *certp =
         (struct Certificate *)member_casn(&rp->content.signedData.
@@ -742,32 +756,67 @@ static int check_mft_number(
 
 static int check_mft_dates(
     struct Manifest *manp,
+    struct Certificate *certp,
     int *stalep)
 {
     time_t now;
     time(&now);
-    int64_t thisUpdate,
-        nextUpdate;
+
+    int64_t thisUpdate;
+    int64_t nextUpdate;
+    int64_t notBefore;
+    int64_t notAfter;
+
     if (read_casn_time(&manp->thisUpdate, &thisUpdate) < 0)
     {
-        LOG(LOG_ERR, "This update is invalid");
+        LOG(LOG_ERR, "Manifest's thisUpdate is invalid");
         return ERR_SCM_INVALDT;
     }
+
     if (thisUpdate > now)
     {
-        LOG(LOG_ERR, "This update in the future");
+        LOG(LOG_ERR, "Manifest's thisUpdate is in the future");
         return ERR_SCM_INVALDT;
     }
+
     if (read_casn_time(&manp->nextUpdate, &nextUpdate) < 0)
     {
-        LOG(LOG_ERR, "Next update is invalid");
+        LOG(LOG_ERR, "Manifest's nextUpdate is invalid");
         return ERR_SCM_INVALDT;
     }
+
     if (nextUpdate < thisUpdate)
     {
-        LOG(LOG_ERR, "Next update earlier than this update");
+        LOG(LOG_ERR, "Manifest's nextUpdate is earlier than thisUpdate");
         return ERR_SCM_INVALDT;
     }
+
+    if (read_casn_time(&certp->toBeSigned.validity.notBefore.self, &notBefore) < 0)
+    {
+        LOG(LOG_ERR, "Manifest's EE's notBefore is invalid");
+        return ERR_SCM_INVALDT;
+    }
+
+    if (thisUpdate < notBefore)
+    {
+        LOG(LOG_ERR,
+            "Manifest's thisUpdate is before its EE certificate's validity");
+        return ERR_SCM_INVALDT;
+    }
+
+    if (read_casn_time(&certp->toBeSigned.validity.notAfter.self, &notAfter) < 0)
+    {
+        LOG(LOG_ERR, "Manifest's EE's notAfter is invalid");
+        return ERR_SCM_INVALDT;
+    }
+
+    if (nextUpdate > notAfter)
+    {
+        LOG(LOG_ERR,
+            "Manifest's nextUpdate is after its EE certificate's validity");
+        return ERR_SCM_INVALDT;
+    }
+
     if (now > nextUpdate)
     {
         *stalep = 1;
@@ -776,6 +825,7 @@ static int check_mft_dates(
     {
         *stalep = 0;
     }
+
     return 0;
 }
 
@@ -940,46 +990,58 @@ int manifestValidate(
     struct CMS *cmsp,
     int *stalep)
 {
-    /*
-     * Procedure: Step 1 Check that content type is id-ct-rpkiManifest 2 Check 
-     * version 3 Check manifest number 4 Check dates 5 Check the hash
-     * algorithm 6 Check the list of files and hashes 7 Check general CMS
-     * structure 
-     */
     int iRes;
-    // step 1
+
+    // Check that content type is id-ct-rpkiManifest
     if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
                    id_roa_pki_manifest))
         return ERR_SCM_BADCT;
-    // step 2
+
+    // Check version
     struct Manifest *manp =
         &cmsp->content.signedData.encapContentInfo.eContent.manifest;
     if (size_casn(&manp->self) <= 0)
         return ERR_SCM_BADCT;
     if ((iRes = check_mft_version(&manp->version.self)) < 0)
         return iRes;
-    // step 3
+
+    // Check manifest number
     if ((iRes = check_mft_number(&manp->manifestNumber)) < 0)
         return iRes;
-    // step 4
-    if ((iRes = check_mft_dates(manp, stalep)) < 0)
-        return iRes;
-    // step 5
+
+    // Check the hash algorithm
     if (diff_objid(&manp->fileHashAlg, id_sha256))
     {
         LOG(LOG_ERR, "Incorrect hash algorithm");
         return ERR_SCM_BADHASHALG;
     }
-    // step 6
+
+    // Check the list of files and hashes
     if ((iRes = check_mft_filenames(&manp->fileList)) < 0)
         return iRes;
     iRes = check_mft_duplicate_filenames(manp);
     if (iRes < 0)
         return iRes;
-    // step 7
+
+    // Check general CMS structure
     iRes = cmsValidate(cmsp);
     if (iRes < 0)
         return iRes;
+
+    struct Certificate *certp =
+        &cmsp->content.signedData.certificates.certificate;
+
+    // Check dates
+    if ((iRes = check_mft_dates(manp, certp, stalep)) < 0)
+        return iRes;
+
+    if (has_non_inherit_resources(certp))
+    {
+        LOG(LOG_ERR, "Manifest's EE certificate has RFC3779 resources "
+            "that are not marked inherit");
+        return ERR_SCM_NOTINHERIT;
+    }
+
     return 0;
 }
 
@@ -1080,6 +1142,21 @@ static int checkIPAddrs(
 
     struct ROAIPAddressFamily *roaFamilyp;
     struct IPAddressFamilyA *certFamilyp;
+
+    // make sure none of the cert families are marked inherit
+    for (certFamilyp =
+        (struct IPAddressFamilyA *)member_casn(&certIpAddrBlockp->self, 0);
+        certFamilyp;
+        certFamilyp = (struct IPAddressFamilyA *)next_of(&certFamilyp->self))
+    {
+        if (size_casn(&certFamilyp->ipAddressChoice.inherit))
+        {
+            LOG(LOG_ERR,
+                "ROA's EE certificate has IP resources marked inherit");
+            return ERR_SCM_ROAIPMISMATCH;
+        }
+    }
+
     // for each ROA family, see if it is in cert
     for (roaFamilyp =
          (struct ROAIPAddressFamily *)member_casn(&roaIPAddrBlocksp->self, 0);
@@ -1097,9 +1174,6 @@ static int checkIPAddrs(
                 (&certFamilyp->addressFamily, &roaFamilyp->addressFamily))
                 continue;
             matchedCertFamily = 1;
-            // now at matching families. If inheriting, skip it
-            if (size_casn(&certFamilyp->ipAddressChoice.inherit))
-                break;
             // for each ROA entry, see if it is in cert 
             const int roaNumPrefixes = num_items(&roaFamilyp->addresses.self);
             struct certrange *roaRanges =

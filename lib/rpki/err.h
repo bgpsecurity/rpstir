@@ -81,7 +81,7 @@
 #define ERR_SCM_BADSIA      -73 /* SIA not a URI */
 #define ERR_SCM_NOPOLICY    -74 /* missing policy extension */
 #define ERR_SCM_DUPPOLICY   -75 /* duplicate policy extension */
-#define ERR_SCM_POLICYQ     -76 /* policy qualifiers shouldn't be present */
+#define ERR_SCM_POLICYQ     -76 /* invalid policy qualifiers */
 #define ERR_SCM_BADOID      -77 /* invalid/unexpected OID */
 #define ERR_SCM_NOIPAS      -78 /* missing IP or AS# resources */
 #define ERR_SCM_DUPIP       -79 /* duplicate IP resource extension */
@@ -166,7 +166,9 @@
 #define ERR_SCM_REVOKED     -157        /* Object has been revoked */
 #define ERR_SCM_NOTINHERIT  -158        /* Non-inherit resources present */
 #define ERR_SCM_BADCHAR     -159        /* Invalid character sequence */
-#define ERR_SCM_MAXERR      -159
+#define ERR_SCM_AIATA       -160        /* AIA found in TA cert */
+#define ERR_SCM_INVALSATTR  -161        /* Invalid signed attribute */
+#define ERR_SCM_MAXERR      -161
 
 /*
  * macro that prints an error string and call return if a condition is true 

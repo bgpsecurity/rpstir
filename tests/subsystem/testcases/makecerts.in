@@ -20,77 +20,77 @@ rr < C.raw > C.cer
 ./make_test_cert C1M1    0D 1M
 ./make_test_cert C11     0D 1Y < "$TESTS_SRCDIR/makeC11"
 ./make_test_cert C11G1   0D 1M
-./make_test_cert C11R1   0D 1M
+./make_test_cert C11R1   0D 1M e
 ./make_test_cert C11M1   0D 1M
 ./make_test_cert C11M2   0D 1M
 ./make_test_cert C111    0D 1Y < "$TESTS_SRCDIR/makeC111"
 ./make_test_cert C111G1  0D 1M
-./make_test_cert C111R1  0D 1M
+./make_test_cert C111R1  0D 1M e
 ./make_test_cert C111G2  0D 1M
-./make_test_cert C111R2  0D 1M
+./make_test_cert C111R2  0D 1M e
 ./make_test_cert C111G3  0D 1M
-./make_test_cert C111R3  0D 1M
+./make_test_cert C111R3  0D 1M e
 ./make_test_cert C111M1  0D 1M
 ./make_test_cert C1111   0D 1Y < "$TESTS_SRCDIR/makeC1111"
 ./make_test_cert C1111G1 0D 1M
-./make_test_cert C1111R1 0D 1M
+./make_test_cert C1111R1 0D 1M e
 ./make_test_cert C112    0D 1Y < "$TESTS_SRCDIR/makeC112"
 ./make_test_cert C112G1  0D 1M
-./make_test_cert C112R1  0D 1M
+./make_test_cert C112R1  0D 1M e
 ./make_test_cert C113    0D 1Y < "$TESTS_SRCDIR/makeC113"
 ./make_test_cert C113G1  0D 1M
-./make_test_cert C113R1  0D 1M
+./make_test_cert C113R1  0D 1M e
 ./make_test_cert C12     0D 1Y < "$TESTS_SRCDIR/makeC12"
 ./make_test_cert C121    0D 1Y < "$TESTS_SRCDIR/makeC121"
 ./make_test_cert C121G1  0D 1M
-./make_test_cert C121R1  0D 1M
+./make_test_cert C121R1  0D 1M e
 ./make_test_cert C13     0D 1Y < "$TESTS_SRCDIR/makeC13"
 ./make_test_cert C131    0D 1Y < "$TESTS_SRCDIR/makeC131"
 ./make_test_cert C131G1  0D 1M
-./make_test_cert C131R1  0D 1M
+./make_test_cert C131R1  0D 1M e
 ./make_test_cert C132    0D 1Y < "$TESTS_SRCDIR/makeC132"
 ./make_test_cert C132G1  0D 1M
-./make_test_cert C132R1  0D 1M
+./make_test_cert C132R1  0D 1M e
 ./make_test_cert C132G2  0D 1M
-./make_test_cert C132R2  0D 1M
+./make_test_cert C132R2  0D 1M e
 ./make_test_cert C2      0D 1Y < "$TESTS_SRCDIR/makeC2"
 ./make_test_cert C21     0D 1Y < "$TESTS_SRCDIR/makeC21"
 ./make_test_cert C211    0D 1Y < "$TESTS_SRCDIR/makeC211"
 ./make_test_cert C211G1  0D 1M
-./make_test_cert C211R1  0D 1M
+./make_test_cert C211R1  0D 1M e
 ./make_test_cert C22     0D 1Y < "$TESTS_SRCDIR/makeC22"
 ./make_test_cert C22G1   0D 1M
-./make_test_cert C22R1   0D 1M
+./make_test_cert C22R1   0D 1M e
 ./make_test_cert C221    0D 1Y < "$TESTS_SRCDIR/makeC221"
 ./make_test_cert C221G1  0D 1M
-./make_test_cert C221R1  0D 1M
+./make_test_cert C221R1  0D 1M e
 ./make_test_cert C2211   0D 1Y < "$TESTS_SRCDIR/makeC2211"
 ./make_test_cert C2211G1 0D 1M
-./make_test_cert C2211R1 0D 1M
+./make_test_cert C2211R1 0D 1M e
 ./make_test_cert C2212   0D 1Y < "$TESTS_SRCDIR/makeC2212"
 ./make_test_cert C2212G1 0D 1M
-./make_test_cert C2212R1 0D 1M
+./make_test_cert C2212R1 0D 1M e
 ./make_test_cert C2212G2 0D 1M
-./make_test_cert C2212R2 0D 1M
+./make_test_cert C2212R2 0D 1M e
 ./make_test_cert C23     0D 1Y b < "$TESTS_SRCDIR/makeC23"
 ./make_test_cert C23G1   0D 1M
-./make_test_cert C23R1   0D 1M 
+./make_test_cert C23R1   0D 1M e
 ./make_test_cert C23G2   0D 1M n
 ./make_test_cert C23R2   0D 1M n
 ./make_test_cert C23M1   0D 1M e
 ./make_test_cert C231    0D 1Y < "$TESTS_SRCDIR/makeC231"
 ./make_test_cert C231G1  0D 1M
-./make_test_cert C231R1  0D 1M
+./make_test_cert C231R1  0D 1M e
 ./make_test_cert C231G2  0D 1M
-./make_test_cert C231R2  0D 1M
+./make_test_cert C231R2  0D 1M e
 ./make_test_cert C232    0D 1Y < "$TESTS_SRCDIR/makeC232"
 ./make_test_cert C232G1  0D 1M
-./make_test_cert C232R1  0D 1M
+./make_test_cert C232R1  0D 1M e
 ./make_test_cert C233    0D 1Y < "$TESTS_SRCDIR/makeC233"
 ./make_test_cert C233G1  0D 1M
-./make_test_cert C233R1  0D 1M
+./make_test_cert C233R1  0D 1M e
 ./make_test_cert C233G9  0D 1M x
-./make_test_cert C233R9  0D 1M x
+./make_test_cert C233R9  0D 1M xe
 
 cp C2.cer C2X.cer
 cp C2.raw C2X.raw

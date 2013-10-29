@@ -1,0 +1,11 @@
+--- badCMSDigestAlgWrongOuter.raw.old	2013-10-09 13:49:58.622395983 -0400
++++ badCMSDigestAlgWrongOuter.raw	2013-10-09 13:50:30.170394663 -0400
+@@ -1,7 +1,7 @@
+ seq oid 1.2.840.113549.1.7.2 /* id_signedData */
+     ctx+0x20
+         seq int 0x03 /* 3 */ 
+-            set seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++            set seq oid 2.16.840.1.101.3.4.2.2
+                     nul 
+             seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                 ctx+0x20

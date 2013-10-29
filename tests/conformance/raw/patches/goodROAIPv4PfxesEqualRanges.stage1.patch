@@ -1,0 +1,28 @@
+--- goodROAIPv4PfxesEqualRanges.raw.old	2013-10-08 13:05:47.554052168 -0400
++++ goodROAIPv4PfxesEqualRanges.raw	2013-10-08 13:08:44.415446038 -0400
+@@ -7,9 +7,22 @@
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+-                                    seq seq bit 0x000101
+-                                seq oct 0x0002
+-                                    seq seq bit 0x00010201
++                                    seq seq bit 0x00010101
++                                        seq bit 0x01010102
++                                        seq bit 0x02010104
++                                        seq bit 0x03010108
++                                        seq bit 0x04010110
++                                        seq bit 0x05010120
++                                        seq bit 0x06010140
++                                        seq bit 0x07010180
++                                        seq bit 0x00010301
++                                        seq bit 0x01010302
++                                        seq bit 0x02010304
++                                        seq bit 0x03010308
++                                        seq bit 0x04010310
++                                        seq bit 0x05010320
++                                        seq bit 0x06010340
++                                        seq bit 0x07010380
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 

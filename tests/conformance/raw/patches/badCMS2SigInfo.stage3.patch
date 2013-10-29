@@ -1,0 +1,36 @@
+--- badCMS2SigInfo.raw.old	2013-10-21 16:35:58.482925309 -0400
++++ badCMS2SigInfo.raw	2013-10-21 18:27:56.634644337 -0400
+@@ -134,3 +134,33 @@
+                         0x5C61987D894D93565949E0317C12D064
+                         0xCC18A75C2E5579D581346206FCE83A9F
+                         0x3B9CB85612C99425A6F52B41D20C9378
++                seq int 0x03 /* 3 */ 
++                    ctx+0x00
++                        0x876ABADAC83B6499A2262A4D4C7895CF
++                        0xAEFC40E6
++                    seq oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++                        nul 
++                    ctx+0x20
++                        seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
++                            set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
++                        seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
++                            set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
++                                    0x234CB1D2DD939DB9BC65DAC7014366E4
++                    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
++                        nul 
++                    oct 0xA4C4DC87C07CFE7FA3B54C12BDC55758
++                        0x3EDBBE03845ABF9375AE6925669A623A
++                        0x7CF5F39AD2A57EAF80A536D33EC6C59A
++                        0xA806D041856125A4980E35267F9E463D
++                        0x5AD62104DD4FB9A75DCCE6ECA6495C55
++                        0x7BD7BF6DC39D37363EC554496088FFC8
++                        0x5447C4F873F6E8E1FE4334A80366394D
++                        0xA3F9D03B7298DDC79EF8B9D6F64FF5D5
++                        0x3BC9E4D93410F2A73028BD2818B3975B
++                        0xBDAAAC6A4FEB292CC528662A8BE0A186
++                        0x4660E0AC2E31F01E7978D8F0BCE6F210
++                        0x31F65BE1EC0A9BCFE565B460770BCEF9
++                        0x9D0DC3550C7DBAEED36956161A794755
++                        0x5C61987D894D93565949E0317C12D064
++                        0xCC18A75C2E5579D581346206FCE83A9F
++                        0x3B9CB85612C99425A6F52B41D20C9378

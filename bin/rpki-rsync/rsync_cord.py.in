@@ -3,6 +3,7 @@
 from threading import Thread, Lock
 from subprocess import Popen
 import atexit, getopt, sys, os, Queue, time, socket, subprocess, logging, commands
+from random import randint
 
 BLOCK_TIMEOUT = 1
 
@@ -77,7 +78,7 @@ class RSYNC_thread(Thread):
                 sleep_time = 5
                 retry_count = 0
                 while sleep_time < 300:
-                    time.sleep(sleep_time)
+                    time.sleep(sleep_time + randint(-5,5))
                     #re-run the rsync command
                     with open(rsync_log, 'w') as rsync_log_file:
                         rcode = subprocess.call(rsyncCom, stdout=rsync_log_file)

@@ -1,0 +1,19 @@
+--- goodROAIPv6ExtraSubPfxInRangeMiddle.raw.old	2013-10-17 16:04:40.706168235 -0400
++++ goodROAIPv6ExtraSubPfxInRangeMiddle.raw	2013-10-17 16:05:35.049838761 -0400
+@@ -6,10 +6,12 @@
+             seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 
+-                            seq seq oct 0x0001
+-                                    seq seq bit 0x000101
+-                                seq oct 0x0002
+-                                    seq seq bit 0x00010201
++                            seq seq oct 0x0002
++                                    seq seq bit 0x0401020110
++                                        seq bit 0x0501020120
++                                        seq bit 0x0601020140
++                                        seq bit 0x0701020180
++                                        seq bit 0x000102018001
+             ctx+0x20
+                 seq seq ctx+0x20
+                             int 0x02 /* 2 */ 

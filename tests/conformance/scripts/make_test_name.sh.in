@@ -1,0 +1,239 @@
+#!@SHELL_BASH@
+
+# This script creates a certificate and subordinate RPKI objects in order to
+# test the issuer fields of the subordinate objects.
+
+@SETUP_ENVIRONMENT@
+@trap_errors@
+
+TEST_LOG_DIR="$TESTS_BUILDDIR"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+
+usage () {
+    echo >&2 "Usage: $0 [options] <serial> <CA filestem> <MFT filename> <CRL filename> <filename>..."
+    echo >&2
+    echo >&2 "Options:"
+    echo >&2 "  -P        Apply patches instead of prompting user to edit (default = false)"
+    echo >&2 "  -h        Display this help message"
+}
+
+OUTPUT_DIR="$TESTS_BUILDDIR/../raw/root"
+PATCHES_DIR="$TESTS_SRCDIR/../raw/patches"
+KEYS_DIR="$TESTS_SRCDIR/../raw/keys"
+ROOT_KEY_PATH="$TESTS_SRCDIR/../raw/root.p15"
+ROOT_CERT_PATH="$TESTS_BUILDDIR/../raw/root.cer"
+CRLDP="rsync://rpki.bbn.com/conformance/root/root.crl"
+ROOT_URI="rsync://rpki.bbn.com/conformance/root.cer"
+USE_EXISTING_PATCHES=
+EDITOR=${EDITOR:-vi}
+
+while getopts Ph opt
+do
+    case $opt in
+        P)
+            USE_EXISTING_PATCHES=1
+            ;;
+
+        h)
+            usage
+            exit 0
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+if [ $# -lt 4 ]
+then
+    usage
+    exit 1
+else
+    SERIAL="$1"
+    FILESTEM="$2"
+    MFTNAME="$3"
+    CRLNAME="$4"
+    shift 4
+fi
+
+
+# Get information out of root.cer
+root_sia="$(run "extractSIA-root-$FILESTEM" extractSIA "$ROOT_CERT_PATH")"
+root_notbefore="$(run "extractValidityDate-b-root-$FILESTEM" extractValidityDate -b "$ROOT_CERT_PATH")"
+root_notafter="$(run "extractValidityDate-a-root-$FILESTEM" extractValidityDate -a "$ROOT_CERT_PATH")"
+root_notbefore_gtime="$(run "extractValidityDate-b-g-root-$FILESTEM" extractValidityDate -b -g "$ROOT_CERT_PATH")"
+root_notafter_gtime="$(run "extractValidityDate-a-g-root-$FILESTEM" extractValidityDate -a -g "$ROOT_CERT_PATH")"
+child_sia_dir="${root_sia}${FILESTEM}/"
+child_sia_mft="${child_sia_dir}${MFTNAME}"
+
+# Generate CA cert under root
+test -n "$USE_EXISTING_PATCHES" || \
+    run "gen_key-$FILESTEM" gen_key "$KEYS_DIR/$FILESTEM.p15" 2048
+run "create_object-$FILESTEM" create_object CERT \
+    outputfilename="$OUTPUT_DIR/$FILESTEM.cer" \
+    parentcertfile="$ROOT_CERT_PATH" \
+    parentkeyfile="$ROOT_KEY_PATH" \
+    subjkeyfile="$KEYS_DIR/$FILESTEM.p15" \
+    type=CA \
+    notbefore="$root_notbefore" \
+    notafter="$root_notafter" \
+    serial="$SERIAL" \
+    subject="$FILESTEM" \
+    crldp="$CRLDP" \
+    aia="$ROOT_URI" \
+    sia="r:${child_sia_dir},m:${child_sia_mft}" \
+    ipv4=inherit \
+    ipv6=inherit \
+    as=inherit
+
+# Modify CA cert under root
+run "dump_smart-0-$FILESTEM" dump_smart "$OUTPUT_DIR/$FILESTEM.cer" > "$OUTPUT_DIR/$FILESTEM.raw"
+if [ -n "$USE_EXISTING_PATCHES" ]
+then
+    echo "CA Stage 0: modify to-be-signed portions automatically"
+    patch "$OUTPUT_DIR/$FILESTEM.raw" "$PATCHES_DIR/$FILESTEM.stage0.patch"
+    rm -f "$OUTPUT_DIR/$FILESTEM.raw.orig"
+else
+    echo "CA Stage 0: modify to-be-signed portions manually"
+    cp "$OUTPUT_DIR/$FILESTEM.raw" "$OUTPUT_DIR/$FILESTEM.raw.old"
+    $EDITOR "$OUTPUT_DIR/$FILESTEM.raw"
+    diff -u "$OUTPUT_DIR/$FILESTEM.raw.old" "$OUTPUT_DIR/$FILESTEM.raw" \
+        > "$PATCHES_DIR/$FILESTEM.stage0.patch" || true
+fi
+run "rr-1-$FILESTEM" rr < "$OUTPUT_DIR/$FILESTEM.raw" > "$OUTPUT_DIR/$FILESTEM.blb"
+run "sign_cert-1-$FILESTEM" sign_cert "$OUTPUT_DIR/$FILESTEM.blb" "$ROOT_KEY_PATH"
+mv "$OUTPUT_DIR/$FILESTEM.blb" "$OUTPUT_DIR/$FILESTEM.cer"
+
+# Make publication point
+mkdir -p "$OUTPUT_DIR/$FILESTEM"
+
+# Generate subordinate CRL
+run "create_object-$FILESTEM-$CRLNAME" create_object CRL \
+    outputfilename="$OUTPUT_DIR/$FILESTEM/$CRLNAME" \
+    parentcertfile="$OUTPUT_DIR/$FILESTEM.cer" \
+    parentkeyfile="$KEYS_DIR/$FILESTEM.p15" \
+    thisupdate="$root_notbefore" \
+    nextupdate="$root_notafter" \
+    revokedcertlist= \
+    crlnum=1
+
+# Modify subordinate CRL
+run "dump_smart-0-$FILESTEM-$CRLNAME" dump_smart "$OUTPUT_DIR/$FILESTEM/$CRLNAME" > "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw"
+if [ -n "$USE_EXISTING_PATCHES" ]
+then
+    echo "Subordinate CRL Stage 0: modify to-be-signed portions automatically"
+    patch "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw" "$PATCHES_DIR/$FILESTEM-$CRLNAME.stage0.patch"
+    rm -f "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw.orig"
+else
+    echo "Subordinate CRL Stage 0: modify to-be-signed portions manually"
+    cp "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw" "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw.old"
+    $EDITOR "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw"
+    diff -u "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw.old" "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw" \
+        > "$PATCHES_DIR/$FILESTEM-$CRLNAME.stage0.patch" || true
+fi
+run "rr-1-$FILESTEM-$CRLNAME" rr < "$OUTPUT_DIR/$FILESTEM/$CRLNAME.raw" > "$OUTPUT_DIR/$FILESTEM/$CRLNAME.blb"
+run "sign_cert-1-$FILESTEM-$CRLNAME" sign_cert "$OUTPUT_DIR/$FILESTEM/$CRLNAME.blb" "$KEYS_DIR/$FILESTEM.p15"
+mv "$OUTPUT_DIR/$FILESTEM/$CRLNAME.blb" "$OUTPUT_DIR/$FILESTEM/$CRLNAME"
+
+subordinate_serial=2 # reserve 1 for the MFT
+for subordinate_ca in "$@"
+do
+    # Generate subordinate CA
+    test -n "$USE_EXISTING_PATCHES" || \
+        run "gen_key-$FILESTEM-$subordinate_ca" gen_key "$KEYS_DIR/$FILESTEM-$subordinate_ca.p15" 2048
+    run "create_object-$FILESTEM-$subordinate_ca" create_object CERT \
+        outputfilename="$OUTPUT_DIR/$FILESTEM/$subordinate_ca" \
+        parentcertfile="$OUTPUT_DIR/$FILESTEM.cer" \
+        parentkeyfile="$KEYS_DIR/$FILESTEM.p15" \
+        subjkeyfile="$KEYS_DIR/$FILESTEM-$subordinate_ca.p15" \
+        type=CA \
+        notbefore="$root_notbefore" \
+        notafter="$root_notafter" \
+        serial="$subordinate_serial" \
+        subject="$subordinate_ca" \
+        crldp="${child_sia_dir}${CRLNAME}" \
+        aia="${root_sia}${FILESTEM}.cer" \
+        sia="r:${child_sia_dir}${subordinate_ca}/,m:${child_sia_dir}${subordinate_ca}/invalid.mft" \
+        ipv4=inherit \
+        ipv6=inherit \
+        as=inherit
+
+    # Modify subordinate CA
+    run "dump_smart-0-$FILESTEM-$subordinate_ca" dump_smart "$OUTPUT_DIR/$FILESTEM/$subordinate_ca" > "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw"
+    if [ -n "$USE_EXISTING_PATCHES" ]
+    then
+        echo "Subordinate CA Stage 0: modify to-be-signed portions automatically"
+        patch "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw" "$PATCHES_DIR/$FILESTEM-$subordinate_ca.stage0.patch"
+        rm -f "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw.orig"
+    else
+        echo "Subordinate CA Stage 0: modify to-be-signed portions manually"
+        cp "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw" "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw.old"
+        $EDITOR "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw"
+        diff -u "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw.old" "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw" \
+            > "$PATCHES_DIR/$FILESTEM-$subordinate_ca.stage0.patch" || true
+    fi
+    run "rr-1-$FILESTEM" rr < "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.raw" > "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.blb"
+    run "sign_cert-1-$FILESTEM" sign_cert "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.blb" "$KEYS_DIR/$FILESTEM.p15"
+    mv "$OUTPUT_DIR/$FILESTEM/$subordinate_ca.blb" "$OUTPUT_DIR/$FILESTEM/$subordinate_ca"
+
+    subordinate_serial=$((subordinate_serial + 1))
+done
+
+# Generate file and hash list for the MFT
+fah_list=
+hash_file () {
+    openssl sha -sha256 -r "$1" | \
+        sed -e 's/ .*$//' -e 'y/abcdef/ABCDEF/'
+}
+for filename in "$CRLNAME" "$@"
+do
+    test -n "$fah_list" && fah_list="${fah_list},"
+    fah_list="${fah_list}${filename}%0x$(hash_file "$OUTPUT_DIR/$FILESTEM/$filename")"
+done
+
+# Generate subordinate MFT
+test -n "$USE_EXISTING_PATCHES" || \
+    run "gen_key-$FILESTEM-$MFTNAME" gen_key "$KEYS_DIR/$FILESTEM-$MFTNAME.p15" 2048
+run "create_object-$FILESTEM-$MFTNAME.ee.cer" create_object CERT \
+    outputfilename="$OUTPUT_DIR/$FILESTEM/$MFTNAME.ee.cer" \
+    parentcertfile="$OUTPUT_DIR/$FILESTEM.cer" \
+    parentkeyfile="$KEYS_DIR/$FILESTEM.p15" \
+    subjkeyfile="$KEYS_DIR/$FILESTEM-$MFTNAME.p15" \
+    type=EE \
+    notbefore="$root_notbefore" \
+    notafter="$root_notafter" \
+    serial=1 \
+    subject="$MFTNAME" \
+    crldp="${child_sia_dir}${CRLNAME}" \
+    aia="${root_sia}${FILESTEM}.cer" \
+    sia="s:${child_sia_dir}${MFTNAME}" \
+    ipv4=inherit \
+    ipv6=inherit \
+    as=inherit
+run "create_object-$FILESTEM-$MFTNAME" create_object MANIFEST \
+    outputfilename="$OUTPUT_DIR/$FILESTEM/$MFTNAME" \
+    EECertLocation="$OUTPUT_DIR/$FILESTEM/$MFTNAME.ee.cer" \
+    EEKeyLocation="$KEYS_DIR/$FILESTEM-$MFTNAME.p15" \
+    thisUpdate="$root_notbefore_gtime" \
+    nextUpdate="$root_notafter_gtime" \
+    manNum=1 \
+    filelist="$fah_list"
+
+# Modify subordinate MFT
+run "dump_smart-0-$FILESTEM-$MFTNAME" dump_smart "$OUTPUT_DIR/$FILESTEM/$MFTNAME" > "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw"
+if [ -n "$USE_EXISTING_PATCHES" ]
+then
+    echo "Subordinate MFT Stage 0: modify to-be-signed portions automatically"
+    patch "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw" "$PATCHES_DIR/$FILESTEM-$MFTNAME.stage0.patch"
+    rm -f "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw.orig"
+else
+    echo "Subordinate MFT Stage 0: modify to-be-signed portions manually"
+    cp "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw" "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw.old"
+    $EDITOR "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw"
+    diff -u "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw.old" "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw" \
+        > "$PATCHES_DIR/$FILESTEM-$MFTNAME.stage0.patch" || true
+fi
+run "rr-1-$FILESTEM-$MFTNAME" rr < "$OUTPUT_DIR/$FILESTEM/$MFTNAME.raw" > "$OUTPUT_DIR/$FILESTEM/$MFTNAME"
+run "add_cms_cert_no_check-1-$FILESTEM-$MFTNAME" add_cms_cert_no_check \
+    "$OUTPUT_DIR/$FILESTEM/$MFTNAME.ee.cer" \
+    "$OUTPUT_DIR/$FILESTEM/$MFTNAME" \
+    "$KEYS_DIR/$FILESTEM-$MFTNAME.p15" \
+    "$OUTPUT_DIR/$FILESTEM/$MFTNAME"

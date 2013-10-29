@@ -146,7 +146,7 @@ ensure_file_exists "${single_CMS_script}"
 
 ###############################################################################
 # Generate CMS cases
-###############################################################################
+##############################################################################
 
 ${single_CMS_cmd} CMS 512 ContentType
 ${single_CMS_cmd} CMS 513 NoCerts
@@ -154,10 +154,12 @@ ${single_CMS_cmd} CMS 514 2Certs
 ${single_CMS_cmd} CMS 515 Version2
 ${single_CMS_cmd} CMS 516 Version4
 ${single_CMS_cmd} CMS 517 DigestAlgSameWrong
+${single_CMS_cmd} CMS 546 DigestAlgWrongOuter
 ${single_CMS_cmd} CMS 518 2DigestAlgs
 ${single_CMS_cmd} CMS 519 NoDigestAlgs
 ${single_CMS_cmd} CMS 520 HasCRL
 ${single_CMS_cmd} CMS 521 NoSigInfo
+${single_CMS_cmd} CMS 721 2SigInfo
 ${single_CMS_cmd} CMS 523 SigInfoVersion
 ${single_CMS_cmd} CMS 524 SigInfoVersion4
 ${single_CMS_cmd} CMS 525 SigInfoNoSid
@@ -165,16 +167,27 @@ ${single_CMS_cmd} CMS 526 SigInfoWrongSid
 ${single_CMS_cmd} CMS 527 SigInfoBadSid
 ${single_CMS_cmd} CMS 528 SigInfoHashAlg
 ${single_CMS_cmd} CMS 529 SigInfoNoAttrs
+${single_CMS_cmd} CMS 722 SigInfoForbiddenAttr
 ${single_CMS_cmd} CMS 530 SigInfoAttrsNoContType
 ${single_CMS_cmd} CMS 531 SigInfoAttrsContTypeOid
 ${single_CMS_cmd} CMS 533 SigInfoAttrsNoMsgDigest
+${single_CMS_cmd} CMS 548 SigInfoAttrsWrongDigest
 ${single_CMS_cmd} CMS 534 SigInfoAttrs2ContType
 ${single_CMS_cmd} CMS 535 SigInfoAttrs2MsgDigest
 ${single_CMS_cmd} CMS 536 SigInfoAttrs2SigTime
 ${single_CMS_cmd} CMS 537 SigInfoAttrs2BinSigTime
+${single_CMS_cmd} CMS 549 SigInfoAttrsContType2Val
+${single_CMS_cmd} CMS 564 SigInfoAttrsMsgDigest2Val
+${single_CMS_cmd} CMS 565 SigInfoAttrsSigTime2Val
+${single_CMS_cmd} CMS 566 SigInfoAttrsBinSigTime2Val
+${single_CMS_cmd} CMS 567 SigInfoAttrsContType0Val
+${single_CMS_cmd} CMS 568 SigInfoAttrsMsgDigest0Val
+${single_CMS_cmd} CMS 570 SigInfoAttrsSigTime0Val
+${single_CMS_cmd} CMS 569 SigInfoAttrsBinSigTime0Val
 ${single_CMS_cmd} CMS 538 SigInfoUnSigAttrs
 ${single_CMS_cmd} CMS 539 SigInfoNoSig
 ${single_CMS_cmd} CMS 540 SigInfo2Sig
+${single_CMS_cmd} CMS 571 SigInfoBadSigVal
 ${single_CMS_cmd} CMS 542 SigInfoWrongSigAlg
 ${single_CMS_cmd} CMS 543 SigInfoNoHashAlg
 
@@ -182,5 +195,20 @@ ${single_CMS_cmd} CMS 543 SigInfoNoHashAlg
 # Generate EE certificate cases (embedded in ROAs)
 ###############################################################################
 
+${single_CMS_cmd} EE 572 HasBasicConstraints
+${single_CMS_cmd} EE 575 HasCABasicConstraint
 ${single_CMS_cmd} EE 544 KeyUsageCABits
+${single_CMS_cmd} EE 573 KeyUsageNoDigitalSig
+${single_CMS_cmd} EE 574 KeyUsageHasKeyCertSign
+${single_CMS_cmd} EE 576 KeyUsageHasKeyCertSignCABool
+${single_CMS_cmd} EE 577 KeyUsageHasCRLSign
+${single_CMS_cmd} EE 578 KeyUsageHasNonRepu
+${single_CMS_cmd} EE 581 HasEKU
 ${single_CMS_cmd} EE 545 SIAWrongAccessMethod
+${single_CMS_cmd} -x good EE 579 SIAExtraAccessMethod
+${single_CMS_cmd} EE 580 SIAExtraWrongAccessMethod
+${single_CMS_cmd} EE 582 SIANoRsync
+${single_CMS_cmd} -x good EE 583 SIA2Rsync
+${single_CMS_cmd} -x good EE 584 SIAHtRs
+${single_CMS_cmd} -x good EE 716 SIAHasNonURI
+${single_CMS_cmd} EE 717 BadSig

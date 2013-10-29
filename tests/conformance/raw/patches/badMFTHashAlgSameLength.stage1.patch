@@ -1,0 +1,11 @@
+--- badMFTHashAlgSameLength.raw.old	2013-10-22 11:39:07.259921082 -0400
++++ badMFTHashAlgSameLength.raw	2013-10-22 11:39:14.044125982 -0400
+@@ -8,7 +8,7 @@
+                     ocw seq int 0x01 /* 1 */ 
+                             gen "20110411185728Z"
+                             gen "20460515185928Z"
+-                            oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
++                            oid 2.16.840.1.101.3.4.2.2 /* id_sha256 */
+                             seq seq ia5 "MFTHashAlgSameLength.crl"
+                                     bit 0x00A477B5219D7992EDF42FCA693C50DD
+                                         0x583083FAD2E3F3D82510FD3A58CD10D8

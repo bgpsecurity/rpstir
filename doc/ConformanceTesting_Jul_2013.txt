@@ -1,0 +1,28 @@
+1. find new test to create in doc/conformance-cases
+2. add a new unique number to that line, incremented one from the maximum in that category
+3. add the new number/name to the relevant gen_all_XXXs.sh.in file in tests/conformance/scripts/
+	1. CA certs: gen_all_certs.sh.in
+	2. CMS and EE: gen_all_CMSs.sh.in
+	3. CRLs: gen_all_CRLs.sh.in
+	4. GBRs: gen_all_GBRs.sh.in
+	5. Manifests: gen_all_MFTs.sh.in
+	6. ROAs: gen_all_ROAs.sh.in
+4. `make` the sh file with all other tests commented out
+5. run ./tests/setup_test_environment.sh tests/conformance/scripts/gen_all_XXXs.sh (without -P)
+6. using the script called from the gen_all_XXXs.sh.in as a guide, edit the correct stage (0, 1, 2, or 3)
+7. test the test
+	1. make check
+	2. ./tests/setup_test_environment.sh tests/conformance/scripts/run_tests.sh
+	3. setup system manually
+		1. preceed all commands with ./tests/setup_test_environment.sh 
+		2. rcli -x -y -t tests/conformance/raw
+		3. rcli -y -F tests/conformance/raw/root.cer
+		4. if (doesn't have directory)
+			1. rcli -f path/to/testcase (like tests/conformance/raw/root/cert.cer)
+		5. else
+			1. rcli -f path/to/testcase.cer (like tests/conformance/raw/root/cert.cer)
+			2. rcli -f path/to/testcase/testcase.* (like tests/conformance/raw/root/cert/manifest.mft)
+8. remove comments from gen_all_XXXs.sh
+9. add patch files to mk/rpki.mk and sort (:sort)
+	1. possibly key files (anything untracked)
+10. commit

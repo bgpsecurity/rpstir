@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.8, rpstir-support@bbn.com)
+AC_INIT(rpstir, 0.9, rpstir-support@bbn.com)
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
 PACKAGE_NAME_UC="RPSTIR"
@@ -136,6 +136,13 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
 else
   AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
+AC_MSG_CHECKING([whether mysql flags are useable])
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM(
+        [[]],
+        [[return 0;]])],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no]); AC_MSG_FAILURE([cannot compile and link a program with the flags supplied by mysql_config])])
 
 if test x${ssl_lib} != x; then
   LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"

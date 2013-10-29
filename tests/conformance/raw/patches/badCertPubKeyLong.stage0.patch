@@ -1,0 +1,11 @@
+--- badCertPubKeyLong.raw.old	2013-08-05 11:43:38.442390864 -0400
++++ badCertPubKeyLong.raw	2013-08-05 11:43:55.237901600 -0400
+@@ -11,7 +11,7 @@
+                     prt "badCertPubKeyLong"
+         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                 nul 
+-            bit 0x003082010A0282010100BFBD06FD096D
++            bit 0x003082010A0282010101BFBD06FD096D
+                 0x521EBC459C635121DE5118755DED6887
+                 0x2600106715226FDEF783049BF1B83BC7
+                 0x53CE863CED62A0DE13476D36E1B467F2

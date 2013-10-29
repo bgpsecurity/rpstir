@@ -1,0 +1,11 @@
+--- badCertKUsageDigitalSig.raw.old	2013-10-18 17:54:01.394822835 -0400
++++ badCertKUsageDigitalSig.raw	2013-10-18 17:54:26.846591505 -0400
+@@ -41,7 +41,7 @@
+                                 0x5B7804D4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+-                    ocw bit 0x0106
++                    ocw bit 0x0186
+                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20

@@ -1,0 +1,11 @@
+--- badROAIPv4PrefixLong.raw.old	2013-10-21 15:48:26.147044602 -0400
++++ badROAIPv4PrefixLong.raw	2013-10-21 15:49:10.283042757 -0400
+@@ -7,7 +7,7 @@
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+-                                    seq seq bit 0x000101
++                                    seq seq bit 0x070101010180
+                                 seq oct 0x0002
+                                     seq seq bit 0x00010201
+             ctx+0x20

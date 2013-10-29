@@ -1,0 +1,11 @@
+--- badCMSSigInfoAttrsSigTime0Val.raw.old	2013-09-03 12:51:38.711306807 -0400
++++ badCMSSigInfoAttrsSigTime0Val.raw	2013-09-03 12:52:08.851220718 -0400
+@@ -113,6 +113,8 @@
+                     ctx+0x20
+                         seq oid 1.2.840.113549.1.9.3 /* id_contentTypeAttr */
+                             set oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
++                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
++                            set
+                         seq oid 1.2.840.113549.1.9.4 /* id_messageDigestAttr */
+                             set oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
+                                     0x234CB1D2DD939DB9BC65DAC7014366E4
