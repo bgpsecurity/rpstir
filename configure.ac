@@ -19,6 +19,13 @@ AM_SILENT_RULES
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
 
+PACKAGE_VERSION_FULL="$(
+    cd "$srcdir" &&
+    git describe --tags --long --always --dirty ||
+    echo "$PACKAGE_VERSION")"
+AC_SUBST([PACKAGE_VERSION_FULL])
+AC_DEFINE_UNQUOTED([PACKAGE_VERSION_FULL], ["$PACKAGE_VERSION_FULL"])
+
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.

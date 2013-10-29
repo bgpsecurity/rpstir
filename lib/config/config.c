@@ -253,6 +253,26 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "\"" PKGLOGDIR "\""},
+
+    // CONFIG_LOG_RETENTION
+    {
+     "LogRetention",
+     false,
+     config_type_sscanf_converter, &config_type_sscanf_arg_size_t,
+     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_size_t,
+     free,
+     NULL, NULL,
+     "9"},
+
+    // CONFIG_RPKI_STATISTICS_DIR
+    {
+     "RPKIStatisticsDir",
+     false,
+     config_type_path_converter, NULL,
+     config_type_path_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     "\"" PKGVARLIBDIR "/statistics\""},
 };
 
 

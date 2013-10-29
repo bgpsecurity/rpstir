@@ -37,18 +37,26 @@ trap_errors = \
 do_subst = $(SED) \
 	-e 's,[@]abs_top_builddir[@],$(abs_top_builddir),g' \
 	-e 's,[@]abs_top_srcdir[@],$(abs_top_srcdir),g' \
+	-e 's,[@]examplesdir[@],$(examplesdir),g' \
 	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
+	-e 's,[@]pkgdatadir[@],$(pkgdatadir),g' \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
 	-e 's,[@]pkgsysconfdir[@],$(pkgsysconfdir),g' \
+	-e 's,[@]pkgvarlibdir[@],$(pkgvarlibdir),g' \
+	-e 's,[@]plotexecdir[@],$(plotexecdir),g' \
 	-e 's,[@]sampletadir[@],$(sampletadir),g' \
+	-e 's,[@]statshelperdir[@],$(statshelperdir),g' \
 	-e 's,[@]trap_errors[@],$(trap_errors),g' \
 	-e 's,[@]CONFIG_ENV_VAR[@],$(CONFIG_ENV_VAR),g' \
 	-e 's,[@]MKTEMP[@],$(MKTEMP),g' \
+	-e 's,[@]MKTEMP_DIR[@],$(MKTEMP_DIR),g' \
 	-e 's,[@]PACKAGE_BUGREPORT[@],$(PACKAGE_BUGREPORT),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
+	-e 's,[@]PACKAGE_NAME_UC[@],$(PACKAGE_NAME_UC),g' \
 	-e 's,[@]PACKAGE_SYS_CONF_FILE[@],$(PACKAGE_SYS_CONF_FILE),g' \
 	-e 's,[@]PACKAGE_VERSION[@],$(PACKAGE_VERSION),g' \
+	-e 's,[@]PACKAGE_VERSION_FULL[@],$(PACKAGE_VERSION_FULL),g' \
 	-e 's,[@]PYTHON[@],$(PYTHON),g' \
 	-e 's,[@]SETUP_ENVIRONMENT[@],$(SETUP_ENVIRONMENT),g' \
 	-e 's,[@]SHELL_BASH[@],$(SHELL_BASH),g'

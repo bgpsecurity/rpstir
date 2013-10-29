@@ -50,14 +50,19 @@ dist_doc_DATA =
 dist_man_MANS =
 dist_noinst_DATA =
 dist_pkgdata_DATA =
+dist_plotexec_SCRIPTS =
+dist_statshelper_SCRIPTS =
 dist_sysconf_DATA =
 examples_DATA =
 noinst_DATA =
 noinst_LIBRARIES =
 noinst_PROGRAMS =
+noinst_SCRIPTS =
 pkgdata_DATA =
 pkglibexec_PROGRAMS =
 pkglibexec_SCRIPTS =
+plotexec_SCRIPTS =
+statshelper_SCRIPTS =
 
 
 ## The test environment can be used by any of the other makefiles, so it comes
@@ -87,6 +92,7 @@ include mk/rpki-local-ta.mk
 include mk/rpki-object.mk
 include mk/rpki-rsync.mk
 include mk/rpki-rtr.mk
+include mk/rpki-statistics.mk
 include mk/rpki.mk
 include mk/testbed.mk
 include mk/top.mk
