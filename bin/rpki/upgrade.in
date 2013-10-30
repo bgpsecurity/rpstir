@@ -18,8 +18,7 @@ usage () {
 # messages until the end of the script so the user is more likely to notice
 # them.
 MSGS=""
-add_msg ()
-{
+add_msg () {
     local FORMAT
 
     # format string for printf
@@ -34,8 +33,7 @@ add_msg ()
         MSGS="$MSGS$(printf "\n\n\n$FORMAT" "$@")"
     fi
 }
-show_msgs ()
-{
+show_msgs () {
     if test -z "$MSGS"; then
         return 0
     else
@@ -54,8 +52,19 @@ show_msgs ()
 }
 
 
-upgrade_from_0_7 ()
-{
+upgrade_from_0_8 () {
+    echo "Attempting to create @pkgvarlibdir@."
+    mkdir -p "@pkgvarlibdir@" && chmod 700 "@pkgvarlibdir@" \
+        || add_msg "%s\n%s\n%s\n%s" \
+            "Creating @pkgvarlibdir@ failed." \
+            "Please run the following commands as root:" \
+            "    mkdir -p \"@pkgvarlibdir@\"" \
+            "    chmod 700 \"@pkgvarlibdir@\""
+
+    return 0
+}
+
+upgrade_from_0_7 () {
     echo "Adding SKI index to the manifest table. This may take a few minutes."
     echo "ALTER TABLE rpki_manifest ADD KEY ski (ski);" \
         | mysql_cmd || \
@@ -87,15 +96,8 @@ upgrade_from_0_7 ()
     find "`config_get RPKICacheDir`" -type f -name \*.gbr -print \
         | rcli -l
 
-    echo "Attempting to create @pkgvarlibdir@."
-    mkdir -p "@pkgvarlibdir@" && chmod 700 "@pkgvarlibdir@" \
-        || add_msg "%s\n%s\n%s\n%s" \
-            "Creating @pkgvarlibdir@ failed." \
-            "Please run the following commands as root:" \
-            "    mkdir -p \"@pkgvarlibdir@\"" \
-            "    chmod 700 \"@pkgvarlibdir@\""
-
-    return 0
+    upgrade_from_0_8
+    return $?
 }
 
 
@@ -121,6 +123,10 @@ case "$OLD_VERSION" in
         upgrade_from_0_7 || exit $?
         ;;
 
+    0.8)
+        upgrade_from_0_8 || exit $?
+        ;;
+
     "@PACKAGE_VERSION@")
         usage_fatal "Please specify the version you're upgrading from, not" \
                     "the version you're upgrading to."
@@ -132,3 +138,6 @@ case "$OLD_VERSION" in
 esac
 
 show_msgs || exit $?
+
+echo
+echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."
