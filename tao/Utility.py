@@ -29,10 +29,10 @@ def balance(source,target):
 
 def intersection(source,target):
 	results = {}
+	## Loop through both lists and check for matches
 	for i in range(1, len(source)+1):
 		for x in range(1, len(target)+1):
 			if source[i]  == target[x]:
-					#depth = source[i]['depth'] + target[x]['depth']
 					results[len(results)+1] = source[i]
 	return results
 

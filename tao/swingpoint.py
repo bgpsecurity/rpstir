@@ -128,7 +128,6 @@ def swingpoint(src, tar):
 					## Creates a depth field for each certificate that is one greater than its child
 					source[len(source)]['depth'] = source[index]['depth']+1
 				srcq = cur.fetchone()			
-
 			index += 1
 
 		index = 1
@@ -164,17 +163,19 @@ def swingpoint(src, tar):
 				lowest = intersection[i]['depth']
 				result.append(intersection[i]['filename'])
 
+		## Displays visualization based on Depth
 		depth = visual[len(visual)]['depth']
-    		for x in range(depth,-1,-1):
-        		for i in range(1,len(visual)+1):
+		for x in range(depth,-1,-1):
+			for i in range(1,len(visual)+1):
+				## Prepends the swingpoints with a *
 				if x == lowest:
-                			prepend = "*"
-            			else:
-                			prepend = " "
-            			if visual[i]['depth'] == x:
-                			output = output + prepend + visual[i]['filename'] + " "
-        		print output
-       	 		output = ""
+					prepend = "*"
+				else:
+					prepend = " "
+				if visual[i]['depth'] == x:
+					output = output + prepend + visual[i]['filename'] + " "
+			print output
+			output = ""
 
 		return "Swingpoints: %s" % result
 
