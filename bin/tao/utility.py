@@ -1,3 +1,4 @@
+## Function used to balance source and target and load visual
 def balance(source,target):
 		visual = {}
 		## Loads visualization for balanced graph
@@ -27,6 +28,7 @@ def balance(source,target):
 					visual[len(visual)+1] = source[i]
 		return source,target,visual
 
+## Function used to find the intersection of Source and Target dictionaries
 def intersection(source,target):
 	results = {}
 	## Loop through both lists and check for matches
