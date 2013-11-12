@@ -42,7 +42,7 @@ parser.add_option("-s", "--ski",
 # Return the swingpoint hierarchy
 #
 def swingpoint(src, tar):
-	import Utility as util
+	import utility as util
 	result = []
 
 	src = src.strip()
