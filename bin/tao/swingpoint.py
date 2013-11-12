@@ -47,13 +47,19 @@ def swingpoint(src, tar):
 
 	src = src.strip()
 	tar = tar.strip()
-
 	source = {} # source dictionary
 	target = {} # target dictionary
 	visual = {} # visualization dictionary
 	intersection = {} #intersection dictionary
 
 	try:
+		if (source == None and target == None):
+			raise Exception("Invalid source and target identifier. See \'--help\' for usage information.")
+		elif source == None:
+			raise Exception("Invalid source identifier. See \'--help\' for usage information.")
+		elif target == None:
+			raise Exception("Invalid target identifier. See \'--help\' for usage information.")
+
 		con = MySQLdb.connect(
 			host='localhost', 
 			user='rpstir', 
@@ -111,6 +117,13 @@ def swingpoint(src, tar):
 		source[index]['depth'] = 0
 		target[index] = tar
 		target[index]['depth'] = 0
+
+		if source[index]['aki'] == None:
+			raise Exception("Source does not have valid authority key identifier")
+		if target[index]['aki'] == None:
+			raise Exception("Target does not have valid authority key identifier")
+		if (source[index]['aki'] == None) and (target[index]['aki'] == None):
+			raise Exception("Source and Target do not have valid authority key identifier")
 
 		while not(source[index]['aki'] == None):
 			if source[index]['aki'] == None:
@@ -189,6 +202,4 @@ def swingpoint(src, tar):
 
 if args and len(args) > 1:
 	print swingpoint(args[0], args[1])
-else:
-	print "You must supply source and target identifiers. See \'--help\' for usage information."
 
