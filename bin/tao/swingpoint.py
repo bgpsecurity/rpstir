@@ -52,15 +52,12 @@ def swingpoint(src, tar):
 	visual = {} # visualization dictionary
 	intersection = {} #intersection dictionary
 
+	index = 1
+	depth = 1
+	output = ""
+	lowest = sys.maxint
+
 	try:
-		## Handle Invalid Source and/or Target inputs
-		if (source == None and target == None):
-			raise Exception("Invalid source and target identifier. See \'--help\' for usage information.")
-		elif source == None:
-			raise Exception("Invalid source identifier. See \'--help\' for usage information.")
-		elif target == None:
-			raise Exception("Invalid target identifier. See \'--help\' for usage information.")
-		
 		## Establish Connection to RPSTIR Database
 		con = MySQLdb.connect(
 			host='localhost', 
@@ -79,15 +76,7 @@ def swingpoint(src, tar):
 		if options.ski:
 			cur.execute("""
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
-
 		srcq = cur.fetchone()
-		# Handle Source Query Results
-		if srcq is None:
-			raise Exception("No row found for source \'%s\'" % src)
-		else:
-			sski = srcq['ski']
-			saki = srcq['aki']
-
 		if options.certificate:
 			cur.execute("""
 				SELECT * FROM rpki_cert WHERE filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
@@ -95,15 +84,25 @@ def swingpoint(src, tar):
 		if options.ski:
 			cur.execute("""
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
-
 		targetq = cur.fetchone()
-		## Handle Target Query Results
-		if targetq is None: 
-			raise Exception("No row found for target \'%s\'" % tar)
-		else:
-			tski = targetq['ski']
-			taki = targetq['aki']
-		
+
+		try:
+			## Handle Source Query Results
+			if srcq is None:
+				raise Exception("No row found for source \'%s\'" % src)
+			else:
+				sski = srcq['ski']
+				saki = srcq['aki']
+			## Handle Target Query Results
+			if targetq is None: 
+				raise Exception("No row found for target \'%s\'" % tar)
+			else:
+				tski = targetq['ski']
+				taki = targetq['aki']
+		except Exception , err:
+			sys.stderr.write('ERROR: %s\n' % str(err))
+			sys.exit()
+
 		## Handle Edge Case(Source is Targets Parent and Vice Versa)
 		if(sski == taki): 
 			return '*'+srcq['filename']+'\n'+targetq['filename']+'\nSwingpoints: ['+srcq['filename']+']'
@@ -112,11 +111,6 @@ def swingpoint(src, tar):
 
 		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
 		tar = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}
-
-		index = 1
-		depth = 1
-		output = ""
-		lowest = sys.maxint
 		
 		## Load source and target into the first entry and set depth
 		source[index] = src
@@ -125,12 +119,12 @@ def swingpoint(src, tar):
 		target[index]['depth'] = 0
 
 		## Throw exception on bad source or target certificates
-		if source[index]['aki'] == None:
-			raise Exception("Source does not have valid authority key identifier")
-		if target[index]['aki'] == None:
-			raise Exception("Target does not have valid authority key identifier")
-		if (source[index]['aki'] == None) and (target[index]['aki'] == None):
-			raise Exception("Source and Target do not have valid authority key identifier")
+		try:
+			if (source[index]['aki'] == None) and (target[index]['aki'] == None):
+				raise Exception("Source and Target do not have valid authority key identifier")
+		except Exception , err:
+			sys.stderr.write('ERROR: %s\n' % str(err))
+			sys.exit()
 
 		while not(source[index]['aki'] == None):
 			## Finds all certificates with ski that matches the current certificates aki
@@ -205,4 +199,9 @@ def swingpoint(src, tar):
 
 if args and len(args) > 1:
 	print swingpoint(args[0], args[1])
-
+else:
+	## Handle Invalid Source and/or Target inputs
+	try:
+		raise ValueError("Invalid source and/or target identifier. See \'--help\' for usage information.")
+	except Exception, err:
+		sys.stderr.write('ERROR: %s\n' % str(err))
