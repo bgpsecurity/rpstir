@@ -136,10 +136,10 @@ def swingpoint(src, tar):
 			while srcq:
 				## Creates a Dictionary for each certificate
 				parent = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
+				## Creates a depth field for each certificate that is one greater than its child
+				source[len(source)]['depth'] = source[index]['depth']+1
 				if(not(parent in source.itervalues())):
 					source[len(source)+1] = parent
-					## Creates a depth field for each certificate that is one greater than its child
-					source[len(source)]['depth'] = source[index]['depth']+1
 				srcq = cur.fetchone()			
 			index += 1
 
@@ -156,11 +156,10 @@ def swingpoint(src, tar):
 			while targetq:
 				## Creates a Dictionary for each certificate
 				parent = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}
+				## Creates a depth field for each certificate that is one greater than its child
+				target[len(target)]['depth'] = target[index]['depth']+1
 				if(not(parent in source.itervalues())):
 					target[len(target)+1] = parent
-					## Creates a depth field for each certificate that is one greater than its child
-					target[len(target)]['depth'] = target[index]['depth']+1
-
 				targetq = cur.fetchone()			
 			index += 1
 
