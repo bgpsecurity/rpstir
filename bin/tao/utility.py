@@ -33,8 +33,7 @@ def intersection(source,target):
 	results = {}
 	## Loop through both lists and check for matches
 	for i in range(1, len(source)+1):
-		for x in range(1, len(target)+1):
-			if source[i]  == target[x]:
-					results[len(results)+1] = source[i]
+		if source[i] in target.itervalues():
+			results[len(results)+1] = source[i]
 	return results
 
