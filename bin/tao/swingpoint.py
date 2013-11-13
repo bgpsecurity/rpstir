@@ -53,13 +53,15 @@ def swingpoint(src, tar):
 	intersection = {} #intersection dictionary
 
 	try:
+		## Handle Invalid Source and/or Target inputs
 		if (source == None and target == None):
 			raise Exception("Invalid source and target identifier. See \'--help\' for usage information.")
 		elif source == None:
 			raise Exception("Invalid source identifier. See \'--help\' for usage information.")
 		elif target == None:
 			raise Exception("Invalid target identifier. See \'--help\' for usage information.")
-
+		
+		## Establish Connection to RPSTIR Database
 		con = MySQLdb.connect(
 			host='localhost', 
 			user='rpstir', 
@@ -79,8 +81,8 @@ def swingpoint(src, tar):
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
 
 		srcq = cur.fetchone()
+		# Handle Source Query Results
 		if srcq is None:
-			# log exception
 			raise Exception("No row found for source \'%s\'" % src)
 		else:
 			sski = srcq['ski']
@@ -95,15 +97,18 @@ def swingpoint(src, tar):
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
 
 		targetq = cur.fetchone()
+		## Handle Target Query Results
 		if targetq is None: 
-			# log exception
 			raise Exception("No row found for target \'%s\'" % tar)
 		else:
 			tski = targetq['ski']
 			taki = targetq['aki']
 		
-		if(sski == taki): return '*'+srcq['filename']+'\n'+targetq['filename']+'\nSwingpoints: ['+srcq['filename']+']'
-		if(saki == tski): return '*'+targetq['filename']+'\n'+srcq['filename']+'\n'+'Swingpoints: ['+targetq['filename']+']'
+		## Handle Edge Case(Source is Targets Parent and Vice Versa)
+		if(sski == taki): 
+			return '*'+srcq['filename']+'\n'+targetq['filename']+'\nSwingpoints: ['+srcq['filename']+']'
+		if(saki == tski): 
+			return '*'+targetq['filename']+'\n'+srcq['filename']+'\n'+'Swingpoints: ['+targetq['filename']+']'
 
 		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
 		tar = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}
@@ -112,12 +117,14 @@ def swingpoint(src, tar):
 		depth = 1
 		output = ""
 		lowest = sys.maxint
-
+		
+		## Load source and target into the first entry and set depth
 		source[index] = src
 		source[index]['depth'] = 0
 		target[index] = tar
 		target[index]['depth'] = 0
 
+		## Throw exception on bad source or target certificates
 		if source[index]['aki'] == None:
 			raise Exception("Source does not have valid authority key identifier")
 		if target[index]['aki'] == None:
@@ -126,9 +133,7 @@ def swingpoint(src, tar):
 			raise Exception("Source and Target do not have valid authority key identifier")
 
 		while not(source[index]['aki'] == None):
-			if source[index]['aki'] == None:
-				break
-			## Finds all certificates with ski that matches the current certificates ski
+			## Finds all certificates with ski that matches the current certificates aki
 			cur.execute("""
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (source[index]['aki']))
 			## Processes each certificate one at a time as there may be one or more matches
@@ -137,18 +142,17 @@ def swingpoint(src, tar):
 				## Creates a Dictionary for each certificate
 				parent = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
 				## Creates a depth field for each certificate that is one greater than its child
-				source[len(source)]['depth'] = source[index]['depth']+1
+				parent['depth'] = source[index]['depth']+1
 				if(not(parent in source.itervalues())):
 					source[len(source)+1] = parent
 				srcq = cur.fetchone()			
 			index += 1
 
+		## Reset Index for Target
 		index = 1
 
 		while not(target[index]['aki'] == None):
-			if target[index]['aki'] == None:
-				break
-			## Finds all certificates with ski that matches the current certificates ski
+			## Finds all certificates with ski that matches the current certificates aki
 			cur.execute("""
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (target[index]['aki']))
 			## Processes each certificate one at a time as there may be one or more matches			
@@ -157,8 +161,8 @@ def swingpoint(src, tar):
 				## Creates a Dictionary for each certificate
 				parent = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}
 				## Creates a depth field for each certificate that is one greater than its child
-				target[len(target)]['depth'] = target[index]['depth']+1
-				if(not(parent in source.itervalues())):
+				parent['depth'] = target[index]['depth']+1
+				if(not(parent in target.itervalues())):
 					target[len(target)+1] = parent
 				targetq = cur.fetchone()			
 			index += 1
