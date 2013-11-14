@@ -142,6 +142,8 @@ make_serial () {
 	test "$LAST_ASN" -le 255
 	test "$FIRST_ASN" -le "$LAST_ASN"
 
+	#echo -e "deleting ${#ASNS_IN_DB[@]} \n${ASNS_IN_DB[@]}" 
+
 	#If i understand correctly, this deletes the roa from the db (-d)
 	for ASN in $ASNS_IN_DB; do
 		rcli -y -d "$TESTS_BUILDDIR/as-$ASN.roa"
@@ -156,7 +158,7 @@ make_serial () {
 
 	if test -n "$SPECIAL_ASN"; then
 		rcli -y -f "$TESTS_BUILDDIR/as-$SPECIAL_ASN.roa"
-		ASNS_IN_DB=("${ASNS_IN_DB[@]}" "$SPECIAL_ASN")
+		ASNS_IN_DB+=`echo -e "\n$SPECIAL_ASN"`
 	fi
 
 	"$UPDATE" "$SERIAL"
