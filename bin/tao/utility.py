@@ -2,14 +2,14 @@
 def balance(source,target):
 		visual = {}
 		## Loads visualization for balanced graph
-		if len(source) == len(target):
+		if source[len(source)]['depth'] == target[len(target)]['depth']:
 			for i in range(1, len(source)+1):
 				if(not(source[i] in visual.itervalues())):
 					visual[len(visual)+1] = source[i]
 				if(not(target[i] in visual.itervalues())):
 					visual[len(visual)+1] = target[i]
 		## Loads visualization for unbalanced graph towards source and adjusts for the depth difference
-		if len(source) > len(target):
+		if source[len(source)]['depth'] > target[len(target)]['depth']:
 			diff = source[len(source)]['depth'] - target[len(target)]['depth']
 			for i in range(1, len(source)+1):
 				if(not(source[i] in visual.itervalues())):
@@ -18,7 +18,7 @@ def balance(source,target):
 					target[i]['depth'] += diff
 					visual[len(visual)+1] = target[i]
 		## Loads visualization for unbalanced graph towards target and adjusts for the depth difference
-		if len(source) < len(target):
+		if source[len(source)]['depth'] < target[len(target)]['depth']:
 			diff = target[len(target)]['depth'] - source[len(source)]['depth']
 			for i in range(1, len(target)+1):
 				if(not(target[i] in visual.itervalues())):
