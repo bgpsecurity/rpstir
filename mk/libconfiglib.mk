@@ -18,8 +18,8 @@ lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/types/path.h \
 	lib/configlib/types/sscanf.c \
 	lib/configlib/types/sscanf.h \
-	lib/configlib/types/string.c \
-	lib/configlib/types/string.h
+	lib/configlib/types/string_cvt.c \
+	lib/configlib/types/string_cvt.h
 
 
 check_PROGRAMS += lib/configlib/tests/good
