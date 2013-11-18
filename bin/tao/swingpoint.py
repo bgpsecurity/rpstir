@@ -125,41 +125,11 @@ def swingpoint(src, tar):
 		except Exception , err:
 			sys.stderr.write('ERROR: %s\n' % str(err))
 			sys.exit()
-
-		while not(source[index]['aki'] == None):
-			## Finds all certificates with ski that matches the current certificates aki
-			cur.execute("""
-				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (source[index]['aki']))
-			## Processes each certificate one at a time as there may be one or more matches
-			srcq = cur.fetchone()
-			while srcq:
-				## Creates a Dictionary for each certificate
-				parent = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
-				## Creates a depth field for each certificate that is one greater than its child
-				parent['depth'] = source[index]['depth']+1
-				if(not(parent in source.itervalues())):
-					source[len(source)+1] = parent
-				srcq = cur.fetchone()			
-			index += 1
-
-		## Reset Index for Target
-		index = 1
-
-		while not(target[index]['aki'] == None):
-			## Finds all certificates with ski that matches the current certificates aki
-			cur.execute("""
-				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (target[index]['aki']))
-			## Processes each certificate one at a time as there may be one or more matches			
-			targetq = cur.fetchone()
-			while targetq:
-				## Creates a Dictionary for each certificate
-				parent = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}
-				## Creates a depth field for each certificate that is one greater than its child
-				parent['depth'] = target[index]['depth']+1
-				if(not(parent in target.itervalues())):
-					target[len(target)+1] = parent
-				targetq = cur.fetchone()			
-			index += 1
+	
+		## Loads the Source Dictionary
+		source = util.findParents(source)
+		## Loads the Target Dictionary
+		target = util.findParents(target)
 
 		## Calls Utility function Balance to adjust depths and load visual
 		source,target,visual = util.balance(source,target)
