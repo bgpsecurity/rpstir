@@ -42,7 +42,7 @@ parser.add_option("-s", "--ski",
 # Return the swingpoint hierarchy
 #
 def swingpoint(src, tar):
-	import utility as util
+	import swingpointUtility as util
 	result = []
 
 	src = src.strip()
@@ -160,7 +160,7 @@ def swingpoint(src, tar):
 		return "Swingpoints: %s" % result
 
 	except MySQLdb.Error, e:
-		print "Error %d: %s" % (e.args[0], e.args[1])
+		print "ERROR: %d: %s" % (e.args[0], e.args[1])
 		sys.exit(1)
 
 	finally:
@@ -172,6 +172,9 @@ if args and len(args) > 1:
 else:
 	## Handle Invalid Source and/or Target inputs
 	try:
-		raise ValueError("Invalid source and/or target identifier. See \'--help\' for usage information.")
+		raise Exception("Invalid source and/or target identifier. See \'--help\' for usage information.")
 	except Exception, err:
 		sys.stderr.write('ERROR: %s\n' % str(err))
+		pass
+
+
