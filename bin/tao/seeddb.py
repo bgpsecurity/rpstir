@@ -4,13 +4,15 @@
 import MySQLdb
 import sys
 
-def dbup:
+def dbup():
+	print "HERE"	
 	try:
 		con = MySQLdb.connect(
 			host='localhost', 
 			user='rpstir', 
 			passwd='bbn', 
-			db='rpstir_test'
+			db='rpstir_test',
+			cursorclass=MySQLdb.cursors.DictCursor
 		)
 		cur = con.cursor()
 
@@ -51,17 +53,20 @@ def dbup:
 		if con: con.close()
 	
 
-def dbdown:
+def dbdown():
+
 	try:
+		
 		con = MySQLdb.connect(
 			host='localhost', 
 			user='rpstir', 
 			passwd='bbn', 
-			db='rpstir_test'
+			db='rpstir_test', 
+			cursorclass=MySQLdb.cursors.DictCursor
 		)
 		cur = con.cursor()
-
-		cur.execute("DELETE FROM rpki_cert WHERE local_id > 1000 AND local_id < 1020;")
+		cur.execute("TRUNCATE TABLE rpki_cert;")
+		#cur.execute("DELETE FROM rpki_cert WHERE local_id > 1000 AND local_id < 1020;")
 	except MySQLdb.Error, e:
 		if con: con.rollback()
 		print "Error %d: %s" % (e.args[0],e.args[1])

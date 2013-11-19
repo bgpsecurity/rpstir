@@ -52,6 +52,11 @@ def swingpoint(src, tar):
 	visual = {} # visualization dictionary
 	intersection = {} #intersection dictionary
 
+	tski = None
+	sski = None
+	saki = None
+	taki = None
+
 	index = 1
 	depth = 1
 	output = ""
@@ -101,12 +106,12 @@ def swingpoint(src, tar):
 				taki = targetq['aki']
 		except Exception , err:
 			sys.stderr.write('ERROR: %s\n' % str(err))
-			sys.exit()
+			sys.exit(1)	
 
 		## Handle Edge Case(Source is Targets Parent and Vice Versa)
-		if(sski == taki): 
+		if(sski == taki) and (not(sski == None)): 
 			return '*'+srcq['filename']+'\n'+targetq['filename']+'\nSwingpoints: ['+srcq['filename']+']'
-		if(saki == tski): 
+		if(saki == tski) and (not(saki == None)): 
 			return '*'+targetq['filename']+'\n'+srcq['filename']+'\n'+'Swingpoints: ['+targetq['filename']+']'
 
 		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
@@ -124,7 +129,7 @@ def swingpoint(src, tar):
 				raise Exception("Source and Target do not have valid authority key identifier")
 		except Exception , err:
 			sys.stderr.write('ERROR: %s\n' % str(err))
-			sys.exit()
+			sys.exit(1)
 	
 		## Loads the Source Dictionary
 		source = util.findParents(source)
@@ -175,6 +180,5 @@ else:
 		raise Exception("Invalid source and/or target identifier. See \'--help\' for usage information.")
 	except Exception, err:
 		sys.stderr.write('ERROR: %s\n' % str(err))
-		pass
-
+		
 
