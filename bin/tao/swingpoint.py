@@ -109,10 +109,16 @@ def swingpoint(src, tar):
 			sys.exit(1)	
 
 		## Handle Edge Case(Source is Targets Parent and Vice Versa)
-		if(sski == taki) and (not(sski == None)): 
-			return '*'+srcq['filename']+'\n'+targetq['filename']+'\nSwingpoints: ['+srcq['filename']+']'
-		if(saki == tski) and (not(saki == None)): 
-			return '*'+targetq['filename']+'\n'+srcq['filename']+'\n'+'Swingpoints: ['+targetq['filename']+']'
+		if(sski == taki): 
+			print '*' + srcq['filename']
+			print targetq['filename']
+			result.append(srcq['filename'])
+			return "Swingpoints: %s" % result
+		if(saki == tski): 
+			print '*' + targetq['filename']
+			print srcq['filename']
+			result.append(targetq['filename'])
+			return "Swingpoints: %s" % result
 
 		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
 		tar = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}

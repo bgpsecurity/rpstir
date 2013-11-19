@@ -31,6 +31,24 @@ class TestSwingpoint(unittest.TestCase):
 		source = "J.cer"
 		target = "J.cer"
 		self.assertRaises(SystemExit, lambda: swingpoint(source, target))
+	def test_MultipleParents(self):
+		source = "A.cer"
+		target = "B.cer"
+		expected = "Swingpoints: ['G.cer', 'GPRIME.cer']"
+		result = swingpoint(source, target)
+		self.assertEqual(expected, result)
+	def test_SingleParent(self):
+		source = "M.cer"
+		target = "N.cer"
+		expected = "Swingpoints: ['O.cer']"
+		result = swingpoint(source, target)
+		self.assertEqual(expected, result)		
+	def test_SwingpointIsTarget(self):
+		source = "K.cer"
+		target = "L.cer"
+		expected = "Swingpoints: ['L.cer']"
+		result = swingpoint(source, target)
+		self.assertEqual(expected, result)
 
 if __name__ == '__main__':
 	seed.dbdown()

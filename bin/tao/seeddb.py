@@ -33,8 +33,8 @@ def dbup():
 		# source: M.cer, target: N.cer
 		# vice-versa
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('M.cer','10','12','2031-11-04 15:50:52',1011)")
-		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('N.cer','12',NULL,'2031-11-04 15:50:52',1012)")
-		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('O.cer','11','12','2031-11-04 15:50:52',1013)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('O.cer','12',NULL,'2031-11-04 15:50:52',1012)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('N.cer','11','12','2031-11-04 15:50:52',1013)")
 
 		# 2 node swingpoint (direct ancestor)
 		# source: K.cer, target: L.cer
