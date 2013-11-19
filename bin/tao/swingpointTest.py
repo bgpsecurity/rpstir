@@ -26,27 +26,44 @@ class TestSwingpoint(unittest.TestCase):
 		source = "A.cer"
 		target = "Z.cer"
 		self.assertRaises(SystemExit, lambda: swingpoint(source, target))
-	## Source does not have an AKI
+	## Source and Target does not have an AKI
 	def test_SourceTargetInvalidAKI(self):
 		source = "J.cer"
 		target = "J.cer"
 		self.assertRaises(SystemExit, lambda: swingpoint(source, target))
+	## Multiple Parents Swinpoint Test	
 	def test_MultipleParents(self):
 		source = "A.cer"
 		target = "B.cer"
 		expected = "Swingpoints: ['G.cer', 'GPRIME.cer']"
 		result = swingpoint(source, target)
 		self.assertEqual(expected, result)
+	## Singple Parent Swingpoint Test
 	def test_SingleParent(self):
 		source = "M.cer"
 		target = "N.cer"
 		expected = "Swingpoints: ['O.cer']"
 		result = swingpoint(source, target)
-		self.assertEqual(expected, result)		
+		self.assertEqual(expected, result)
+	## Swingpoint is Target Test		
 	def test_SwingpointIsTarget(self):
 		source = "K.cer"
 		target = "L.cer"
 		expected = "Swingpoints: ['L.cer']"
+		result = swingpoint(source, target)
+		self.assertEqual(expected, result)
+	## No Swingpoint(Different Trust Anchors)	
+	def test_DifferentTrustAnchor(self):
+		source = "A.cer"
+		target = "L.cer"
+		expected = "Swingpoints: []"
+		result = swingpoint(source, target)
+		self.assertEqual(expected, result)
+	## A is farther from Swingpoint Than D	
+	def test_UnbalancedGraph(self):
+		source = "A.cer"
+		target = "D.cer"
+		expected = "Swingpoints: ['G.cer', 'GPRIME.cer']"
 		result = swingpoint(source, target)
 		self.assertEqual(expected, result)
 
