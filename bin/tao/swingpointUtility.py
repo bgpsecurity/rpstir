@@ -65,7 +65,7 @@ def findParents(node):
 		nodeq = cur.fetchone()
 		while nodeq:
 			## Creates a Dictionary for each certificate
-			parent = {'filename': nodeq['filename'], 'ski': nodeq['ski'], 'aki': nodeq['aki']}
+			parent = {'filename': nodeq['filename'], 'ski': nodeq['ski'], 'aki': nodeq['aki'], 'local_id': nodeq['local_id'], 'subject': nodeq['subject']}
 			## Creates a depth field for each certificate that is one greater than its child
 			parent['depth'] = node[index]['depth']+1
 			if(not(parent in node.itervalues())):

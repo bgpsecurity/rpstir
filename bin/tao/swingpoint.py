@@ -26,13 +26,17 @@ import MySQLdb, MySQLdb.cursors
 description = """\
 Print a diagram of the current authority hierarchy in the RPKI cache. This helps
 determine where credentials need to be both relinquished to, and from where credentials
-need to be assigned. Accepts \'.cer\' certificate files as input by default. Set the \'-s\'
-SKI flag to provide source key identifiers.
+need to be assigned. Accepts \'.cer\' certificate files as input by default. Set the \'--ski\'
+flag to provide source key identifiers. Set the \'--uri\' flag to display URIs in the hierarchy.
 """
 usage = "usage: %prog [options] source target"
 parser = OptionParser(description=description, usage=usage)
 parser.add_option("-c", "--certificate",
 				action="store_true", dest="certificate", default=True)
+parser.add_option("-u", "--uri",
+				action="store_true", dest="uri", default=False)
+parser.add_option("-n", "--subject",
+				action="store_true", dest="subject", default=False)
 parser.add_option("-s", "--ski",
 				action="store_true", dest="ski", default=False)
 
@@ -120,8 +124,8 @@ def swingpoint(src, tar):
 			result.append(targetq['filename'])
 			return "Swingpoints: %s" % result
 
-		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki']}
-		tar = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki']}
+		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki'], 'local_id': srcq['local_id'],'subject': srcq['subject']}
+		tar = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki'], 'local_id': targetq['local_id'], 'subject': targetq['subject']}
 		
 		## Load source and target into the first entry and set depth
 		source[index] = src
@@ -141,7 +145,7 @@ def swingpoint(src, tar):
 		source = util.findParents(source)
 		## Loads the Target Dictionary
 		target = util.findParents(target)
-
+		
 		## Calls Utility function Balance to adjust depths and load visual
 		source,target,visual = util.balance(source,target)
 
@@ -160,11 +164,25 @@ def swingpoint(src, tar):
 			for i in range(1,len(visual)+1):
 				## Prepends the swingpoints with a *
 				if x == lowest:
-					prepend = "*"
+					prepend = "(*"
 				else:
-					prepend = " "
+					prepend = "("
 				if visual[i]['depth'] == x:
-					output = output + prepend + visual[i]['filename'] + " "
+					output = output + prepend + visual[i]['filename']
+					if options.uri:
+						cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (visual[i]['local_id']))
+						dirq = cur.fetchone()
+						if dirq and dirq['dirname']:
+							uri = dirq['dirname'].split('EEcertificates/')[-1].split('/')[0]
+							output += ", rsync://"+uri
+					
+					if options.subject:
+						if visual[i]['ski']:
+							output += ", "+visual[i]['ski']
+						if visual[i]['subject']:
+							output += ", "+visual[i]['subject']
+
+					output += ") "
 			print output
 			output = ""
 
