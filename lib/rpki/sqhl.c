@@ -254,6 +254,7 @@ static int dupsigscm(
     conp->mystat.tabname = tabp->hname;
     initTables(scmp);
     one.column = "sig";
+	//@ebarnes this is where the signiture is checked for duplicates
     one.value = msig;
     where.vec = &one;
     where.ntot = 1;
@@ -371,7 +372,13 @@ static int add_cert_internal(
         if ((ptr = cf->fields[i]) != NULL)
         {
             cols[idx].column = certf[i];
-            cols[idx++].value = ptr;
+            if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
+                char * escaped = (char *)malloc(strlen(ptr)*2+1);
+                mysql_escape_string(escaped, ptr, strlen(ptr));
+                cols[idx++].value = escaped;
+            } 
+            else
+                cols[idx++].value = ptr;
         }
     }
     (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
@@ -1029,9 +1036,12 @@ struct cert_answers *find_parent_cert(
     sta = 0;
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
-    if (subject != NULL)
+    if (subject != NULL){
+        char * escaped = (char *)malloc(strlen(subject)*2+1);
+        mysql_escape_string(escaped, subject, strlen(subject));
         snprintf(certSrch->wherestr, WHERESTR_SIZE,
-                 "ski=\'%s\' and subject=\'%s\'", ski, subject);
+                 "ski=\'%s\' and subject=\'%s\'", ski, escaped);
+	}
     else
         snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
@@ -1040,6 +1050,7 @@ struct cert_answers *find_parent_cert(
     if (cert_answers.cert_ansrp)
         free(cert_answers.cert_ansrp);
     cert_answers.cert_ansrp = NULL;
+//@ebarnes, looks like where parent cert subject passed to query
     sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
@@ -1229,7 +1240,9 @@ static int cert_revoked(
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
-    snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", issuer);
+	char * escaped = (char *)malloc(strlen(issuer)*2+1);
+        mysql_escape_string(escaped, issuer, strlen(issuer));
+    snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     isRevoked = 0;
@@ -1932,6 +1945,7 @@ static int verifyChildCert(
         x = readCertFromFile(pathname, &sta);
         if (x == NULL)
             return ERR_SCM_X509;
+//@ebarnes another location for issuer escape
         sta =
             verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta,
                         &chainOK);
@@ -2032,7 +2046,9 @@ static int countvalidparents(
     if (IS != NULL)
     {
         w[1].column = "subject";
-        w[1].value = IS;
+        char * escaped = (char *)malloc(strlen(IS)*2+1);
+        mysql_escape_string(escaped, IS, strlen(IS));
+        w[1].value = escaped;
     }
     where.vec = &w[0];
     where.ntot = (IS == NULL) ? 1 : 2;
@@ -2223,8 +2239,10 @@ static int invalidateChildCert(
         ADDCOL(invalidateCRLSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
     }
+	char * escaped = (char *)malloc(strlen(data->subject)*2+1);
+	mysql_escape_string(escaped, data->subject, strlen(data->subject));
     snprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
-             "aki=\"%s\" AND issuer=\"%s\"", data->ski, data->subject);
+             "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
     addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
 
 
@@ -2345,8 +2363,10 @@ static int verifyOrNotChildren(
         currPropData->data =
             (PropData *) calloc(currPropData->maxSize, sizeof(PropData));
     currPropData->data[0].ski = ski;
+//@ebarnes need to escape this subject
     currPropData->data[0].subject = subject;
     currPropData->data[0].aki = aki;
+//@ebarnes need to escape this issuer
     currPropData->data[0].issuer = issuer;
     currPropData->data[0].id = cert_id;
     currPropData->size = 1;
@@ -2609,6 +2629,7 @@ static int add_cert_2(
     // try to validate children of cert
     if ((sta == 0) && chainOK)
     {
+//@ebarnes field subject checked
         sta = verifyOrNotChildren(conp, cf->fields[CF_FIELD_SKI],
                                   cf->fields[CF_FIELD_SUBJECT],
                                   cf->fields[CF_FIELD_AKI],
