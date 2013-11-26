@@ -149,17 +149,12 @@ make_serial () {
 		rcli -y -d "$TESTS_BUILDDIR/as-$ASN.roa"
 	done
 
-	ASNS_IN_DB=`seq "$FIRST_ASN" "$LAST_ASN"`
+	ASNS_IN_DB="`seq "$FIRST_ASN" "$LAST_ASN"` $SPECIAL_ASN"
 
 	#If I understand correctly, this adds a roa to the db (-f)
 	for ASN in $ASNS_IN_DB; do
 		rcli -y -f "$TESTS_BUILDDIR/as-$ASN.roa"
 	done
-
-	if test -n "$SPECIAL_ASN"; then
-		rcli -y -f "$TESTS_BUILDDIR/as-$SPECIAL_ASN.roa"
-		ASNS_IN_DB+=`echo -e "\n$SPECIAL_ASN"`
-	fi
 
 	"$UPDATE" "$SERIAL"
 }
