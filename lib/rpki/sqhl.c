@@ -2697,6 +2697,7 @@ int add_crl(
         delete_casn(&crl.self);
         return ERR_SCM_INVALASN;
     }
+//@ebarnes maybe here
     if ((sta = crl_profile_chk(&crl)) != 0)
     {
         LOG(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
@@ -2716,6 +2717,7 @@ int add_crl(
     }
     cf->dirid = id;
     // first verify the CRL
+//@ebarnes here
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
     // then add the CRL
@@ -2728,6 +2730,7 @@ int add_crl(
     }
     if (sta == 0)
     {
+//@ebarnes here
         sta = add_crl_internal(scmp, conp, cf);
     }
     // and do the revocations
@@ -2736,6 +2739,7 @@ int add_crl(
         uint8_t *u = (uint8_t *) cf->snlist;
         for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
+//@ebarnes here
             revoke_cert_by_serial(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
                                   cf->fields[CRF_FIELD_AKI], u);
         }
