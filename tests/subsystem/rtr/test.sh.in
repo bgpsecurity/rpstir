@@ -126,6 +126,7 @@ init () {
 	mkdir -p "`config_get LogDir`"
 	rcli -x -t "$TESTS_BUILDDIR" -y
 	rcli -y -F "$TESTS_BUILDDIR/root.cer"
+	rcli -y -F "$TESTS_BUILDDIR/root2.cer"
 	echo "INSERT INTO rtr_session VALUES ($SESSION);" | mysql_cmd
 
 	SERIAL=""
