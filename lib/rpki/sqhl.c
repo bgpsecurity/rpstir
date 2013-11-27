@@ -1068,6 +1068,7 @@ static X509 *parent_cert(
 {
     char ofullname[PATH_MAX];   /* full pathname */
 
+//@ebarnes maybe here
     struct cert_answers *cert_answersp = find_parent_cert(ski, subject, conp);
     struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
     int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
@@ -1380,6 +1381,7 @@ static int verify_crl(
     X509 *parent;
     EVP_PKEY *pkey;
 
+//@ebarnes maybe here
     parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
     if (parent == NULL)
     {
@@ -1390,6 +1392,7 @@ static int verify_crl(
     pkey = X509_get_pubkey(parent);
     sta = X509_CRL_verify(x, pkey);
     X509_free(parent);
+//@ebarnes maybe here
     EVP_PKEY_free(pkey);
     return (sta <= 0) ? ERR_SCM_NOTVALID : 0;
 }
@@ -2718,7 +2721,6 @@ int add_crl(
         delete_casn(&crl.self);
         return ERR_SCM_INVALASN;
     }
-//@ebarnes maybe here
     if ((sta = crl_profile_chk(&crl)) != 0)
     {
         LOG(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
