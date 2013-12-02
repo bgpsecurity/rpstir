@@ -159,32 +159,55 @@ def swingpoint(src, tar):
 				result.append(intersection[i]['filename'])
 
 		## Displays visualization based on Depth
-		depth = visual[len(visual)]['depth']
-		for x in range(depth,-1,-1):
-			for i in range(1,len(visual)+1):
-				## Prepends the swingpoints with a *
-				if x == lowest:
-					prepend = "(*"
-				else:
-					prepend = "("
-				if visual[i]['depth'] == x:
-					output = output + prepend + visual[i]['filename']
-					if options.uri:
-						cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (visual[i]['local_id']))
-						dirq = cur.fetchone()
-						if dirq and dirq['dirname']:
-							uri = dirq['dirname'].split('EEcertificates/')[-1].split('/')[0]
-							output += ", rsync://"+uri
-					
-					if options.subject:
-						if visual[i]['ski']:
-							output += ", "+visual[i]['ski']
-						if visual[i]['subject']:
-							output += ", "+visual[i]['subject']
+		print "From Source:"
+		for x in range(len(source), 0, -1):
+			prepend = str(source[x]['depth'])
+			if source[x]['depth'] == lowest:
+				prepend = "*" + prepend
+			else:
+				prepend = " " + prepend
+			print (prepend + ":\tFilename: " + source[x]['filename'])
 
-					output += ") "
-			print output
-			output = ""
+			if options.uri:
+				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (source[x]['local_id']))
+				dirq = cur.fetchone()
+				if dirq and dirq['dirname']:
+					uri = dirq['dirname'].split('EEcertificates/')[-1].split('/')[0]
+					print "\tURI Path: rsync://" + uri
+				
+			if options.subject:
+				if source[x]['ski'] and source[x]['subject']:
+					print "\t(ski, subject): (" + source[x]['ski'] + " ," + source[x]['subject'] + ")"
+				if source[x]['subject']:
+					print "\tSubject: " + source[x]['subject']
+				if source[x]['ski']:
+					print "\tSKI: " + str(source[x]['ski'])
+			print ""
+		
+		print "From Target:"
+		for x in range(len(target), 0, -1):
+			prepend = str(target[x]['depth'])
+			if target[x]['depth'] == lowest:
+				prepend = "*" + prepend
+			else:
+				prepend = " " + prepend
+			print (prepend + ":\tFilename: " + target[x]['filename'])
+
+			if options.uri:
+				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (target[x]['local_id']))
+				dirq = cur.fetchone()
+				if dirq and dirq['dirname']:
+					uri = dirq['dirname'].split('EEcertificates/')[-1].split('/')[0]
+					print "\tURI Path: rsync://" + uri
+				
+			if options.subject:
+				if target[x]['ski'] and target[x]['subject']:
+					print "\t(ski, subject): (" + target[x]['ski'] + " ," + target[x]['subject'] + ")"
+				if target[x]['subject']:
+					print "\tSubject: " + target[x]['subject']
+				if target[x]['ski']:
+					print "\tSKI: " + str(target[x]['ski'])
+			print ""
 
 		return "Swingpoints: %s" % result
 

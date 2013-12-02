@@ -36,6 +36,10 @@ def dbup():
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('O.cer','12',NULL,'2031-11-04 15:50:52',1012)")
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('N.cer','11','12','2031-11-04 15:50:52',1013)")
 
+		cur.execute("INSERT INTO rpki_dir(dirname, dir_id) VALUES ('/usr/local/var/cache/rpstir/EEcertificates/rpki.apnic.net/repository/B4A1BEA61D6611E2B2CD8B7C72FD1FF2', 1011)")
+		cur.execute("INSERT INTO rpki_dir(dirname, dir_id) VALUES ('/usr/local/var/cache/rpstir/EEcertificates/rpki.apnic.net/repository/B4A1BEA61D6611E2B2CD8B7C72FD1FF2', 1012)")
+		cur.execute("INSERT INTO rpki_dir(dirname, dir_id) VALUES ('/usr/local/var/cache/rpstir/EEcertificates/rpki.apnic.net/repository/B4A1BEA61D6611E2B2CD8B7C72FD1FF2', 1013)")	
+
 		# 2 node swingpoint (direct ancestor)
 		# source: K.cer, target: L.cer
 		# vice-versa
