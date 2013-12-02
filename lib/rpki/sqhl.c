@@ -254,7 +254,6 @@ static int dupsigscm(
     conp->mystat.tabname = tabp->hname;
     initTables(scmp);
     one.column = "sig";
-	//@ebarnes this is where the signiture is checked for duplicates
     one.value = msig;
     where.vec = &one;
     where.ntot = 1;
@@ -373,6 +372,7 @@ static int add_cert_internal(
         {
             cols[idx].column = certf[i];
             if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
+                //TODO needs to be freed
                 char * escaped = (char *)malloc(strlen(ptr)*2+1);
                 mysql_escape_string(escaped, ptr, strlen(ptr));
                 cols[idx++].value = escaped;
@@ -461,7 +461,13 @@ static int add_crl_internal(
         if ((ptr = cf->fields[i]) != NULL)
         {
             cols[idx].column = crlf[i];
-            cols[idx++].value = ptr;
+            if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
+                //TODO needs to be freed
+                char * escaped = (char *)malloc(strlen(ptr)*2+1);
+                mysql_escape_string(escaped, ptr, strlen(ptr));
+                cols[idx++].value = escaped;
+            } else  
+                cols[idx++].value = ptr;
         }
     }
     memset(lid, 0, sizeof(lid));
@@ -1050,7 +1056,6 @@ struct cert_answers *find_parent_cert(
     if (cert_answers.cert_ansrp)
         free(cert_answers.cert_ansrp);
     cert_answers.cert_ansrp = NULL;
-//@ebarnes, looks like where parent cert subject passed to query
     sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
@@ -1068,7 +1073,6 @@ static X509 *parent_cert(
 {
     char ofullname[PATH_MAX];   /* full pathname */
 
-//@ebarnes maybe here
     struct cert_answers *cert_answersp = find_parent_cert(ski, subject, conp);
     struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
     int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
@@ -1381,7 +1385,6 @@ static int verify_crl(
     X509 *parent;
     EVP_PKEY *pkey;
 
-//@ebarnes maybe here
     parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
     if (parent == NULL)
     {
@@ -1392,7 +1395,6 @@ static int verify_crl(
     pkey = X509_get_pubkey(parent);
     sta = X509_CRL_verify(x, pkey);
     X509_free(parent);
-//@ebarnes maybe here
     EVP_PKEY_free(pkey);
     return (sta <= 0) ? ERR_SCM_NOTVALID : 0;
 }
@@ -1948,7 +1950,6 @@ static int verifyChildCert(
         x = readCertFromFile(pathname, &sta);
         if (x == NULL)
             return ERR_SCM_X509;
-//@ebarnes another location for issuer escape
         sta =
             verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta,
                         &chainOK);
@@ -2366,10 +2367,8 @@ static int verifyOrNotChildren(
         currPropData->data =
             (PropData *) calloc(currPropData->maxSize, sizeof(PropData));
     currPropData->data[0].ski = ski;
-//@ebarnes need to escape this subject
     currPropData->data[0].subject = subject;
     currPropData->data[0].aki = aki;
-//@ebarnes need to escape this issuer
     currPropData->data[0].issuer = issuer;
     currPropData->data[0].id = cert_id;
     currPropData->size = 1;
@@ -2386,10 +2385,14 @@ static int verifyOrNotChildren(
                                     !isRoot) == 0;
         if (doIt)
         {
+			//TODO needs to be freed
+            char * escaped = (char *)malloc(sizeof(currPropData->data[idx].subject)*2+1);
+            mysql_escape_string(escaped, currPropData->data[idx].subject, sizeof(currPropData->data[idx].subject));
+
             snprintf(childrenSrch->wherestr, WHERESTR_SIZE,
                      "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
                      currPropData->data[idx].ski, currPropData->data[idx].ski,
-                     currPropData->data[idx].subject);
+                     escaped);
             addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOCHAIN, doVerify, 1);
         }
         if (!isRoot)
@@ -2632,7 +2635,6 @@ static int add_cert_2(
     // try to validate children of cert
     if ((sta == 0) && chainOK)
     {
-//@ebarnes field subject checked
         sta = verifyOrNotChildren(conp, cf->fields[CF_FIELD_SKI],
                                   cf->fields[CF_FIELD_SUBJECT],
                                   cf->fields[CF_FIELD_AKI],
@@ -2740,7 +2742,6 @@ int add_crl(
     }
     cf->dirid = id;
     // first verify the CRL
-//@ebarnes here
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
     // then add the CRL
@@ -2753,7 +2754,6 @@ int add_crl(
     }
     if (sta == 0)
     {
-//@ebarnes here
         sta = add_crl_internal(scmp, conp, cf);
     }
     // and do the revocations
@@ -2762,7 +2762,6 @@ int add_crl(
         uint8_t *u = (uint8_t *) cf->snlist;
         for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
-//@ebarnes here
             revoke_cert_by_serial(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
                                   cf->fields[CRF_FIELD_AKI], u);
         }
@@ -3973,7 +3972,9 @@ int revoke_cert_by_serial(
     mymcf.did = 0;
     mymcf.toplevel = 1;
     w[0].column = "issuer";
-    w[0].value = issuer;
+	char * escaped = (char *)malloc(sizeof(issuer)*2+1);
+	mysql_escape_string(escaped, issuer, sizeof(issuer));
+    w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
     {
