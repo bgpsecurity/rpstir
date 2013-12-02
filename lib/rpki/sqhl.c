@@ -372,8 +372,7 @@ static int add_cert_internal(
         {
             cols[idx].column = certf[i];
             if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
-                //TODO needs to be freed
-                char * escaped = (char *)malloc(strlen(ptr)*2+1);
+                char escaped [strlen(ptr)*2+1];
                 mysql_escape_string(escaped, ptr, strlen(ptr));
                 cols[idx++].value = escaped;
             } 
@@ -462,8 +461,7 @@ static int add_crl_internal(
         {
             cols[idx].column = crlf[i];
             if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
-                //TODO needs to be freed
-                char * escaped = (char *)malloc(strlen(ptr)*2+1);
+                char escaped [strlen(ptr)*2+1];
                 mysql_escape_string(escaped, ptr, strlen(ptr));
                 cols[idx++].value = escaped;
             } else  
@@ -1043,7 +1041,7 @@ struct cert_answers *find_parent_cert(
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
     if (subject != NULL){
-        char * escaped = (char *)malloc(strlen(subject)*2+1);
+        char escaped [strlen(subject)*2+1];
         mysql_escape_string(escaped, subject, strlen(subject));
         snprintf(certSrch->wherestr, WHERESTR_SIZE,
                  "ski=\'%s\' and subject=\'%s\'", ski, escaped);
@@ -1245,8 +1243,8 @@ static int cert_revoked(
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
-	char * escaped = (char *)malloc(strlen(issuer)*2+1);
-        mysql_escape_string(escaped, issuer, strlen(issuer));
+	char escaped [strlen(issuer)*2+1];
+	mysql_escape_string(escaped, issuer, strlen(issuer));
     snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
@@ -2050,7 +2048,7 @@ static int countvalidparents(
     if (IS != NULL)
     {
         w[1].column = "subject";
-        char * escaped = (char *)malloc(strlen(IS)*2+1);
+        char escaped [strlen(IS)*2+1];
         mysql_escape_string(escaped, IS, strlen(IS));
         w[1].value = escaped;
     }
@@ -2243,7 +2241,7 @@ static int invalidateChildCert(
         ADDCOL(invalidateCRLSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
     }
-	char * escaped = (char *)malloc(strlen(data->subject)*2+1);
+	char escaped [strlen(data->subject)*2+1];
 	mysql_escape_string(escaped, data->subject, strlen(data->subject));
     snprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
              "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
@@ -2385,8 +2383,7 @@ static int verifyOrNotChildren(
                                     !isRoot) == 0;
         if (doIt)
         {
-			//TODO needs to be freed
-            char * escaped = (char *)malloc(sizeof(currPropData->data[idx].subject)*2+1);
+            char escaped [strlen(currPropData->data[idx].subject)*2+1];
             mysql_escape_string(escaped, currPropData->data[idx].subject, sizeof(currPropData->data[idx].subject));
 
             snprintf(childrenSrch->wherestr, WHERESTR_SIZE,
@@ -3972,7 +3969,7 @@ int revoke_cert_by_serial(
     mymcf.did = 0;
     mymcf.toplevel = 1;
     w[0].column = "issuer";
-	char * escaped = (char *)malloc(sizeof(issuer)*2+1);
+    char escaped [strlen(issuer)*2+1];
 	mysql_escape_string(escaped, issuer, sizeof(issuer));
     w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
