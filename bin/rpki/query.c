@@ -408,7 +408,7 @@ static int doQuery(
                     name[j] = ' ';
             }
             char escaped [strlen(name)*2+1];
-            mysql_real_escape_string(conp, escaped, name, sizeof(name));
+            mysql_escape_string(escaped, name, sizeof(name));
 
             strncat(whereStr, escaped, maxW - strlen(whereStr));
             strncat(whereStr, "\"", maxW - strlen(whereStr));
