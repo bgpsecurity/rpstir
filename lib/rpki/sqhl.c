@@ -1045,7 +1045,7 @@ struct cert_answers *find_parent_cert(
         mysql_escape_string(escaped, subject, strlen(subject));
         snprintf(certSrch->wherestr, WHERESTR_SIZE,
                  "ski=\'%s\' and subject=\'%s\'", ski, escaped);
-	}
+    }
     else
         snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
@@ -1243,8 +1243,8 @@ static int cert_revoked(
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
-	char escaped [strlen(issuer)*2+1];
-	mysql_escape_string(escaped, issuer, strlen(issuer));
+    char escaped [strlen(issuer)*2+1];
+    mysql_escape_string(escaped, issuer, strlen(issuer));
     snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
@@ -2241,8 +2241,8 @@ static int invalidateChildCert(
         ADDCOL(invalidateCRLSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
     }
-	char escaped [strlen(data->subject)*2+1];
-	mysql_escape_string(escaped, data->subject, strlen(data->subject));
+    char escaped [strlen(data->subject)*2+1];
+    mysql_escape_string(escaped, data->subject, strlen(data->subject));
     snprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
              "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
     addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
@@ -3970,7 +3970,7 @@ int revoke_cert_by_serial(
     mymcf.toplevel = 1;
     w[0].column = "issuer";
     char escaped [strlen(issuer)*2+1];
-	mysql_escape_string(escaped, issuer, sizeof(issuer));
+    mysql_escape_string(escaped, issuer, sizeof(issuer));
     w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
