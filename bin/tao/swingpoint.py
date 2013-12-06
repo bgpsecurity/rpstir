@@ -67,79 +67,34 @@ def swingpoint(src, tar):
 	lowest = sys.maxint
 
 	try:
-		## Establish Connection to RPSTIR Database
-		con = MySQLdb.connect(
-			host='localhost', 
-			user='rpstir', 
-			passwd='bbn', 
-			db='rpstir_test', 
-			# use the cursor class DictCursor to return a dictionary result instead of a tuple for queries
-			cursorclass=MySQLdb.cursors.DictCursor
-		)
-		cur = con.cursor()
+		srcq = util.findCert(options, src)
+		targetq = util.findCert(options, tar)
 
-		if options.certificate:
-			cur.execute("""
-				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
+		## Handle Source Query Results
+		if srcq is None:
+			raise Exception("No row found for source \'%s\'" % src)
+		else:
+			sski = srcq['ski']
+			saki = srcq['aki']
+		## Handle Target Query Results
+		if targetq is None: 
+			raise Exception("No row found for target \'%s\'" % tar)
+		else:
+			tski = targetq['ski']
+			taki = targetq['aki']
 
-		if options.ski:
-			cur.execute("""
-				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
-		srcq = cur.fetchone()
-		if options.certificate:
-			cur.execute("""
-				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
 
-		if options.ski:
-			cur.execute("""
-				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
-		targetq = cur.fetchone()
-
-		try:
-			## Handle Source Query Results
-			if srcq is None:
-				raise Exception("No row found for source \'%s\'" % src)
-			else:
-				sski = srcq['ski']
-				saki = srcq['aki']
-			## Handle Target Query Results
-			if targetq is None: 
-				raise Exception("No row found for target \'%s\'" % tar)
-			else:
-				tski = targetq['ski']
-				taki = targetq['aki']
-		except Exception , err:
-			sys.stderr.write('ERROR: %s\n' % str(err))
-			sys.exit(1)	
-
-		## Handle Edge Case(Source is Targets Parent and Vice Versa)
-		if(sski == taki): 
-			print '*' + srcq['filename']
-			print targetq['filename']
-			result.append(srcq['filename'])
-			return "Swingpoints: %s" % result
-		if(saki == tski): 
-			print '*' + targetq['filename']
-			print srcq['filename']
-			result.append(targetq['filename'])
-			return "Swingpoints: %s" % result
-
+		## Load source and target into the first entry and set depth
 		src = {'filename': srcq['filename'], 'ski': srcq['ski'], 'aki': srcq['aki'], 'local_id': srcq['local_id'],'subject': srcq['subject']}
 		tar = {'filename': targetq['filename'], 'ski': targetq['ski'], 'aki': targetq['aki'], 'local_id': targetq['local_id'], 'subject': targetq['subject']}
-		
-		## Load source and target into the first entry and set depth
 		source[index] = src
 		source[index]['depth'] = 0
 		target[index] = tar
 		target[index]['depth'] = 0
 
 		## Throw exception on bad source or target certificates
-		try:
-			if (source[index]['aki'] == None) and (target[index]['aki'] == None):
-				raise Exception("Source and Target do not have valid authority key identifier")
-		except Exception , err:
-			sys.stderr.write('ERROR: %s\n' % str(err))
-			sys.exit(1)
+		if (source[index]['aki'] == None) and (target[index]['aki'] == None):
+			raise Exception("Source and Target do not have valid authority key identifier")
 	
 		## Loads the Source Dictionary
 		source = util.findParents(source)
@@ -167,13 +122,9 @@ def swingpoint(src, tar):
 
 		return "Swingpoints: %s" % result
 
-	except MySQLdb.Error, e:
-		print "ERROR: %d: %s" % (e.args[0], e.args[1])
-		sys.exit(1)
-
-	finally:
-		if con:
-			con.close()
+	except Exception , err:
+		sys.stderr.write('ERROR: %s\n' % str(err))
+		sys.exit(1)	
 
 if args and len(args) > 1:
 	print swingpoint(args[0], args[1])

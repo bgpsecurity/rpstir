@@ -70,6 +70,7 @@ def dbdown():
 		)
 		cur = con.cursor()
 		cur.execute("TRUNCATE TABLE rpki_cert;")
+		cur.execute("TRUNCATE TABLE rpki_dir;")
 		#cur.execute("DELETE FROM rpki_cert WHERE local_id > 1000 AND local_id < 1020;")
 	except MySQLdb.Error, e:
 		if con: con.rollback()
