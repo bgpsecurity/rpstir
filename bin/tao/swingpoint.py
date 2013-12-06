@@ -160,58 +160,10 @@ def swingpoint(src, tar):
 
 		## Displays visualization based on Depth
 		print "From Source:"
-		for x in range(len(source), 0, -1):
-			prepend = str(source[x]['depth'])
-			if source[x]['depth'] == lowest:
-				prepend = "*" + prepend
-			else:
-				prepend = " " + prepend
-			print (prepend + ":\tFilename: " + source[x]['filename'])
-
-			if options.uri:
-				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (source[x]['local_id']))
-				dirq = cur.fetchone()
-				cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", source[x]['local_id'])
-				rootq = cur.fetchone()
-				if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
-					uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
-					print "\tURI Path: rsync://" + uri
-				
-			if options.subject:
-				if source[x]['ski'] and source[x]['subject']:
-					print "\t(ski, subject): (" + source[x]['ski'] + " ," + source[x]['subject'] + ")"
-				if source[x]['subject']:
-					print "\tSubject: " + source[x]['subject']
-				if source[x]['ski']:
-					print "\tSKI: " + str(source[x]['ski'])
-			print ""
+		util.visualize(options, lowest, source)
 		
 		print "From Target:"
-		for x in range(len(target), 0, -1):
-			prepend = str(target[x]['depth'])
-			if target[x]['depth'] == lowest:
-				prepend = "*" + prepend
-			else:
-				prepend = " " + prepend
-			print (prepend + ":\tFilename: " + target[x]['filename'])
-
-			if options.uri:
-				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (source[x]['local_id']))
-				dirq = cur.fetchone()
-				cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", source[x]['local_id'])
-				rootq = cur.fetchone()
-				if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
-					uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
-					print "\tURI Path: rsync://" + uri
-				
-			if options.subject:
-				if target[x]['ski'] and target[x]['subject']:
-					print "\t(ski, subject): (" + target[x]['ski'] + " ," + target[x]['subject'] + ")"
-				if target[x]['subject']:
-					print "\tSubject: " + target[x]['subject']
-				if target[x]['ski']:
-					print "\tSKI: " + str(target[x]['ski'])
-			print ""
+		util.visualize(options, lowest, target)
 
 		return "Swingpoints: %s" % result
 
@@ -231,5 +183,3 @@ else:
 		raise Exception("Invalid source and/or target identifier. See \'--help\' for usage information.")
 	except Exception, err:
 		sys.stderr.write('ERROR: %s\n' % str(err))
-		
-

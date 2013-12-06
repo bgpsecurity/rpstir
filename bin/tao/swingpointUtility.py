@@ -74,3 +74,45 @@ def findParents(node):
 		index += 1
 
 	return node
+
+def visualize(options, lowest, node):
+	try:
+		## Establish Connection to RPSTIR Database
+		con = MySQLdb.connect(
+			host='localhost', 
+			user='rpstir', 
+			passwd='bbn', 
+			db='rpstir_test', 
+			# use the cursor class DictCursor to return a dictionary result instead of a tuple for queries
+			cursorclass=MySQLdb.cursors.DictCursor
+		)
+		cur = con.cursor()
+	except MySQLdb.Error, e:
+		print "Error %d: %s" % (e.args[0], e.args[1])
+		sys.exit(1)	
+
+	for x in range(len(node), 0, -1):
+		prepend = str(node[x]['depth'])
+		if node[x]['depth'] == lowest:
+			prepend = "*" + prepend
+		else:
+			prepend = " " + prepend
+		print (prepend + ":\tFilename: " + node[x]['filename'])
+		if options.uri:
+			cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (node[x]['local_id']))
+			dirq = cur.fetchone()
+			cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", node[x]['local_id'])
+			rootq = cur.fetchone()
+			if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
+				uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
+				print "\tURI Path: rsync://" + uri
+				
+		if options.subject:
+			if node[x]['ski'] and node[x]['subject']:
+				print "\t(ski, subject): (" + node[x]['ski'] + " ," + node[x]['subject'] + ")"
+			if node[x]['subject']:
+				print "\tSubject: " + node[x]['subject']
+			if node[x]['ski']:
+				print "\tSKI: " + str(node[x]['ski'])
+		print ""
+	return 1
