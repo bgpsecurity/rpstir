@@ -51,29 +51,32 @@ def findParents(node):
 			cursorclass=MySQLdb.cursors.DictCursor
 		)
 		cur = con.cursor()
+
+		index = 1
+		parent = {}
+		while not(node[index]['aki'] == None):
+			## Finds all certificates with ski that matches the current certificates aki
+			cur.execute("""
+				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (node[index]['aki']))
+			## Processes each certificate one at a time as there may be one or more matches
+			nodeq = cur.fetchone()
+			while nodeq:
+				## Creates a Dictionary for each certificate
+				parent = {'filename': nodeq['filename'], 'ski': nodeq['ski'], 'aki': nodeq['aki'], 'local_id': nodeq['local_id'], 'subject': nodeq['subject']}
+				## Creates a depth field for each certificate that is one greater than its child
+				parent['depth'] = node[index]['depth']+1
+				if(not(parent in node.itervalues())):
+					node[len(node)+1] = parent
+				nodeq = cur.fetchone()			
+			index += 1
+
+		return node
 	except MySQLdb.Error, e:
 		print "Error %d: %s" % (e.args[0], e.args[1])
 		sys.exit(1)
-		
-	index = 1
-	parent = {}
-	while not(node[index]['aki'] == None):
-		## Finds all certificates with ski that matches the current certificates aki
-		cur.execute("""
-			SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (node[index]['aki']))
-		## Processes each certificate one at a time as there may be one or more matches
-		nodeq = cur.fetchone()
-		while nodeq:
-			## Creates a Dictionary for each certificate
-			parent = {'filename': nodeq['filename'], 'ski': nodeq['ski'], 'aki': nodeq['aki'], 'local_id': nodeq['local_id'], 'subject': nodeq['subject']}
-			## Creates a depth field for each certificate that is one greater than its child
-			parent['depth'] = node[index]['depth']+1
-			if(not(parent in node.itervalues())):
-				node[len(node)+1] = parent
-			nodeq = cur.fetchone()			
-		index += 1
-
-	return node
+	finally:
+		if con:
+			con.close()
 
 def visualize(options, lowest, node):
 	try:
@@ -87,32 +90,36 @@ def visualize(options, lowest, node):
 			cursorclass=MySQLdb.cursors.DictCursor
 		)
 		cur = con.cursor()
+
+		for x in range(len(node), 0, -1):
+			prepend = str(node[x]['depth'])
+			if node[x]['depth'] == lowest:
+				prepend = "*" + prepend
+			else:
+				prepend = " " + prepend
+			print (prepend + ":\tFilename: " + node[x]['filename'])
+			if options.uri:
+				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (node[x]['local_id']))
+				dirq = cur.fetchone()
+				cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", node[x]['local_id'])
+				rootq = cur.fetchone()
+				if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
+					uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
+					print "\tURI Path: rsync://" + uri
+				
+			if options.subject:
+				if node[x]['ski'] and node[x]['subject']:
+					print "\t(ski, subject): (" + node[x]['ski'] + " ," + node[x]['subject'] + ")"
+				if node[x]['subject']:
+					print "\tSubject: " + node[x]['subject']
+				if node[x]['ski']:
+					print "\tSKI: " + str(node[x]['ski'])
+			print ""
+		return 1
+
 	except MySQLdb.Error, e:
 		print "Error %d: %s" % (e.args[0], e.args[1])
-		sys.exit(1)	
-
-	for x in range(len(node), 0, -1):
-		prepend = str(node[x]['depth'])
-		if node[x]['depth'] == lowest:
-			prepend = "*" + prepend
-		else:
-			prepend = " " + prepend
-		print (prepend + ":\tFilename: " + node[x]['filename'])
-		if options.uri:
-			cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (node[x]['local_id']))
-			dirq = cur.fetchone()
-			cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", node[x]['local_id'])
-			rootq = cur.fetchone()
-			if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
-				uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
-				print "\tURI Path: rsync://" + uri
-				
-		if options.subject:
-			if node[x]['ski'] and node[x]['subject']:
-				print "\t(ski, subject): (" + node[x]['ski'] + " ," + node[x]['subject'] + ")"
-			if node[x]['subject']:
-				print "\tSubject: " + node[x]['subject']
-			if node[x]['ski']:
-				print "\tSKI: " + str(node[x]['ski'])
-		print ""
-	return 1
+		sys.exit(1)
+	finally:
+		if con:
+			con.close()
