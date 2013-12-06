@@ -53,7 +53,6 @@ def swingpoint(src, tar):
 	tar = tar.strip()
 	source = {} # source dictionary
 	target = {} # target dictionary
-	visual = {} # visualization dictionary
 	intersection = {} #intersection dictionary
 
 	tski = None
@@ -102,7 +101,7 @@ def swingpoint(src, tar):
 		target = util.findParents(target)
 		
 		## Calls Utility function Balance to adjust depths and load visual
-		source,target,visual = util.balance(source,target)
+		source,target = util.balance(source,target)
 
 		## Finds the intersection of source and target dictionaries
 		intersection = util.intersection(source,target)
