@@ -80,19 +80,19 @@ def swingpoint(src, tar):
 
 		if options.certificate:
 			cur.execute("""
-				SELECT * FROM rpki_cert WHERE filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
+				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
 
 		if options.ski:
 			cur.execute("""
-				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
+				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (src))
 		srcq = cur.fetchone()
 		if options.certificate:
 			cur.execute("""
-				SELECT * FROM rpki_cert WHERE filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
+				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND filename=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
 
 		if options.ski:
 			cur.execute("""
-				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
+				SELECT * FROM rpki_cert WHERE MOD(flags,16) < 8 AND ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (tar))
 		targetq = cur.fetchone()
 
 		try:
@@ -171,8 +171,10 @@ def swingpoint(src, tar):
 			if options.uri:
 				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (source[x]['local_id']))
 				dirq = cur.fetchone()
-				if dirq and dirq['dirname']:
-					uri = dirq['dirname'].split('EEcertificates/')[-1].split('/')[0]
+				cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", source[x]['local_id'])
+				rootq = cur.fetchone()
+				if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
+					uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
 					print "\tURI Path: rsync://" + uri
 				
 			if options.subject:
@@ -194,10 +196,12 @@ def swingpoint(src, tar):
 			print (prepend + ":\tFilename: " + target[x]['filename'])
 
 			if options.uri:
-				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (target[x]['local_id']))
+				cur.execute("SELECT * FROM rpki_dir WHERE dir_id = %s", (source[x]['local_id']))
 				dirq = cur.fetchone()
-				if dirq and dirq['dirname']:
-					uri = dirq['dirname'].split('EEcertificates/')[-1].split('/')[0]
+				cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", source[x]['local_id'])
+				rootq = cur.fetchone()
+				if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
+					uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
 					print "\tURI Path: rsync://" + uri
 				
 			if options.subject:
