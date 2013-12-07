@@ -1,5 +1,15 @@
+###
+# Program: swingpointUtility.py
+# Author(s): Brian Buchanan, John Slivka, Elijah Batkoski
+# Description: This is the utility file for swingpoint.py and handles majority of the functions that are
+# 	used mutiple times or used to provide calculations
+###
 import MySQLdb, MySQLdb.cursors
-## Function used to balance source and target and load visual
+###
+# This function is given both the source and target dictionary.  Both dictionaries are already sorted due 
+# to the way they are loaded; therefore, the highest index of the dictionary will be the "lowest" in depth.
+# Then the dictionaries are balance to ensure common nodes have the same depth.
+###
 def balance(source,target):
 		## Loads visualization for unbalanced graph towards source and adjusts for the depth difference
 		if source[len(source)]['depth'] > target[len(target)]['depth']:
@@ -15,7 +25,9 @@ def balance(source,target):
 					source[i]['depth'] += diff
 		return source,target
 
-## Function used to find the intersection of Source and Target dictionaries
+###
+# This function is a simple intersection of both source and target dictionaries
+###
 def intersection(source,target):
 	results = {}
 	## Loop through both lists and check for matches
@@ -24,18 +36,16 @@ def intersection(source,target):
 			results[len(results)+1] = source[i]
 	return results
 
-## Loads a dictionary with all nodes above the given node
+###
+# This function is given a dictionary containing one node and parses up the graph based on
+# SKI/AKI pairs.  The dictionary is loaded by (index:nodeInfo).  The index is used in this function
+# as a proxy for calculating depth.  The variable multiple is used to test that if multiple parents
+# are found then both must have null AKIs to terminate the loop
+###
 def findParents(node):
 	try:
 		## Establish Connection to RPSTIR Database
-		con = MySQLdb.connect(
-			host='localhost', 
-			user='rpstir', 
-			passwd='bbn', 
-			db='rpstir_test', 
-			# use the cursor class DictCursor to return a dictionary result instead of a tuple for queries
-			cursorclass=MySQLdb.cursors.DictCursor
-		)
+		con = getCon()
 		cur = con.cursor()
 
 		index = 1
@@ -68,22 +78,20 @@ def findParents(node):
 	finally:
 		if con:
 			con.close()
-
+###
+# Visualize is passed in display options, the value of the lowest depth based on the intersection, and
+# a dictionary of nodes from either the source or target.  Each node is printed out in a list format 
+# displaying the desired information based on options.  The swingpoints are pepended with a *.
+###
 def visualize(options, lowest, node):
 	try:
 		## Establish Connection to RPSTIR Database
-		con = MySQLdb.connect(
-			host='localhost', 
-			user='rpstir', 
-			passwd='bbn', 
-			db='rpstir_test', 
-			# use the cursor class DictCursor to return a dictionary result instead of a tuple for queries
-			cursorclass=MySQLdb.cursors.DictCursor
-		)
+		con = getCon()
 		cur = con.cursor()
 
 		for x in range(len(node), 0, -1):
 			prepend = str(node[x]['depth'])
+			## Prepends swingpoints with a *
 			if node[x]['depth'] == lowest:
 				prepend = "*" + prepend
 			else:
@@ -114,19 +122,15 @@ def visualize(options, lowest, node):
 	finally:
 		if con:
 			con.close()
-
+###
+# This function is used to find the initial source and target certificate based on the options flag
+###
 def findCert(options, node):
 	try:
 		## Establish Connection to RPSTIR Database
-		con = MySQLdb.connect(
-			host='localhost', 
-			user='rpstir', 
-			passwd='bbn', 
-			db='rpstir_test', 
-			# use the cursor class DictCursor to return a dictionary result instead of a tuple for queries
-			cursorclass=MySQLdb.cursors.DictCursor
-		)
+		con = getCon()
 		cur = con.cursor()	
+
 		nodeq = None
 		if options.certificate:
 			cur.execute("""
@@ -144,3 +148,16 @@ def findCert(options, node):
 	finally:
 		if con:
 			con.close()
+
+###
+# Creates a connection to the rpstir test database.
+###
+def getCon():
+	return MySQLdb.connect(
+			host='localhost', 
+			user='rpstir', 
+			passwd='bbn', 
+			db='rpstir_test', 
+			# use the cursor class DictCursor to return a dictionary result instead of a tuple for queries
+			cursorclass=MySQLdb.cursors.DictCursor
+		)

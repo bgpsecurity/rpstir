@@ -1,11 +1,10 @@
+###
+# Program: swingpoint.py
+#	Author(s): Brian Buchanan, John Slivka, Elijah Batkoski
+###
+
 #!/usr/bin/python
 #!@PYTHON@
-
-# swingpoint.py
-#
-# Locate root authority hierarchy given a source and target
-# certificate or SKI as input. Uses current RPKI database and local
-# repository files.
 #
 # usage: swingpoint.py [options]
 #
@@ -42,23 +41,20 @@ parser.add_option("-s", "--ski",
 
 (options, args) = parser.parse_args()
 
-#
-# Return the swingpoint hierarchy
-#
+###
+# This function is the swingpoint finder tool that is used to find the lowest common ancestor of the given
+# source and target certificate/ski.  The output of this function is a list displaying the certificate
+# filename and other information based on options
+###
 def swingpoint(src, tar):
 	import swingpointUtility as util
 	result = []
 
 	src = src.strip()
 	tar = tar.strip()
-	source = {} # source dictionary
-	target = {} # target dictionary
-	intersection = {} #intersection dictionary
-
-	tski = None
-	sski = None
-	saki = None
-	taki = None
+	source = {}
+	target = {}
+	intersection = {}
 
 	index = 1
 	depth = 1
@@ -66,6 +62,7 @@ def swingpoint(src, tar):
 	lowest = sys.maxint
 
 	try:
+		## Finds initial certs based on the options
 		srcq = util.findCert(options, src)
 		targetq = util.findCert(options, tar)
 
@@ -106,13 +103,13 @@ def swingpoint(src, tar):
 		## Finds the intersection of source and target dictionaries
 		intersection = util.intersection(source,target)
 
-		## Finds the lowest point certificate in the intersection
+		## Finds the lowest point certificate in the intersection(Swingpoints)
 		for i in range(1,len(intersection)+1):
 			if intersection[i]['depth'] <= lowest:
 				lowest = intersection[i]['depth']
 				result.append(intersection[i]['filename'])
 
-		## Displays visualization based on Depth
+		## Displays visualization
 		print "From Source:"
 		util.visualize(options, lowest, source)
 		
