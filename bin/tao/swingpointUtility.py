@@ -103,12 +103,12 @@ def visualize(options, lowest, node):
 				cur.execute("SELECT * FROM rpki_metadata WHERE local_id = %s", node[x]['local_id'])
 				rootq = cur.fetchone()
 				if dirq and dirq['dirname'] and rootq and rootq['rootdir']:
-					uri = dirq['dirname'].split(rootq['rootdir'])[-1].split('/')[0]
+					uri = dirq['dirname'].split(rootq['rootdir']+'/')[-1].split('/')[0]
 					print "\tURI Path: rsync://" + uri
 				
 			if options.subject:
-				if node[x]['ski'] and node[x]['subject']:
-					print "\t(ski, subject): (" + node[x]['ski'] + " ," + node[x]['subject'] + ")"
+				#if node[x]['ski'] and node[x]['subject']:
+				#	print "\t(ski, subject): (" + node[x]['ski'] + " ," + node[x]['subject'] + ")"
 				if node[x]['subject']:
 					print "\tSubject: " + node[x]['subject']
 				if node[x]['ski']:

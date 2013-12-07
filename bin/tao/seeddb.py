@@ -44,7 +44,7 @@ def dbup():
 		# not actual hex values, ends with XX, letter, etc g, gg denotes a g prime
 		# source: A.cer, target: B.cer
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0a.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:01','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:02','2031-11-04 15:50:52',1001)")
-		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0b.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:02','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:03','2031-11-04 15:50:52',1002)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0b.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:07','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:06','2031-11-04 15:50:52',1002)")
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0c.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:02','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:03','2031-11-04 15:50:52',1003)")
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8fcc.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:02','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:03','2030-11-04 15:50:52',1004)")
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0d.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:06','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:03','2031-11-04 15:50:52',1005)")
@@ -57,9 +57,9 @@ def dbup():
 		# 3 node swingpoint
 		# source: M.cer, target: N.cer
 		# vice-versa
-		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0m.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:10','12','2031-11-04 15:50:52',1011)")
-		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0n.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:0C',NULL,'2031-11-04 15:50:52',1012)")
-		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0o.cer.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:0B','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:0C','2031-11-04 15:50:52',1013)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0m.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:10','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:12','2031-11-04 15:50:52',1011)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0o.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:12',NULL,'2031-11-04 15:50:52',1012)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('fd1f287669507cad7f87e6ac87af2e9fd54b8f0n.cer','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:11','FD:1F:28:76:69:50:7C:AD:7F:87:E6:AC:87:AF:2E:9F:D5:4B:8F:12','2031-11-04 15:50:52',1013)")
 
 		# 2 node swingpoint (direct ancestor)
 		# source: K.cer, target: L.cer
@@ -100,6 +100,8 @@ def dbup():
 		cur.execute("INSERT INTO rpki_metadata (rootdir, local_id) VALUES ('/usr/local/var/cache/rpstir',1013)")
 		cur.execute("INSERT INTO rpki_metadata (rootdir, local_id) VALUES ('/usr/local/var/cache/rpstir',1014)")
 		cur.execute("INSERT INTO rpki_metadata (rootdir, local_id) VALUES ('/usr/local/var/cache/rpstir',1015)")
+
+		cur.execute("UPDATE rpki_cert SET subject = '/CN=52415bf6-482b' WHERE 1;")
 
 		con.commit()
 
