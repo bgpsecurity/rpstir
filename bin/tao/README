@@ -1,0 +1,25 @@
+README FILE
+
+TABLE OF CONTENTS:
+
+seeddb.py
+
+This file is a script that adds all test certificates to the test databases so that the test scripts can be run. It contains two functions: dbup and dbdown. These functions respectively upload certificates with specific details to the database in order for tests to be run and delete all certificates that were uploaded. dbdown only deletes certificates within a certain range as there may be other users with certificates outside of the range of our scripts within the same database.
+
+swingpoint.py
+
+This file is the main python file for the Swingpoint Finder Tool. When run in the command prompt with target and source certificates (along with optional flags) identified the tool outputs a visualization of the Swingpoint (lowest common parent) and the paths taken from each certificate to get there. It contains a mixture of inline MySQL and Python code.
+
+swingpointTest.py
+
+This file is a python script that contains all of the unit tests for the SwingPoint Finder Tool. It covers items such as invalid certificates or bad certificate details.
+
+utility.py
+
+This file contains utility functions that are used within "swingpoint.py". The file currently contains two functions: balance and intersection. balance is used to balance the depths of the source and target certificate paths, so that if one is deeper than the other it won't interfere with the visualization output because of the difference in depths. intersection is a standard function for finding the intersection of two dictionaries.
+
+utilityTest.py
+
+This file is a python script that contains tests to ensure that the two helper functions in the "utility.py" file are functioning properly.
+
+
