@@ -6,10 +6,6 @@
 
 #include "semaphore_compat.h"
 
-// TODO: remove this, it's just for testing
-#undef HAVE_SEM_TIMEDWAIT
-#undef HAVE_CLOCK_GETTIME
-
 /*
  * OpenBSD lacks sem_timedwait(), so we implement a simple version here.  This 
  * function is sufficient for the RTR server implementation because threads
