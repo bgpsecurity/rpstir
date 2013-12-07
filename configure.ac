@@ -260,6 +260,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([
     alarm
     bzero
+    clock_gettime
     dup2
     getcwd
     gethostbyaddr
