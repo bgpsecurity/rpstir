@@ -65,6 +65,7 @@ int sem_timedwait(
             break;
         }
 
+        #ifdef HAVE_CLOCK_GETTIME
         if (clock_gettime(CLOCK_REALTIME, &now) != 0)
         {
             // unfortunately none of the valid errors for sem_timedwait
@@ -73,6 +74,10 @@ int sem_timedwait(
             sem_errno = EINVAL;
             break;
         }
+        #else
+        now.tv_sec = time(NULL);
+        now.tv_nsec = 0L;
+        #endif
 
         if (now.tv_sec > abs_timeout->tv_sec
             || (now.tv_sec == abs_timeout->tv_sec
