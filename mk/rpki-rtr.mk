@@ -79,8 +79,7 @@ check_DATA += \
 	tests/subsystem/rtr/as-5.roa \
 	tests/subsystem/rtr/as-6.roa \
 	tests/subsystem/rtr/as-2147483647.roa \
-	tests/subsystem/rtr/root.cer \
-	tests/subsystem/rtr/root2.cer
+	tests/subsystem/rtr/root.cer
 
 EXTRA_DIST += \
 	tests/subsystem/rtr/ee.options \
@@ -93,7 +92,6 @@ EXTRA_DIST += \
 	tests/subsystem/rtr/response.serial_notify.log.correct \
 	tests/subsystem/rtr/response.serial_queries.log.correct \
 	tests/subsystem/rtr/root.options \
-	tests/subsystem/rtr/root2.options \
 	tests/subsystem/rtr/test.conf
 
 RPKI_RTR_TEST_KEYS = \
@@ -104,8 +102,7 @@ RPKI_RTR_TEST_KEYS = \
 	tests/subsystem/rtr/ee-5.key \
 	tests/subsystem/rtr/ee-6.key \
 	tests/subsystem/rtr/ee-2147483647.key \
-	tests/subsystem/rtr/root.key \
-	tests/subsystem/rtr/root2.key
+	tests/subsystem/rtr/root.key
 
 CLEANFILES += $(RPKI_RTR_TEST_KEYS)
 
@@ -117,7 +114,6 @@ $(RPKI_RTR_TEST_KEYS):
 		$(TESTS_ENVIRONMENT) bin/rpki-object/gen_key "$@" 2048
 
 CLEANFILES += tests/subsystem/rtr/root.cer
-CLEANFILES += tests/subsystem/rtr/root2.cer
 
 tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/subsystem/rtr/root.options
 	mkdir -p "$(@D)"
@@ -129,17 +125,6 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 		CERT \
 		outputfilename="$@" \
 		subjkeyfile="tests/subsystem/rtr/root.key"
-
-tests/subsystem/rtr/root2.cer: tests/subsystem/rtr/root2.key $(top_srcdir)/tests/subsystem/rtr/root2.options
-	mkdir -p "$(@D)"
-	TEST_LOG_NAME=`basename "$@"` \
-		TEST_LOG_DIR=`dirname "$@"` \
-		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
-		-f $(top_srcdir)/tests/subsystem/rtr/root2.options \
-		CERT \
-		outputfilename="$@" \
-		subjkeyfile="tests/subsystem/rtr/root2.key"
 
 RPKI_RTR_TEST_EE_CERTS = \
 	tests/subsystem/rtr/as-1.ee.cer \
@@ -185,7 +170,7 @@ RPKI_RTR_TEST_MAX_AS_EE_CERT = \
 CLEANFILES += $(RPKI_RTR_TEST_MAX_AS_EE_CERT)
 
 tests/subsystem/rtr/as-2147483647.ee.cer: tests/subsystem/rtr/ee-2147483647.key
-$(RPKI_RTR_TEST_MAX_AS_EE_CERT): tests/subsystem/rtr/root2.key tests/subsystem/rtr/root2.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
+$(RPKI_RTR_TEST_MAX_AS_EE_CERT): tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
 	mkdir -p "$(@D)"
 	ASnumber=2147483647; \
 	number=2; \
@@ -199,8 +184,8 @@ $(RPKI_RTR_TEST_MAX_AS_EE_CERT): tests/subsystem/rtr/root2.key tests/subsystem/r
 		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
 		CERT \
 		outputfilename="$@" \
-		parentcertfile=tests/subsystem/rtr/root2.cer \
-		parentkeyfile=tests/subsystem/rtr/root2.key \
+		parentcertfile=tests/subsystem/rtr/root.cer \
+		parentkeyfile=tests/subsystem/rtr/root.key \
 		subjkeyfile="$$key" \
 		serial="$$ASnumber" \
 		subject="as$$ASnumber" \
