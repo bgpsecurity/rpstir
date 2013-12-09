@@ -3970,7 +3970,13 @@ int revoke_cert_by_serial(
     mymcf.toplevel = 1;
     w[0].column = "issuer";
     char escaped [strlen(issuer)*2+1];
+<<<<<<< HEAD
     mysql_escape_string(escaped, issuer, strlen(issuer));
+||||||| merged common ancestors
+	mysql_escape_string(escaped, issuer, sizeof(issuer));
+=======
+    mysql_escape_string(escaped, issuer, sizeof(issuer));
+>>>>>>> f1830ba8f3f5a0aa3a7a03ddd8ccbce604e8a959
     w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
