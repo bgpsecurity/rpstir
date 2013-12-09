@@ -4,7 +4,6 @@ import seeddb as seed
 
 class TestSwingpoint(unittest.TestCase):
 	def setUp(self):
-		#seed.dbdown
 		pass
 	## No Source File
 	def test_InvalidSource(self):
@@ -66,8 +65,23 @@ class TestSwingpoint(unittest.TestCase):
 		expected = "Swingpoints: ['G.cer', 'GPRIME.cer']"
 		result = swingpoint(source, target)
 		self.assertEqual(expected, result)
+ 	## Multiple Parents Swinpoint Test with Simulated Data    
+        def test_MultipleParentsSimulatedData(self):
+                source = "fd1f287669507cad7f87e6ac87af2e9fd54b8f0a.cer"
+                target = "fd1f287669507cad7f87e6ac87af2e9fd54b8f0b.cer"
+                expected = "Swingpoints: ['fd1f287669507cad7f87e6ac87af2e9fd54b8f0g.cer', 'fd1f287669507cad7f87e6ac87af2e9fd54b8fgg.cer']"
+                result = swingpoint(source, target)
+                self.assertEqual(expected, result)
+	## Multiple Parents But One Parent has NULL AKI
+	def test_MultipleParentsOneNull(self):
+		source = "AA.cer"
+		target = "BB.cer"
+		expected = "Swingpoints: ['GG.cer', 'GGPRIME.cer']"
+		result = swingpoint(source, target)
+		self.assertEqual(expected, result)
 
 if __name__ == '__main__':
 	seed.dbdown()
-	seed.dbup()
+	seed.dbup()	
 	unittest.main()
+

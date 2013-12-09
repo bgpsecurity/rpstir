@@ -39,8 +39,8 @@ def intersection(source,target):
 ###
 # This function is given a dictionary containing one node and parses up the graph based on
 # SKI/AKI pairs.  The dictionary is loaded by (index:nodeInfo).  The index is used in this function
-# as a proxy for calculating depth.  The variable multiple is used to test that if multiple parents
-# are found then both must have null AKIs to terminate the loop
+# as a proxy for calculating depth.  The index is used to ensure that if multiple parents
+# are found then both must have null AKIs to terminate the loop.
 ###
 def findParents(node):
 	try:
@@ -49,25 +49,20 @@ def findParents(node):
 		cur = con.cursor()
 
 		index = 1
-		multiple = 1
 		parent = {}
-		while not(multiple == 0) and not(node[index]['aki'] == None):
-			multiple = 0			
+		while not(node[index]['aki'] == None) and not(index == len(node)+1):
 			## Finds all certificates with ski that matches the current certificates aki
 			cur.execute("""
 				SELECT * FROM rpki_cert WHERE ski=%s AND DATE(valto) > DATE(NOW()) ORDER BY DATE(valto) DESC""", (node[index]['aki']))
 			## Processes each certificate one at a time as there may be one or more matches
 			nodeq = cur.fetchone()
 			while nodeq:
-				multiple += 1
 				## Creates a Dictionary for each certificate
 				parent = {'filename': nodeq['filename'], 'ski': nodeq['ski'], 'aki': nodeq['aki'], 'local_id': nodeq['local_id'], 'subject': nodeq['subject']}
 				## Creates a depth field for each certificate that is one greater than its child
 				parent['depth'] = node[index]['depth']+1
 				if(not(parent in node.itervalues())):
 					node[len(node)+1] = parent
-				if parent['aki'] == None:
-					multiple -= 1
 				nodeq = cur.fetchone()
 			index += 1
 

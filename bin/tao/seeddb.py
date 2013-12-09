@@ -39,6 +39,19 @@ def dbup():
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('K.cer','13','14','2031-11-04 15:50:52',1114)")
 		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('L.cer','14',NULL,'2031-11-04 15:50:52',1115)")
 
+		# multiple certificates with same SKI and different valto(s) expiration
+		# one parent has null AKI, other has valid AKI
+		# source: A.cer, target: B.cer
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('AA.cer','111','222','2031-11-04 15:50:52',1201)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('BB.cer','777','66','2031-11-04 15:50:52',1202)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('CC.cer','222','NULL','2031-11-04 15:50:52',1203)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('CCPRIME.cer','222','333','2030-11-04 15:50:52',1204)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('DD.cer','66','333','2031-11-04 15:50:52',1205)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('DDPRIME.cer','66','NULL','2030-11-04 15:50:52',1206)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('GG.cer','333','444','2031-11-04 15:50:52',1207)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('GGPRIME.cer','333','444','2030-11-04 15:50:52',1208)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('II.cer','444','555','2021-11-04 15:50:52',1209)")
+		cur.execute("INSERT INTO rpki_cert(filename,ski,aki,valto,local_id) VALUES('JJ.cer','555',NULL,'2021-11-04 15:50:52',1210)")
 
 		# multiple certificates with same SKI and different valto(s) expiration
 		# not actual hex values, ends with XX, letter, etc g, gg denotes a g prime
@@ -115,7 +128,6 @@ def dbup():
 	
 
 def dbdown():
-
 	try:
 		con = getCon()
 		cur = con.cursor()
