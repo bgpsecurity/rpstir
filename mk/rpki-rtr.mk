@@ -191,7 +191,7 @@ $(RPKI_RTR_TEST_MAX_AS_EE_CERT): tests/subsystem/rtr/root.key tests/subsystem/rt
 		subject="as$$ASnumber" \
 		ipv4="$$IP4" \
 		ipv6="$$IP6" \
-		as="$$ASnumber"
+		as=inherit
 
 RPKI_RTR_TEST_ROAS = \
 	tests/subsystem/rtr/as-1.roa \
