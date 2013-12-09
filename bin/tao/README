@@ -22,4 +22,6 @@ utilityTest.py
 
 This file is a python script that contains tests to ensure that the two helper functions in the "utility.py" file are functioning properly.
 
+runTests.py
 
+This file is used to run all test scripts in the tao folder.  Tests may be added by inserting the new test scrip filename into the list call testScripts.
