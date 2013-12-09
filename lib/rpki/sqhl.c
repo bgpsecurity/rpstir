@@ -433,6 +433,9 @@ static int add_crl_internal(
     int idx = 0;
     int sta;
     int i;
+    char* escaped_strings[CRF_NFIELDS];
+
+    memset(escaped_strings, 0, CRF_NFIELDS*sizeof(int));
 
     // immediately check for duplicate signature
     initTables(scmp);
@@ -460,12 +463,11 @@ static int add_crl_internal(
         if ((ptr = cf->fields[i]) != NULL)
         {
             cols[idx].column = crlf[i];
-            if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
-                char escaped [strlen(ptr)*2+1];
-                mysql_escape_string(escaped, ptr, strlen(ptr));
-                cols[idx++].value = escaped;
-            } else  
-                cols[idx++].value = ptr;
+            escaped_strings[i] = malloc(strlen(ptr)*2+1);
+            if(escaped_strings[i] == NULL)
+                goto cleanup;
+            mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
+            cols[idx++].value = escaped_strings[i];
         }
     }
     memset(lid, 0, sizeof(lid));
@@ -491,7 +493,13 @@ static int add_crl_internal(
     aone.vald = 0;
     // add the CRL
     sta = insertscm(conp, theCRLTable, &aone);
+cleanup:
     free((void *)hexs);
+    for (i = 0; i < CRF_NFIELDS; i++)
+    {
+        free(escaped_strings[i]);
+    }
+    free(escaped_strings);
     return (sta);
 }
 
@@ -3970,13 +3978,7 @@ int revoke_cert_by_serial(
     mymcf.toplevel = 1;
     w[0].column = "issuer";
     char escaped [strlen(issuer)*2+1];
-<<<<<<< HEAD
     mysql_escape_string(escaped, issuer, strlen(issuer));
-||||||| merged common ancestors
-	mysql_escape_string(escaped, issuer, sizeof(issuer));
-=======
-    mysql_escape_string(escaped, issuer, sizeof(issuer));
->>>>>>> f1830ba8f3f5a0aa3a7a03ddd8ccbce604e8a959
     w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
