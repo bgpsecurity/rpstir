@@ -353,7 +353,9 @@ static int add_cert_internal(
     int idx = 0;
     int sta;
     int i;
-
+	char* escaped_strings[CF_NFIELDS];
+	memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
+	
     initTables(scmp);
     sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
     if (sta < 0)
@@ -371,13 +373,13 @@ static int add_cert_internal(
         if ((ptr = cf->fields[i]) != NULL)
         {
             cols[idx].column = certf[i];
-            if(idx==CF_FIELD_SUBJECT || idx==CF_FIELD_ISSUER){
-                char escaped [strlen(ptr)*2+1];
-                mysql_escape_string(escaped, ptr, strlen(ptr));
-                cols[idx++].value = escaped;
-            } 
-            else
-                cols[idx++].value = ptr;
+            escaped_strings[i] = malloc(strlen(ptr)*2+1);
+            if(escaped_strings[i] == NULL) {
+				sta = ERR_SCM_NOMEM;
+                goto cleanup;
+			}
+            mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
+            cols[idx++].value = escaped_strings[i];
         }
     }
     (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
@@ -406,6 +408,11 @@ static int add_cert_internal(
     aone.nused = idx;
     aone.vald = 0;
     sta = insertscm(conp, theCertTable, &aone);
+cleanup:
+    for (i = 0; i < CF_NFIELDS; i++)
+    {
+        free(escaped_strings[i]);
+    }
     if (wptr != NULL)
         free((void *)wptr);
     lastCertIDAdded = *cert_id;
@@ -435,7 +442,7 @@ static int add_crl_internal(
     int i;
     char* escaped_strings[CRF_NFIELDS];
 
-    memset(escaped_strings, 0, CRF_NFIELDS*sizeof(int));
+    memset(escaped_strings, 0, CRF_NFIELDS*sizeof(char*));
 
     // immediately check for duplicate signature
     initTables(scmp);
@@ -464,8 +471,10 @@ static int add_crl_internal(
         {
             cols[idx].column = crlf[i];
             escaped_strings[i] = malloc(strlen(ptr)*2+1);
-            if(escaped_strings[i] == NULL)
+            if(escaped_strings[i] == NULL) {
+				sta = ERR_SCM_NOMEM;
                 goto cleanup;
+			}
             mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
             cols[idx++].value = escaped_strings[i];
         }
@@ -495,11 +504,10 @@ static int add_crl_internal(
     sta = insertscm(conp, theCRLTable, &aone);
 cleanup:
     free((void *)hexs);
-    for (i = 0; i < CRF_NFIELDS; i++)
+    for (i = 0; i < CF_NFIELDS; i++)
     {
         free(escaped_strings[i]);
     }
-    free(escaped_strings);
     return (sta);
 }
 
