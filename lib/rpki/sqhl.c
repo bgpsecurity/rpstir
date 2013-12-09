@@ -2042,13 +2042,13 @@ static int countvalidparents(
     char ws[256];
     char *now;
     int sta;
+    char escaped [(IS != NULL) ? strlen(IS)*2+1 : 0];
 
     w[0].column = "ski";
     w[0].value = AK;
     if (IS != NULL)
     {
         w[1].column = "subject";
-        char escaped [strlen(IS)*2+1];
         mysql_escape_string(escaped, IS, strlen(IS));
         w[1].value = escaped;
     }
