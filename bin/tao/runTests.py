@@ -5,7 +5,7 @@
 ###
 import unittest
 
-#Add all test scripts that need to run into this list
+## Add all test scripts that need to run into this list
 testScripts = [
 	'swingpointTest',
 	'swingpointUtilityTest'
@@ -20,4 +20,6 @@ for t in testScripts:
 		suite.addTest(suitefn())
 	except:
 		suite.addTest(unittest.defaultTestLoader.loadTestsFromName(t))
+
+## Runs all tests listed above
 unittest.TextTestRunner().run(suite)
