@@ -504,7 +504,7 @@ static int add_crl_internal(
     sta = insertscm(conp, theCRLTable, &aone);
 cleanup:
     free((void *)hexs);
-    for (i = 0; i < CF_NFIELDS; i++)
+    for (i = 0; i < CRF_NFIELDS; i++)
     {
         free(escaped_strings[i]);
     }
