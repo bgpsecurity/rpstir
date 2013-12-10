@@ -353,9 +353,9 @@ static int add_cert_internal(
     int idx = 0;
     int sta;
     int i;
-	char* escaped_strings[CF_NFIELDS];
-	memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
-	
+    char* escaped_strings[CF_NFIELDS];
+    memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
+
     initTables(scmp);
     sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
     if (sta < 0)
@@ -375,9 +375,9 @@ static int add_cert_internal(
             cols[idx].column = certf[i];
             escaped_strings[i] = malloc(strlen(ptr)*2+1);
             if(escaped_strings[i] == NULL) {
-				sta = ERR_SCM_NOMEM;
+                sta = ERR_SCM_NOMEM;
                 goto cleanup;
-			}
+            }
             mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
             cols[idx++].value = escaped_strings[i];
         }
@@ -472,9 +472,9 @@ static int add_crl_internal(
             cols[idx].column = crlf[i];
             escaped_strings[i] = malloc(strlen(ptr)*2+1);
             if(escaped_strings[i] == NULL) {
-				sta = ERR_SCM_NOMEM;
+                sta = ERR_SCM_NOMEM;
                 goto cleanup;
-			}
+            }
             mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
             cols[idx++].value = escaped_strings[i];
         }
