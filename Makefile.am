@@ -2,6 +2,7 @@ AUTOMAKE_OPTIONS = \
 	1.6 \
 	foreign \
 	subdir-objects \
+	parallel-tests \
 	-Wall \
 	-Wno-extra-portability
 

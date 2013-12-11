@@ -17,7 +17,7 @@ BUILT_SOURCES += $(ASN_H_FILES)
 # Depend on all .asn files because .asn files can include one another.
 ASN_GENERATION_DEPS = \
 	lib/casn/asn_gen/asn_gen \
-	$(TESTS_ENVIRONMENT_DEPS) \
+	$(LOG_COMPILER_DEPS) \
 	$(ASN_BUILT_FILES) \
 	$(ASN_SOURCE_FILES)
 
@@ -45,7 +45,7 @@ $(ASN_C_FILES) $(ASN_H_FILES): $(ASN_GENERATION_DEPS)
 	TEST_LOG_NAME="$(@F)" \
 		TEST_LOG_DIR="$(abs_builddir)/$(@D)" \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) \
+		$(LOG_COMPILER) \
 		$(abs_top_builddir)/lib/casn/asn_gen/asn_gen "$${base}.asn" && \
 	cd "$(abs_builddir)" && \
 	mkdir -p "$(@D)" && \

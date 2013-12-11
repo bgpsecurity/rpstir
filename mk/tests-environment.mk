@@ -1,10 +1,10 @@
-## Anything that uses $(TESTS_ENVIRONMENT) before "make all" finishes should
+## Anything that uses $(LOG_COMPILER) before "make all" finishes should
 ## depend on this.
-TESTS_ENVIRONMENT_DEPS = \
+LOG_COMPILER_DEPS = \
 	tests/setup_test_environment.sh \
 	tests/test.include
 
-TESTS_ENVIRONMENT = $(abs_top_builddir)/tests/setup_test_environment.sh
+LOG_COMPILER = $(abs_top_builddir)/tests/setup_test_environment.sh
 
 
 EXTRA_DIST += etc/test.conf
