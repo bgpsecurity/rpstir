@@ -410,8 +410,10 @@ the below line, modified for the options you want to pass to netcat:
 If you didn't create the configuration files in step 2.3.1, go back and do that
 now. Some of the self tests won't work without the test configuration file.
 
-To perform a basic validation of your install, run the self-test
-target by issuing the command:
+To perform a basic validation of your install, run the self-test target by
+issuing the command below. The self-tests do not support concurrent operation,
+so do not try to run make with more than one simultaneous job (i.e., do not pass
+the -jN option to make).
 
    $ make check
 
