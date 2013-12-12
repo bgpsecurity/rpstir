@@ -28,3 +28,18 @@ clean-local: clean-local-checktool-logs
 .PHONY: clean-local-checktool-logs
 clean-local-checktool-logs:
 	find . -type f -name 'valgrind.*.log' -exec rm -f '{}' +
+
+
+# Cat all the log files produced by self-tests.
+# This is probably only useful to capture the log files in an automated build
+# and test environment.
+.PHONY: cat-logs
+cat-logs:
+	{ \
+		for f in $(TEST_LOGS); do echo "$$f"; done; \
+		find . -type f -name 'valgrind.*.log' -print; \
+	} | sort | uniq | while read log_file; do \
+		echo "$$log_file" 1>&2; \
+		cat "$$log_file"; \
+		echo 1>&2; \
+	done
