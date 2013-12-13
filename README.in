@@ -47,6 +47,7 @@ Appendix A. Troubleshooting
       A.3.1 OpenBSD
       A.3.2 FreeBSD
       A.3.3 Ubuntu 12.04-12.10 x86
+      A.3.4 Mac OS X 10.8.5
     A.4 Configure can't find installed software
 
 ===============================================================================
@@ -882,6 +883,35 @@ sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
 sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
+
+A.3.4 Mac OS X 10.8.5 (64-bit)
+
+These are the exact instructions for installing RPSTIR on a fresh copy
+of Mac OS X 10.8.5 (64-bit), as of [TODO: date]
+
+First, install Mac Ports from http://www.macports.org/. This requires an Apple
+ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
+
+# Install rpstir's dependencies.
+sudo port install openssl +rfc3779 +universal
+sudo port install mysql5 +universal
+sudo port install unixODBC +universal
+sudo port install mysql-connector-odbc +universal # TODO: universal doesn't work? https://trac.macports.org/ticket/41755
+sudo port install cryptlib +universal
+
+# TODO: Configure ODBC
+
+# Add mysql binaries to the PATH.
+export PATH="/opt/local/lib/mysql5/bin:$PATH"
+
+# TODO: Configure MySQL
+
+# Configure, build, test, and install rpstir
+cd path/to/rpstir # the directory this file is in
+./configure --with-cryptlib-include=/opt/local/include --with-cryptlib-lib=/opt/local/lib CFLAGS="-arch i386" LDFLAGS="-arch i386"
+# TODO: build, test, install
+
+# TODO: Setup rpstir
 
 
 A.4 Configure can't find installed software
