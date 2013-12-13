@@ -1,10 +1,10 @@
-## Anything that uses $(TESTS_ENVIRONMENT) before "make all" finishes should
+## Anything that uses $(LOG_COMPILER) before "make all" finishes should
 ## depend on this.
-TESTS_ENVIRONTMENT_DEPS = \
+LOG_COMPILER_DEPS = \
 	tests/setup_test_environment.sh \
 	tests/test.include
 
-TESTS_ENVIRONMENT = $(abs_top_builddir)/tests/setup_test_environment.sh
+LOG_COMPILER = $(abs_top_builddir)/tests/setup_test_environment.sh
 
 
 EXTRA_DIST += etc/test.conf
@@ -28,3 +28,23 @@ clean-local: clean-local-checktool-logs
 .PHONY: clean-local-checktool-logs
 clean-local-checktool-logs:
 	find . -type f -name 'valgrind.*.log' -exec rm -f '{}' +
+
+
+# Cat all the log files produced by self-tests.
+# This is probably only useful to capture the log files in an automated build
+# and test environment.
+.PHONY: cat-logs
+cat-logs:
+	{ \
+		for f in $(TEST_LOGS); do \
+			echo "$$f"; \
+			echo "$(distdir)/_build/$$f"; \
+		done; \
+		find . -type f -name 'valgrind.*.log' -print; \
+	} | sort | uniq | while read log_file; do \
+		if test -f "$$log_file"; then \
+			echo "$$log_file" 1>&2; \
+			cat "$$log_file"; \
+			echo 1>&2; \
+		fi; \
+	done
