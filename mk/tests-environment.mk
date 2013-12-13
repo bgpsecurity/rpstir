@@ -36,10 +36,15 @@ clean-local-checktool-logs:
 .PHONY: cat-logs
 cat-logs:
 	{ \
-		for f in $(TEST_LOGS); do echo "$$f"; done; \
+		for f in $(TEST_LOGS); do \
+			echo "$$f"; \
+			echo "$(distdir)/_build/$$f"; \
+		done; \
 		find . -type f -name 'valgrind.*.log' -print; \
 	} | sort | uniq | while read log_file; do \
-		echo "$$log_file" 1>&2; \
-		cat "$$log_file"; \
-		echo 1>&2; \
+		if test -f "$$log_file"; then \
+			echo "$$log_file" 1>&2; \
+			cat "$$log_file"; \
+			echo 1>&2; \
+		fi; \
 	done
