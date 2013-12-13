@@ -43,8 +43,10 @@ cat-logs:
 		find . -type f -name 'valgrind.*.log' -print; \
 	} | sort | uniq | while read log_file; do \
 		if test -f "$$log_file"; then \
-			echo "$$log_file" 1>&2; \
+			echo "++++++ $$log_file ++++++"; \
+			echo; \
 			cat "$$log_file"; \
-			echo 1>&2; \
+			echo; \
+			echo; \
 		fi; \
 	done
