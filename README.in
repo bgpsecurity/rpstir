@@ -887,7 +887,7 @@ rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPST
 A.3.4 Mac OS X 10.8.5 (64-bit)
 
 These are the exact instructions for installing RPSTIR on a fresh copy
-of Mac OS X 10.8.5 (64-bit), as of [TODO: date]
+of Mac OS X 10.8.5 (64-bit), as of [TODO: date]. [TODO: any highlights, e.g., +universal and -arch i386].
 
 First, install Mac Ports from http://www.macports.org/. This requires an Apple
 ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
