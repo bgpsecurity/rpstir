@@ -894,10 +894,10 @@ ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
 
 # Install rpstir's dependencies.
 sudo port install openssl +rfc3779 +universal
-sudo port install cryptlib +universal # TODO: there's no universal variant: http://trac.macports.org/ticket/41804, maybe use build_arch=i386 ?
+sudo port install cryptlib +universal
 sudo port install mysql5 +universal
 sudo port install unixODBC +universal
-sudo port install mysql-connector-odbc +universal # TODO: universal doesn't work? https://trac.macports.org/ticket/41755
+sudo port install mysql-connector-odbc +universal # TODO: universal doesn't work? https://trac.macports.org/ticket/41755, maybe use build_arch=i386 ?
 
 # TODO: Configure ODBC
 
