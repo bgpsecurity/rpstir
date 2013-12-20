@@ -896,15 +896,37 @@ ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
 sudo port install openssl +rfc3779 +universal
 sudo port install cryptlib +universal
 sudo port install mysql5 +universal
+sudo port install mysql5-server
 sudo port install unixODBC +universal
 sudo port install mysql-connector-odbc +universal # TODO: universal doesn't work? https://trac.macports.org/ticket/41755, maybe use build_arch=i386 ?
 
-# TODO: Configure ODBC
+# Configure MySQL
+sudo port select --set mysql ... # TODO: https://trac.macports.org/ticket/41863
+sudo -u _mysql mysql_install_db5
+sudo port load mysql5
+mysql_secure_installation5 # MySQL root password: rpstir
+mysql5 -u root -p
+  CREATE USER 'rpstir'@'localhost' IDENTIFIED BY 'bbn';
+  CREATE DATABASE rpstir;
+  GRANT ALL PRIVILEGES ON rpstir.* TO 'rpstir'@'localhost';
+  CREATE DATABASE rpstir_test;
+  GRANT ALL PRIVILEGES ON rpstir_test.* TO 'rpstir'@'localhost';
+  quit
 
-# Add mysql binaries to the PATH.
-export PATH="/opt/local/lib/mysql5/bin:$PATH"
-
-# TODO: Configure MySQL
+# Configure ODBC
+sudo vim /opt/local/etc/odbcinst.ini
+  [MySQL]
+  Description = ODBC for MySQL
+  Driver = /opt/local/lib/libmyodbc5.so
+sudo vim /opt/local/etc/odbc.ini
+  [myodbc]
+  Description = myodbc
+  Driver = MySQL
+  Server = localhost
+  Port =
+  User = arbitraryuser
+  Password = arbitrarypassword
+  Database = arbitrarydbname
 
 # Configure, build, test, and install rpstir
 cd path/to/rpstir # the directory this file is in
