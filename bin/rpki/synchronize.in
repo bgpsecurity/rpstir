@@ -103,7 +103,7 @@ while test -s "$ADDED_LIST"; do
 			else
 				printf " " >> "$RSYNC_CORD_CONF"
 			fi
-			printf "%s" "$URI" | sed 's!^rsync://!!i' | sed 's!/$!!' >> "$RSYNC_CORD_CONF"
+			printf "%s" "$URI" | sed 's!^[rR][sS][yY][nN][cC]://!!' | sed 's!/$!!' >> "$RSYNC_CORD_CONF"
 		fi
 	done < "$ADDED_LIST"
 	echo "\"" >> "$RSYNC_CORD_CONF"
