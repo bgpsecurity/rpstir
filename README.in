@@ -892,16 +892,22 @@ of Mac OS X 10.8.5 (64-bit), as of [TODO: date]. [TODO: any highlights, e.g., +u
 First, install Mac Ports from http://www.macports.org/. This requires an Apple
 ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
 
+# Run the below commands if you're getting rpstir from git instead of from a
+# tarball.
+sudo port install git-core
+sudo port install automake
+sudo port install autoconf
+
 # Install rpstir's dependencies.
 sudo port install openssl +rfc3779 +universal
 sudo port install cryptlib +universal
-sudo port install mysql5 +universal
-sudo port install mysql5-server
+sudo port install mysql5 +universal # TODO: use a newer version of mysql once there's an appropriate ODBC connector (https://lists.macosforge.org/pipermail/macports-users/2013-December/034241.html)
+sudo port install mysql5-server # TODO: newer version, as above
 sudo port install unixODBC +universal
-sudo port install mysql-connector-odbc +universal # TODO: universal doesn't work? https://trac.macports.org/ticket/41755, maybe use build_arch=i386 ?
+sudo port install mysql-connector-odbc build_arch=i386 # TODO: use +universal instead of build_arch=i386 once https://trac.macports.org/ticket/41755 is done
 
 # Configure MySQL
-sudo port select --set mysql ... # TODO: https://trac.macports.org/ticket/41863
+export PATH="/opt/local/lib/mysql5/bin:$PATH" # Consider adding this to your shell's startup file too. TODO: use "port select" with a newer mysql port instead of messing with the user's PATH
 sudo -u _mysql mysql_install_db5
 sudo port load mysql5
 mysql_secure_installation5 # MySQL root password: rpstir
@@ -930,10 +936,32 @@ sudo vim /opt/local/etc/odbc.ini
 
 # Configure, build, test, and install rpstir
 cd path/to/rpstir # the directory this file is in
+./autogen.sh # Only do this if running from git instead of from a tarball
 ./configure --with-cryptlib-include=/opt/local/include --with-cryptlib-lib=/opt/local/lib CFLAGS="-arch i386" LDFLAGS="-arch i386"
-# TODO: build, test, install
+make
+cp etc/test.conf ~/.rpstir.test.conf
+chmod 600 ~/.rpstir.test.conf
+vim ~/.rpstir.test.conf # set these options:
+  Database rpstir_test
+  DatabaseUser rpstir
+  DatabasePassword bbn
+make check
+sudo make install
 
-# TODO: Setup rpstir
+# Setup rpstir
+sudo mkdir -p /usr/local/etc/rpstir
+sudo cp /usr/local/share/doc/rpstir/examples/rpstir.conf /usr/local/etc/rpstir/
+sudo chown root:rpstir /usr/local/etc/rpstir /usr/local/etc/rpstir/rpstir.conf # substitute 'rpstir' in 'root:rpstir' for the group of the user you plan to run rpstir as
+sudo chmod 750 /usr/local/etc/rpstir
+sudo chmod 640 /usr/local/etc/rpstir/rpstir.conf
+sudo vim /usr/local/etc/rpstir/rpstir.conf # read the comments for each option, and make sure to set these:
+  Database rpstir
+  DatabaseUser rpstir
+  DatabasePassword bbn
+sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
+sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
 
 
 A.4 Configure can't find installed software
