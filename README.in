@@ -892,6 +892,8 @@ of Mac OS X 10.8.5 (64-bit), as of [TODO: date]. [TODO: any highlights, e.g., +u
 First, install Mac Ports from http://www.macports.org/. This requires an Apple
 ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
 
+TODO: note about /opt/local/etc/macports/macports.conf. universal_archs must include i386
+
 # Run the below commands if you're getting rpstir from git instead of from a
 # tarball.
 sudo port install git-core
