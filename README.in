@@ -947,7 +947,7 @@ vim ~/.rpstir.test.conf # set these options:
   Database rpstir_test
   DatabaseUser rpstir
   DatabasePassword bbn
-make check # TODO: fix the two tests that fail (tests/subsystem/rtr/test.sh and tests/conformance/scripts/run_tests.sh)
+make check # TODO: fix the one test that fails (tests/conformance/scripts/run_tests.sh)
 sudo make install
 
 # Setup rpstir
