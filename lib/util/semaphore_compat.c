@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 #include "util/logging.h"
 
@@ -175,7 +176,7 @@ static void make_sem_name(
 {
     size_t i;
 
-    buf[0] = '/'
+    buf[0] = '/';
 
     for (i = 1; i < SEM_NAME_SIZE - 1; ++i)
     {
@@ -215,7 +216,7 @@ sem_t * semcompat_new(
             return SEM_FAILED;
         }
 
-        return sem;
+        return ret;
     }
     else
     {
