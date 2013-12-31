@@ -1,2 +1,0 @@
-# sets up server that listens for inputs
-$RPKI_ROOT/proto/rcli -w $RPKI_PORT -p
