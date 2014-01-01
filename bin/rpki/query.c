@@ -77,10 +77,6 @@ struct {
 };
 
 
-static unsigned int oldasn;              // needed for grouping by AS#
-static int v4size = 0,
-    v6size = 0;
-
 /*
  * callback function for searchscm that prints the output 
  */
@@ -486,7 +482,7 @@ int main(
     }
     for (i = 1; i < argc; i += 2)
     {
-        else if (strcasecmp(argv[i], "-i") == 0)
+        if (strcasecmp(argv[i], "-i") == 0)
         {
             validate = 0;
             i--;
