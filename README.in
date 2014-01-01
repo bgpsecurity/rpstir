@@ -886,13 +886,20 @@ rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPST
 
 A.3.4 Mac OS X 10.8.5 (64-bit)
 
-These are the exact instructions for installing RPSTIR on a fresh copy
-of Mac OS X 10.8.5 (64-bit), as of [TODO: date]. [TODO: any highlights, e.g., +universal and -arch i386].
+These are the exact instructions for installing rpstir on a fresh copy
+of Mac OS X 10.8.5 (64-bit), as of [TODO: date]. Note that rpstir is not tested
+on Mac as much as on other platforms. Additionally, the rpki-rtr daemon is
+susceptible to a denial of service by local users, so do not run rpstir on a
+shared Mac system. RPSTIR currently only supports running in 32-bit mode, so
+the instructions below build various ports with the +universal flag, and rpstir
+itself is built for i386.
 
 First, install Mac Ports from http://www.macports.org/. This requires an Apple
 ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
 
-TODO: note about /opt/local/etc/macports/macports.conf. universal_archs must include i386
+# Make sure that +universal will cause ports to be built for i386. Edit the file
+# below and find the line that sets universal_archs. It must include i386.
+sudo vim /opt/local/etc/macports/macports.conf
 
 # Run the below commands if you're getting rpstir from git instead of from a
 # tarball.
