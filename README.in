@@ -954,7 +954,7 @@ vim ~/.rpstir.test.conf # set these options:
   Database rpstir_test
   DatabaseUser rpstir
   DatabasePassword bbn
-make check # TODO: fix the one test that fails (tests/conformance/scripts/run_tests.sh)
+make check # There's one test that does not work yet on Mac: tests/conformance/scripts/run_tests.sh
 sudo make install
 
 # Setup rpstir
