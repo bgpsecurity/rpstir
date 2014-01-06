@@ -2,7 +2,8 @@ AUTOMAKE_OPTIONS = \
 	1.6 \
 	foreign \
 	subdir-objects \
-	-Wall
+	-Wall \
+	-Wno-extra-portability
 
 ACLOCAL_AMFLAGS = -I build-aux -I m4
 

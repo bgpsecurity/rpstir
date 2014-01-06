@@ -415,9 +415,7 @@ target by issuing the command:
 
    $ make check
 
-You may need to enter the MySQL root password several times as the
-various self-test steps proceed.  If all tests pass, you will see a
-message indicating success.
+If all tests pass, you will see a message indicating success.
 
 If you have valgrind installed, you can run some tests under valgrind
 by running the command:

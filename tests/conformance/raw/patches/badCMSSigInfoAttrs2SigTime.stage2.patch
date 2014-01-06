@@ -8,6 +8,6 @@
 +                            set utc "110525220348Z"
 +                        seq oid 1.2.840.113549.1.9.5 /* id_signingTimeAttr */
 +                            set utc "110525220348Z"
-                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                          nul 
                      oct 0x2DD7C3ADC2B28820D875AC1DC266196B

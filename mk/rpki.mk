@@ -1660,6 +1660,10 @@ check_SCRIPTS += tests/conformance/scripts/make_test_name.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_name.sh
 tests/conformance/scripts/make_test_name.sh: $(srcdir)/tests/conformance/scripts/make_test_name.sh.in
 
+check_SCRIPTS += tests/conformance/scripts/sign_root_CAs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/sign_root_CAs.sh
+tests/conformance/scripts/sign_root_CAs.sh: $(srcdir)/tests/conformance/scripts/sign_root_CAs.sh.in
+
 
 check_SCRIPTS += tests/conformance/scripts/run_tests.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/run_tests.sh

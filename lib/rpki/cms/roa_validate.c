@@ -639,24 +639,23 @@ static int cmsValidate(
         0)
         return ERR_SCM_UNSIGATTR;
 
-    // check that roa->content->signerInfoStruct->signatureAlgorithm ==
-    // 1.2.840.113549.1.1.11)
+    // See http://www.ietf.org/mail-archive/web/sidr/current/msg04813.html for
+    // why we deviate from the RFC here.
     struct casn *oidp =
         &rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.
         algorithm;
-    if (diff_objid(oidp, id_sha_256WithRSAEncryption))
+    if (!diff_objid(oidp, id_rsadsi_rsaEncryption))
     {
-        if (strict_profile_checks_cms
-            || diff_objid(oidp, id_rsadsi_rsaEncryption))
-        {
-            LOG(LOG_ERR, "invalid signature algorithm in CMS");
-            return ERR_SCM_BADSIGALG;
-        }
-        /* In conversation at IETF 85, R. Austein said that this was a
-         * mistake in the specification, not the code.  We'll wait for
-         * an update to the RFC before we remove this entirely.  But
-         * log at debug level rather than warning. */
-        LOG(LOG_DEBUG, "deprecated signature algorithm in CMS?");
+        LOG(LOG_DEBUG, "signatureAlgorithm is id_rsadsi_rsaEncryption");
+    }
+    else if (!diff_objid(oidp, id_sha_256WithRSAEncryption))
+    {
+        LOG(LOG_DEBUG, "signatureAlgorithm is id_sha_256WithRSAEncryption");
+    }
+    else
+    {
+        LOG(LOG_ERR, "invalid signature algorithm in CMS");
+        return ERR_SCM_BADSIGALG;
     }
 
     // check that the subject key identifier has proper length
