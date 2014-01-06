@@ -20,10 +20,13 @@
  * should be designed to obey the following four conditions:
  * 
  * 1. (Mutal Exclusion) No two processes may be simultaneously inside their
- * critical regions. 2. No assumptions may be made about speeds or the number
- * of CPUs. 3. (Progress) No process running outside its critical region may
- * block other processes. 4. (Bounded wait) No process should have to wait
- * forever to enter its critical region.
+ *    critical regions.
+ * 2. No assumptions may be made about speeds or the number
+ *    of CPUs.
+ * 3. (Progress) No process running outside its critical region may
+ *    block other processes.
+ * 4. (Bounded wait) No process should have to wait forever to enter its
+ *    critical region.
  * 
  * Warning: this function does NOT ensure #4 (Bounded wait).  Also, this is
  * minor, but in the unlikely event that nanosleep() fails repeatedly and we
@@ -62,6 +65,7 @@ int sem_timedwait(
             break;
         }
 
+        #ifdef HAVE_CLOCK_GETTIME
         if (clock_gettime(CLOCK_REALTIME, &now) != 0)
         {
             // unfortunately none of the valid errors for sem_timedwait
@@ -70,6 +74,10 @@ int sem_timedwait(
             sem_errno = EINVAL;
             break;
         }
+        #else
+        now.tv_sec = time(NULL);
+        now.tv_nsec = 0L;
+        #endif
 
         if (now.tv_sec > abs_timeout->tv_sec
             || (now.tv_sec == abs_timeout->tv_sec

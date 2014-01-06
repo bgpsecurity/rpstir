@@ -19,10 +19,22 @@ AM_SILENT_RULES
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
 
-PACKAGE_VERSION_FULL="$(
-    cd "$srcdir" &&
-    git describe --tags --long --always --dirty ||
-    echo "$PACKAGE_VERSION")"
+AC_PATH_PROG(GIT, git)
+AC_MSG_CHECKING([for extra version information])
+if test "x${GIT}" != x -a -x "${GIT}" -a -d "${srcdir}/.git"; then
+    PACKAGE_VERSION_FULL="$(
+        cd "${srcdir}" &&
+        ${GIT} describe --tags --long --always --dirty)"
+    if test -n "$PACKAGE_VERSION_FULL"; then
+        AC_MSG_RESULT([$PACKAGE_VERSION_FULL])
+    else
+        PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
+        AC_MSG_RESULT([failed])
+    fi
+else
+    PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
+    AC_MSG_RESULT([no])
+fi
 AC_SUBST([PACKAGE_VERSION_FULL])
 AC_DEFINE_UNQUOTED([PACKAGE_VERSION_FULL], ["$PACKAGE_VERSION_FULL"])
 
@@ -257,7 +269,7 @@ AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([alarm bzero dup2 getcwd gethostbyaddr gethostbyname gethostname getline getpass memmove memset mkdir mysql_real_connect munmap select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([alarm bzero clock_gettime dup2 getcwd gethostbyaddr gethostbyname gethostname getline getpass memmove memset mkdir munmap mysql_real_connect select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
 if test "$ac_cv_func_getline" != yes; then
     AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
 fi
