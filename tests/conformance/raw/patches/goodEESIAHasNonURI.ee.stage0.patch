@@ -1,0 +1,12 @@
+--- goodEESIAHasNonURI.ee.raw.old	2013-10-21 15:26:25.591099832 -0400
++++ goodEESIAHasNonURI.ee.raw	2013-10-21 15:27:48.219096375 -0400
+@@ -51,6 +51,9 @@
+                                     "rsync://rpki.bbn.com/conformance/root.cer"
+                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                     ocw seq seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
++                                ctx+0x07
++                                    0x01010101
++                            seq oid 1.3.6.1.5.5.7.48.11 /* id_ad_signedObject */
+                                 ctx+0x06
+                                     "rsync://rpki.bbn.com/conformance/root/good"
+                                     "EESIAHasNonURI.roa"

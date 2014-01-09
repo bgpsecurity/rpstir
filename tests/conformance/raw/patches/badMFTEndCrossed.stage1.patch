@@ -1,0 +1,11 @@
+--- badMFTEndCrossed.raw.old	2013-10-22 10:45:50.308608483 -0400
++++ badMFTEndCrossed.raw	2013-10-22 10:46:00.542922486 -0400
+@@ -7,7 +7,7 @@
+                 ctx+0x20
+                     ocw seq int 0x01 /* 1 */ 
+                             gen "20110411185728Z"
+-                            gen "20460515185928Z"
++                            gen "20470515185928Z"
+                             oid 2.16.840.1.101.3.4.2.1 /* id_sha256 */
+                             seq seq ia5 "MFTEndCrossed.crl"
+                                     bit 0x00C3B16264A586B29356FA298E170A9E

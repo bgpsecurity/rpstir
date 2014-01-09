@@ -244,9 +244,12 @@ const char *signCMS(
     // all done with it now
     free(signature);
 
-    // mark it as encrypted with rsa, no params
+    // Mark it as encrypted with rsa, no params.
+    // See http://www.ietf.org/mail-archive/web/sidr/current/msg04813.html for
+    // why we use id_rsadsi_rsaEncryption instead of id_sha_256WithRSAEncryption
+    // here.
     write_objid(&sigInfop->signatureAlgorithm.algorithm,
-                id_sha_256WithRSAEncryption);
+                id_rsadsi_rsaEncryption);
     write_casn(&sigInfop->signatureAlgorithm.parameters.self, (uchar *) "", 0);
 
     // no errors, we return NULL

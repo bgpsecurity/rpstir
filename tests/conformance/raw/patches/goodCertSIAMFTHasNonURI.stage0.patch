@@ -1,0 +1,12 @@
+--- goodCertSIAMFTHasNonURI.raw.old	2013-10-21 12:51:32.440875813 -0400
++++ goodCertSIAMFTHasNonURI.raw	2013-10-21 12:53:45.820907378 -0400
+@@ -58,6 +58,9 @@
+                                     "rsync://rpki.bbn.com/conformance/root/empt"
+                                     "y/"
+                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
++                                ctx+0x07
++                                    0x01010101
++                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                 ctx+0x06
+                                     "rsync://rpki.bbn.com/conformance/root/empt"
+                                     "y/doesNotExist.mft"

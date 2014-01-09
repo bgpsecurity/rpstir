@@ -1,6 +1,6 @@
 ## Anything that uses $(TESTS_ENVIRONMENT) before "make all" finishes should
 ## depend on this.
-TESTS_ENVIRONTMENT_DEPS = \
+TESTS_ENVIRONMENT_DEPS = \
 	tests/setup_test_environment.sh \
 	tests/test.include
 

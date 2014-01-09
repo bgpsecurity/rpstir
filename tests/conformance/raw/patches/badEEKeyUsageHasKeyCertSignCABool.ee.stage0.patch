@@ -1,0 +1,19 @@
+--- badEEKeyUsageHasKeyCertSignCABool.ee.raw.old	2013-09-03 16:47:53.936711756 -0400
++++ badEEKeyUsageHasKeyCertSignCABool.ee.raw	2013-09-03 16:48:32.380899418 -0400
+@@ -32,13 +32,15 @@
+             seq seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                     ocw oct 0xF6D6E2E8BB104F64F1425B2B815F2CD9
+                             0xD3E0DBAE
++                seq oid 2.5.29.19 /* id_basic */
++                    ocw seq boo 0xFF
+                 seq oid 2.5.29.35 /* id_authKeyId */
+                     ocw seq ctx+0x00
+                                 0xD27F6E783B2B5CE535940D54C0A6F38F
+                                 0x5B7804D4
+                 seq oid 2.5.29.15 /* id_keyUsage */
+                     boo 0xFF
+-                    ocw bit 0x0780
++                    ocw bit 0x0284
+                 seq oid 2.5.29.31 /* id_cRLDistributionPoints */
+                     ocw seq seq ctx+0x20
+                                     ctx+0x20

@@ -1,7 +1,13 @@
-#!/bin/sh -e
+#!@SHELL_BASH@ -e
+
+shopt -s nullglob
 
 # whitespace separated list of files to ignore the results from
-IGNORE="badGBRNotVCard.gbr"
+IGNORE="
+	badGBRExtraProperty.gbr
+	badGBRNoContact.gbr
+	badGBRNotVCard.gbr
+"
 
 @SETUP_ENVIRONMENT@
 
@@ -110,6 +116,11 @@ for BAD_ROOT in badRoot*.cer; do
 	add_file bad -F "$BAD_ROOT"
 done
 
+for GOOD_ROOT in goodRoot*.cer; do
+	reset_db
+	add_file good -F "$GOOD_ROOT"
+done
+
 cd root
 
 for GOOD_SINGLE_FILE in good*; do
@@ -146,6 +157,18 @@ for MFT_CERT in MFT*.cer; do
 	if test -f "$MFT_NAME/bad$MFT_NAME.mft"; then
 		add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"
 	fi
+done
+
+for NAM_CERT in NAM*.cer; do
+	NAM_NAME=`basename "$NAM_CERT" .cer`
+	reset_db
+	add_file good -f "$NAM_CERT"
+	for file in "$NAM_NAME"/good*; do
+		add_file good -f "$file"
+	done
+	for file in "$NAM_NAME"/bad*; do
+		add_file bad -f "$file"
+	done
 done
 
 if test -n "$FAILED"; then

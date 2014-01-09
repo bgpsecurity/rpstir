@@ -1,0 +1,41 @@
+#!/bin/sh
+
+@SETUP_ENVIRONMENT@
+
+setup_statistics_environment
+
+if test $# -eq 0 -o "$1" = "--help"; then
+    echo >&2 "Usage: $0 <plot-name> [<plot-args> ...]"
+    echo >&2 ""
+    echo >&2 "Plots available:"
+    for file in "@plotexecdir@/"*.R; do
+        plotname="$(basename "$file" .R)"
+        test -e "@plotexecdir@/$plotname.sh" && \
+           echo >&2 "    $plotname"
+    done
+    exit 1
+fi
+
+# export for the plot scripts
+export STATS_DIR="`config_get RPKIStatisticsDir`"
+
+
+PLOT="$1"
+shift
+
+cd "$STATS_DIR/results" \
+    || fatal "error cd'ing into $STATS_DIR/results"
+
+# generate times.dat which can be used by all plots
+{
+    printf "Start\tEnd\n"
+    for file in "$STATS_DIR/good"/*.tgz; do
+        basename "$file" .tgz
+    done | sed -e 's/T/ /g' -e 's/~/\t/' | sort
+} > times.dat || fatal "error generating times.dat"
+
+"@plotexecdir@/$PLOT.sh" "$@" > "$PLOT.dat" \
+    || fatal "error running @plotexecdir@/$PLOT.sh to generate plotable data"
+
+R -f "@plotexecdir@/$PLOT.R" \
+    || fatal "error running @plotexecdir@/$PLOT.R to generate plots"

@@ -14,8 +14,57 @@ usage () {
 }
 
 
-upgrade_from_0_7 ()
-{
+# This variable and these functions support delaying of printing specific
+# messages until the end of the script so the user is more likely to notice
+# them.
+MSGS=""
+add_msg () {
+    local FORMAT
+
+    # format string for printf
+    FORMAT="$1"
+    shift
+
+    printf "$FORMAT\n" "$@" >&2
+
+    if test -z "$MSGS"; then
+        MSGS="$(printf "$FORMAT" "$@")"
+    else
+        MSGS="$MSGS$(printf "\n\n\n$FORMAT" "$@")"
+    fi
+}
+show_msgs () {
+    if test -z "$MSGS"; then
+        return 0
+    else
+        echo >&2
+        echo >&2
+        echo >&2 "================================================"
+        echo >&2 "WARNING: not all upgrade actions could complete:"
+        echo >&2
+        echo >&2
+        echo >&2 "$MSGS"
+        echo >&2
+        echo >&2
+        echo >&2 "================================================"
+        return 1
+    fi
+}
+
+
+upgrade_from_0_8 () {
+    echo "Attempting to create @pkgvarlibdir@."
+    mkdir -p "@pkgvarlibdir@" && chmod 700 "@pkgvarlibdir@" \
+        || add_msg "%s\n%s\n%s\n%s" \
+            "Creating @pkgvarlibdir@ failed." \
+            "Please run the following commands as root:" \
+            "    mkdir -p \"@pkgvarlibdir@\"" \
+            "    chmod 700 \"@pkgvarlibdir@\""
+
+    return 0
+}
+
+upgrade_from_0_7 () {
     echo "Adding SKI index to the manifest table. This may take a few minutes."
     echo "ALTER TABLE rpki_manifest ADD KEY ski (ski);" \
         | mysql_cmd || \
@@ -47,7 +96,8 @@ upgrade_from_0_7 ()
     find "`config_get RPKICacheDir`" -type f -name \*.gbr -print \
         | rcli -l
 
-    return 0
+    upgrade_from_0_8
+    return $?
 }
 
 
@@ -73,6 +123,10 @@ case "$OLD_VERSION" in
         upgrade_from_0_7 || exit $?
         ;;
 
+    0.8)
+        upgrade_from_0_8 || exit $?
+        ;;
+
     "@PACKAGE_VERSION@")
         usage_fatal "Please specify the version you're upgrading from, not" \
                     "the version you're upgrading to."
@@ -82,3 +136,8 @@ case "$OLD_VERSION" in
         fatal "Unrecognized version number: $OLD_VERSION"
         ;;
 esac
+
+show_msgs || exit $?
+
+echo
+echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."
