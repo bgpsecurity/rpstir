@@ -1,3 +1,14 @@
+next
+
+	* TODO: the following branches were merged into master in v0.9..5981bccb29b842dc10ef4ab4ac5c323034c5a489
+		* topic.251.rename_strings_h
+		* topic.286.sem_timedwait
+		* topic.293.no-git-error
+		* topic.185.remove-rpsl
+		* topic.276.sha256WithRSAEncryption
+		* topic.277.conformance-root-sia
+		* topic.279.badMFTNextUpdPast
+
 0.9
 
 	* Add many more conformance test cases. (See doc/conformance-cases for
