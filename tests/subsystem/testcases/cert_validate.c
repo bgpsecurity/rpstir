@@ -18,20 +18,10 @@
  */
 #define MINMAXBUFSIZE 20
 
-char *msgs[] = {
-    "Signature %s\n",
-    "Args are locertfile hicertfile\n",
-    "Can't get %s\n",
-    "Signing error in %s\n",
-};
-
-static void fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    exit(err);
-}
+#define MSG_SIG "Signature %s"
+#define MSG_USAGE "Args are locertfile hicertfile"
+#define MSG_GET "Can't get %s"
+#define MSG_SIG_ERR "Signing error in %s"
 
 int main(
     int argc,
@@ -39,17 +29,17 @@ int main(
 {
     OPEN_LOG("cert_validate", LOG_USER);
     if (argc != 3)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     struct Certificate locert,
         hicert;
     Certificate(&locert, (ushort) 0);
     Certificate(&hicert, (ushort) 0);
     if (get_casn_file(&locert.self, argv[1], 0) < 0)
-        fatal(2, argv[1]);
+        FATAL(MSG_GET, argv[1]);
     if (get_casn_file(&hicert.self, argv[2], 0) < 0)
-        fatal(2, argv[2]);
+        FATAL(MSG_GET, argv[2]);
     if (!check_cert_signature(&locert, &hicert))
-        fatal(0, "Failed");
-    fatal(0, "succeeded");
+        FATAL(MSG_SIG, "Failed");
+    DONE(MSG_SIG, "succeeded");
     return 0;
 }

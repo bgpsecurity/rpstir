@@ -5,22 +5,12 @@
 #include "casn/casn.h"
 #include "rpki-asn1/cms.h"
 #include "rpki-asn1/crlv2.h"
+#include "util/logging.h"
 
-static char *msgs[] = {
-    "Usage: name of input file\n",
-    "Suffix missing in %s\n",
-    "Unknown type %s\n",
-    "Error reading at %s\n",
-};
-
-void fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    if (err)
-        exit(err);
-}
+#define MSG_USAGE "Usage: name of input file"
+#define MSG_SUFFIX "Suffix missing in %s"
+#define MSG_TYPE "Unknown type %s"
+#define MSG_READ "Error reading at %s"
 
 int main(
     int argc,
@@ -34,15 +24,15 @@ int main(
 
 
     if (argc < 2)
-        fatal(0, (char *)0);
+        DONE(MSG_USAGE);
     char *p = strrchr(argv[1], (int)'.');
     if (!p)
-        fatal(1, (char *)0);
+        FATAL(MSG_SUFFIX, argv[1]);
     if (!strcmp(p, ".cer"))
     {
         Certificate(&certificate, (ushort) 0);
         if (get_casn_file(&certificate.self, argv[1], 0) < 0)
-            fatal(3, casn_err_struct.asn_map_string);
+            FATAL(MSG_READ, casn_err_struct.asn_map_string);
         bsize = dump_size(&certificate.self);
         buf = (char *)calloc(1, bsize + 8);
         dump_casn(&certificate.self, buf);
@@ -54,7 +44,7 @@ int main(
     {
         CertificateRevocationList(&crl, (ushort) 0);
         if (get_casn_file(&crl.self, argv[1], 0) < 0)
-            fatal(3, casn_err_struct.asn_map_string);
+            FATAL(MSG_READ, casn_err_struct.asn_map_string);
         bsize = dump_size(&crl.self);
         buf = (char *)calloc(1, bsize + 8);
         dump_casn(&crl.self, buf);
@@ -68,7 +58,7 @@ int main(
     {
         CMS(&cms, (ushort) 0);
         if (get_casn_file(&cms.self, argv[1], 0) < 0)
-            fatal(3, casn_err_struct.asn_map_string);
+            FATAL(MSG_READ, casn_err_struct.asn_map_string);
         bsize = dump_size(&cms.self);
         buf = (char *)calloc(1, bsize + 8);
         dump_casn(&cms.self, buf);
@@ -77,6 +67,6 @@ int main(
         delete_casn(&cms.self);
     }
     else
-        fatal(2, p);
+        FATAL(MSG_TYPE, p);
     return 0;
 }
