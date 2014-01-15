@@ -317,6 +317,7 @@ int statementscm(
     char *stm)
 {
     SQLINTEGER istm;
+    SQLLEN len;
     SQLRETURN ret;
 
     if (conp == NULL || conp->connected == 0 || stm == NULL || stm[0] == 0)
@@ -330,8 +331,8 @@ int statementscm(
              conp->mystat.errmsg, conp->mystat.emlen);
         return (ERR_SCM_SQL);
     }
-    istm = 0;
-    ret = SQLRowCount(conp->hstmtp->hstmt, &istm);
+    len = 0;
+    ret = SQLRowCount(conp->hstmtp->hstmt, &len);
     if (!SQLOK(ret))
     {
         heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
@@ -701,7 +702,7 @@ int getuintscm(
     unsigned int *ival)
 {
     SQLUINTEGER f1;
-    SQLINTEGER f1len;
+    SQLLEN f1len;
     SQLRETURN rc;
     int fnd = 0;
 
