@@ -83,7 +83,7 @@ struct {
 static int handleResults(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     int result = 0;
     int display;

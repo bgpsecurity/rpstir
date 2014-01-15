@@ -815,7 +815,7 @@ int searchscm(
     int what,
     char *orderp)
 {
-    SQLINTEGER nrows = 0;
+    SQLLEN nrows = 0;
     SQLRETURN rc;
     scmsrch *vecp;
     char *stmt = NULL;
@@ -825,7 +825,7 @@ int searchscm(
     int sta = 0;
     int nfnd = 0;
     int bset = 0;
-    int ridx = 0;
+    ssize_t ridx = 0;
     int nok = 0;
     int didw = 0;
     int fnd;
@@ -978,7 +978,7 @@ int searchscm(
             pophstmt(conp);
             return (ERR_SCM_SQL);
         }
-        sta = (*cnter) (conp, srch, (int)nrows);
+        sta = (*cnter) (conp, srch, nrows);
         if (sta < 0 && (what & SCM_SRCH_BREAK_CERR))
         {
             SQLCloseCursor(conp->hstmtp->hstmt);
@@ -1231,7 +1231,7 @@ int addcolsrchscm(
 static int socvaluefunc(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);

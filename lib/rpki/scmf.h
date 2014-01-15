@@ -7,6 +7,7 @@
 #define _SCMF_H_
 
 #include <inttypes.h>
+#include <unistd.h>
 #include <sql.h>
 #include <sqlext.h>
 #include "scm.h"
@@ -76,7 +77,7 @@ typedef int (
     *sqlcountfunc) (
     scmcon * conp,
     scmsrcha * s,
-    int cnt);
+    ssize_t cnt);
 
 // callback function signature for a single search result
 
@@ -84,7 +85,7 @@ typedef int (
     *sqlvaluefunc) (
     scmcon * conp,
     scmsrcha * s,
-    int idx);
+    ssize_t idx);
 
 // bitfields for how to do a search
 
