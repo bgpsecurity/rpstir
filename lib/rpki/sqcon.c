@@ -996,7 +996,7 @@ int searchscm(
             SQLBindCol(conp->hstmtp->hstmt,
                        vecp->colno <= 0 ? i + 1 : vecp->colno, vecp->sqltype,
                        vecp->valptr, vecp->valsize,
-                       (SQLINTEGER *) & vecp->avalsize);
+                       &vecp->avalsize);
         }
         while (1)
         {
@@ -1236,7 +1236,7 @@ static int socvaluefunc(
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
     if (s->vec[0].sqltype == SQL_C_ULONG &&
-        (unsigned)(s->vec[0].avalsize) >= sizeof(unsigned int) &&
+        (size_t)(s->vec[0].avalsize) >= sizeof(unsigned int) &&
         s->context != NULL)
     {
         memcpy(s->context, s->vec[0].valptr, sizeof(unsigned int));
