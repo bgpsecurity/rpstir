@@ -283,7 +283,7 @@ Procedure:
             break;
 
         default:
-            fatal(4, (char *)state);
+            done(true, MSG_INVAL_STATE, state);
         }
     }
     if (fd < 0)
@@ -306,7 +306,7 @@ static int pre_proc_get_token(
     {
         putout(str, linebuf);
         fflush(str);
-        fatal(22, token);
+        done(true, MSG_LOOP, token);
     }
     if (!*token && !get_token(fd, token))
         return 0;
@@ -448,7 +448,7 @@ static int pre_proc_glob(
                             fname = (char *)calloc(1, strlen(imtbp->name) + 6);
                             strcat(strcpy(fname, imtbp->name), ".asn");
                             if ((sub_fd = find_file(fname)) < 0)
-                                fatal(2, imtbp->name);
+                                done(true, MSG_OPEN, imtbp->name);
                             free(imtbp->name);
                             imtbp->name = fname;
                         }
@@ -496,7 +496,7 @@ static int pre_proc_glob(
             if (!*classname)
             {
                 cat(classname, token);
-                fatal(17, token);
+                done(true, MSG_DUP_DEF, token);
             }
             ntbp->pos = -2;     /* so it won't appear in unused list */
             glob_type(fd, ntbp->type, *activep);
@@ -505,7 +505,7 @@ static int pre_proc_glob(
         else if (*activep && (ctbp = find_class_entry(token)))
         {
             if (!*classname)
-                fatal(20, "class name");
+                done(true, MSG_MISSING, "class name");
             if (!(*classname & 0x20) &&
                 (ctbp->with_syntax.next || ctbp->with_syntax.subject))
             {
@@ -535,7 +535,7 @@ static int pre_proc_glob(
                                                         *token > ' ') &&
             (*linendpp = cat(cat(*linendpp, token),
                              ((*token == '{') ? "\n    " : " "))) >= elinebuf)
-            fatal(37, linebuf);
+            done(true, MSG_BIG_LINE, linebuf);
         *token = 0;
     }
     while (state == GLOBAL && pre_proc_get_token(fd, str, linebuf));
@@ -871,7 +871,7 @@ static int pre_proc_def(
                 {
                     if (*token == '{' && (*linendpp = cat(*linendpp, "{\n")) >=
                         elinebuf)
-                        fatal(37, linebuf);
+                        done(true, MSG_BIG_LINE, linebuf);
                     *token = 0;
                 }
             }
@@ -887,7 +887,7 @@ static int pre_proc_def(
             if (constrain == '(')
             {
                 if ((*linendpp = cat(*linendpp, "\n")) >= elinebuf)
-                    fatal(37, linebuf);
+                    done(true, MSG_BIG_LINE, linebuf);
                 constrain = 0;
                 state = GLOBAL;
             }
@@ -1144,7 +1144,7 @@ static int pre_proc_item(
                     parens--;
             }
             if (parens)
-                fatal(20, ")");
+                done(true, MSG_MISSING, ")");
             *token = 0;
         }
         else if (*token == '(')
@@ -1176,7 +1176,7 @@ static int pre_proc_item(
                 if (!*itemname)
                 {
                     if (loctag <= 0)
-                        fatal(20, "item name");
+                        done(true, MSG_MISSING, "item name");
                     cat(namebuf, *linendpp);
                     cat(itemname, &find_class(loctag)[3]);
                     *itemname |= 0x20;
@@ -1215,7 +1215,7 @@ static int pre_proc_item(
             for (b = token; *b; b++);
             *b++ = ' ';
             if (!get_token(fd, b))
-                fatal(14, linebuf);
+                done(true, MSG_EOF, linebuf);
             if (strcmp(b, of_w))
                 syntax(b);
         }
@@ -1287,7 +1287,7 @@ static int pre_proc_item(
             {
                 get_must(fd, token);
                 if (!(ctbp = find_class_entry(token)))
-                    fatal(30, token);
+                    done(true, MSG_UNDEF_CLASS, token);
                 cat(token, ctbp->name);
                 for (c = &token[1]; *c; c++)
                     if (*c >= 'A' && *c <= 'Z')
@@ -1350,7 +1350,7 @@ static int pre_proc_item(
             if (substr)
             {
                 if (*linendpp > linebuf)
-                    fatal(24, "pre-processor");
+                    done(true, MSG_INTERNAL, "pre-processor");
                 if (*activep)
                     putout(str, "\n");
                 if (*activep)
@@ -1364,7 +1364,7 @@ static int pre_proc_item(
     }
     while (state != GLOBAL && pre_proc_get_token(fd, str, linebuf));
     if (state != GLOBAL)
-        fatal(14, linebuf);
+        done(true, MSG_EOF, linebuf);
     return state;
 }
 
@@ -1403,7 +1403,7 @@ static int append_token(
     if (!*string)
         return 0;
     if ((c = cat(cat(to, string), " ")) > elinebuf)
-        fatal(37, string);
+        done(true, MSG_BIG_LINE, string);
     return c - to;
 }
 
@@ -1470,7 +1470,7 @@ FILE *make_substr(
     FILE *nstr;
     strcpy(fname, "asnXXXXXX");
     if ((fd = mkstemp(fname)) < 0 || !(nstr = fdopen(fd, "w+")))
-        fatal(2, fname);
+        done(true, MSG_OPEN, fname);
     made_change = 1;
     return nstr;
 }
@@ -1548,7 +1548,7 @@ static void scan_modules(
         while ((siz = get_token(fd, locbuf)) && siz < (int)sizeof(locbuf) &&
                strcmp(locbuf, end_w));
         if ((size_t)siz >= sizeof(locbuf))
-            fatal(36, locbuf);
+            done(true, MSG_BIG_TOKEN, locbuf);
         modtbp->end_pos = tell_pos(streams.str);
         if (!siz)
             break;

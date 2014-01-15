@@ -30,13 +30,6 @@
 #include "rpki/myssl.h"
 #include "rpki/err.h"
 
-static void fatal(
-    char *msg)
-{
-    fprintf(stderr, "%s\n", msg);
-    exit(0);
-}
-
 int main(
     int argc,
     char **argv)
@@ -50,24 +43,24 @@ int main(
 
     if (!my_config_load())
     {
-        fatal("Can't load configuration");
+        FATAL("Can't load configuration");
     }
 
     if ((scmp = initscm()) == NULL)
-        fatal("Can't initialize database");
+        FATAL("Can't initialize database");
     if ((conp = connectscm(scmp->dsn, errMsg, 1024)) == NULL)
-        fatal("Can't connect");
+        FATAL("Can't connect");
     OpenSSL_add_all_algorithms();
     ERR_load_crypto_strings();
     if (!(table = findtablescm(scmp, "certificate")))
-        fatal("Can't get table");
+        FATAL("Can't get table");
     if (argc != 2)
-        fatal("Need name of control file");
+        FATAL("Need name of control file");
     int ansr = read_SKI_blocks(scmp, conp, argv[1]);
     if (ansr < 0)
         fprintf(stderr, "Had error %d: %s\n", ansr, err2string(ansr));
     config_unload();
     CLOSE_LOG();
-    fatal("Finished");
+    DONE("Finished");
     return 0;
 }

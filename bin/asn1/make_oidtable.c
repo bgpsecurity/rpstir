@@ -7,18 +7,17 @@ char make_oidtable_sfcsid[] = "@(#)make_oidtable.c 869P";
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include "util/logging.h"
 
 struct oidtable {
     char *oid;
     char *label;
 };
 
-char *msgs[] = {
-    "Finished OK\n",
-    "Can't open %s\n",
-    "Error in this line: %s",
-    "Usage: tablefilename, file.h ...\n",
-};
+#define MSG_OK "Finished OK"
+#define MSG_OPEN "Can't open %s"
+#define MSG_LINE "Error in this line: %s"
+#define MSG_USAGE "Usage: tablefilename, file.h ..."
 
 static int diff_oid(
     char *o1,
@@ -52,14 +51,6 @@ static int diff_oid(
     return 0;                   // never happens
 }
 
-static void fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    exit(err);
-}
-
 int main(
     int argc,
     char **argv)
@@ -71,14 +62,14 @@ int main(
         oidnum;
     FILE *str;
     if (argc < 2)
-        fatal(3, (char *)0);
+        FATAL(MSG_USAGE);
 
     oidtable = (struct oidtable *)calloc(numoids, sizeof(struct oidtable));
     for (argv++, oidnum = 0; argv && *argv; argv++)
     {
         // int linenum = 1;
         if (!(str = fopen(*argv, "r")))
-            fatal(1, *argv);
+            FATAL(MSG_OPEN, *argv);
         char *c;
         while (fgets(linebuf, 512, str))
         {
@@ -91,10 +82,10 @@ int main(
                 continue;
             for (c = &linebuf[8]; *c && *c <= ' '; c++);
             if (!*c)
-                fatal(2, linebuf);
+                FATAL(MSG_LINE, linebuf);
             for (l = c; *c && *c > ' '; c++);
             if (!*c)
-                fatal(2, linebuf);
+                FATAL(MSG_LINE, linebuf);
             *c++ = 0;
             while (*c && *c <= ' ')
                 c++;
@@ -102,20 +93,20 @@ int main(
                 continue;
             c++;
             if (!*c || *c < '0' || *c > '9')
-                fatal(2, linebuf);
+                FATAL(MSG_LINE, linebuf);
             int j;
             if (sscanf(c, "%d.", &j) < 1 || j > 2)
                 continue;
             o = c;
             for (o = c; *c && *c != '.' && *c != '"'; c++);
             if (!*c)
-                fatal(2, linebuf);
+                FATAL(MSG_LINE, linebuf);
             if (*c != '.')
                 continue;       // just one segment
             while (*c && *c != '"')
                 c++;
             if (!*c)
-                fatal(2, linebuf);
+                FATAL(MSG_LINE, linebuf);
             *c = 0;
             if (oidnum >= numoids)
                 oidtable = (struct oidtable *)realloc(oidtable,
@@ -152,7 +143,7 @@ int main(
             i++;
     }
     if (!(str = fopen(outfile, "w")))
-        fatal(1, outfile);
+        FATAL(MSG_OPEN, outfile);
     char lastoid[256];
     memset(lastoid, 0, 256);
     for (i = 0; i < oidnum; i++)
@@ -166,6 +157,5 @@ int main(
         strcpy(lastoid, curr_oidp->oid);
     }
     fclose(str);
-    // fatal(0, outfile); // commented out for silent success
     return 0;
 }

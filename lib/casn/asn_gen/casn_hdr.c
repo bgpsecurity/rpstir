@@ -214,7 +214,7 @@ static void print_hdr(
             break;
 
         default:
-            fatal(4, (char *)state);
+            done(true, MSG_INVAL_STATE, state);
         }
     }
 }

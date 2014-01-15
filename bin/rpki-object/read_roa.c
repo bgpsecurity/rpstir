@@ -1,23 +1,13 @@
 
 #include "rpki/cms/roa_utils.h"
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished OK\n",
-    "Error in family %s\n",
-    "Can't open %s\n",          // 2
-    "%s is not a roa\n",
-    "Invalid or missing AS#\n", // 4
-    "Error in family %d\n",
-};
-
-static void fatal(
-    int err,
-    char *param)
-{
-    if (err)
-        fprintf(stderr, msgs[err], param);
-    exit(0);
-}
+#define MSG_OK "Finished OK"
+#define MSG_FAMILY_STR "Error in family %s"
+#define MSG_OPEN "Can't open %s"
+#define MSG_NOT_ROA "%s is not a roa"
+#define MSG_BAD_AS "Invalid or missing AS#"
+#define MSG_FAMILY_NUM "Error in family %d"
 
 static int roa2prefix(
     char **prefixpp,
@@ -93,7 +83,7 @@ static int read_family(
             (struct ROAIPAddress *)member_casn(&roafamp->addresses.self,
                                                i);
         if (!roaipp)
-            fatal(1, buf);
+            FATAL(MSG_FAMILY_STR, buf);
         int lth = roa2prefix(&a, roaipp, (int)ub[1]);
         if (lth <= 0)
             fprintf(stderr, "Error in address[%d] in IPv%c\n", i, buf[3]);
@@ -126,19 +116,19 @@ int main(
     }
     FILE *str = stdout;
     if (argc == 3 && (str = fopen(argv[2], "w")) == 0)
-        fatal(2, argv[2]);
+        FATAL(MSG_OPEN, argv[2]);
     struct CMS roa;
     CMS(&roa, (ushort) 0);
     if (get_casn_file(&roa.self, argv[1], 0) < 0)
-        fatal(2, argv[1]);
+        FATAL(MSG_OPEN, argv[1]);
     struct RouteOriginAttestation *roaip;
     roaip = &roa.content.signedData.encapContentInfo.eContent.roa;
 
     if (vsize_casn(&roaip->self) <= 0)
-        fatal(3, argv[1]);
+        FATAL(MSG_NOT_ROA, argv[1]);
     long asnum;
     if (read_casn_num(&roaip->asID, &asnum) < 0 || asnum <= 0)
-        fatal(4, (char *)0);
+        FATAL(MSG_BAD_AS);
     fprintf(str, "AS# %ld\n", asnum);
     struct ROAIPAddrBlocks *roablockp = &roaip->ipAddrBlocks;
     int i,
@@ -150,7 +140,7 @@ int main(
             (struct ROAIPAddressFamily *)member_casn(&roablockp->self, i);
         char *a;
         if ((ansr = read_family(&a, roafamp)) < 0)
-            fatal(5, (char *)i);
+            FATAL(MSG_FAMILY_NUM, i);
         fprintf(str, "%s", a);
         free(a);
     }

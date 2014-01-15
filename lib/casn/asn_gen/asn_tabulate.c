@@ -75,7 +75,7 @@ void tabulate(
             parent = add_name(classname, (ulong) - 1, 0);
             ptbp = &((struct name_table *)name_area.area)[parent];
             if ((ptbp->flags & ASN_FILLED_FLAG))
-                warn(17, classname);
+                warn(MSG_DUP_DEF, classname);
             else
                 ptbp->flags |= ASN_FILLED_FLAG;
             if (ptbp->pos == -1)
@@ -112,7 +112,7 @@ void tabulate(
             break;
 
         default:
-            fatal(4, (char *)state);
+            done(true, MSG_INVAL_STATE, state);
         }
     }
     if (name_area.area)
@@ -186,7 +186,7 @@ static void tab_def(
          !(option & ASN_OF_FLAG)) || *lo_end)
     {
         if (*lo_end && type != ASN_INTEGER)
-            warn(31, "range definition");
+            warn(MSG_NOT_SUPPORTED, "range definition");
         flags |= ASN_ENUM_FLAG; /* for read_item */
         option |= ASN_ENUM_FLAG;        /* for add_name just below */
     }
@@ -324,7 +324,7 @@ static void tab_item(
                           ASN_DEFINER_FLAG);
         if (!
             (c = (char *)calloc(strlen(tablename) + strlen(classname) + 4, 1)))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         mk_in_name(c, tablename, classname);
         tmp = add_child(c, child, 0, (ulong) - 1, ASN_TABLE_FLAG);
         tmp = add_child(tablename, tmp, 0, (ulong) - 1, ASN_TABLE_FLAG);
@@ -333,7 +333,7 @@ static void tab_item(
     }
     if (!*itemname && type < 0 && !*subclass &&
         tell_pos(streams.str) >= real_start)
-        warn(20, "item name");
+        warn(MSG_MISSING, "item name");
     /*
      * step 3 
      */
@@ -410,7 +410,7 @@ Procedure:
     if (!(testname = (char *)calloc(ASN_BSIZE + (2 * strlen(classname)) +
                                     strlen(itemname) + strlen(subclass) +
                                     strlen(token) + 8, 1)))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     mk_in_name(testname, segment, inclass);
     ntbp = find_name(testname);
     if (!ntbp || !ntbp->name)
@@ -449,7 +449,7 @@ Procedure:
                 if (*subclass)
                     cat(inclass, subclass);
                 else if (!(b = find_class(type)))
-                    fatal(34, segment);
+                    done(true, MSG_UNDEF_TYPE, segment);
                 else
                     cat(inclass, b);
                 /*
@@ -625,7 +625,7 @@ Procedure:
             if (!lftbp->name)
             {
                 cat(classname, ptbp->name);
-                warn(19, ptbp->name);
+                warn(MSG_NO_TABLE, ptbp->name);
                 continue;
             }
             /*
@@ -640,14 +640,14 @@ Procedure:
                     free(pparentp);
                 }
                 else
-                    fatal(24, func);
+                    done(true, MSG_INTERNAL, func);
             }
             else
             {                   /* find the one before, pparentp */
                 for (pparentp = &ctbp->parent; pparentp && pparentp->next !=
                      cparentp; pparentp = pparentp->next);
                 if (!pparentp)
-                    fatal(24, func);
+                    done(true, MSG_INTERNAL, func);
                 pparentp->next = cparentp->next;
                 free(cparentp);
                 cparentp = pparentp;
@@ -699,7 +699,7 @@ Procedure:
         }
     }
     if (!generation && loop_test(table, table, 0))
-        fatal(13, (char *)0);
+        done(true, MSG_NESTING);
     /*
      * step 3 
      */
@@ -729,7 +729,7 @@ Procedure:
                     if (cparentp->index != curr_parent)
                         continue;
                     if (generation > 31 && loop_test(table, ptbp, 0))
-                        fatal(13, (char *)0);
+                        done(true, MSG_NESTING);
                     if (((pparentp->map_lth + 2) >> 4) >
                         (cparentp->map_lth >> 4))
                     {
@@ -737,7 +737,7 @@ Procedure:
                                                          cparentp->map_lth,
                                                          ((pparentp->map_lth +
                                                            17) & ~0xF))))
-                            fatal(7, (char *)0);;
+                            done(true, MSG_MEM);;
                     }
                     cparentp->mymap[pparentp->map_lth] =
                         cparentp->mymap[cparentp->map_lth - 1];
@@ -767,7 +767,7 @@ Procedure:
                     else
                         ctbp->type = table[ptbp->parent.index].type;
                     if (lth++)
-                        fatal(25, ctbp->name);
+                        done(true, MSG_MULTIPLE_DEFINERS, ctbp->name);
                 }
                 else if ((ptbp->flags & ASN_DEFINED_FLAG))
                     ptbp->pos = ctbp->pos;
@@ -809,7 +809,7 @@ Procedure:
              * ptbp is child of lftbp, i.e. the non-false item 
              */
             if (!ptbp->name)
-                fatal(5, lftbp->name);
+                done(true, MSG_NO_CHILD, lftbp->name);
             set_false(table, ptbp);
         }
     }
@@ -850,7 +850,7 @@ static void mk_table_child(
                       (ASN_DEFINED_FLAG | (option & ASN_OPTIONAL_FLAG)));
     if (!(ntbp = find_definer(definer, parent)) || !ntbp->name)
     {
-        warn(19, definer);
+        warn(MSG_NO_TABLE, definer);
         return;
     }
     tntbp = (struct name_table *)name_area.area;

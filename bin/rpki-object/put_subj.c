@@ -5,23 +5,13 @@
 #include <casn/casn.h>
 #include <rpki-asn1/certificate.h>
 #include <stdio.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished %s OK\n",
-    "Usage: filename subjname\n",
-    "Can't open %s\n",
-    "Error reading %n\n",
-    "Error writing %s\n",
-};
-
-void fatal(
-    int num,
-    char *note)
-{
-    printf(msgs[num], note);
-    if (num)
-        exit(num);
-}
+#define MSG_OK "Finished %s OK"
+#define MSG_USAGE "Usage: filename subjname"
+#define MSG_OPEN "Can't open %s"
+#define MSG_READING "Error reading %n"
+#define MSG_WRITING "Error writing %s"
 
 int main(
     int argc,
@@ -30,9 +20,9 @@ int main(
     struct Certificate cert;
     Certificate(&cert, (ushort) 0);
     if (argc < 3)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     if (get_casn_file(&cert.self, argv[1], 0) <= 0)
-        fatal(1, argv[1]);
+        FATAL(MSG_OPEN, argv[1]);
     struct RelativeDistinguishedName *rdnp =
         (struct RelativeDistinguishedName *)member_casn(&cert.toBeSigned.
                                                         subject.rDNSequence.
@@ -42,9 +32,9 @@ int main(
     if (write_casn
         (&avap->value.commonName.printableString, (uchar *) argv[2],
          strlen(argv[2])) < 0)
-        fatal(3, "name");
+        FATAL(MSG_WRITING, "name");
     if (put_casn_file(&cert.self, argv[1], 0) < 0)
-        fatal(3, argv[1]);
-    fatal(0, argv[1]);
+        FATAL(MSG_WRITING, argv[1]);
+    DONE(MSG_OK, argv[1]);
     return 0;
 }

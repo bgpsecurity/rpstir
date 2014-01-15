@@ -14,25 +14,16 @@
 #include "rpki-asn1/extensions.h"
 #include <util/cryptlib_compat.h>
 #include <rpki-asn1/roa.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished %s OK\n",
-    "Usage: CRLfile startdelta enddelta\n",
-    "Can't get %s\n",           // 2
-    "Invalid CRL number %s\n",
-    "Error signing CRL\n",      // 4
-    "Error %s\n",
-    "Error writing CRL to %s\n",        // 6
-    "Invalid time delta %s\n",
-};
-
-static int fatal(
-    int err,
-    const char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    exit(err);
-}
+#define MSG_OK "Finished %s OK"
+#define MSG_USAGE "Usage: CRLfile startdelta enddelta"
+#define MSG_GET "Can't get %s"
+#define MSG_INVAL_CRL_NO "Invalid CRL number %s"
+#define MSG_SIG "Error signing CRL"
+#define MSG_ERROR "Error %s"
+#define MSG_WRITING "Error writing CRL to %s"
+#define MSG_INVAL_TIME_DELTA "Invalid time delta %s"
 
 static long getCertNum(
     char *certfile)
@@ -44,7 +35,7 @@ static long getCertNum(
     struct Certificate cert;
     Certificate(&cert, (ushort) 0);
     if (get_casn_file(&cert.self, certfile, 0) < 0)
-        fatal(2, certfile);
+        FATAL(MSG_GET, certfile);
     long num;
     read_casn_num(&cert.toBeSigned.serialNumber, &num);
     delete_casn(&cert.self);
@@ -87,7 +78,7 @@ int main(
     char **argv)
 {
     if (argc < 4)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     struct stat tstat;
     fstat(0, &tstat);
     int filein = (tstat.st_mode & S_IFREG);
@@ -101,7 +92,7 @@ int main(
     for (c = crlname; *c && *c != '.'; c++);
     int crlnum;
     if (sscanf(&c[-1], "%d", &crlnum) != 1)
-        fatal(3, &c[-1]);
+        FATAL(MSG_INVAL_CRL_NO, &c[-1]);
     if (!*c)
         strcpy(c, ".crl");
     strcpy(certname, argv[1]);
@@ -120,7 +111,7 @@ int main(
     CertificateRevocationList(&crl, (ushort) 0);
     Certificate(&cert, (ushort) 0);
     if (get_casn_file(&cert.self, certname, 0) < 0)
-        fatal(2, certname);
+        FATAL(MSG_GET, certname);
     struct CertificateRevocationListToBeSigned *crltbsp = &crl.toBeSigned;
     struct CertificateToBeSigned *ctbsp = &cert.toBeSigned;
     write_casn_num(&crltbsp->version.self, 1);
@@ -132,9 +123,9 @@ int main(
     clear_casn(&crltbsp->lastUpdate.self);
     clear_casn(&crltbsp->nextUpdate.self);
     if (adjustTime(&crltbsp->lastUpdate.utcTime, now, argv[2]))
-        fatal(7, argv[2]);
+        FATAL(MSG_INVAL_TIME_DELTA, argv[2]);
     if (adjustTime(&crltbsp->nextUpdate.utcTime, now, argv[3]))
-        fatal(7, argv[3]);
+        FATAL(MSG_INVAL_TIME_DELTA, argv[3]);
 
     struct Extension *iextp;
     struct CRLExtension *extp;
@@ -180,14 +171,14 @@ int main(
     msg = signCRL(&crl, keyfile);
     if (msg != NULL)
     {
-        fatal(5, msg);
+        FATAL(MSG_ERROR, msg);
     }
     char fullpath[40];
     make_fullpath(fullpath, crlname);
     if (put_casn_file(&crl.self, crlname, 0) < 0)
-        fatal(6, crlname);
+        FATAL(MSG_WRITING, crlname);
     if (put_casn_file(&crl.self, fullpath, 0) < 0)
-        fatal(2, fullpath);
+        FATAL(MSG_GET, fullpath);
     int siz = dump_size(&crl.self);
     char *rawp = (char *)calloc(1, siz + 4);
     siz = dump_casn(&crl.self, rawp);
@@ -195,11 +186,11 @@ int main(
     strcpy(c, ".raw");
     int fd = open(crlname, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
     if (fd < 0)
-        fatal(6, crlname);
+        FATAL(MSG_WRITING, crlname);
     if (write(fd, rawp, siz) < 0)
         perror(crlname);
     close(fd);
     free(rawp);
-    fatal(0, crlname);
+    DONE(MSG_OK, crlname);
     return 0;
 }

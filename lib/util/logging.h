@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* LOG_LEVEL_TEXT[0] == "EMERG", etc. (RFC 5424) */
 extern const char *LOG_LEVEL_TEXT[];
@@ -65,6 +67,21 @@ volatile sig_atomic_t LOG_LEVEL;
         { \
             LOG(LOG_ERR, format ": error code %d", ## __VA_ARGS__, (err)); \
         } \
+    } while (false)
+
+/**
+    These macros help transition from the problematic fatal() functions used in
+    some of the older code. They are not intended to be used by new code.
+*/
+#define FATAL(format, ...) \
+    do { \
+        fprintf(stderr, format "\n", ## __VA_ARGS__); \
+        exit(EXIT_FAILURE); \
+    } while (false)
+#define DONE(format, ...) \
+    do { \
+        fprintf(stderr, format "\n", ## __VA_ARGS__); \
+        exit(EXIT_SUCCESS); \
     } while (false)
 
 
