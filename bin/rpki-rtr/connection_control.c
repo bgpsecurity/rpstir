@@ -69,11 +69,10 @@ static void cleanup_connection(
     if (retval1 != 0)
         ERR_LOG(errno, errorbuf, "close()");
 
-    retval1 = sem_destroy(cxn_info->semaphore);
+    retval1 = semcompat_free(cxn_info->semaphore);
     if (retval1 != 0)
-        ERR_LOG(errno, errorbuf, "sem_destroy()");
+        ERR_LOG(errno, errorbuf, "semcompat_free()");
 
-    free((void *)cxn_info->semaphore);
     free((void *)cxn_info);
 }
 
@@ -302,19 +301,10 @@ void *connection_control_main(
             cxn_info->started = false;
             cxn_info->addr_len = 0;
 
-            cxn_info->semaphore = malloc(sizeof(cxn_semaphore_t));
-            if (cxn_info->semaphore == NULL)
+            cxn_info->semaphore = semcompat_new(0, 0);
+            if (cxn_info->semaphore == SEM_FAILED)
             {
-                LOG(LOG_ERR,
-                    "can't allocate memory for a new connection semaphore");
-                free((void *)cxn_info);
-                continue;
-            }
-
-            if (sem_init(cxn_info->semaphore, 0, 0) != 0)
-            {
-                ERR_LOG(errno, errorbuf, "sem_init()");
-                free((void *)cxn_info->semaphore);
+                ERR_LOG(errno, errorbuf, "semcompat_new()");
                 free((void *)cxn_info);
                 continue;
             }
@@ -326,11 +316,10 @@ void *connection_control_main(
             if (cxn_info->fd < 0)
             {
                 ERR_LOG(errno, errorbuf, "accept()");
-                if (sem_destroy(cxn_info->semaphore) != 0)
+                if (semcompat_free(cxn_info->semaphore) != 0)
                 {
-                    ERR_LOG(errno, errorbuf, "sem_destroy()");
+                    ERR_LOG(errno, errorbuf, "semcompat_free()");
                 }
-                free((void *)cxn_info->semaphore);
                 free((void *)cxn_info);
                 continue;
             }

@@ -1,0 +1,11 @@
+--- badROAIPv4SAFI.raw.old	2013-12-03 19:06:08.148689605 -0500
++++ badROAIPv4SAFI.raw	2013-12-03 19:08:10.198467691 -0500
+@@ -6,7 +6,7 @@
+             seq oid 1.2.840.113549.1.9.16.1.24 /* id_routeOriginAttestation */
+                 ctx+0x20
+                     ocw seq int 0x08 /* 8 */ 
+-                            seq seq oct 0x0001
++                            seq seq oct 0x000103
+                                     seq seq bit 0x000101
+                                 seq oct 0x0002
+                                     seq seq bit 0x00010201

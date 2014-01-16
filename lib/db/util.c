@@ -23,7 +23,7 @@ int wrap_mysql_stmt_execute(
 {
     int tried = 0;
     int ret = 0;
-    uint err_no = 0;
+    unsigned int err_no = 0;
 
     ret = mysql_stmt_execute(stmt);
     // currently limited to a single reconnect attempt
@@ -71,9 +71,9 @@ int getStringByFieldname(
     MYSQL_ROW row,
     char field_name[])
 {
-    uint num_fields;
+    unsigned int num_fields;
     int field_no = -1;
-    uint i = 0;
+    unsigned int i = 0;
     MYSQL_FIELD *fields = NULL;
     ulong *lengths = NULL;
     ulong len;
