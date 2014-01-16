@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <mysql.h>
 
 #include "rpki/scm.h"
 #include "rpki/scmf.h"
