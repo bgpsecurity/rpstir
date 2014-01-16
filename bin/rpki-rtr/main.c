@@ -54,8 +54,7 @@ struct run_state {
     Queue *db_request_queue;
     Bag *db_currently_processing;
 
-    bool db_semaphore_initialized;
-    db_semaphore_t db_semaphore;
+    db_semaphore_t * db_semaphore;
 
     void *db;
 
@@ -87,7 +86,7 @@ static void initialize_run_state(
     run_state->db_request_queue = NULL;
     run_state->db_currently_processing = NULL;
 
-    run_state->db_semaphore_initialized = false;
+    run_state->db_semaphore = SEM_FAILED;
 
     run_state->db = NULL;
 
@@ -414,11 +413,11 @@ static void cleanup(
         db_close();
     }
 
-    if (run_state->db_semaphore_initialized)
+    if (run_state->db_semaphore != SEM_FAILED)
     {
-        if (sem_destroy(&run_state->db_semaphore) != 0)
-            ERR_LOG(errno, errorbuf, "sem_destroy()");
-        run_state->db_semaphore_initialized = false;
+        if (semcompat_free(run_state->db_semaphore) != 0)
+            ERR_LOG(errno, errorbuf, "semcompat_free()");
+        run_state->db_semaphore = SEM_FAILED;
     }
 
     if (run_state->db_currently_processing != NULL)
@@ -512,13 +511,13 @@ static void startup(
     unblock_signals();
 
     block_signals();
-    if (sem_init(&run_state->db_semaphore, 0, 0) != 0)
+    run_state->db_semaphore = semcompat_new(0, 0);
+    if (run_state->db_semaphore == SEM_FAILED)
     {
-        ERR_LOG(errno, errorbuf, "sem_init() for db_semaphore");
+        ERR_LOG(errno, errorbuf, "semcompat_new() for db_semaphore");
         exit_code = EXIT_FAILURE;
         pthread_exit(NULL);
     }
-    run_state->db_semaphore_initialized = true;
     unblock_signals();
 
     block_signals();
@@ -567,7 +566,7 @@ static void startup(
     }
     unblock_signals();
 
-    run_state->db_main_args.semaphore = &run_state->db_semaphore;
+    run_state->db_main_args.semaphore = run_state->db_semaphore;
     run_state->db_main_args.db_request_queue = run_state->db_request_queue;
     run_state->db_main_args.db_currently_processing =
         run_state->db_currently_processing;
@@ -589,7 +588,7 @@ static void startup(
     run_state->connection_control_main_args.db_request_queue =
         run_state->db_request_queue;
     run_state->connection_control_main_args.db_semaphore =
-        &run_state->db_semaphore;
+        run_state->db_semaphore;
     run_state->connection_control_main_args.global_cache_state =
         &run_state->global_cache_state;
 

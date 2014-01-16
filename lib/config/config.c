@@ -6,7 +6,7 @@
 #include "configlib/types/enum.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
-#include "configlib/types/string.h"
+#include "configlib/types/string_cvt.h"
 #include "util/logging.h"
 
 #include "config.h"

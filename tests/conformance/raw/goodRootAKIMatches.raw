@@ -45,11 +45,12 @@ seq seq ctx+0x20
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
                     ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
                                 ctx+0x06
-                                    "rsync://rpki.bbn.com/conformance/root/"
+                                    "rsync://rpki.bbn.com/conformance/goodRootA"
+                                    "KIMatches/"
                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
-                                    "rsync://rpki.bbn.com/conformance/root/root"
-                                    ".mft"
+                                    "rsync://rpki.bbn.com/conformance/goodRootA"
+                                    "KIMatches/root.mft"
                 seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
                     ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
@@ -66,12 +67,12 @@ seq seq ctx+0x20
                                         int 0x010000 /* 65536 */ 
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x004376D06EE582B0C262CEA0B66C2AE91525F57BFD6C61DA2BEA7798C39E0EB3
-        0x996FED534C03364680351AC577907665878A362A197D12CA6EA9504AF79EEBE4
-        0x9E3835049311907494452AA1BE9FA6D97D99C8B664EE630C82CADF993FA27DC8
-        0xCF0AFE10E5EFB2FD372CF85C722CB604886FA2B20D2190EFBCA5F5D3D1A277B9
-        0x51CCE4384E867B8E4E224CB984B4E4B6DC4045871B2FC8B6D3B02DDC29C88851
-        0x36B405FBA5C115F7704BEC2F793E98FF4BA9F272C2B39A413AF140DE6C1B6DE1
-        0x3BC230E9C5A348A67F2B6C7F551D009E28A92635A3F3A17A6FFADCF4B269F621
-        0xB7EAA9E20BA034CDA6C321BA257805C51CF2637B16D1F6175F2F59E97E245FF6
-        0xAF
+    bit 0x0019D7174827E1C273941BFC769A2D8AFCB5A44749513A458A03979E3AEC711B
+        0x7C81A249129878CC6EF407CBB495A38A22E3A73A8CD12CDC5FA50A2F43F27C8C
+        0x817AA53CE6649E1CB0C178932C3AE529847DFADED16D43BEA8F2F9AC4031D43E
+        0xD6A959C4B9040F1E2340FFDA49450B6ADE8676F56AD0A5E480B06FBF12121A41
+        0x90E42B5AA9344109C824C58C92C9B7F385647985765A096E915FACECCEF0800B
+        0xA509FE03E260ABAC6EAFDC4B09BFB3630372F53810B564BAD3DBD7F5DEBBAAC1
+        0xA6A7418FC6D3A6FBCB546E3CFDE6DCAF26F21A06B82FE4C9FCF6FBB93B6FBE16
+        0x59668448CB7A80015FEE221AC2DBA824D32EAE2C245FC6D2E2148C1A58F1C9BD
+        0x49

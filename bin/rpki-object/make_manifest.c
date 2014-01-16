@@ -234,7 +234,7 @@ int main(
     write_casn_num(&sigInfop->version.v3, 3);
     write_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256);
     write_objid(&sigInfop->signatureAlgorithm.algorithm,
-                id_sha_256WithRSAEncryption);
+                id_rsadsi_rsaEncryption);
 
     const char *msg;
     if ((msg = signCMS(&cms, argv[3], 0)))
