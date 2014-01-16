@@ -36,7 +36,7 @@
 #define MAX_CONDS 10
 
 #define BAD_OBJECT_TYPE \
-  "\nBad object type; must be roa, cert, crl, man[ifest], gbr, or rpsl\n\n"
+  "\nBad object type; must be roa, cert, crl, man[ifest], or gbr\n\n"
 
 /*
  * I hate to use all these static variables, but the problem is
@@ -53,7 +53,6 @@ static char *objectType;
 static int isROA = 0,
     isCert = 0,
     isCRL = 0,
-    isRPSL = 0,
     isManifest = 0,
     isGBR = 0;
 static scm *scmp = NULL;
@@ -75,37 +74,8 @@ struct {
     "manifest", "manifest"},
     {
     "gbr", "ghostbusters"},
-    {
-    "rpsl", "roa"},};
+};
 
-
-static unsigned int oldasn;              // needed for grouping by AS#
-static int v4size = 0,
-    v6size = 0;
-static char *v4members = NULL,
-    *v6members = NULL;
-
-static void emptyRPSL(
-    )
-{
-    char *hdrp = "route-set: RS-RPKI-ROA-FOR-V%d:AS%u\n";
-    if (v4members != NULL)
-    {
-        fprintf(output, hdrp, 4, oldasn);
-        fprintf(output, "%s\n", v4members);
-        free(v4members);
-        v4members = NULL;
-        v4size = 0;
-    }
-    if (v6members != NULL)
-    {
-        fprintf(output, hdrp, 6, oldasn);
-        fprintf(output, "%s\n", v6members);
-        free(v6members);
-        v6members = NULL;
-        v6size = 0;
-    }
-}
 
 /*
  * callback function for searchscm that prints the output 
@@ -125,120 +95,13 @@ static int handleResults(
     if (validate)
     {
         if (!checkValidity
-            ((isROA || isRPSL || isManifest || isGBR
+            ((isROA || isManifest || isGBR
               || isCRL) ? (char *)s->vec[valIndex].valptr : NULL,
              isCert ? *((unsigned int *)s->vec[valIndex].valptr) : 0, scmp,
              connection))
             return 0;
     }
 
-    if (isRPSL)
-    {
-        unsigned int asn = 0;
-        char *ip_addrs = 0;
-        const char *filename = 0;
-
-        for (display = 0; globalFields[display] != NULL; display++)
-        {
-            QueryField *field = globalFields[display];
-            if (!strcasecmp(field->name, "ip_addrs"))
-            {
-                if (s->vec[display].avalsize != SQL_NULL_DATA)
-                    ip_addrs = (char *)s->vec[display].valptr;
-                else
-                    ip_addrs = NULL;
-            }
-            else if (!strcasecmp(field->name, "asn"))
-            {
-                if (s->vec[display].avalsize != SQL_NULL_DATA)
-                    asn = *(unsigned int *)s->vec[display].valptr;
-                else
-                    asn = 0;
-            }
-            else if (!strcasecmp(field->name, "filename"))
-            {
-                if (s->vec[display].avalsize != SQL_NULL_DATA)
-                    filename = (char *)s->vec[display].valptr;
-                else
-                    filename = "";
-            }
-            else
-                LOG(LOG_WARNING, "unexpected field %s in RPSL query",
-                        field->name);
-        }
-        if (asn == 0 || ip_addrs == 0)
-        {
-            LOG(LOG_ERR, "incomplete result returned in RPSL query: %s",
-                    (asn == 0) ? "no asn" : "no ip_addrs");
-        }
-        else
-        {
-            if (asn != oldasn)
-                emptyRPSL();
-            oldasn = asn;
-            // 0 == ipv4, 1 == ipv6
-            int numprinted = 0;
-
-            for (i = 0; i < 2; ++i)
-            {
-                char *end,
-                   *f2,
-                   *f = ip_addrs;
-
-                // format one line of ip_addrs:
-                // "ip_addr/prefix_len[/max_prefix_len]\n"
-                while ((end = strchr(f, '\n')) != 0)
-                {
-                    *end = '\0';
-                    // take out max_prefix_len from string
-                    f2 = strchr(f, '/');
-                    f2 = strchr(f2 + 1, '/');
-                    if (f2)
-                        *f2 = '\0';
-                    if ((i == 0 && strchr(f, ':') == 0) ||
-                        (i == 1 && strchr(f, ':') != 0))
-                    {
-                        int need = strlen(f) + 10 + strlen(filename) + 3;
-                        if (i == 0)
-                        {
-                            if (!v4members)
-                                v4members = (char *)calloc(1, need + 1);
-                            else
-                                v4members =
-                                    realloc(v4members, (v4size + need + 1));
-                            sprintf(&v4members[v4size], "members: %s # %s\n",
-                                    f, filename);
-                            v4size += need;
-                            v4members[v4size] = 0;
-                        }
-                        else
-                        {
-                            need += 3;
-                            if (!v6members)
-                                v6members = (char *)calloc(1, need + 1);
-                            else
-                                v6members =
-                                    realloc(v6members, (v6size + need + 1));
-                            sprintf(&v6members[v6size],
-                                    "mp-members: %s # %s\n", f, filename);
-                            v6size += need;
-                            v6members[v6size] = 0;
-                        }
-                        ++numprinted;
-                    }
-                    if (f2)
-                        *f2 = '/';
-                    *end = '\n';
-                    // skip past the newline and try for another one
-                    f = end + 1;
-                }
-            }
-            emptyRPSL();
-        }
-        return (0);
-    }
-
-    // normal query result (not RPSL)
     for (display = 0; globalFields[display] != NULL; display++)
     {
         QueryField *field = globalFields[display];
@@ -448,7 +311,7 @@ static int doQuery(
     if (validate)
     {
         valIndex = srch.nused;
-        if (isROA || isRPSL || isManifest || isCRL || isGBR)
+        if (isROA || isManifest || isCRL || isGBR)
         {
             char *ski;
             if (isCRL)
@@ -470,7 +333,7 @@ static int doQuery(
      * do query 
      */
     status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
-                       (isRPSL) ? "asn" : orderp);
+                       orderp);
     for (i = 0; i < srch.nused; i++)
     {
         free(srch.vec[i].colname);
@@ -488,7 +351,7 @@ static int listOptions(
     int i,
         j;
 
-    checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
+    checkErr((!isROA) && (!isCRL) && (!isCert) &&
              (!isManifest) && (!isGBR), BAD_OBJECT_TYPE);
     printf("\nPossible fields to display or use in clauses for a %s:\n",
            objectType);
@@ -542,36 +405,15 @@ static int addAllFields(
 }
 
 /*
- * add fields needed for RPSL query 
- */
-static int addRPSLFields(
-    char *displays[])
-{
-    // XXX hack... just add these by hand
-    // XXX worse hack... we have hard-coded SQL field names scattered
-    // throughout the code. Help us if we ever change the schema.
-    displays[0] = "asn";        /* we only need asn and ip_addrs */
-    displays[1] = "ip_addrs";
-    displays[2] = "filename";   /* added for commentary */
-    return 3;                   /* number of fields added */
-}
-
-/*
  * Help user by showing the possible arguments 
  */
 static int printUsage(
     )
 {
-    printf("\nPossible usages:\n  query -r [-o <outfile>]\n");
-    printf
-        ("     Note that this is the form that a typical user should always use.\n");
-    printf("     It produces the expected output of the system: RPSL.\n");
-    printf("     Other forms are only for developers and advanced users\n");
-    printf("       to view the supporting data.\n");
+    printf("\nPossible usages:\n");
     printf("  query -l <type>\n");
     printf
         ("  query -t <type> -d <disp1>...[ -d <dispn>] [-f <cls1>]...[ -f <clsn>] [-o <outfile>] [-i] [-n] [-m]\n\nSwitches:\n");
-    printf("  -r: Output the RPSL data\n");
     printf("  -o <filename>: print results to filename (default is screen)\n");
     printf
         ("  -l <type>: list the possible display fields for the type, where type is\n");
@@ -589,10 +431,6 @@ static int printUsage(
     printf("  -x <field>: sort output in order of field values\n");
     printf("\n");
     printf("Note: All switches are case insensitive\n");
-    printf("Note: RPSL format is route-set:\n");
-    printf
-        ("route-set: RS-RPKI-ROA-FOR-V4:ASnnnn (or RS-RPKI-ROA-FOR-V6:ASnnnn\n");
-    printf("members: <route-prefix> (or mp-members: <route-prefix>)\n");
     return -1;
 }
 
@@ -608,7 +446,6 @@ static void setObjectType(
     isCert = (strcasecmp(objectType, "cert") == 0);
     isManifest = (strcasecmp(objectType, "manifest") == 0);
     setIsManifest(isManifest);
-    isRPSL = (strcasecmp(objectType, "rpsl") == 0);
     isGBR = (strcasecmp(objectType, "gbr") == 0);
 }
 
@@ -645,13 +482,7 @@ int main(
     }
     for (i = 1; i < argc; i += 2)
     {
-        if (strcasecmp(argv[i], "-r") == 0)
-        {
-            setObjectType("rpsl");
-            useLabels = 0;
-            i--;
-        }
-        else if (strcasecmp(argv[i], "-i") == 0)
+        if (strcasecmp(argv[i], "-i") == 0)
         {
             validate = 0;
             i--;
@@ -695,14 +526,9 @@ int main(
             return printUsage();
         }
     }
-    if (isRPSL)
-    {
-        checkErr(numDisplays != 0, "-d should not be used with RPSL query\n");
-        numDisplays = addRPSLFields(displays);
-    }
-    checkErr((!isROA) && (!isCRL) && (!isCert) && (!isRPSL) &&
+    checkErr((!isROA) && (!isCRL) && (!isCert) &&
              (!isManifest) && (!isGBR), BAD_OBJECT_TYPE);
-    checkErr(numDisplays == 0 && isRPSL == 0, "Need to display something\n");
+    checkErr(numDisplays == 0, "Need to display something\n");
     if (numDisplays == 1 && strcasecmp(displays[0], "all") == 0)
         numDisplays = addAllFields(displays, 0);
     displays[numDisplays++] = NULL;

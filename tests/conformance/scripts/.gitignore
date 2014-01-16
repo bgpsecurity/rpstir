@@ -14,3 +14,4 @@ make_test_MFT.sh
 make_test_cert.sh
 make_test_name.sh
 run_tests.sh
+sign_root_CAs.sh

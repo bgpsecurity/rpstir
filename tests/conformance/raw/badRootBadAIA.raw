@@ -49,11 +49,12 @@ seq seq ctx+0x20
                 seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
                     ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
                                 ctx+0x06
-                                    "rsync://rpki.bbn.com/conformance/root/"
+                                    "rsync://rpki.bbn.com/conformance/badRootBa"
+                                    "dAIA/"
                             seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
                                 ctx+0x06
-                                    "rsync://rpki.bbn.com/conformance/root/root"
-                                    ".mft"
+                                    "rsync://rpki.bbn.com/conformance/badRootBa"
+                                    "dAIA/root.mft"
                 seq oid 2.5.29.32 /* id_certificatePolicies */
                     boo 0xFF
                     ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
@@ -70,12 +71,12 @@ seq seq ctx+0x20
                                         int 0x010000 /* 65536 */ 
     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
         nul 
-    bit 0x0005B78C873DD16C3FB13E4054D69D0849267A41BAAA7C3B195B9676BB38C969
-        0x11692F0039BBDF0245E90CBE2E3D8388FF913DDA12FF5438DF0148680CC3AB79
-        0x3591640CED1F674D447D11C9ED415AA9D63C95325E4A8865E55543D3600F9829
-        0xADEEFAE49C49A904988180B4FBFF7E6620EFA821991803A526FBA1B22948CB3A
-        0x6050DA3A7A56C2DE97675773BC8EA73F1AA32A8E71877D6D8711DD435715544B
-        0x574E148739D104542FF70252DD8BE8FB64E4AEC0C1F5F100E10ADE1A5A12AC32
-        0xA6CC91CAD08F274038006E091418F6B335127FAD7E2B2E2F20240A859062FC8B
-        0xA52150002D4B7EB78817315508BC6BAF357A4C39A735ACBC0BFE88EB3601EAEF
-        0xD5
+    bit 0x005EBDBAFDD5A4E3BAC9C48A023A67CFB7455021DFB388F7793D7EE651ABE2B4
+        0xDB5B4BB75AD312002CBF476CF3708A835798032FE086D871354235044F042C5F
+        0xFB3599CD7F1438B9C3060ECEF3DBC445A4F65C775ADD0A53F42BB29112C5C348
+        0x3750E1034DC6A3919D7268ABB406E1026FCB98A292AEF133FBBC220AEE0F95EB
+        0x39525E27EFBA4A6901FD647DF710E2B754D10EDA3D73C491AEB94F7B10CB7AD7
+        0x7FE684C31EC8E58A668E4CF1E1A90FFA4494595E1047ABAFEEFDFBEBBC9B3553
+        0xC95997E2CBB1E799845CD162B11A7B782BFD5972C51EF97CC549F7C0DF98C4E6
+        0x215E2D630AC946DD47AA05B237C474E7E55FB8ABF637421D29CF93B5DACB281E
+        0xC4
