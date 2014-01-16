@@ -1,4 +1,4 @@
-#include "string.h"
+#include "string_cvt.h"
 
 bool config_type_string_converter(
     const struct config_context *context,

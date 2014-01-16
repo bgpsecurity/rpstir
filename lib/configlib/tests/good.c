@@ -8,7 +8,7 @@
 #include "configlib/types/enum.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
-#include "configlib/types/string.h"
+#include "configlib/types/string_cvt.h"
 
 enum config_key {
     CONFIG_SOME_INT,

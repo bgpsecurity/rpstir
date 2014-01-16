@@ -2,7 +2,7 @@
 +++ badCMSSigInfoNoSig.raw	2011-11-13 02:36:57.440691230 -0500
 @@ -118,19 +118,3 @@
                                      0x234CB1D2DD939DB9BC65DAC7014366E4
-                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                          nul 
 -                    oct 0x3F884FFC5947DDAA4B2C3EFDF3D76CC1
 -                        0x5CB915DF620D7EE780B3C121626F70FD

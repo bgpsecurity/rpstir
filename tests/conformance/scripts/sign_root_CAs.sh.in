@@ -1,0 +1,22 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+cd "$TESTS_SRCDIR/../raw"
+
+sign_root_ca () {
+    local name="$1"
+
+    rr < "$name.raw" > "$name.cer"
+    sign_cert "$name.cer" root.p15
+    dump_smart "$name.cer" > "$name.raw"
+}
+
+sign_root_ca badRootBadAIA
+sign_root_ca badRootBadAKI
+sign_root_ca badRootBadCRLDP
+#sign_root_ca badRootBadSig # This is omitted because it should have a bad signature
+sign_root_ca badRootNameDiff
+sign_root_ca goodRootAKIMatches
+sign_root_ca goodRootAKIOmitted
+sign_root_ca root

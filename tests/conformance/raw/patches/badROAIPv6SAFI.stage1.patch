@@ -1,0 +1,11 @@
+--- badROAIPv6SAFI.raw.old	2013-12-03 19:08:32.430150930 -0500
++++ badROAIPv6SAFI.raw	2013-12-03 19:08:38.629342355 -0500
+@@ -8,7 +8,7 @@
+                     ocw seq int 0x08 /* 8 */ 
+                             seq seq oct 0x0001
+                                     seq seq bit 0x000101
+-                                seq oct 0x0002
++                                seq oct 0x000203
+                                     seq seq bit 0x00010201
+             ctx+0x20
+                 seq seq ctx+0x20
