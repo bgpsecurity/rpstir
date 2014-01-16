@@ -353,6 +353,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxTouchRanges.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4PrefixLong.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4SAFI.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAbovePfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAboveRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxBelowPfx.ee.p15 \
@@ -379,6 +380,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxTouchRanges.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6PrefixLong.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6SAFI.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1Explicit.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1ExplicitBadSig.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV2.ee.p15 \
@@ -1249,6 +1251,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage2.patch \
@@ -1353,6 +1359,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.stage3.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage2.patch \
@@ -1659,6 +1669,10 @@ tests/conformance/scripts/make_test_cert.sh: $(srcdir)/tests/conformance/scripts
 check_SCRIPTS += tests/conformance/scripts/make_test_name.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/make_test_name.sh
 tests/conformance/scripts/make_test_name.sh: $(srcdir)/tests/conformance/scripts/make_test_name.sh.in
+
+check_SCRIPTS += tests/conformance/scripts/sign_root_CAs.sh
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/sign_root_CAs.sh
+tests/conformance/scripts/sign_root_CAs.sh: $(srcdir)/tests/conformance/scripts/sign_root_CAs.sh.in
 
 
 check_SCRIPTS += tests/conformance/scripts/run_tests.sh
@@ -2052,6 +2066,6 @@ CLEANFILES += \
 
 
 TESTS += \
-	$(srcdir)/tests/subsystem/runSubsystemTest1.sh \
-	$(srcdir)/tests/subsystem/runSubsystemTest2.sh \
-	$(srcdir)/tests/subsystem/runSubsystemTest3.sh
+	tests/subsystem/runSubsystemTest1.sh \
+	tests/subsystem/runSubsystemTest2.sh \
+	tests/subsystem/runSubsystemTest3.sh

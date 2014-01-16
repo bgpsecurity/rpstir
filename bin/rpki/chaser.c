@@ -586,7 +586,7 @@ static int query_crldp(
 ------------------------------------------------------------------------------*/
 static int query_sia(
     dbconn * db,
-    uint chase_not_yet_validated)
+    unsigned int chase_not_yet_validated)
 {
     char **results = NULL;
     int64_t num_malloced = 0;
@@ -690,7 +690,7 @@ int main(
     int chase_aia = 0;
     int restrict_crls_by_next_update = 0;
     size_t num_seconds = 0;
-    uint chase_not_yet_validated = 0;
+    unsigned int chase_not_yet_validated = 0;
     int skip_database = 0;
     int ret;
     int consumed;
