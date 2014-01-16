@@ -270,7 +270,10 @@ static int doQuery(
                 if (name[j] == '#')
                     name[j] = ' ';
             }
-            strncat(whereStr, name, maxW - strlen(whereStr));
+            char escaped [strlen(name)*2+1];
+            mysql_escape_string(escaped, name, strlen(name));
+
+            strncat(whereStr, escaped, maxW - strlen(whereStr));
             strncat(whereStr, "\"", maxW - strlen(whereStr));
         }
         srch.wherestr = whereStr;
