@@ -742,7 +742,6 @@ int has_Text_Value(
      * expect this to be a filename most of the time 
      */
     int i,
-        pos,
         field_len;
     const char *text;
 
@@ -751,14 +750,6 @@ int has_Text_Value(
 
     text = start_of_next_field(str, WHITESPACE);
     if (!text)
-        return (FALSE);
-
-    /*
-     * Check that filename starts at 11th or 13th character.  Since the number 
-     * depends on version of rsync; we allow either. 
-     */
-    pos = text - str;
-    if (pos != 10 && pos != 12)
         return (FALSE);
 
     /*
