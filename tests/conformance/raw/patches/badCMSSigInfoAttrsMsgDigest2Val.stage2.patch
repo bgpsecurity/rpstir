@@ -6,6 +6,6 @@
                                      0x234CB1D2DD939DB9BC65DAC7014366E4
 +                                oct 0x5808AD5429D14BE2CD5CD9B912B61FD0
 +                                    0x234CB1D2DD939DB9BC65DAC7014366E5
-                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                          nul 
                      oct 0x0FB1F9D21ABAD5DFC73881C720430AE4

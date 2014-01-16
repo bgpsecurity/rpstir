@@ -17,7 +17,7 @@ BUILT_SOURCES += $(ASN_H_FILES)
 # Depend on all .asn files because .asn files can include one another.
 ASN_GENERATION_DEPS = \
 	lib/casn/asn_gen/asn_gen \
-	$(TESTS_ENVIRONTMENT_DEPS) \
+	$(TESTS_ENVIRONMENT_DEPS) \
 	$(ASN_BUILT_FILES) \
 	$(ASN_SOURCE_FILES)
 
