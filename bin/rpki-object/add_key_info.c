@@ -14,23 +14,14 @@
 #include <rpki-asn1/crlv2.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished OK\n",
-    "Couldn't open %s\n",
-    "Couldn't find %s subject key identifier\n",        // 2
-    "Usage: file names for certificate/CRL, subject key, [authority certificate]\n",
-    "Subject and issuer differ in %s; need authority certificate\n",    // 4
-    "Couldn't get %s\n",
-};
-
-static void fatal(
-    int err,
-    char *paramp)
-{
-    fprintf(stderr, msgs[err], paramp);
-    exit(err);
-}
+#define MSG_OK "Finished OK"
+#define MSG_OPEN "Couldn't open %s"
+#define MSG_FIND_SKI "Couldn't find %s subject key identifier"
+#define MSG_USAGE "Usage: file names for certificate/CRL, subject key, [authority certificate]"
+#define MSG_DIFFER "Subject and issuer differ in %s; need authority certificate"
+#define MSG_GET "Couldn't get %s"
 
 
 static struct Extension *find_CRLextension(
@@ -64,33 +55,33 @@ int main(
     struct Keyfile keyfile;
     Keyfile(&keyfile, (ushort) 0);
     if (argc < 3)
-        fatal(3, (char *)0);
+        FATAL(MSG_USAGE);
     if (get_casn_file(&keyfile.self, argv[2], 0) < 0)
-        fatal(1, argv[2]);
+        FATAL(MSG_OPEN, argv[2]);
     uchar *keyp;
     int ksiz = readvsize_casn(&keyfile.content.bbb.ggg.iii.nnn.ooo.ppp.key,
                               &keyp);
     uchar hashbuf[40];
     int hsize = gen_hash(&keyp[1], ksiz - 1, hashbuf, CRYPT_ALGO_SHA1);
     if (hsize < 0)
-        fatal(5, "hash");
+        FATAL(MSG_GET, "hash");
     char *buf,
        *c = strrchr(argv[1], (int)'.');
     int siz;
     if (!c)
-        fatal(1, argv[1]);
+        FATAL(MSG_OPEN, argv[1]);
     if (!strcmp(c, ".crl"))
     {
         CertificateRevocationList(&crl, (ushort) 0);
         struct CRLExtension *aextp;
         if (get_casn_file(&crl.self, argv[1], 0) < 0)
-            fatal(1, argv[1]);
+            FATAL(MSG_OPEN, argv[1]);
         if (!
             (aextp =
              (struct CRLExtension *)find_CRLextension(&crl.toBeSigned.
                                                       extensions, id_authKeyId,
                                                       0)))
-            fatal(2, "authority");
+            FATAL(MSG_FIND_SKI, "authority");
         write_casn(&aextp->extnValue.authKeyId.keyIdentifier, hashbuf, hsize);
         put_casn_file(&crl.self, argv[1], 0);
         siz = dump_size(&crl.self);
@@ -102,23 +93,23 @@ int main(
         struct Extension *aextp,
            *sextp;
         if (get_casn_file(&scert.self, argv[1], 0) < 0)
-            fatal(1, argv[1]);
+            FATAL(MSG_OPEN, argv[1]);
         struct Extensions *extsp = &scert.toBeSigned.extensions;
         if (!(sextp = find_extension(extsp, id_subjectKeyIdentifier, 1)))
-            fatal(2, "subject's");
+            FATAL(MSG_FIND_SKI, "subject's");
         if (!(aextp = find_extension(extsp, id_authKeyId, 0)) && argc > 3)
-            fatal(2, "authority");
+            FATAL(MSG_FIND_SKI, "authority");
         write_casn(&sextp->extnValue.subjectKeyIdentifier, hashbuf, hsize);
         if (diff_casn
             (&scert.toBeSigned.subject.self, &scert.toBeSigned.issuer.self))
         {
             if (argc < 4)
-                fatal(4, argv[1]);
+                FATAL(MSG_DIFFER, argv[1]);
             if (get_casn_file(&acert.self, argv[3], 0) < 0)
-                fatal(1, argv[3]);
+                FATAL(MSG_OPEN, argv[3]);
             if (!(sextp = find_extension(&acert.toBeSigned.extensions,
                                          id_subjectKeyIdentifier, 0)))
-                fatal(2, "authority's");
+                FATAL(MSG_FIND_SKI, "authority's");
             hsize = read_casn(&sextp->extnValue.subjectKeyIdentifier, hashbuf);
         }
         if (aextp)

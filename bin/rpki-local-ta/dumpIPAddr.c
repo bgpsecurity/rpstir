@@ -3,25 +3,15 @@
 #include <casn/casn.h>
 #include <rpki-object/certificate.h>
 #include <stdio.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished checking %s OK\n",
-    "Usage: certfilename(s)\n",
-    "Bad file %s\n",            // 2
-    "Invalid serial number\n",
-    "No %s extension\n",        // 4
-    "Can't open %s\n",
-    "Error in %s\n",            // 6
-};
-
-void fatal(
-    int num,
-    char *note)
-{
-    printf(msgs[num], note);
-    if (num)
-        exit(-1);
-}
+#define MSG_OK "Finished checking %s OK"
+#define MSG_USAGE "Usage: certfilename(s)"
+#define MSG_FILE "Bad file %s"
+#define MSG_SN "Invalid serial number"
+#define MSG_EXT "No %s extension"
+#define MSG_OPEN "Can't open %s"
+#define MSG_IN "Error in %s"
 
 void printAddress(
     struct IPAddressA *addressPrefixp,
@@ -76,17 +66,17 @@ int main(
 {
     int lth;
     if (argc < 2)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     char **p;
     for (p = &argv[1]; p < &argv[argc]; p++)
     {
         struct Extensions extensions;
         Extensions(&extensions, (ushort) 0);
         if ((lth = get_casn_file(&extensions.self, *p, 0)) < 0)
-            fatal(5, *p);
+            FATAL(MSG_OPEN, *p);
         struct Extension *extp;
         if (!(extp = find_extension(&extensions, id_pe_ipAddrBlock, 0)))
-            fatal(4, "IPAddress");
+            FATAL(MSG_EXT, "IPAddress");
         printf("File %s\n", *p);
         struct IpAddrBlock *ipaddrblockp = &extp->extnValue.ipAddressBlock;
         struct IPAddressFamilyA *ipaddrfamap =
@@ -134,6 +124,6 @@ int main(
         }
         clear_casn(&extensions.self);
     }
-    fatal(0, argv[1]);
+    DONE(MSG_OK, argv[1]);
     return 0;
 }

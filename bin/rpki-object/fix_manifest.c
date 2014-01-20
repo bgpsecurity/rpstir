@@ -15,22 +15,11 @@
 #include <rpki-object/cms/cms.h>
 #include <casn/casn.h>
 #include "util/hashutils.h"
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished OK\n",
-    "Couldn't get %s\n",
-    "Error hashing %s\n",       // 2
-    "EEcert has no key identifier\n",
-    "Error signing in %s\n",
-};
-
-static void fatal(
-    int err,
-    char *paramp)
-{
-    fprintf(stderr, msgs[err], paramp);
-    exit(err);
-}
+#define MSG_OK "Finished OK"
+#define MSG_GET "Couldn't get %s"
+#define MSG_HASHING "Error hashing %s"
 
 struct keyring {
     char filename[80];
@@ -54,10 +43,10 @@ int main(
     strcpy(keyring.label, "label");
     strcpy(keyring.password, "password");
     if (get_casn_file(&cms.self, argv[1], 0) < 0)
-        fatal(1, "CMS file");
+        FATAL(MSG_GET, "CMS file");
     char *c = strrchr(argv[1], (int)'.');
     if (!c || (strcmp(c, ".man") && strcmp(c, ".mft") && strcmp(c, ".mnf")))
-        fatal(1, "CMSfile suffix");
+        FATAL(MSG_GET, "CMSfile suffix");
     int i;
     char *fname;
     uchar hashbuf[40];
@@ -77,7 +66,7 @@ int main(
             uchar *f;
             int fl = readvsize_casn(&fahp->file, &f);
             if (fl < 0)
-                fatal(2, fname);
+                FATAL(MSG_HASHING, fname);
             if ((ssize_t)fl == (ssize_t)strlen(fname) && !strcmp((char *)f, fname))
                 break;
         }
@@ -85,11 +74,11 @@ int main(
             !(tbh = (uchar *) calloc(1, statbuf.st_size + 4)) ||
             (fd = open(fname, O_RDONLY)) < 0 ||
             (tbh_lth = read(fd, tbh, statbuf.st_size + 1)) < 0)
-            fatal(1, fname);
+            FATAL(MSG_GET, fname);
         hashbuf[0] = 0;
         j = gen_hash(tbh, tbh_lth, &hashbuf[1], CRYPT_ALGO_SHA2);
         if (j < 0)
-            fatal(2, fname);
+            FATAL(MSG_HASHING, fname);
         free(tbh);
         write_casn(&fahp->hash, hashbuf, j + 1);
     }

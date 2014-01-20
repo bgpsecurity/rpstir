@@ -21,6 +21,7 @@
 #include <rpki-object/cms/cms.h>
 #include <rpki/cms/roa_utils.h>
 #include <assert.h>
+#include "util/logging.h"
 
 void usage(
     char *prog)
@@ -41,29 +42,13 @@ void usage(
     exit(1);
 }
 
-char *msgs[] = {
-    "unused 1\n",               // 0
-    "IPAddress block has range\n",
-    "Can't read %s\n",          // 2
-    "Can't find %s extension in certificate\n",
-    "Error writing %s\n",       // 4
-    "Can't find extension %s\n",
-    "Can't find ASNum[%d]\n",   // 6
-    "Signature failed in %s\n",
-};
-
-void fatal(
-    int err,
-    ...)
-{
-    va_list ap;
-    va_start(ap, err);
-    assert(err >= 0);
-    assert((size_t)err < (sizeof(msgs) / sizeof(msgs[0])));
-    vfprintf(stderr, msgs[err], ap);
-    va_end(ap);
-    exit(err);
-}
+#define MSG_HAS_RANGE "IPAddress block has range"
+#define MSG_READ "Can't read %s"
+#define MSG_FIND_EXT_IN_CER "Can't find %s extension in certificate"
+#define MSG_WRITING "Error writing %s"
+#define MSG_FIND_EXT "Can't find extension %s"
+#define MSG_FIND_AS "Can't find ASNum[%d]"
+#define MSG_SIG_FAILED "Signature failed in %s"
 
 // copy the ip addr blocks over into the roa
 static void getIPAddresses(
@@ -110,7 +95,7 @@ static void getIPAddresses(
                                                    numwritten++);
             // if cert has a range, give up
             if (size_casn(&ipaorrp->addressRange.self))
-                fatal(1, "");
+                FATAL(MSG_HAS_RANGE);
             // otherwise copy the prefix
             copy_casn(&roaipa->address, &ipaorrp->addressPrefix);
             if (!numAddr)       // only on first
@@ -313,12 +298,12 @@ int main(
     // init and read in the ee cert
     Certificate(&cert, (ushort) 0);
     if (get_casn_file(&cert.self, certfile, 0) < 0)
-        fatal(2, certfile);
+        FATAL(MSG_READ, certfile);
 
     // init and read in the parent cert
     Certificate(&pcert, (ushort) 0);
     if (get_casn_file(&pcert.self, pcertfile, 0) < 0)
-        fatal(2, pcertfile);
+        FATAL(MSG_READ, pcertfile);
 
     // mark the roa: the signed data is hashed with sha256
     struct SignedData *sgdp = &roa.content.signedData;
@@ -354,14 +339,14 @@ int main(
     while (extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock) != 0)
         extp = (struct Extension *)next_of(&extp->self);
     if (extp == NULL)
-        fatal(3, "IP Address Block");
+        FATAL(MSG_FIND_EXT_IN_CER, "IP Address Block");
     getIPAddresses(&roap->ipAddrBlocks, &extp->extnValue.ipAddressBlock,
                    v4maxLen, v6maxLen, v4choice, v6choice);
 
     // sign the message
     msg = signCMS(&roa, keyfile, bad);
     if (msg != NULL)
-        fatal(7, msg);
+        FATAL(MSG_SIG_FAILED, msg);
 
     if (fValidate)
     {
@@ -383,19 +368,19 @@ int main(
     {
         fprintf(stderr, "error: mkdir_recursive(\"%s\"): %s\n", fulldir,
                 strerror(errno));
-        fatal(4, fulldir);
+        FATAL(MSG_WRITING, fulldir);
     }
     if (put_casn_file(&roa.self, roafile, 0) < 0)
-        fatal(4, roafile);
+        FATAL(MSG_WRITING, roafile);
     if (put_casn_file(&roa.self, fullpath, 0) < 0)
-        fatal(4, fullpath);
+        FATAL(MSG_WRITING, fullpath);
 
     // do they want readable output saved?
     if (readablefile != NULL)
     {
         int fd = open(readablefile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
         if (fd < 0)
-            fatal(4, readablefile);
+            FATAL(MSG_WRITING, readablefile);
         int siz = dump_size(&roa.self);
         char *rawp = (char *)calloc(1, siz + 4);
         siz = dump_casn(&roa.self, rawp);

@@ -223,7 +223,7 @@ void cconstruct(
             break;
 
         default:
-            fatal(4, (char *)state);
+            done(true, MSG_INVAL_STATE, state);
         }
     }
     for (ntbp = (struct name_table *)name_area.area; ntbp && ntbp->name;
@@ -386,7 +386,7 @@ static void constr_def(
             {
                 ntbp = find_name(classname);
                 if (ntbp->type < 0)
-                    warn(34, ntbp->name);
+                    warn(MSG_UNDEF_TYPE, ntbp->name);
                 ntbp =
                     &((struct name_table *)name_area.area)[ntbp->parent.index];
                 for (parentp = &ntbp->parent, numdefineds = 0; parentp->next;
@@ -610,10 +610,10 @@ static int constr_item(
         else if (!*itemname)
             c = "item name";
         if (c)
-            fatal(20, c);
+            done(true, MSG_MISSING, c);
     }
     if (*defined_by && (!(c = find_child(defined_by)) || !find_child(c)))
-        fatal(19, defined_by);
+        done(true, MSG_NO_TABLE, defined_by);
     if (thisdefined > 1)
         set_alt_subtype(ntablep, thisdefined);
     if (((explicit1 & 1) || type == ASN_ANY) &&
@@ -665,7 +665,7 @@ static int constr_item(
             cat(itemname, c);
         }
         *itemname |= 0x20;
-        // if (thisdefined > 0 && type < 0 && !*subclass) fatal(40, itemname);
+        // if (thisdefined > 0 && type < 0 && !*subclass) done(true, MSG_INCOMPLETE_ITEM, itemname);
         if ((option & ASN_ENUM_FLAG) && !sub_val)
             tag = type = -1;
         /*
@@ -690,12 +690,12 @@ static int constr_item(
                 if (ntbp->type != -1)
                     tag |= (ntbp->type & ASN_CONSTRUCTED);
                 else if (*subclass != '_')
-                    warn(34, ntbp->name);
+                    warn(MSG_UNDEF_TYPE, ntbp->name);
                 if (ntbp->tag != -1)
                 {
                     if (tag >= ASN_APPL_SPEC && (explicit1 & 1) &&
                         ntbp->type < ASN_CHOICE)
-                        warn(15, (char *)tag);
+                        warn(MSG_EXTRA_TAG_DEF, tag);
                     else if (tag < 0)
                     {
                         tag_tb = ntbp->tag;
@@ -982,7 +982,7 @@ static void checkq(
             break;
     }
     if (tagqp)
-        warn(23, itemname);
+        warn(MSG_AMBIGUOUS_TAG, itemname);
 }
 
 static void clear_data_item(
@@ -1059,7 +1059,7 @@ static void find_path(
             definerp = &ptbp->parent;
     }
     if (!definerp)
-        fatal(11, tablenamep);
+        done(true, MSG_NO_PATH, tablenamep);
     for (parentp = &ntbp->parent, a = path; parentp; parentp = parentp->next)
     {
         ptbp = (struct name_table *)&name_area.area[parentp->index *
@@ -1175,7 +1175,7 @@ static void print_components(
             c = next_word(c);
     }
     else
-        fatal(31, "simple constraint"); /* simple constraint */
+        done(true, MSG_NOT_SUPPORTED, "simple constraint"); /* simple constraint */
 }
 
 static void print_constraint(
@@ -1227,7 +1227,7 @@ static void print_constraint(
             }
             else
             {
-                warn(33, constraint_area.area);
+                warn(MSG_DETERMINE_CONSTRAINT, constraint_area.area);
                 c = &constraint_area.area[constraint_area.next];
             }
         }

@@ -12,25 +12,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Created %s\n",
-    "Can't open %s\n",          // 1
-    "Invalid prefix %s\n",
-    "Missing %s\n",             // 3
-    "%s covers AS number and v4 and v6 files\n",
-    "Error in %s when signng\n",        // 5
-    "Error writing %s\n",
-    "Invalid parameter %s\n",   // 7
-};
-
-static int fatal(
-    int msg,
-    const char *paramp)
-{
-    fprintf(stderr, msgs[msg], paramp);
-    exit(msg);
-}
+#define MSG_CREATED "Created %s"
+#define MSG_OPEN "Can't open %s"
+#define MSG_PREFIX "Invalid prefix %s"
+#define MSG_MISSING "Missing %s"
+#define MSG_COVERS "%s covers AS number and v4 and v6 files"
+#define MSG_ERROR_SIGNING "Error in %s when signng"
+#define MSG_ERROR_WRITING "Error writing %s"
+#define MSG_INVAL_PARAM "Invalid parameter %s"
 
 static int prefix2roa(
     struct ROAIPAddress *roaIPAddrp,
@@ -52,7 +43,7 @@ static int prefix2roa(
             if (c[1] != ':')
                 siz += 2;
             else if (pad)
-                fatal(2, prefixp);
+                FATAL(MSG_PREFIX, prefixp);
             else
                 pad = 1;
         }
@@ -95,12 +86,12 @@ static int prefix2roa(
     }
     int lim = (i + 7) / 8;
     if (siz < lim)
-        fatal(2, prefixp);
+        FATAL(MSG_PREFIX, prefixp);
     else if (siz > lim)
     {
         b--;
         if (*b)
-            fatal(2, prefixp);
+            FATAL(MSG_PREFIX, prefixp);
         siz--;
     }
     i = (8 * siz) - i;          // i = number of bits that don't count
@@ -109,7 +100,7 @@ static int prefix2roa(
     for (x = 1, y = 0; x && y < i; x <<= 1, y++)
     {
         if (b[-1] & x)
-            fatal(2, prefixp);
+            FATAL(MSG_PREFIX, prefixp);
     }
     buf[0] = i;
     write_casn(&roaIPAddrp->address, buf, siz + 1);
@@ -178,7 +169,7 @@ int main(
     {
         int fd = open(argv[1], O_RDONLY);
         if (fd < 0)
-            fatal(1, argv[1]);
+            FATAL(MSG_OPEN, argv[1]);
         int lth = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
         buf = (char *)calloc(1, lth + 1);
@@ -212,7 +203,7 @@ int main(
     {
         c = *pp;
         if (*c != '-')
-            fatal(7, c);
+            FATAL(MSG_INVAL_PARAM, c);
         b = *(++pp);
         if (*(++c) == 'c')
             certfile = b;
@@ -225,19 +216,19 @@ int main(
         else if (*c == 'v')
             vfile = b;
         else
-            fatal(7, &c[-1]);
+            FATAL(MSG_INVAL_PARAM, &c[-1]);
     }
     if (!certfile)
-        fatal(3, "certificate file");
+        FATAL(MSG_MISSING, "certificate file");
     if (!outfile)
-        fatal(3, "output file");
+        FATAL(MSG_MISSING, "output file");
     if (!keyfile)
-        fatal(3, "key file");
+        FATAL(MSG_MISSING, "key file");
     if (!readroafile)
-        fatal(4, "readroafile");
+        FATAL(MSG_COVERS, "readroafile");
     FILE *str = fopen(readroafile, "r");
     if (!str)
-        fatal(1, readroafile);
+        FATAL(MSG_OPEN, readroafile);
     char nbuf[256];
     long asnum = -1;
     while (fgets(nbuf, 128, str))
@@ -274,12 +265,12 @@ int main(
     struct Certificate *certp =
         (struct Certificate *)inject_casn(&sgdp->certificates.self, 0);
     if (get_casn_file(&certp->self, certfile, 0) < 0)
-        fatal(2, certfile);
+        FATAL(MSG_PREFIX, certfile);
     const char *msg;
     if ((msg = signCMS(&roa, keyfile, 0)))
-        fatal(5, msg);
+        FATAL(MSG_ERROR_SIGNING, msg);
     if (put_casn_file(&roa.self, outfile, 0) < 0)
-        fatal(6, outfile);
+        FATAL(MSG_ERROR_WRITING, outfile);
     if (vfile)
     {
         int lth = dump_size(&roa.self);
@@ -292,6 +283,6 @@ int main(
     }
     if (buf)
         free(buf);
-    fatal(0, outfile);
+    DONE(MSG_CREATED, outfile);
     return 0;
 }
