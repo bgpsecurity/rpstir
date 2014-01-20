@@ -126,9 +126,9 @@ int main(
     }
     // sig alg
     write_objid(&signerInfop->signatureAlgorithm.algorithm,
-                id_sha_256WithRSAEncryption);
+                id_rsadsi_rsaEncryption);
     write_casn(&signerInfop->signatureAlgorithm.
-               parameters.sha256WithRSAEncryption, (uchar *) "", 0);
+               parameters.self, (uchar *) "", 0);
     // sign it!
     const char *msg = signCMSBlob(&roa, argv[3]);
     if (msg)

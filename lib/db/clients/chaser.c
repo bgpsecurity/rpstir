@@ -94,8 +94,8 @@ int64_t db_chaser_read_aia(
 {
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_AIA];
-    uint flag_no_chain = SCM_FLAG_NOCHAIN;
-    uint flag_validated = SCM_FLAG_VALIDATED;
+    unsigned int flag_no_chain = SCM_FLAG_NOCHAIN;
+    unsigned int flag_validated = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
@@ -420,14 +420,14 @@ int64_t db_chaser_read_sia(
     dbconn * conn,
     char ***results,
     int64_t * num_malloced,
-    uint chase_not_yet_validated)
+    unsigned int chase_not_yet_validated)
 {
     MYSQL_STMT *stmt;
     stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
-    uint validated_flag = SCM_FLAG_VALIDATED;
+    unsigned int validated_flag = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
-    uint flag;
+    unsigned int flag;
     int ret;
 
     if (chase_not_yet_validated)

@@ -158,7 +158,7 @@ static int add_paracert2DB(
     ulong flags;
     struct cert_answers *cert_answersp;
     struct cert_ansr *cert_ansrp;
-    uint dbid;
+    unsigned int dbid;
     ansr = findorcreatedir(locscmp, locconp, Xrpdir, &dbid);
     sprintf(fullname, "%s/%s", Xrpdir, done_certp->filename);
     ansr = delete_object(locscmp, locconp, done_certp->filename, Xrpdir,

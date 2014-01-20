@@ -84,7 +84,7 @@ int64_t db_chaser_read_sia(
     dbconn * conn,
     char ***results,
     int64_t * num_malloced,
-    uint chase_not_yet_validated);
+    unsigned int chase_not_yet_validated);
 
 
 #endif
