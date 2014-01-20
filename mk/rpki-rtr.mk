@@ -180,7 +180,7 @@ $(RPKI_RTR_TEST_MAX_AS_EE_CERT): tests/subsystem/rtr/root.key tests/subsystem/rt
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
 		CERT \
 		outputfilename="$@" \
@@ -263,7 +263,7 @@ $(RPKI_RTR_TEST_MAX_AS_ROA):
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
 		ROA \
 		outputfilename="$@" \
 		eecertlocation="$$ee_cer" \
