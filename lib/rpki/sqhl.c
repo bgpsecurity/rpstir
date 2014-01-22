@@ -3539,16 +3539,16 @@ static int crliterator(
     if (aki == NULL || aki[0] == 0 || s->vec[6].avalsize == 0)
         return (0);
     snlen = *(unsigned int *)(s->vec[1].valptr);
-    if (snlen == 0 || s->vec[1].avalsize < (ssize_t)(sizeof(unsigned int)))
+    if (snlen == 0 || s->vec[1].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     sninuse = *(unsigned int *)(s->vec[2].valptr);
-    if (sninuse == 0 || s->vec[2].avalsize < (ssize_t)(sizeof(unsigned int)))
+    if (sninuse == 0 || s->vec[2].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     flags = *(unsigned int *)(s->vec[3].valptr);
     // ?????????? test for this in where of select statement ???????????????
     if ((flags & SCM_FLAG_VALIDATED) == 0 ||
         (flags & SCM_FLAG_NOCHAIN) != 0 ||
-        s->vec[3].avalsize < (ssize_t)(sizeof(unsigned int)))
+        s->vec[3].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     lid = *(unsigned int *)(s->vec[4].valptr);
     if (s->vec[5].avalsize <= 0)

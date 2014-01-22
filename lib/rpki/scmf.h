@@ -56,7 +56,7 @@ typedef struct _scmsrch         /* used for a single column of a search */
     char *colname;              /* name of column */
     void *valptr;               /* where the value goes */
     unsigned valsize;           /* expected value size */
-    ssize_t avalsize;               /* actual value size */
+    SQLLEN avalsize;               /* actual value size */
 } scmsrch;
 
 typedef struct _scmsrcha        /* used for a search (select) */
