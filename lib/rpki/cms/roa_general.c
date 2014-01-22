@@ -464,7 +464,7 @@ static int convertAddr(
             return ERR_SCM_INVALSZ;
         for (ii = 1; ii < addrLth; ii++)
             addrVal = (addrVal << 8) + abuf[ii];
-        while (ii++ <= (int)sizeof(uint))
+        while (ii++ <= (int)sizeof(unsigned int))
             addrVal <<= 8;
         xx = htonl(addrVal);
         if (!inet_ntop(family, &xx, outbuf, outbufLth))

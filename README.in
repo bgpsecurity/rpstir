@@ -29,6 +29,7 @@ Table of Contents
     2.6 Installation
     2.7 Post-Installation Procedures
     2.8 Upgrade Procedure
+    2.9 Firewall
 3. Running the RPKI Software
     3.1 Normal Operation
       3.1.1 Note About Cron Jobs
@@ -318,6 +319,16 @@ named @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz.  Extract the file using:
 This will create a directory named @PACKAGE_TARNAME@-@PACKAGE_VERSION@ which
 will contain various subdirectories.
 
+Alternatively, you can get @PACKAGE_NAME@ from git if you want the latest version
+(which may or may not be particularly stable). In addition to the above
+prerequisites, you'll need to install git (http://git-scm.com/), automake
+(http://www.gnu.org/software/automake/), and autoconf
+(http://www.gnu.org/software/autoconf/). Then run the below commands:
+
+    $ git clone git://git.code.sf.net/p/rpstir/code rpstir
+    $ cd rpstir
+    $ ./autogen.sh
+
 2.2.2 Configure
 
 @PACKAGE_NAME_UC@ uses autoconf to generate its Makefiles.  On many systems,
@@ -508,6 +519,15 @@ Run @PACKAGE_NAME@-upgrade with the version number of the previous release. For
 example, to upgrade from version 0.7, run:
 
    $ @PACKAGE_NAME@-upgrade 0.7
+
+2.9 Firewall
+
+As part of @PACKAGE_NAME@'s normal operation, it fetches RPKI objects over rsync.
+Many of these objects contain links to additional RPKI objects, which @PACKAGE_NAME@
+then attempts to fetch, recursively. If you plan to make the results of @PACKAGE_NAME@'s
+validation public and if your local network (or localhost) contains any
+confidential data available over rsync, you may want to set up a firewall to
+prevent @PACKAGE_NAME@ from downloading any data it shouldn't.
 
 ===============================================================================
 

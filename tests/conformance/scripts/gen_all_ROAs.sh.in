@@ -169,6 +169,8 @@ ${single_ROA_cmd} -x good ROA 590 IPv4DupPrefixDiffMaxLen
 ${single_ROA_cmd} -x good ROA 591 IPv6DupPrefixDiffMaxLen
 ${single_ROA_cmd} ROA 562 IPv4Inherit
 ${single_ROA_cmd} ROA 563 IPv6Inherit
+${single_ROA_cmd} ROA 723 IPv4SAFI
+${single_ROA_cmd} ROA 724 IPv6SAFI
 ${single_ROA_cmd} ROA 593 IPv4OnlyPfxBelowPfxNoGap
 ${single_ROA_cmd} ROA 631 IPv4OnlyPfxBelowRangeNoGap
 ${single_ROA_cmd} ROA 594 IPv4OnlyPfxAbovePfxNoGap

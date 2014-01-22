@@ -1,5 +1,7 @@
+<<<<<<< HEAD
 next
 
+	* Fix multiple potential SQL-injection bugs.
 	* TODO: the following branches were merged into master in v0.9..5981bccb29b842dc10ef4ab4ac5c323034c5a489
 		* topic.251.rename_strings_h
 		* topic.286.sem_timedwait

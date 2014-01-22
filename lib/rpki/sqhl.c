@@ -353,6 +353,8 @@ static int add_cert_internal(
     int idx = 0;
     int sta;
     int i;
+    char* escaped_strings[CF_NFIELDS];
+    memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
 
     initTables(scmp);
     sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
@@ -371,7 +373,13 @@ static int add_cert_internal(
         if ((ptr = cf->fields[i]) != NULL)
         {
             cols[idx].column = certf[i];
-            cols[idx++].value = ptr;
+            escaped_strings[i] = malloc(strlen(ptr)*2+1);
+            if(escaped_strings[i] == NULL) {
+                sta = ERR_SCM_NOMEM;
+                goto cleanup;
+            }
+            mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
+            cols[idx++].value = escaped_strings[i];
         }
     }
     (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
@@ -400,6 +408,11 @@ static int add_cert_internal(
     aone.nused = idx;
     aone.vald = 0;
     sta = insertscm(conp, theCertTable, &aone);
+cleanup:
+    for (i = 0; i < CF_NFIELDS; i++)
+    {
+        free(escaped_strings[i]);
+    }
     if (wptr != NULL)
         free((void *)wptr);
     lastCertIDAdded = *cert_id;
@@ -427,6 +440,9 @@ static int add_crl_internal(
     int idx = 0;
     int sta;
     int i;
+    char* escaped_strings[CRF_NFIELDS];
+
+    memset(escaped_strings, 0, CRF_NFIELDS*sizeof(char*));
 
     // immediately check for duplicate signature
     initTables(scmp);
@@ -454,7 +470,13 @@ static int add_crl_internal(
         if ((ptr = cf->fields[i]) != NULL)
         {
             cols[idx].column = crlf[i];
-            cols[idx++].value = ptr;
+            escaped_strings[i] = malloc(strlen(ptr)*2+1);
+            if(escaped_strings[i] == NULL) {
+                sta = ERR_SCM_NOMEM;
+                goto cleanup;
+            }
+            mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
+            cols[idx++].value = escaped_strings[i];
         }
     }
     memset(lid, 0, sizeof(lid));
@@ -480,7 +502,12 @@ static int add_crl_internal(
     aone.vald = 0;
     // add the CRL
     sta = insertscm(conp, theCRLTable, &aone);
+cleanup:
     free((void *)hexs);
+    for (i = 0; i < CRF_NFIELDS; i++)
+    {
+        free(escaped_strings[i]);
+    }
     return (sta);
 }
 
@@ -1029,9 +1056,12 @@ struct cert_answers *find_parent_cert(
     sta = 0;
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
-    if (subject != NULL)
+    if (subject != NULL){
+        char escaped [strlen(subject)*2+1];
+        mysql_escape_string(escaped, subject, strlen(subject));
         snprintf(certSrch->wherestr, WHERESTR_SIZE,
-                 "ski=\'%s\' and subject=\'%s\'", ski, subject);
+                 "ski=\'%s\' and subject=\'%s\'", ski, escaped);
+    }
     else
         snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
@@ -1229,7 +1259,9 @@ static int cert_revoked(
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
-    snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", issuer);
+    char escaped [strlen(issuer)*2+1];
+    mysql_escape_string(escaped, issuer, strlen(issuer));
+    snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     isRevoked = 0;
@@ -2026,13 +2058,15 @@ static int countvalidparents(
     char ws[256];
     char *now;
     int sta;
+    char escaped [(IS != NULL) ? strlen(IS)*2+1 : 0];
 
     w[0].column = "ski";
     w[0].value = AK;
     if (IS != NULL)
     {
         w[1].column = "subject";
-        w[1].value = IS;
+        mysql_escape_string(escaped, IS, strlen(IS));
+        w[1].value = escaped;
     }
     where.vec = &w[0];
     where.ntot = (IS == NULL) ? 1 : 2;
@@ -2223,8 +2257,10 @@ static int invalidateChildCert(
         ADDCOL(invalidateCRLSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
     }
+    char escaped [strlen(data->subject)*2+1];
+    mysql_escape_string(escaped, data->subject, strlen(data->subject));
     snprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
-             "aki=\"%s\" AND issuer=\"%s\"", data->ski, data->subject);
+             "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
     addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
 
 
@@ -2363,10 +2399,13 @@ static int verifyOrNotChildren(
                                     !isRoot) == 0;
         if (doIt)
         {
+            char escaped [strlen(currPropData->data[idx].subject)*2+1];
+            mysql_escape_string(escaped, currPropData->data[idx].subject, strlen(currPropData->data[idx].subject));
+
             snprintf(childrenSrch->wherestr, WHERESTR_SIZE,
                      "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
                      currPropData->data[idx].ski, currPropData->data[idx].ski,
-                     currPropData->data[idx].subject);
+                     escaped);
             addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOCHAIN, doVerify, 1);
         }
         if (!isRoot)
@@ -3946,7 +3985,9 @@ int revoke_cert_by_serial(
     mymcf.did = 0;
     mymcf.toplevel = 1;
     w[0].column = "issuer";
-    w[0].value = issuer;
+    char escaped [strlen(issuer)*2+1];
+    mysql_escape_string(escaped, issuer, strlen(issuer));
+    w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
     {
