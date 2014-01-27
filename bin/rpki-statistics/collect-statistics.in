@@ -5,9 +5,10 @@
 
 @SETUP_ENVIRONMENT@
 
-TMP=`getopt -o hf -l help,fresh -n "$0" -- "$@"` || exit $?
+TMP=`getopt -o hf -l help,fresh,initialize -n "$0" -- "$@"` || exit $?
 eval set -- "$TMP"
 FRESH=
+INITIALIZE=
 while true; do
     case "$1" in
         -h | --help)
@@ -20,13 +21,20 @@ while true; do
             echo >&2 "@PACKAGE_NAME@-plot-statistics to analyze the results of this"
             echo >&2 "script."
             echo >&2 ""
+            echo >&2 "Use the --initialize option to initialize the database."
+            echo >&2 ""
             echo >&2 "Use the --fresh option to start fresh each time instead of"
-            echo >&2 "incrementally updating."
+            echo >&2 "incrementally updating. This implies --initialize."
             exit 0
             ;;
 
         -f | --fresh)
             FRESH=yes
+            INITIALIZE=yes
+            ;;
+
+        --initialize)
+            INITIALIZE=yes
             ;;
     esac
 done
@@ -114,10 +122,9 @@ fatal () {
 
 
 if test -z "$FRESH"; then
-    # remove everything from the workdir except for the repository
+    # remove everything from the workdir except for the repository (if it exists)
     find "$WORK_DIR" -mindepth 1 -maxdepth 1 -not -name REPOSITORY \
         -exec rm -rf '{}' +
-    mkdir "$WORK_DIR/LOGS"
 fi
 
 
@@ -128,7 +135,7 @@ echo "@PACKAGE_VERSION_FULL@" > "$WORK_DIR/version" \
     || fatal "could not record software version"
 
 
-if test -n "$FRESH"; then
+if test -n "$INITIALIZE"; then
     initialize -f > "$WORK_DIR/initialize.log" 2>&1 \
         || fatal "failed to initialize database"
 fi
