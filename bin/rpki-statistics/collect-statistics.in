@@ -5,17 +5,31 @@
 
 @SETUP_ENVIRONMENT@
 
-if test "$1" = "--help"; then
-    echo >&2 "This script can be used to collect data on"
-    echo >&2 "the global RPKI. This is probably only useful to people who want"
-    echo >&2 "to monitor the RPKI, not to people who just want their routers"
-    echo >&2 "to work."
-    echo >&2 ""
-    echo >&2 "This script should be run periodically from Cron. See"
-    echo >&2 "@PACKAGE_NAME@-plot-statistics to analyze the results of this"
-    echo >&2 "script."
-    exit 0
-fi
+TMP=`getopt -o hf -l help,fresh -n "$0" -- "$@"` || exit $?
+eval set -- "$TMP"
+FRESH=
+while true; do
+    case "$1" in
+        -h | --help)
+            echo >&2 "This script can be used to collect data on"
+            echo >&2 "the global RPKI. This is probably only useful to people who want"
+            echo >&2 "to monitor the RPKI, not to people who just want their routers"
+            echo >&2 "to work."
+            echo >&2 ""
+            echo >&2 "This script should be run periodically from Cron. See"
+            echo >&2 "@PACKAGE_NAME@-plot-statistics to analyze the results of this"
+            echo >&2 "script."
+            echo >&2 ""
+            echo >&2 "Use the --fresh option to start fresh each time instead of"
+            echo >&2 "incrementally updating."
+            exit 0
+            ;;
+
+        -f | --fresh)
+            FRESH=yes
+            ;;
+    esac
+done
 
 setup_statistics_environment
 
@@ -23,7 +37,11 @@ STATS_DIR="`config_get RPKIStatisticsDir`"
 
 
 LOCK_FILE="$STATS_DIR/tmp/collect.lock"
-WORK_DIR="$STATS_DIR/tmp/work-`date +%s`-`hostname`-$$"
+if test -n "$FRESH"; then
+    WORK_DIR="$STATS_DIR/tmp/work-`date +%s`-`hostname`-$$"
+else
+    WORK_DIR="$STATS_DIR/tmp/work-incremental"
+fi
 
 # For use in statistics-internal.conf
 export @PACKAGE_NAME_UC@_STATISTICS_COLLECTION_DIR="$WORK_DIR"
@@ -49,8 +67,14 @@ cleanup () {
     test -n "$END_TIME" || END_TIME="`formatted_date`"
     NAME="${START_TIME}~${END_TIME}"
 
+    if test -n "$FRESH"; then
+        RENAME="mv"
+    else
+        RENAME="cp -a"
+    fi
+
     # Compress $WORK_DIR to $STATS_DIR/$RESULT/$NAME.tgz.
-    if mv "$WORK_DIR" "$STATS_DIR/tmp/$NAME" && \
+    if $RENAME "$WORK_DIR" "$STATS_DIR/tmp/$NAME" && \
         tar -cpzf "$STATS_DIR/$RESULT/$NAME.tgz" -C "$STATS_DIR/tmp" "$NAME"
     then
         rm -rf "$STATS_DIR/tmp/$NAME" || {
@@ -71,7 +95,7 @@ cleanup () {
 
 # Set up the conditions required to run cleanup(), then trap cleanup().
 mutex_trylock "$LOCK_FILE" || exit 1 # mutex_trylock prints its own error message
-mkdir "$WORK_DIR" || {
+mkdir -p "$WORK_DIR" || {
     mutex_unlock "$LOCK_FILE"
     fatal "could not create work directory $WORK_DIR"
 }
@@ -89,6 +113,14 @@ fatal () {
 }
 
 
+if test -z "$FRESH"; then
+    # remove everything from the workdir except for the repository
+    find "$WORK_DIR" -mindepth 1 -maxdepth 1 -not -name REPOSITORY \
+        -exec rm -rf '{}' +
+    mkdir "$WORK_DIR/LOGS"
+fi
+
+
 hostname > "$WORK_DIR/hostname" \
     || fatal "could not record hostname"
 
@@ -96,8 +128,10 @@ echo "@PACKAGE_VERSION_FULL@" > "$WORK_DIR/version" \
     || fatal "could not record software version"
 
 
-initialize -f > "$WORK_DIR/initialize.log" 2>&1 \
-    || fatal "failed to initialize database"
+if test -n "$FRESH"; then
+    initialize -f > "$WORK_DIR/initialize.log" 2>&1 \
+        || fatal "failed to initialize database"
+fi
 
 START_TIME="`formatted_date`"
 synchronize > "$WORK_DIR/synchronize.log" 2>&1 \
