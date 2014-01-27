@@ -31,10 +31,21 @@ while true; do
         -f | --fresh)
             FRESH=yes
             INITIALIZE=yes
+            shift
             ;;
 
         --initialize)
             INITIALIZE=yes
+            shift
+            ;;
+
+        --)
+            shift
+            break
+            ;;
+
+        *)
+            fatal "unrecognized option: $1"
             ;;
     esac
 done
