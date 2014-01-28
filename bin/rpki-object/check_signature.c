@@ -10,23 +10,11 @@
 #include "util/hashutils.h"
 #include "rpki-object/certificate.h"
 
-char *msgs[] = {
-    "Signature %s\n",
-    "Usage: signed cert or CRL, signer's cert\n",
-    "Can't get file %s\n",
-    "Signature checking error in %s\n",
-    "Invalid type %s\n",
-    "Invalid algorithm %s\n",
-};
-
-static void fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    if (err)
-        exit(err);
-}
+#define MSG_USAGE "Usage: signed cert or CRL, signer's cert"
+#define MSG_GET "Can't get file %s"
+#define MSG_SIG_CHECK "Signature checking error in %s"
+#define MSG_TYPE "Invalid type %s"
+#define MSG_ALG "Invalid algorithm %s"
 
 int main(
     int argc,
@@ -34,7 +22,7 @@ int main(
 {
     OPEN_LOG("check_signature", LOG_USER);
     if (argc != 3)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     struct Certificate locert,
         hicert;
     struct CertificateRevocationList crl;
@@ -70,19 +58,19 @@ int main(
         ansr = get_casn_file(&blob.self, argv[1], 0);
     }
     else
-        fatal(4, argv[1]);
+        FATAL(MSG_TYPE, argv[1]);
     if (ansr < 0)
-        fatal(2, argv[1]);
+        FATAL(MSG_GET, argv[1]);
     if (get_casn_file(&hicert.self, argv[2], 0) < 0)
-        fatal(2, argv[2]);
+        FATAL(MSG_GET, argv[2]);
     if (diff_objid(&algp->algorithm, id_sha_256WithRSAEncryption))
     {
         char oidbuf[80];
         read_objid(&algp->algorithm, oidbuf);
-        fatal(5, oidbuf);
+        FATAL(MSG_ALG, oidbuf);
     }
     if (!check_signature(tbsp, &hicert, sigp))
-        fatal(0, "failed");
-    fatal(0, "succeeded");
+        fprintf(stderr, "Signature failed\n");
+    fprintf(stderr, "Signature succeeded\n");
     return 0;
 }

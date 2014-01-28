@@ -90,7 +90,7 @@ struct chain *add_chain(
     while (chp->next)
         chp = chp->next;
     if (!(chp->next = (struct chain *)calloc(siz, 1)))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     return chp->next;
 }
 
@@ -132,7 +132,7 @@ Procedure:
     for (ctbp = (struct class_table *)class_area.area; ctbp && ctbp->name &&
          strcmp(classname, ctbp->name); ctbp++);
     if (ctbp && ctbp->name)
-        fatal(17, classname);
+        done(true, MSG_DUP_DEF, classname);
     ctbp = (struct class_table *)expand_area(&class_area);
     fill_name(&ctbp->name, classname);
     get_known(fd, token, "{");
@@ -229,7 +229,7 @@ void add_class_member(
 {
     struct class_table *nctbp;
     if ((nctbp = find_class_entry(name)))
-        fatal(17, name);
+        done(true, MSG_DUP_DEF, name);
     nctbp = (struct class_table *)expand_area(&class_area);
     fill_name(&nctbp->name, name);
     nctbp->item.next = ctbp->item.next; /* inherit item structure */
@@ -273,7 +273,7 @@ Procedure:
             itemp = itemp->next;
         if (!(itemp->next =
               (struct import_item *)calloc(sizeof(struct import_item), 1)))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         itemp = itemp->next;
     }
     /*
@@ -419,7 +419,7 @@ Procedure:
         if (!*token && *peek_token(fd) == '(')
         {
             if (!(b = c = (char *)calloc((size = 32), 1)))
-                fatal(7, (char *)0);
+                done(true, MSG_MEM);
             get_known(fd, c++, "(");
             *c++ = ' ';
             for (get_must(fd, token); 1; get_must(fd, token))
@@ -455,7 +455,7 @@ static void append_name(
     {
         for (c = locbuf; *c > ' '; c++);
         if (!(*pp = (char *)realloc(*pp, (strlen(*pp) + lth + 2))))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         cat(cat(&(*pp)[strlen(*pp)], " "), val);
     }
 }
@@ -518,7 +518,7 @@ Procedure:
     if (!wsxp->verb)
         wsxp = wsxp->next;
     if (!wsxp)
-        fatal(20, "syntax entry");
+        done(true, MSG_MISSING, "syntax entry");
     /*
      * step 2 
      */
@@ -544,7 +544,7 @@ Procedure:
                     braces--;
                 }
                 else
-                    fatal(27, locbuf);
+                    done(true, MSG_UNDEF_MACRO, locbuf);
             }
             else if (curr_typ != VAL_REF && *locbuf != '{')
                 c = cat(cat(c, " "), token);
@@ -567,7 +567,7 @@ Procedure:
                     wsxp = wsxp->next;
                 }
                 if (!wsxp)
-                    fatal(20, locbuf);
+                    done(true, MSG_MISSING, locbuf);
             }
             else
             {
@@ -603,7 +603,7 @@ Procedure:
     if (do_it)
     {
         if ((wsxp->subject && !nouns[0]) || (wsxp->object && !nouns[1]))
-            fatal(20, (!*nouns) ? "Type" : "id");
+            done(true, MSG_MISSING, (!*nouns) ? "Type" : "id");
         for (tbop = &ctbp->table_out; tbop; tbop = tbop->next)
         {
             for (tbep = &tbop->table_entry;
@@ -657,7 +657,7 @@ static int collect_args(
              && !(argpp =
                   (char **)realloc((char *)argpp,
                                    sizeof(char *) * (count + 1)))))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         fill_name(&argpp[count++], token);
     }
     *argppp = argpp;
@@ -749,7 +749,7 @@ Procedure:
      * step 1 
      */
     if (!wsxp->verb)
-        fatal(20, "syntax table");
+        done(true, MSG_MISSING, "syntax table");
     if (!ctbp->instance_name)
         fill_name(&ctbp->instance_name, classname);
     c = tbuf = (char *)calloc((tbuf_size = 40), 1);
@@ -760,7 +760,7 @@ Procedure:
            (!wsxp->object || strcmp(token, wsxp->object)))
         wsxp = wsxp->next;
     if (!wsxp)
-        fatal(28, token);
+        done(true, MSG_UNDEF_ITEM, token);
     if (*peek_token(fd) == '(')
     {
         get_known(fd, token, "(");
@@ -825,9 +825,9 @@ Procedure
     if (*token != '{')
         get_must(fd, token);
     if (*token != '{')
-        fatal(26, few_w);
+        done(true, MSG_MACRO_PARAMS, few_w);
     if ((count = collect_args(fd, &argpp)) != mtbp->arg_count)
-        fatal(26, (count > mtbp->arg_count) ? many_w : few_w);
+        done(true, MSG_MACRO_PARAMS, (count > mtbp->arg_count) ? many_w : few_w);
     /*
      * step 2 
      */
@@ -945,14 +945,14 @@ Procedure
                         else if (*b > ' ')
                         {
                             if (arg_num >= tmtbp->arg_count)
-                                fatal(26, many_w);
+                                done(true, MSG_MACRO_PARAMS, many_w);
                             for (a = b; *a > ' '; a++);
                             locargpp[arg_num] = (char *)calloc((&a[1] - b), 1);
                             strncpy(locargpp[arg_num++], b, (a - b));
                         }
                     }
                     if (arg_num < tmtbp->arg_count)
-                        fatal(26, few_w);
+                        done(true, MSG_MACRO_PARAMS, few_w);
                 }
                 if (locargpp)
                     argpp = locargpp;
@@ -1033,7 +1033,7 @@ char *extend_buf(
 {
     char *c;
     if (!(c = realloc(buf, lth)))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     *ebuf += (c - buf);
     return c;
 }
@@ -1077,7 +1077,7 @@ Procedure:
      * step 1 
      */
     if (!wsxp->verb)
-        fatal(20, "syntax table");
+        done(true, MSG_MISSING, "syntax table");
     if (!ctbp->instance_name)
         fill_name(&ctbp->instance_name, classname);
     string = scan_known(string, "&");
@@ -1086,7 +1086,7 @@ Procedure:
            (!wsxp->object || strcmp(locbuf, wsxp->object)))
         wsxp = wsxp->next;
     if (!wsxp)
-        fatal(28, string);
+        done(true, MSG_UNDEF_ITEM, string);
     while (*string && *string <= ' ')
         string++;
     if (*string != '(')
@@ -1094,7 +1094,7 @@ Procedure:
         for (citp = &ctbp->item; citp && strcmp(citp->name, wsxp->object);
              citp = citp->next);
         if (!citp)
-            fatal(28, wsxp->object);
+            done(true, MSG_UNDEF_ITEM, wsxp->object);
         for (c = citp->predicate; *c && !is_reserved(c);)
         {
             while (*c > ' ')
@@ -1143,7 +1143,7 @@ Procedure:
         if (!(citp = &ctbp->item)->name)
             citp = citp->next;
         if (!citp)
-            fatal(28, tbname);
+            done(true, MSG_UNDEF_ITEM, tbname);
         while (citp && strcmp(citp->name, wsxp->object))
             citp = citp->next;
         for (c = citp->predicate; *c > ' '; c++);
@@ -1183,7 +1183,7 @@ void fill_name(
     if (*to)
         free(*to);
     if (!(*to = (char *)calloc(strlen(from) + 1, 1)))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     cat(*to, from);
 }
 
@@ -1416,7 +1416,7 @@ Procedure:
             if (ntbp > entbp)
             {
                 cat(classname, imports_w);
-                warn(21, itemp->objname);
+                warn(MSG_NOT_EXPORT, itemp->objname);
             }
         }
         for (ntbp = bntbp; ntbp <= entbp;)      /* step 3 */
@@ -1531,7 +1531,7 @@ Procedure:
     if (objname)
         free(objname);
     if (*token != ';')
-        fatal(14, token);
+        done(true, MSG_EOF, token);
     *token = 0;
 }
 
@@ -1582,7 +1582,7 @@ Procedure:
             {
                 if (!pidp->val)
                 {
-                    warn(18, pidp->name);
+                    warn(MSG_ID_UNDEF, pidp->name);
                     val_string = "";
                 }
                 else
@@ -1606,14 +1606,14 @@ Procedure:
                 else if (*locbuf == '}')
                 {
                     if (id_string)
-                        fatal(13, token);
+                        done(true, MSG_NESTING);
                     fill_name(&id_string, token);
                     return id_string;
                 }
                 else if (*locbuf >= '0' && *locbuf <= '9')
-                    fatal(18, name);
+                    done(true, MSG_ID_UNDEF, name);
                 else
-                    fatal(18, name);
+                    done(true, MSG_ID_UNDEF, name);
             }
         }
         tmp = strlen(val_string);
@@ -1635,7 +1635,7 @@ Procedure:
             get_must(fd, token);
             get_known(fd, locbuf, ")");
             if (strcmp(token, pidp->val))
-                fatal(17, locname);
+                done(true, MSG_DUP_DEF, locname);
             get_must(fd, token);
         }
         if (*token >= 'a' && *token <= 'z')

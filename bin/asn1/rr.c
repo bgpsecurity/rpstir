@@ -10,29 +10,29 @@
 #include <sys/file.h>
 #include <stdio.h>
 #include "casn/asn.h"
+#include "util/logging.h"
+
+#define MSG_OK "RR finished OK. Wrote %d bytes"
+#define MSG_PARAM "Invalid parameter %s"
+#define MSG_MEM "Can't get memory"
+#define MSG_EXTRA "Extra '}'"
+#define MSG_OPEN "Can't open %s"
+#define MSG_OVERFLOW "Area %s overflowed"
 
 char rr_sfcsid[] = "@(#)rr.c 845p";
 
 void dump_asn(
-)  ,
-    fatal(
-    int,
-    char *),
-    putasn(
-    uchar),
-    putout(
+    );
+
+void putasn(
+    uchar);
+
+void putout(
     uchar);
 
 char buf[512],
    *hash_start,
-   *msgs[] = {
-    "RR finished OK. Wrote %d bytes\n", /* 0 */
-    "Invalid parameter %s\n",   /* 1 */
-    "Can't get memory\n",       /* 2 */
-    "Extra '}'\n",              /* 3 */
-    "Can't open %s\n",          /* 4 */
-    "Area %s overflowed\n",     /* 5 */
-}, *cvt_int(char *),
+   *cvt_int(char *),
 
    *cvt_obj_id(
     char *,
@@ -123,7 +123,7 @@ int main(
             if (*(++c) == 'd')
                 dflag = 1;
             else
-                fatal(1, *p);
+                FATAL(MSG_PARAM, *p);
         }
     }
     if (!isatty(0) && !isatty(1))
@@ -139,18 +139,18 @@ int main(
         {
             strcat(strcpy(buf, *p), ".raw");
             if ((fd = open(buf, O_RDONLY)) < 0 || dup2(fd, 0) < 0)
-                fatal(4, buf);
+                FATAL(MSG_OPEN, buf);
             strcat(strcpy(buf, *p), ".req");
             if ((fd = open(buf, (O_WRONLY | O_CREAT | O_TRUNC), 0777)) < 0 ||
                 dup2(fd, 1) < 0)
-                fatal(4, buf);
+                FATAL(MSG_OPEN, buf);
             *buf = 0;
             do_it(buf, 0, 0);
             write(1, out_area.area, out_area.next);
             out_area.next = 0;
         }
     }
-    fatal(0, (char *)bytes);
+    DONE(MSG_OK, bytes);
     return 0;
 }
 
@@ -268,7 +268,7 @@ char *do_it(
                     if (!
                         (genarea.area =
                          calloc((genarea.size = genarea.chunk), 1)))
-                        fatal(2, (char *)0);
+                        FATAL(MSG_MEM);
                     if (bytes & 1)
                         bytes += write_out("", 1);
                 }
@@ -563,15 +563,6 @@ asn_area.next to zero to force putout to go elsewhere
          putout(*c++));
 }
 
-void fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    if (err)
-        exit(err);
-}
-
 char *getbuf(
     char *to,
     int lth)
@@ -585,7 +576,7 @@ char *getbuf(
     linenum++;
     for (b = to; b < &to[lth] && *b && *b != '\n'; b++);
     if (b >= &to[lth])
-        fatal(5, "input buffer");
+        FATAL(MSG_OVERFLOW, "input buffer");
     if (*b == '\n')
         *b = 0;
     e = b;
@@ -648,14 +639,14 @@ void putasn(
 {
     if (!asn_area.area && !(asn_area.area = calloc((asn_area.size =
                                                     asn_area.chunk), 1)))
-        fatal(2, (char *)0);
+        FATAL(MSG_MEM);
     if (asn_area.next >= asn_area.size)
     {
         if (!(asn_area.area = realloc(asn_area.area, (asn_area.size +=
                                                       asn_area.chunk))))
-            fatal(2, (char *)0);
+            FATAL(MSG_MEM);
         if (asn_area.size >= asn_area.limit)
-            fatal(5, asn_area.name);
+            FATAL(MSG_OVERFLOW, asn_area.name);
     }
     asn_area.area[asn_area.next++] = val;
 }
@@ -673,9 +664,9 @@ void putout(
         {
             if (!(genarea.area = realloc(genarea.area, (genarea.size +=
                                                         genarea.chunk))))
-                fatal(2, (char *)0);
+                FATAL(MSG_MEM);
             if (genarea.size >= genarea.limit)
-                fatal(3, (char *)0);
+                FATAL(MSG_EXTRA);
         }
         genarea.area[genarea.next++] = val;
     }
@@ -698,14 +689,14 @@ int write_out(
     char *b,
        *e;
     if (!out_area.area && !(out_area.area = calloc(out_area.chunk, 1)))
-        fatal(2, (char *)0);
+        FATAL(MSG_MEM);
     while (out_area.next + lth > out_area.size)
     {
         if ((out_area.size += out_area.chunk) > out_area.limit)
-            fatal(5, out_area.name);
+            FATAL(MSG_OVERFLOW, out_area.name);
         if (!(out_area.area = realloc(out_area.area, out_area.size +=
                                       out_area.chunk)))
-            fatal(2, (char *)0);
+            FATAL(MSG_MEM);
     }
     for (b = &out_area.area[out_area.next], e = &b[lth]; b < e; *b++ = *c++);
     out_area.next = b - out_area.area;

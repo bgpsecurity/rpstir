@@ -519,7 +519,7 @@ Procedure:
             if ((flags & ASN_TABLE_FLAG))
                 array++;
             if (*itemname)
-                warn(12, token);
+                warn(MSG_SYNTAX_ERR, token);
             else
                 cat(itemname, token);
         }
@@ -545,7 +545,7 @@ static struct alt_subclass *append_subclasses(
     {
         if (!(alt_subclassp = altscp =
               (struct alt_subclass *)calloc(sizeof(struct alt_subclass), 1)))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
     }
     else
     {
@@ -556,7 +556,7 @@ static struct alt_subclass *append_subclasses(
             if (!(altscp->next =
                   (struct alt_subclass *)calloc(sizeof(struct alt_subclass),
                                                 1)))
-                fatal(7, (char *)0);
+                done(true, MSG_MEM);
             altscp = altscp->next;
         }
     }
@@ -742,13 +742,13 @@ Inputs: token is a buffer
 	min and max are self-explanatory
 **/
     if (!get_token(0, loctoken))
-        fatal(20, "(");         /* gets the opening '(' */
+        done(true, MSG_MISSING, "(");         /* gets the opening '(' */
     if (!get_token(0, loctoken))
         syntax("(");            /* gets the min..max */
     get_min_max(loctoken, minp, maxp, parent);
     if (!get_token(0, loctoken) ||      /* gets the ')' */
         *loctoken != ')')
-        fatal(20, ")");
+        done(true, MSG_MISSING, ")");
 }
 
 static void get_min_max(

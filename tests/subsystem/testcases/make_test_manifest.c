@@ -20,26 +20,21 @@
 #include <util/hashutils.h>
 #include <util/file.h>
 #include "rpki-object/cms/cms.h"
+#include "util/logging.h"
 
 /*
  * This file has a program to make manifests. 
  */
 
-char *msgs[] = {
-    "Finished %s OK\n",
-    "Couldn't open %s\n",       // 1
-    "Error reading %s\n",
-    "Error adding %s\n",        // 3
-    "Error inserting %s\n",
-    "Error creating signature\n",       // 5
-    "Error writing %s\n",
-    "Signature failed in %s\n", // 7
-    "Error getting %s\n",
-};
-
-static int fatal(
-    int msg,
-    const char *paramp);
+#define MSG_OK "Finished %s OK"
+#define MSG_OPEN "Couldn't open %s"
+#define MSG_READING "Error reading %s"
+#define MSG_ADDING "Error adding %s"
+#define MSG_INSERTING "Error inserting %s"
+#define MSG_CREATING_SIG "Error creating signature"
+#define MSG_WRITING "Error writing %s"
+#define MSG_SIG_FAILED "Signature failed in %s"
+#define MSG_GETTING "Error getting %s"
 
 static int add_name(
     char *curr_file,
@@ -53,31 +48,23 @@ static int add_name(
     uchar *b,
         hash[40];
     if ((fd = open(curr_file, O_RDONLY)) < 0)
-        fatal(1, curr_file);
+        FATAL(MSG_OPEN, curr_file);
     siz = lseek(fd, 0, SEEK_END);
     lseek(fd, 0, 0);
     b = (uchar *) calloc(1, siz);
     if (read(fd, b, siz + 2) != siz)
-        fatal(2, curr_file);
+        FATAL(MSG_READING, curr_file);
     hsiz = gen_hash(b, siz, hash, CRYPT_ALGO_SHA2);
     if (hsiz < 0)
-        fatal(8, "hash");
+        FATAL(MSG_GETTING, "hash");
     if (bad)
         hash[1]++;
     struct FileAndHash *fahp;
     if (!(fahp = (struct FileAndHash *)inject_casn(&manp->fileList.self, num)))
-        fatal(3, "fileList");
+        FATAL(MSG_ADDING, "fileList");
     write_casn(&fahp->file, (uchar *) curr_file, strlen(curr_file));
     write_casn_bits(&fahp->hash, hash, hsiz, 0);
     return 1;
-}
-
-static int fatal(
-    int msg,
-    const char *paramp)
-{
-    fprintf(stderr, msgs[msg], paramp);
-    exit(msg);
 }
 
 static void make_fulldir(
@@ -189,7 +176,7 @@ int main(
         else if (u == 'M')
             timediff *= (3600 * 24 * 365);
         else
-            fatal(2, argv[2]);
+            FATAL(MSG_READING, argv[2]);
         now += timediff;
     }
     write_casn_time(&manp->thisUpdate, now);
@@ -231,14 +218,14 @@ int main(
         add_name(curr_file, manp, num, bad);
     }
     if (!inject_casn(&cms.content.signedData.certificates.self, 0))
-        fatal(4, "signedData");
+        FATAL(MSG_INSERTING, "signedData");
     struct Certificate *certp =
         (struct Certificate *)member_casn(&cms.content.signedData.certificates.
                                           self, 0);
     if (get_casn_file(&certp->self, certfile, 0) < 0)
-        fatal(2, certfile);
+        FATAL(MSG_READING, certfile);
     if ((msg = signCMS(&cms, keyfile, 0)))
-        fatal(7, msg);
+        FATAL(MSG_SIG_FAILED, msg);
 
     char fullpath[40];
     char fulldir[40];
@@ -253,14 +240,14 @@ int main(
         {
             fprintf(stderr, "error: mkdir_recursive(\"%s\"): %s\n", fulldir,
                     strerror(errno));
-            fatal(6, fulldir);
+            FATAL(MSG_WRITING, fulldir);
         }
     }
 
     if (put_casn_file(&cms.self, manifestfile, 0) < 0)
-        fatal(6, manifestfile);
+        FATAL(MSG_WRITING, manifestfile);
     if (put_casn_file(&cms.self, fullpath, 0) < 0)
-        fatal(2, fullpath);
+        FATAL(MSG_READING, fullpath);
     for (c = manifestfile; *c && *c != '.'; c++);
     strcpy(c, ".raw");
     char *rawp;
@@ -271,6 +258,6 @@ int main(
     write(fd, rawp, lth);
     close(fd);
     free(rawp);
-    fatal(0, manifestfile);
+    DONE(MSG_OK, manifestfile);
     return 0;
 }

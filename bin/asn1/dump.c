@@ -22,8 +22,19 @@ Remarks:
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "casn/asn.h"
+#include "util/logging.h"
 
 #define BSIZE 512
+
+#define MSG_OK "Dump finished OK"
+#define MSG_INVAL "Invalid parameters"
+#define MSG_OPEN "Can't open file"
+#define MSG_READ "Can't read file"
+#define MSG_MEM "Error getting memory"
+#define MSG_ASN1 "ASN.1 error at offset 0x%x"
+#define MSG_DUMP "Error dumping ASN.1"
+#define MSG_PIPE "Can't start in pipe with indefinite-length-encoded item"
+#define MSG_LEN "File is shorter than first item's length implies"
 
 char dump_sfcsid[] = "@(#)dump.c 840P";
 
@@ -35,26 +46,15 @@ extern int asn1dump(
 static void dump_asn1(
     int,
     long);
-void fatal(
-    int,
-    char *);
 
 char ibuf[BSIZE],
     obuf[80] = "     0  ",
     *fname,
-    *err_msgs[] = {
-    "Dump finished OK\n",
-    "Invalid parameters\n",     /* 1 */
-    "Can't open file\n",        /* 2 */
-    "Can't read file\n",        /* 3 */
-    "Error getting memory\n",   /* 4 */
-    "ASN.1 error at offset 0x%x\n",     /* 5 */
-    "Error dumping ASN.1\n",    /* 6 */
-    "Can't start in pipe with indefinite-length-encoded item\n",        /* 7 */
-    "File is shorter than first item's length implies\n",       /* 8 */
-}, hex[] = "0123456789ABCDEF", *hexit(char *,
+    hex[] = "0123456789ABCDEF";
 
-                                      unsigned char);
+char *hexit(
+    char *,
+    unsigned char);
 
 long getd(
     );
@@ -100,7 +100,7 @@ int main(
             if (*b == 'a' || *b == 'A')
             {
                 if (aflag)
-                    fatal(1, c);
+                    FATAL(MSG_INVAL);
                 aflag = (*b == 'a') ? 1 : -1;
             }
             else if (*b == 'l')
@@ -118,7 +118,7 @@ int main(
             fname = c;
     }
     if (fname && (fd = open(fname, O_RDONLY)) < 0)
-        fatal(2, (char *)0);
+        FATAL(MSG_OPEN);
     if (aflag)
         dump_asn1(fd, pos);
     if (pos < 0)
@@ -239,17 +239,8 @@ int main(
                 }
         }
     }
-    fatal(0, (char *)0);
+    DONE(MSG_OK);
     return 0;
-}
-
-
-void fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, err_msgs[err], param);
-    exit(err);
 }
 
 
@@ -334,21 +325,21 @@ void dump_asn1(
         );
     struct stat tstat;
     if (pos < 0)
-        fatal(1, (char *)0);
+        FATAL(MSG_INVAL);
     if (fd)
     {
         if (fstat(fd, &tstat))
-            fatal(3, (char *)0);
+            FATAL(MSG_READ);
         lseek(fd, pos, 0);
     }
     for (lth = 0; lth < 8; lth += size)
     {
         if ((size = read(fd, &ibuf[lth], 8 - lth)) < 0)
-            fatal(3, (char *)0);
+            FATAL(MSG_READ);
         else if (!size)
         {
             if (!lth)
-                fatal(0, (char *)0);
+                DONE(MSG_OK);
             break;
         }
     }
@@ -358,20 +349,20 @@ void dump_asn1(
     {
         size = (c - (uchar *) ibuf) + asn.lth;
         if (fd && pos + size > tstat.st_size)
-            fatal(8, (char *)0);
+            FATAL(MSG_LEN);
     }
     else if (!fd)
-        fatal(7, (char *)0);
+        FATAL(MSG_PIPE);
     else
         size = tstat.st_size - pos;
     if (!(area = (uchar *) calloc((size + 2), 1)))
-        fatal(4, (char *)0);
+        FATAL(MSG_MEM);
     memcpy(area, ibuf, lth);
     for (c = &area[lth], lth = 0; c < &area[size] &&
          (lth = read(fd, c, (size - (c - area)))) > 0; c += lth);
     if (c < &area[size])
-        fatal(8, (char *)0);
+        FATAL(MSG_LEN);
     if (asn1dump(area, size, stdout) < 0)
-        fatal(6, (char *)0);
-    fatal(0, (char *)0);
+        FATAL(MSG_DUMP);
+    DONE(MSG_OK);
 }

@@ -19,19 +19,10 @@
 #include <rpki-object/signature.h>
 #include <util/logging.h>
 
-char *msgs[] = {
-    "Couldn't open %s\n",
-    "Usage: startdelta, enddelta, certfile(s)\n",
-    "Error in %s\n",
-};
-
-static int fatal(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    exit(-1);
-}
+#define MSG_OPEN "Couldn't open %s"
+#define MSG_USAGE "Usage: startdelta, enddelta, certfile(s)"
+#define MSG_IN "Error in %s"
+#define MSG_ADJUST_TIME "Error adjusting time in %s by %s"
 
 int main(
     int argc,
@@ -41,21 +32,21 @@ int main(
     struct Certificate cert;
     Certificate(&cert, (ushort) 0);
     if (argc < 4)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     int i;
     for (i = 3; i < argc; i++)
     {
         if (get_casn_file(&cert.self, argv[i], 0) < 0)
-            fatal(0, argv[1]);
+            FATAL(MSG_OPEN, argv[1]);
         struct CertificateToBeSigned *ctftbsp = &cert.toBeSigned;
 
         long now = time((time_t *) 0);
         clear_casn(&ctftbsp->validity.notBefore.self);
         clear_casn(&ctftbsp->validity.notAfter.self);
         if (adjustTime(&ctftbsp->validity.notBefore.utcTime, now, argv[1]) < 0)
-            fatal(9, argv[1]);
+            FATAL(MSG_ADJUST_TIME, "notBefore", argv[1]);
         if (adjustTime(&ctftbsp->validity.notAfter.utcTime, now, argv[2]) < 0)
-            fatal(9, argv[2]);
+            FATAL(MSG_ADJUST_TIME, "notAfter", argv[2]);
         char *issuerkeyfile = (char *)calloc(1, strlen(argv[i]) + 8);
         strcpy(issuerkeyfile, argv[i]);
         char *a = strchr(issuerkeyfile, (int)'.');
@@ -63,7 +54,7 @@ int main(
         if (!set_signature(&cert.toBeSigned.self, &cert.signature,
                            issuerkeyfile, "label", "password", false))
         {
-            fatal(2, "set_signature");
+            FATAL(MSG_IN, "set_signature");
         }
         put_casn_file(&cert.self, argv[i], 0);
         fprintf(stderr, "Finished %s\n", argv[i]);

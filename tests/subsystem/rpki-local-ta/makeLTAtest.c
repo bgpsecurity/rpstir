@@ -7,24 +7,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished making %s OK\n",
-    "Usage: casename, certfilename(s)\n",
-    "Bad file %s\n",
-    "Invalid serial number\n",  // 2
-    "No %s extension\n",
-    "Can't open or error in %s\n",      // 4
-    "Error in %s\n",
-};
-
-int fatal(
-    int num,
-    char *note)
-{
-    printf(msgs[num], note);
-    exit(-1);
-}
+#define MSG_OK "Finished making %s OK"
+#define MSG_USAGE "Usage: casename, certfilename(s)"
+#define MSG_BAD_FILE "Bad file %s"
+#define MSG_INVAL_SN "Invalid serial number"
+#define MSG_NO_EXT "No %s extension"
+#define MSG_OPEN "Can't open or error in %s"
+#define MSG_IN "Error in %s"
 
 int main(
     int argc,
@@ -34,7 +25,7 @@ int main(
     int lth;
     Certificate(&cert, (ushort) 0);
     if (argc == 0 || argc < 3)
-        fatal(1, (char *)0);
+        FATAL(MSG_USAGE);
     char **p;
     for (p = &argv[2]; p < &argv[argc]; p++)
     {
@@ -44,13 +35,13 @@ int main(
         struct Extension *extp;
         if (!
             (extp = find_extension(&cert.toBeSigned.extensions, id_pe_ipAddrBlock, 0)))
-            fatal(4, "IPAddress");
+            FATAL(MSG_NO_EXT, "IPAddress");
         struct Extension *nextp =
             (struct Extension *)inject_casn(&extensions.self, 0);
         copy_casn(&nextp->self, &extp->self);
         if (!(extp = find_extension(&cert.toBeSigned.extensions,
                                     id_pe_autonomousSysNum, 0)))
-            fatal(4, "AS number");
+            FATAL(MSG_NO_EXT, "AS number");
         nextp = (struct Extension *)inject_casn(&extensions.self, 1);
         copy_casn(&nextp->self, &extp->self);
         char filename[80];
@@ -67,6 +58,6 @@ int main(
         close(fd);
         clear_casn(&extensions.self);
     }
-    fatal(0, argv[1]);
+    DONE(MSG_OK, argv[1]);
     return 0;
 }

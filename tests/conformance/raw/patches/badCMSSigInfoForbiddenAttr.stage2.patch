@@ -6,6 +6,6 @@
                                      0x234CB1D2DD939DB9BC65DAC7014366E4
 +                        seq oid 1.2.840.113549.1.9.15 /* smimeCapabilities */
 +                            set seq seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
-                     seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+                     seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
                          nul 
                      oct 0x507866A3EA8BA7079B24B060A9693F16

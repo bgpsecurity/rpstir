@@ -20,39 +20,41 @@
 #include <util/logging.h>
 #include <time.h>
 #include <strings.h>
+#include <stdarg.h>
+#include "util/macros.h"
 
-char *msgs[] = {
-    "Finished %s OK\n",
-    "Couldn't open %s\n",
-    "Can't translate %s.  Try again\n", // 2
-    "Usage: subjectname startdelta enddelta\n [b(ad signature) | e(xplicit IP) | n(either)]\n",
-    "Issuer cert has no %s extension\n",        // 4
-    "Signing failed in %s\n",
-    "Error opening %s\n",       // 6
-    "Error reading IP Address Family\n",
-    "Error padding prefix %s. Try again\n",     // 8
-    "Invalid time delta type: %s\n",
-    "Invalid cert name %s\n",   // 10
-    "Error creating %s extension\n",
-    "Error in CA %s extension\n",       // 12
-    "Invalid parameter %s\n",
-    "Directory Error %s\n",     // 14
-};
+#define MSG_OK "Finished %s OK"
+#define MSG_COULDNT_OPEN "Couldn't open %s"
+#define MSG_TRANSLATE "Can't translate %s.  Try again"
+#define MSG_USAGE "Usage: subjectname startdelta enddelta\n [b(ad signature) | e(xplicit IP) | n(either)]"
+#define MSG_NO_EXT "Issuer cert has no %s extension"
+#define MSG_SIG_FAILED "Signing failed in %s"
+#define MSG_ERR_OPEN "Error opening %s"
+#define MSG_IP_ADDR_FAM "Error reading IP Address Family"
+#define MSG_PAD_PREFIX "Error padding prefix %s. Try again"
+#define MSG_TIME_DELTA_TYPE "Invalid time delta type: %s"
+#define MSG_INVAL_NAME "Invalid cert name %s"
+#define MSG_CREATING_EXT "Error creating %s extension"
+#define MSG_IN_EXT "Error in CA %s extension"
+#define MSG_INVAL_PARAM "Invalid parameter %s"
+#define MSG_DIR "Directory Error %s"
 
 static int warn(
-    int err,
-    char *param)
-{
-    fprintf(stderr, msgs[err], param);
-    return -1;
-}
+    const char * format,
+    ...)
+    WARN_PRINTF(1, 2);
 
-static void fatal(
-    int err,
-    char *param)
+static int warn(
+    const char * format,
+    ...)
 {
-    warn(err, param);
-    exit(err);
+    va_list ap;
+
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+
+    return -1;
 }
 
 static void check_access_methods(
@@ -63,7 +65,7 @@ static void check_access_methods(
     char *e = "SubjectInfoAccess";
     struct AccessDescription *accDesp;
     if (num_items(&iextp->extnValue.subjectInfoAccess.self) != 2)
-        fatal(12, e);
+        FATAL(MSG_IN_EXT, e);
     // are the two necessary access methods there?
     for (accDesp =
          (struct AccessDescription *)member_casn(&iextp->extnValue.
@@ -79,7 +81,7 @@ static void check_access_methods(
             man = 10;           // to force error if neither
     }
     if (rep != 1 && man != 1)
-        fatal(12, e);
+        FATAL(MSG_IN_EXT, e);
 }
 
 static void inheritIPAddresses(
@@ -197,9 +199,9 @@ static void make_fullpath(
         if ((fullpath != NULL) && (stat(fullpath, &stbuf) < 0))
         {
             if (errno != ENOENT)
-                fatal(14, fullpath);    // different error
+                FATAL(MSG_DIR, fullpath);    // different error
             if (mkdir(fullpath, 0777) < 0)
-                fatal(14, fullpath);
+                FATAL(MSG_DIR, fullpath);
         }
     }
     strcpy(f, locpath);
@@ -225,7 +227,7 @@ static int prefix2ip(
             if (c[1] != ':')
                 siz += 2;
             else if (pad)
-                return warn(2, prefixp);
+                return warn(MSG_TRANSLATE, prefixp);
             else
                 pad = 1;
         }
@@ -268,12 +270,12 @@ static int prefix2ip(
     }
     int lim = (i + 7) / 8;
     if (siz < lim)
-        return warn(8, prefixp);
+        return warn(MSG_PAD_PREFIX, prefixp);
     else if (siz > lim)
     {
         b--;
         if (*b)
-            return warn(2, prefixp);
+            return warn(MSG_TRANSLATE, prefixp);
         siz--;
     }
     i = (8 * siz) - i;          // i = number of bits that don't count
@@ -282,7 +284,7 @@ static int prefix2ip(
     for (x = 1, y = 0; x && y < i; x <<= 1, y++)
     {
         if (b[-1] & x)
-            return warn(2, prefixp);
+            return warn(MSG_TRANSLATE, prefixp);
     }
     buf[0] = i;
     write_casn(iPAddrp, buf, siz + 1);
@@ -347,7 +349,7 @@ static int read_family(
             (struct IPAddressOrRangeA *)member_casn(&famp->ipAddressChoice.
                                                     addressesOrRanges.self, i);
         if (!ipp)
-            fatal(1, buf);
+            FATAL(MSG_COULDNT_OPEN, buf);
         int lth = ipOrRange2prefix(&a, ipp, (int)ub[1]);
         if (lth <= 0)
             fprintf(stderr, "Error in address[%d] in IPv%c\n", i, buf[3]);
@@ -478,7 +480,7 @@ int main(
 {
     OPEN_LOG("make_test_cert", LOG_USER);
     if (argc < 4 || argc > 5)
-        fatal(3, "");
+        FATAL(MSG_USAGE);
     int bad = 0,
         ee = 0,
         root = (strlen(argv[1]) == 1),
@@ -508,11 +510,11 @@ int main(
         else if (index(argv[4], 'x') != NULL)
             skistat = 'x';
         else
-            fatal(13, argv[4]);
+            FATAL(MSG_INVAL_PARAM, argv[4]);
     }
     for (c = &argv[1][1]; *c && *c >= '0' && *c <= '9'; c++);
     if (*c && *c != 'M' && *c != 'R' && *c != 'G')
-        fatal(10, argv[1]);
+        FATAL(MSG_INVAL_NAME, argv[1]);
     if (*c)
         ee = 1;
     subjfile = (char *)calloc(1, strlen(argv[1]) + 8);
@@ -524,7 +526,7 @@ int main(
     if (root)
     {
         if (get_casn_file(&cert.self, subjfile, 0) < 0)
-            fatal(1, subjfile);
+            FATAL(MSG_COULDNT_OPEN, subjfile);
         write_casn_num(&ctftbsp->serialNumber, (long)1);
     }
     else
@@ -540,7 +542,7 @@ int main(
         issuerkeyfile = (char *)calloc(1, strlen(argv[1]) + 8);
         strcat(strncpy(issuerkeyfile, argv[1], a - argv[1]), ".p15");
         if (get_casn_file(&issuer.self, issuerfile, 0) < 0)
-            fatal(1, issuerfile);
+            FATAL(MSG_COULDNT_OPEN, issuerfile);
         for (c = issuerfile; *c && *c != '.'; c++);
         strcpy(c, ".p15");
         sscanf(subjfile, "C%d", &snum);
@@ -560,9 +562,9 @@ int main(
     clear_casn(&ctftbsp->validity.notBefore.self);
     clear_casn(&ctftbsp->validity.notAfter.self);
     if (adjustTime(&ctftbsp->validity.notBefore.utcTime, now, argv[2]) < 0)
-        fatal(9, argv[2]);
+        FATAL(MSG_TIME_DELTA_TYPE, argv[2]);
     if (adjustTime(&ctftbsp->validity.notAfter.utcTime, now, argv[3]) < 0)
-        fatal(9, argv[3]);
+        FATAL(MSG_TIME_DELTA_TYPE, argv[3]);
 
     struct SubjectPublicKeyInfo *spkinfop = &ctftbsp->subjectPublicKeyInfo;
     write_objid(&spkinfop->algorithm.algorithm, id_rsadsi_rsaEncryption);
@@ -571,7 +573,7 @@ int main(
     struct casn *spkp = &spkinfop->subjectPublicKey;
     if (!fillPublicKey(spkp, subjkeyfile))
     {
-        fatal(1, "subjkeyfile");
+        FATAL(MSG_COULDNT_OPEN, "subjkeyfile");
     }
 
     struct Extensions *extsp = &ctftbsp->extensions,
@@ -590,7 +592,7 @@ int main(
         // key usage
         extp = make_extension(extsp, id_keyUsage);
         if (!(iextp = find_extension(iextsp, id_keyUsage, false)))
-            fatal(4, "key usage");
+            FATAL(MSG_NO_EXT, "key usage");
         copy_casn(&extp->self, &iextp->self);
         if (ee)
         {
@@ -602,18 +604,18 @@ int main(
         {
             extp = make_extension(extsp, id_basicConstraints);
             if (!(iextp = find_extension(iextsp, id_basicConstraints, false)))
-                fatal(4, "basic constraints");
+                FATAL(MSG_NO_EXT, "basic constraints");
             copy_casn(&extp->self, &iextp->self);
         }
         // CRL dist points
         extp = make_extension(extsp, id_cRLDistributionPoints);
         if (!(iextp = find_extension(iextsp, id_cRLDistributionPoints, false)))
-            fatal(4, "CRL Dist points");
+            FATAL(MSG_NO_EXT, "CRL Dist points");
         copy_casn(&extp->self, &iextp->self);
         // Cert policies
         extp = make_extension(extsp, id_certificatePolicies);
         if (!(iextp = find_extension(iextsp, id_certificatePolicies, false)))
-            fatal(4, "cert policies");
+            FATAL(MSG_NO_EXT, "cert policies");
         copy_casn(&extp->self, &iextp->self);
         // authInfoAccess
         extp = make_extension(extsp, id_pkix_authorityInfoAccess);
@@ -632,7 +634,7 @@ int main(
             extp = make_extension(extsp, id_pkix_authorityInfoAccess);
             if (!(iextp = find_extension(iextsp, id_pkix_authorityInfoAccess,
                                          false)))
-                fatal(4, "authorityInfoAccess");
+                FATAL(MSG_NO_EXT, "authorityInfoAccess");
             copy_casn(&extp->self, &iextp->self);
         }
     }
@@ -649,7 +651,7 @@ int main(
     {
         if (!(iextp = find_extension(&issuer.toBeSigned.extensions,
                                     id_subjectKeyIdentifier, false)))
-            fatal(4, "subjectKeyIdentifier");
+            FATAL(MSG_NO_EXT, "subjectKeyIdentifier");
         extp = make_extension(&ctftbsp->extensions, id_authKeyId);
         copy_casn(&extp->extnValue.authKeyId.keyIdentifier,
                   &iextp->extnValue.subjectKeyIdentifier);
@@ -676,7 +678,7 @@ int main(
                  ifamp = (struct IPAddressFamilyA *)next_of(&ifamp->self))
             {
                 if (read_family(&a, ifamp) < 0)
-                    fatal(7, (char *)0);
+                    FATAL(MSG_IP_ADDR_FAM);
                 if (!filein)
                     fprintf(stdout, "%s", a);
                 if (!numfam)
@@ -744,7 +746,7 @@ int main(
                                                         subjectInfoAccess.self,
                                                         0);
             if (!accDesp)
-                fatal(4, "SubjectInfoAccess");
+                FATAL(MSG_NO_EXT, "SubjectInfoAccess");
             // force the accessMethod for an EE cert
             write_objid(&accDesp->accessMethod, id_ad_signedObject);
         }
@@ -752,22 +754,22 @@ int main(
     else                        // root
     {
         if (!(iextp = find_extension(extsp, id_pe_subjectInfoAccess, false)))
-            fatal(4, "subjectInfoAccess");
+            FATAL(MSG_NO_EXT, "subjectInfoAccess");
         check_access_methods(iextp);
     }
     if (!set_signature(&cert.toBeSigned.self, &cert.signature,
                        (issuerkeyfile) ? issuerkeyfile : subjkeyfile,
                        "label", "password", bad))
     {
-        fatal(5, "setting signature");
+        FATAL(MSG_SIG_FAILED, "setting signature");
     }
     char fullpath[40];
     memset(fullpath, 0, sizeof(fullpath));
     make_fullpath(fullpath, subjfile);
     if (put_casn_file(&cert.self, subjfile, 0) < 0)
-        fatal(2, subjfile);
+        FATAL(MSG_TRANSLATE, subjfile);
     if (put_casn_file(&cert.self, fullpath, 0) < 0)
-        fatal(2, fullpath);
+        FATAL(MSG_TRANSLATE, fullpath);
     int siz = dump_size(&cert.self);
     char *rawp = (char *)calloc(1, siz + 4);
     siz = dump_casn(&cert.self, rawp);
@@ -775,11 +777,11 @@ int main(
     strcpy(c, ".raw");
     int fd = open(subjfile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
     if (fd < 0)
-        fatal(6, subjfile);
+        FATAL(MSG_ERR_OPEN, subjfile);
     if (write(fd, rawp, siz) < 0)
         perror(subjfile);
     close(fd);
     free(rawp);
-    fatal(0, subjfile);
+    DONE(MSG_OK, subjfile);
     return 0;
 }

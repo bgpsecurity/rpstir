@@ -15,6 +15,7 @@
 #include <rpki-object/cms/cms.h>
 #include <rpki/cms/roa_utils.h>
 #include <assert.h>
+#include "util/logging.h"
 
 void usage(
     char *prog)
@@ -29,29 +30,13 @@ void usage(
     exit(1);
 }
 
-char *msgs[] = {
-    "unused 1\n",               // 0
-    "IPAddress block has range\n",
-    "Can't read %s\n",          // 2
-    "Can't find %s extension in certificate\n",
-    "Error writing %s\n",       // 4
-    "Can't find extension %s\n",
-    "Can't find ASNum[%d]\n",   // 6
-    "Signature failed in %s\n",
-};
-
-void fatal(
-    int err,
-    ...)
-{
-    va_list ap;
-    va_start(ap, err);
-    assert(err >= 0);
-    assert((size_t)err < (sizeof(msgs) / sizeof(msgs[0])));
-    vfprintf(stderr, msgs[err], ap);
-    va_end(ap);
-    exit(err);
-}
+#define MSG_HAS_RANGE "IPAddress block has range"
+#define MSG_READ "Can't read %s"
+#define MSG_FIND_EXT_IN_CER "Can't find %s extension in certificate"
+#define MSG_WRITING "Error writing %s"
+#define MSG_FIND_EXT "Can't find extension %s"
+#define MSG_FIND_AS "Can't find ASNum[%d]"
+#define MSG_SIG "Signature failed in %s"
 
 static void make_fulldir(
     char *fulldir,
@@ -161,12 +146,12 @@ int main(
     // init and read in the ee cert
     Certificate(&cert, 0);
     if (get_casn_file(&cert.self, certfile, 0) < 0)
-        fatal(2, certfile);
+        FATAL(MSG_READ, certfile);
 
     // init and read in the parent cert
     Certificate(&pcert, 0);
     if (get_casn_file(&pcert.self, pcertfile, 0) < 0)
-        fatal(2, pcertfile);
+        FATAL(MSG_READ, pcertfile);
 
     // mark the gbr: the signed data is hashed with sha256
     struct SignedData *sgdp = &cms.content.signedData;
@@ -200,7 +185,7 @@ int main(
     // sign the message
     msg = signCMS(&cms, keyfile, bad_signature);
     if (msg != NULL)
-        fatal(7, msg);
+        FATAL(MSG_SIG, msg);
 
     // validate: make sure we did it all right
     if (ghostbustersValidate(&cms) != 0)
@@ -219,12 +204,12 @@ int main(
     {
         fprintf(stderr, "error: mkdir_recursive(\"%s\"): %s\n", fulldir,
                 strerror(errno));
-        fatal(4, fulldir);
+        FATAL(MSG_WRITING, fulldir);
     }
     if (put_casn_file(&cms.self, gbrfile, 0) < 0)
-        fatal(4, gbrfile);
+        FATAL(MSG_WRITING, gbrfile);
     if (put_casn_file(&cms.self, fullpath, 0) < 0)
-        fatal(4, fullpath);
+        FATAL(MSG_WRITING, fullpath);
 
     fprintf(stderr, "Finished %s OK\n", gbrfile);
     return 0;

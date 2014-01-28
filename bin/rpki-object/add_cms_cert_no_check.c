@@ -10,22 +10,13 @@
 #include <rpki-asn1/roa.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished OK\n",
-    "Couldn't get %s\n",
-    "Error inserting %s\n",     // 2
-    "EEcert has no key identifier\n",
-    "Error signing in %s\n",
-};
-
-static void fatal(
-    int err,
-    char *paramp)
-{
-    fprintf(stderr, msgs[err], paramp);
-    exit(err);
-}
+#define MSG_OK "Finished OK"
+#define MSG_GET "Couldn't get %s"
+#define MSG_INSERT "Error inserting %s"
+#define MSG_NO_AKI "EEcert has no key identifier"
+#define MSG_SIGN "Error signing in %s"
 
 struct keyring {
     char filename[80];
@@ -56,14 +47,14 @@ int main(
     Certificate(&EEcert, (ushort) 0);
     // get the EE cert
     if (get_casn_file(&EEcert.self, argv[1], 0) < 0)
-        fatal(1, "EE certificate");
+        FATAL(MSG_GET, "EE certificate");
     // get the CMS object
     if (get_casn_file(&roa.self, argv[2], 0) < 0)
-        fatal(1, "CMS file");
+        FATAL(MSG_GET, "CMS file");
     struct Extension *sextp;
     // get EE's Auth Key ID
     if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
-        fatal(3, "key identifier");
+        FATAL(MSG_NO_AKI);
     // add cert to CMS object 
     struct BlobSignedData *signedDatap = &roa.content.signedData;
     struct Certificate *certp;
@@ -71,23 +62,23 @@ int main(
     certp =
         (struct Certificate *)inject_casn(&signedDatap->certificates.self, 0);
     if (!certp)
-        fatal(2, "EE certificate");
+        FATAL(MSG_INSERT, "EE certificate");
     copy_casn(&certp->self, &EEcert.self);
     num_items(&signedDatap->certificates.self);
     // check CMS suffix
     char *c = strrchr(argv[2], (int)'.');
     if (!c || (strcmp(c, ".roa") && strcmp(c, ".man") && strcmp(c, ".mft") &&
                strcmp(c, ".mnf") && strcmp(c, ".gbr")))
-        fatal(1, "CMSfile suffix");
+        FATAL(MSG_GET, "CMSfile suffix");
     // fill in SignerInfo
     struct SignerInfo *signerInfop =
         (struct SignerInfo *)member_casn(&signedDatap->signerInfos.self, 0);
     if (!signerInfop)
-        fatal(2, "SignerInfo");
+        FATAL(MSG_INSERT, "SignerInfo");
     write_casn_num(&signerInfop->version.v3, 3);
     // add EE's SKI
     if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_subjectKeyIdentifier, false)))
-        fatal(2, "EE certificate's subject key identifier");
+        FATAL(MSG_INSERT, "EE certificate's subject key identifier");
     copy_casn(&signerInfop->sid.subjectKeyIdentifier,
               &sextp->extnValue.subjectKeyIdentifier);
     write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
@@ -116,7 +107,7 @@ int main(
                        &tbh);
     tbh_lth = gen_hash(tbh, tbh_lth, hashbuf, CRYPT_ALGO_SHA2);
     if (tbh_lth < 0)
-        fatal(1, "hash");
+        FATAL(MSG_GET, "hash");
     free(tbh);
     write_casn(&attrTbDefp->messageDigest, hashbuf, tbh_lth);
     write_objid(&signerInfop->digestAlgorithm.algorithm, id_sha256);
@@ -135,9 +126,9 @@ int main(
     }
     // sig alg
     write_objid(&signerInfop->signatureAlgorithm.algorithm,
-                id_sha_256WithRSAEncryption);
+                id_rsadsi_rsaEncryption);
     write_casn(&signerInfop->signatureAlgorithm.
-               parameters.sha256WithRSAEncryption, (uchar *) "", 0);
+               parameters.self, (uchar *) "", 0);
     // sign it!
     const char *msg = signCMSBlob(&roa, argv[3]);
     if (msg)
