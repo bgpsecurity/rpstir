@@ -7,16 +7,13 @@ import java.math.BigInteger;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author RTomlinson
  */
 public interface Constants {
-	/** RPKI_HOME environment variable */
-	public static final String RPKI_ROOT = System.getenv("RPKI_ROOT");
-
 	/** Path to the objects directory */
-	public static final String OBJECT_PATH = RPKI_ROOT
-			+ "/testbed/javaObjects/";
+	public static final String OBJECT_PATH = //TODO
+			"/testbed/javaObjects/";
 
 	/** Path to the repository directory */
 	public static final String REPO_PATH = OBJECT_PATH + "REPOSITORY/";
@@ -36,15 +33,6 @@ public interface Constants {
 	/** Generally useful 16-bit mask */
 	public static final BigInteger SXTN_BIT_MASK = new BigInteger("ffff", 16);
 
-	/** BigInteger 1 is also useful */
-	public static final BigInteger ZERO = BigInteger.ZERO;
-
-	/** BigInteger 1 is also useful */
-	public static final BigInteger ONE = BigInteger.ONE;
-
-	/** BigInteger 2 is also useful */
+	/** BigInteger 2 is useful */
 	public static final BigInteger TWO = new BigInteger("2");
-
-	/** Location of binaries to be executed */
-	public static final String BIN_DIR = ".";
 }

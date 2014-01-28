@@ -45,13 +45,13 @@ import com.bbn.rpki.test.objects.Util;
 
 /**
  * Represents the current state of a test.
- * 
+ *
  * Test execution consists of a cycle: Update rpki objects according to the
  * EpochEvents of actions. Uploading those updated objects.
- * 
+ *
  * The cache can be updated and validated at any point during the upload step
  * subject to the granularity of the breakdown of the upload.
- * 
+ *
  * The cycle can be tailoring in three ways: specifying what changes should be
  * made to the rpki objects, how the upload process should be broken down and
  * where within the breakdown cache update and validation should occur. The last
@@ -59,7 +59,7 @@ import com.bbn.rpki.test.objects.Util;
  * breakdown task after which cache update/validation should occur. The path
  * consists of a sequence of alternating task and breakdown names. For example:
  * UploadEpoch:byRepositoryRoot:rpki.bbn.com/rst:deleteFirst:upload:
- * 
+ *
  * @author tomlinso
  */
 public class Model implements Constants, XMLConstants {
@@ -67,7 +67,7 @@ public class Model implements Constants, XMLConstants {
 	/**
 	 * Interface for listeners wanting to know when significant model changes
 	 * have occured. For now only the epochs collection can be monitored.
-	 * 
+	 *
 	 * @author tomlinso
 	 */
 	public interface Listener {
@@ -82,21 +82,16 @@ public class Model implements Constants, XMLConstants {
 
 		private final Object arg;
 
-		/**
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + (arg == null ? 0 : arg.hashCode());
-			result = prime * result + factoryClass.hashCode();
+			result = prime * result + ((arg == null) ? 0 : arg.hashCode());
+			result = prime * result
+					+ ((factoryClass == null) ? 0 : factoryClass.hashCode());
 			return result;
 		}
 
-		/**
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj) {
@@ -116,7 +111,14 @@ public class Model implements Constants, XMLConstants {
 			} else if (!arg.equals(other.arg)) {
 				return false;
 			}
-			return factoryClass == other.factoryClass;
+			if (factoryClass == null) {
+				if (other.factoryClass != null) {
+					return false;
+				}
+			} else if (!factoryClass.equals(other.factoryClass)) {
+				return false;
+			}
+			return true;
 		}
 
 		/**
@@ -438,7 +440,7 @@ public class Model implements Constants, XMLConstants {
 
 	/**
 	 * Advance to the next epoch.
-	 * 
+	 *
 	 * For epoch 0, we record the time we expect to be ready to start epoch 1 as
 	 * the execution start time for epoch 1. Execution start times for
 	 * subsequence epochs are also estimated. Whenever the execution start time
@@ -447,7 +449,7 @@ public class Model implements Constants, XMLConstants {
 	 * Whenever an epoch ends, if the start time of the next epoch is not fixed,
 	 * then the start time is adjusted to be the current time and all subsequent
 	 * epoch start times are adjusted downward.
-	 * 
+	 *
 	 * 1) Record the previous roots so UploadEpoch can know what already exists
 	 * when breaking down the upload into uploading each root. 2) Apply all the
 	 * actions of the epoch. 3) Build the list of all the objects of the new
@@ -537,7 +539,7 @@ public class Model implements Constants, XMLConstants {
 	/**
 	 * The trust anchor,for now is specified only once as the topmost SS cert in
 	 * the first topmost root.
-	 * 
+	 *
 	 * @return the trust anchor cert file
 	 */
 	public File getTrustAnchorCert() {
@@ -609,7 +611,7 @@ public class Model implements Constants, XMLConstants {
 
 	/**
 	 * Get an scp argument for a remote file
-	 * 
+	 *
 	 * @param file
 	 * @return the scp argument
 	 */
@@ -661,8 +663,8 @@ public class Model implements Constants, XMLConstants {
 	}
 
 	/**
-   * 
-   */
+	 *
+	 */
 	public void clearDatabase() {
 		// TODO Auto-generated method stub
 
@@ -826,7 +828,7 @@ public class Model implements Constants, XMLConstants {
 	}
 
 	/**
-   */
+	 */
 	public void epochsChanged() {
 		sortEpochs();
 		fireEpochsChanged();
@@ -835,7 +837,7 @@ public class Model implements Constants, XMLConstants {
 	/**
 	 * Build a new array of EpochActions placing every action in the epoch
 	 * required by its constraints.
-	 * 
+	 *
 	 * First the epoch constraint chains are searched to find epochs having no
 	 * predecessor constraints. Such epochs are assigned an index of zero. Other
 	 * epochs are assigned an index one greater than the max of all predecessor
@@ -859,7 +861,7 @@ public class Model implements Constants, XMLConstants {
 	 * all epochs that are not already constrained to be coincident with or
 	 * predecessors of the given epoch and that are not already constrained to
 	 * be successors
-	 * 
+	 *
 	 * @param epoch
 	 * @return the epochs that are not already constrained w.r.t. the given
 	 *         epoch
@@ -878,7 +880,7 @@ public class Model implements Constants, XMLConstants {
 	 * all epochs that are not already constrained to be coincident with of
 	 * succcessors of the given epoch and that are not already constrained to be
 	 * predecessors.
-	 * 
+	 *
 	 * @param epoch
 	 * @return the epochs that are not already constrained w.r.t. the given
 	 *         epoch
@@ -897,7 +899,7 @@ public class Model implements Constants, XMLConstants {
 	 * all epochs that are not already constrained to be successors of or
 	 * predecessors of the given epoch and that are not already constrained to
 	 * be coincident
-	 * 
+	 *
 	 * @param epoch
 	 * @return the epochs that are not already constrained w.r.t. the given
 	 *         epoch

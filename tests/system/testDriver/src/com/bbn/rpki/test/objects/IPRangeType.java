@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 /**
  * Enumerate the types of ranges used
- * 
+ *
  * @author tomlinso
  */
 public enum IPRangeType implements Constants {
@@ -30,7 +30,7 @@ public enum IPRangeType implements Constants {
 
 	IPRangeType(int bits) {
 		this.bits = bits;
-		this.max = TWO.pow(bits).subtract(ONE);
+		this.max = TWO.pow(bits).subtract(BigInteger.ONE);
 	}
 
 	/**

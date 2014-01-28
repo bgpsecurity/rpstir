@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Holds a list of ranges representing an allocation, free list, etc.
- * 
+ *
  * @author RTomlinson
  */
 public class IPRangeList implements Iterable<Range>, Constants {
@@ -94,7 +94,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
 
 	/**
 	 * Copy constructor
-	 * 
+	 *
 	 * @param orig
 	 */
 	public IPRangeList(IPRangeList orig) {
@@ -157,15 +157,15 @@ public class IPRangeList implements Iterable<Range>, Constants {
 
 	/**
 	 * Allocate Internet number resources based on a free list.
-	 * 
+	 *
 	 * Inputs:
-	 * 
+	 *
 	 * free_list - [list of integer pairs] blocks of unallocated resources, e.g.
 	 * [(3,10), (13,17), ...]
-	 * 
+	 *
 	 * used_list - [list of integer pairs] blocks of allocated resources, e.g.
 	 * [(11,12), (18,34), ...]
-	 * 
+	 *
 	 * requests - [list of character/integer pairs] requests for resources,
 	 * where each request block is denoted by a pair (reqtype, amount). The
 	 * "reqtype" field must be either 'p' (IP prefix) or 'r' (IP/AS range). The
@@ -173,30 +173,30 @@ public class IPRangeList implements Iterable<Range>, Constants {
 	 * Internet resource numbers to allocate (i.e. IP addresses, or AS numbers).
 	 * If "reqtype" is 'p', then "amount" must be a power of 2. e.g. [('r',5),
 	 * ('p', 256), ('r', 16), ...]
-	 * 
+	 *
 	 * range_not_prefix - [boolean] If set to True (default), returned ranges
 	 * must NOT be expressible as a prefix. This option should be set to True
 	 * for IPv4/IPv6 allocation, and False for AS number allocation. The default
 	 * behavior conforms to RFC 3779 encoding requirements that ranges
 	 * equivalent to prefixes MUST be expressed as prefixes. Therefore, a
 	 * "range" request must not return a prefix.
-	 * 
+	 *
 	 * Returns:
-	 * 
+	 *
 	 * allocated_blocks - [list of integer pairs] blocks allocated to the child,
 	 * corresponding to the order of requests. Note that the blocks MAY NOT be
 	 * in ascending order of resource number.
-	 * 
+	 *
 	 * Side effects:
-	 * 
+	 *
 	 * The free_list and used_list will be updated to reflect the blocks
 	 * allocated to the child.
-	 * 
+	 *
 	 * Exceptions:
-	 * 
+	 *
 	 * AllocationError - If the request cannot be fulfilled, the function raises
 	 * an AllocationError exception.
-	 * 
+	 *
 	 * @param requests
 	 * @param expressAsRange
 	 * @return the allocated ranges
@@ -281,7 +281,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
 
 	/**
 	 * Remove b from the enclosing range a
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @return the resulting elements
@@ -292,10 +292,10 @@ public class IPRangeList implements Iterable<Range>, Constants {
 		}
 		List<Range> ret = new ArrayList<Range>(2);
 		if (a.min.compareTo(b.min) < 0) {
-			ret.add(new Range(a.min, b.min.subtract(ONE), ipVersion, true));
+			ret.add(new Range(a.min, b.min.subtract(BigInteger.ONE), ipVersion, true));
 		}
 		if (a.max.compareTo(b.max) > 0) {
-			ret.add(new Range(b.max.add(ONE), a.max, ipVersion, true));
+			ret.add(new Range(b.max.add(BigInteger.ONE), a.max, ipVersion, true));
 		}
 		return ret;
 	}
@@ -383,13 +383,13 @@ public class IPRangeList implements Iterable<Range>, Constants {
 			IPRangeList allocatedBlocks) {
 		/*
 		 * Detect a resource overlap or adjacency conflict.
-		 * 
+		 *
 		 * Return an element (integer pair) from allocated_blocks (list of
 		 * integer pairs) that conflicts with candidate_block (integer pair). An
 		 * element can conflict by being numerically adjacent to the candidate,
 		 * or by numerically overlapping with it. If no element of
 		 * allocated_blocks conflicts with candidate_block, return None.
-		 * 
+		 *
 		 * >>> detect_conflict((1,3), []) # no allocated blocks, no conflict >>>
 		 * detect_conflict((1,3), [(7,9)]) # no conflict >>>
 		 * detect_conflict((1,3), [(7,9), (4,5)]) (4, 5)
@@ -465,7 +465,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
 	 * Remove as much as possible of the given range Remember the invariants are
 	 * that every range is separate from other ranges so that range must fall
 	 * entirely within one range in the list.
-	 * 
+	 *
 	 * @param range
 	 * @return true if the range was successfully removed
 	 */
@@ -504,7 +504,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
 	 * Test if this range list contains the given range. Remember the invariants
 	 * are that every range is separate from other ranges so that range must
 	 * fall entirely within one range in the list.
-	 * 
+	 *
 	 * @param range
 	 * @return true if range is contained within the rangeList
 	 */
@@ -526,7 +526,7 @@ public class IPRangeList implements Iterable<Range>, Constants {
 
 	/**
 	 * Computes the intersection between this RangeList and another
-	 * 
+	 *
 	 * @param rangeList
 	 * @return the intersection or null if the lists do not intersect
 	 */

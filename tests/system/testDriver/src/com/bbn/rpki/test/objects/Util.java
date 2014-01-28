@@ -30,7 +30,7 @@ import com.bbn.rpki.test.util.Sucker;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author RTomlinson
  */
 public class Util implements Constants {
@@ -304,7 +304,7 @@ public class Util implements Constants {
 		String[] path = ca_obj.outputfilename.split("/");
 		String file = path[path.length - 1];
 		String[] cmdArray = new String[3 + xargs.length];
-		cmdArray[0] = Constants.BIN_DIR + "/create_object";
+		cmdArray[0] = "create_object";
 		cmdArray[1] = "-f";
 		cmdArray[2] = Constants.CONFIG_PATH + file + ".cfg";
 		System.arraycopy(xargs, 0, cmdArray, 3, xargs.length);
@@ -317,7 +317,7 @@ public class Util implements Constants {
 	 */
 	static String generate_ski(String fileName) {
 		return exec("gen_hash", true, false, null, null, null,
-				Constants.BIN_DIR + "/gen_hash", "-f", fileName);
+				"gen_hash", "-f", fileName);
 	}
 
 	/**
@@ -357,7 +357,7 @@ public class Util implements Constants {
 		try {
 			if (cwd == null) {
 				cwd = new File(System.getProperty("user.dir"))
-						.getAbsoluteFile();
+				.getAbsoluteFile();
 			}
 			final Process f = runtime.exec(cmdArray, null, cwd);
 			Reader stdoutReader = new InputStreamReader(f.getInputStream());
@@ -419,13 +419,13 @@ public class Util implements Constants {
 	/**
 	 * Calls the gen_hash C executable and grabs the STDOUT from it and returns
 	 * it as the hash of the contents of the filename
-	 * 
+	 *
 	 * @param file
 	 * @return the hash
 	 */
 	public static String generate_file_hash(File file) {
 		{
-			String[] cmdArray = { Constants.BIN_DIR + "/gen_hash", "-n",
+			String[] cmdArray = { "gen_hash", "-n",
 					file.getPath() };
 			return exec("gen_hash", true, false, null, null, null, cmdArray);
 		}
@@ -472,7 +472,7 @@ public class Util implements Constants {
 
 	/**
 	 * Find and kill processes running the indicated program as this user
-	 * 
+	 *
 	 * @param string
 	 *            grep argument for finding the process
 	 */

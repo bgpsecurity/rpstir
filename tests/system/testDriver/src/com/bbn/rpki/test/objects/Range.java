@@ -7,7 +7,7 @@ import java.math.BigInteger;
 
 /**
  * Represents a range of IP addresses
- * 
+ *
  * @author RTomlinson
  */
 public class Range implements Constants, Comparable<Range> {
@@ -22,7 +22,7 @@ public class Range implements Constants, Comparable<Range> {
 		BigInteger min = stringToBigInteger(base);
 		BigInteger max = min.add(TWO.pow(version.getBits() - bits).subtract(
 				BigInteger.ONE));
-		assert min.and(max).equals(ZERO);
+		assert min.and(max).equals(BigInteger.ZERO);
 		Range range = new Range(min, max, version, false);
 		return range;
 	}
@@ -201,7 +201,7 @@ public class Range implements Constants, Comparable<Range> {
 	/**
 	 * A prefix is a range with a size that is a power of two and for which the
 	 * min address is a multiple of the size.
-	 * 
+	 *
 	 * @return true if this is a prefix
 	 */
 	public boolean couldBePrefix() {

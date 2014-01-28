@@ -19,7 +19,7 @@ import org.ini4j.Wini;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author tomlinso
  */
 public class TestbedConfig implements Constants {
@@ -60,17 +60,17 @@ public class TestbedConfig implements Constants {
 
 	/**
 	 * Construct config for the specified file
-	 * 
+	 *
 	 * @param iniFile
 	 */
 	public TestbedConfig(String iniFile) {
 		File objectsDir = new File(OBJECT_PATH);
-		if (!objectsDir.exists()) {
-			objectsDir.mkdir();
-		} else {
-			Util.deleteDirectories(new File(OBJECT_PATH).listFiles());
+		//if the directory was not created right now, delete the directories within it
+		if (!objectsDir.mkdir()) {
+			Util.deleteDirectories(objectsDir.listFiles());
 		}
 		try {
+			//ebarnes unclear what wini is
 			wini = new Wini(new StringReader(iniFile));
 			Collection<Map.Entry<String, Section>> sectionEntries = wini
 					.entrySet();
@@ -86,21 +86,22 @@ public class TestbedConfig implements Constants {
 					}
 				}
 			}
-		} catch (Exception e) {
+		} catch (IOException e) {
+			//FIXME we should not just throw this exception
 			throw new RuntimeException(e);
 		}
 	}
 
 	/**
 	 * Write the config file
-	 * 
+	 *
 	 * @param writer
 	 */
 	public void write(Writer writer) {
 		try {
 			wini.store(writer);
 		} catch (IOException e) {
-			// Should not happen
+			//TODO Should not happen?
 		}
 	}
 
@@ -185,7 +186,7 @@ public class TestbedConfig implements Constants {
 					"Unrecognized type included in name of section in the .ini: "
 							+ type);
 		}
-		FactoryBase<?> f = null;
+		FactoryBase<?> factory = null;
 		boolean isIANA = "IANA".equals(name);
 		if (!breakA && !isIANA) {
 			server = null;
@@ -193,9 +194,9 @@ public class TestbedConfig implements Constants {
 		switch (factoryType) {
 		case C: {
 			if (isIANA) {
-				f = new IANAFactory(name, child, server, subjkeyfile);
+				factory = new IANAFactory(name, child, server, subjkeyfile);
 			} else {
-				f = new CAFactory(name, ipv4, ipv6, as_list, child, server,
+				factory = new CAFactory(name, ipv4, ipv6, as_list, child, server,
 						subjkeyfile);
 			}
 			break;
@@ -205,13 +206,13 @@ public class TestbedConfig implements Constants {
 		case CR:
 			return;
 		case R: {
-			f = new RoaFactory(name, ipv4, ipv6, as_list, child, server,
+			factory = new RoaFactory(name, ipv4, ipv6, as_list, child, server,
 					roav4l, roav6l, a);
 			break;
 		}
 		}
 		// Add our bluePrintName to the factory dictionary
-		factories.put(name, f);
+		factories.put(name, factory);
 	}
 
 	/**
