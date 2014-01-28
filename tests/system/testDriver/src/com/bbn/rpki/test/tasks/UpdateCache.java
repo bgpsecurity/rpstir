@@ -16,57 +16,57 @@ import com.bbn.rpki.test.objects.Util;
  */
 public class UpdateCache extends TaskFactory {
 
-  private static final String TASK_NAME = "";
+	private static final String TASK_NAME = "";
 
-  protected class Task extends TaskFactory.Task {
+	protected class Task extends TaskFactory.Task {
 
-    /**
-     * @param taskName
-     */
-    protected Task() {
-      super(TASK_NAME);
-    }
+		/**
+		 * @param taskName
+		 */
+		protected Task() {
+			super(TASK_NAME);
+		}
 
-    @Override
-    public void run() {
-      Util.exec("Chaser", false, false, Util.RPKI_ROOT,
-                null,
-                "rsync_aur/rsync_listener",
-                "proto/chaser", "-f", "initial_rsync.config");
-    }
+		@Override
+		public void run() {
+			// TODO fix RPKI_ROOT
+			// TODO should Chaser name be changed
+			Util.exec("Chaser", false, false, Util.RPKI_ROOT, null, null,
+					"synchronize");
+		}
 
-    /**
-     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
-     */
-    @Override
-    protected String getLogDetail() {
-      return null;
-    }
-  }
+		/**
+		 * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+		 */
+		@Override
+		protected String getLogDetail() {
+			return null;
+		}
+	}
 
-  /**
-   * @param model
-   */
-  public UpdateCache(Model model) {
-    super(model);
-  }
+	/**
+	 * @param model
+	 */
+	public UpdateCache(Model model) {
+		super(model);
+	}
 
-  @Override
-  protected Task reallyCreateTask(String taskName) {
-    assert TASK_NAME.equals(taskName);
-    return new Task();
-  }
+	@Override
+	protected Task reallyCreateTask(String taskName) {
+		assert TASK_NAME.equals(taskName);
+		return new Task();
+	}
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
-   */
-  @Override
-  protected void appendBreakdowns(List<Breakdown> list) {
-    // There are no breakdowns to append
-  }
+	/**
+	 * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
+	 */
+	@Override
+	protected void appendBreakdowns(List<Breakdown> list) {
+		// There are no breakdowns to append
+	}
 
-  @Override
-  protected Collection<String> getRelativeTaskNames() {
-    return Collections.singleton(TASK_NAME);
-  }
+	@Override
+	protected Collection<String> getRelativeTaskNames() {
+		return Collections.singleton(TASK_NAME);
+	}
 }

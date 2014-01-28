@@ -28,203 +28,214 @@ import com.bbn.rpki.test.objects.TypescriptLogger;
 
 /**
  * <Enter the description of this type here>
- *
+ * 
  * @author tomlinso
  */
 public class TypescriptPanel extends TypescriptLogger {
-  /**
-   * Specify how scrolling should occur. Options are ON, OFF, and AUTO. If OFF,
-   * no scrolling ever occurs. If ON, scrolling always occurs. If AUTO,
-   * scrolling occurs if the cursor is positioned at the end of the buffer.
-   *
-   * @author tomlinso
-   */
-  public enum ScrollLock {
-    /** Scroll if cursor at end of buffer */
-    AUTO,
-    /** Always scroll */
-    ON,
-    /** Never scroll */
-    OFF
-  }
-  private static StyleContext styleContext = new StyleContext();
-  static {
-    Style basicStyle = styleContext.addStyle("basic", null);
-    StyleConstants.setFontFamily(basicStyle, "Monospaced");
-    StyleConstants.setFontSize(basicStyle, 10);
-    Style stderrStyle = styleContext.addStyle("stderr", basicStyle);
-    StyleConstants.setForeground(stderrStyle, Color.RED);
-    Style stdoutStyle = styleContext.addStyle("stdout", basicStyle);
-    StyleConstants.setForeground(stdoutStyle, Color.BLACK);
-    StyleConstants.setFontFamily(stdoutStyle, "Monospaced");
-    StyleConstants.setFontFamily(stderrStyle, "Monospaced");
-  }
+	/**
+	 * Specify how scrolling should occur. Options are ON, OFF, and AUTO. If
+	 * OFF, no scrolling ever occurs. If ON, scrolling always occurs. If AUTO,
+	 * scrolling occurs if the cursor is positioned at the end of the buffer.
+	 * 
+	 * @author tomlinso
+	 */
+	public enum ScrollLock {
+		/** Scroll if cursor at end of buffer */
+		AUTO,
+		/** Always scroll */
+		ON,
+		/** Never scroll */
+		OFF
+	}
 
-  private final StyledDocument styledDocument = new DefaultStyledDocument(styleContext);
-  private final JTextPane textPane = new JTextPane(styledDocument);
-  private final JScrollPane scrollPane = new JScrollPane(textPane);
-  private final JPanel panel = new JPanel(new BorderLayout());
-  private ScrollLock scrollLock = ScrollLock.OFF;
+	private static StyleContext styleContext = new StyleContext();
+	static {
+		Style basicStyle = styleContext.addStyle("basic", null);
+		StyleConstants.setFontFamily(basicStyle, "Monospaced");
+		StyleConstants.setFontSize(basicStyle, 10);
+		Style stderrStyle = styleContext.addStyle("stderr", basicStyle);
+		StyleConstants.setForeground(stderrStyle, Color.RED);
+		Style stdoutStyle = styleContext.addStyle("stdout", basicStyle);
+		StyleConstants.setForeground(stdoutStyle, Color.BLACK);
+		StyleConstants.setFontFamily(stdoutStyle, "Monospaced");
+		StyleConstants.setFontFamily(stderrStyle, "Monospaced");
+	}
 
-  /**
-   * @return the scrollLock
-   */
-  public ScrollLock getScrollLock() {
-    return scrollLock;
-  }
+	private final StyledDocument styledDocument = new DefaultStyledDocument(
+			styleContext);
 
-  /**
-   * @param scrollLock the scrollLock to set
-   */
-  public void setScrollLock(ScrollLock scrollLock) {
-    this.scrollLock = scrollLock;
-  }
+	private final JTextPane textPane = new JTextPane(styledDocument);
 
-  /**
-   * @return the component
-   */
-  public Component getComponent() {
-    return panel;
-  }
+	private final JScrollPane scrollPane = new JScrollPane(textPane);
 
-  /**
-   * @param title display at the top of the panel
-   */
-  public TypescriptPanel(String title) {
-    textPane.setEditable(false);
-    scrollPane.setPreferredSize(new Dimension(800, 300));
-    panel.add(scrollPane);
-    JLabel titleLabel = new JLabel(title);
-    titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-    panel.add(titleLabel, BorderLayout.NORTH);
-  }
+	private final JPanel panel = new JPanel(new BorderLayout());
 
-  /**
-   * Add a source of text for this typescript.
-   * The text will read until EOF is reached and appended to the document in
-   * the specified style. The cursor is advanced to the new end of the document
-   * and the text scrolled so the cursor is visible if scroll lock is off or if
-   * scroll lock is automatic and the cursor was at the end of the document.
-   * @param reader
-   * @param styleName
-   * @return the FilterReader version of reader
-   */
-  @Override
-  public Reader addSource(final Reader reader, final String styleName) {
-    return new FilterReader(reader) {
+	private ScrollLock scrollLock = ScrollLock.OFF;
 
-      /**
-       * @see java.io.FilterInputStream#read()
-       */
-      @Override
-      public int read() throws IOException {
-        int b = super.read();
-        if (b > 0) {
-          char[] bf = {(char) b};
-          processChars(bf, 0, 1, styleName);
-        }
-        return b;
-      }
+	/**
+	 * @return the scrollLock
+	 */
+	public ScrollLock getScrollLock() {
+		return scrollLock;
+	}
 
-      /**
-       * @see java.io.FilterInputStream#read(byte[], int, int)
-       */
-      @Override
-      public int read(char[] b, int off, int len) throws IOException {
-        int ret = super.read(b, off, len);
-        if (ret > 0) {
-          processChars(b, off, ret, styleName);
-        }
-        return ret;
-      }
+	/**
+	 * @param scrollLock
+	 *            the scrollLock to set
+	 */
+	public void setScrollLock(ScrollLock scrollLock) {
+		this.scrollLock = scrollLock;
+	}
 
-      /**
-       * @see java.io.FilterInputStream#read(byte[])
-       */
-      @Override
-      public int read(char[] b) throws IOException {
-        return read(b, 0, b.length);
-      }
-    };
-  }
+	/**
+	 * @return the component
+	 */
+	public Component getComponent() {
+		return panel;
+	}
 
-  private void processChars(char[] b, int off, int len, String styleName) {
-    String s = new String(b, off, len);
-    processString(s, styleName);
-  }
+	/**
+	 * @param title
+	 *            display at the top of the panel
+	 */
+	public TypescriptPanel(String title) {
+		textPane.setEditable(false);
+		scrollPane.setPreferredSize(new Dimension(800, 300));
+		panel.add(scrollPane);
+		JLabel titleLabel = new JLabel(title);
+		titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		panel.add(titleLabel, BorderLayout.NORTH);
+	}
 
-  /**
-   * @param styleName
-   * @param s
-   */
-  private synchronized void processString(String s, String styleName) {
-    int end = styledDocument.getLength();
-    int caret = textPane.getCaretPosition();
-    boolean doScroll = false;
-    switch (scrollLock) {
-    case ON:
-      doScroll = false;
-      break;
-    case OFF:
-      doScroll = true;
-      break;
-    case AUTO:
-      doScroll = caret == end;
-      break;
-    }
-    Style style = styleContext.getStyle(styleName);
-    try {
-      styledDocument.insertString(end, s, style);
-    } catch (BadLocationException e) {
-      e.printStackTrace();
-    }
-    if (doScroll) {
-      textPane.setCaretPosition(styledDocument.getLength());
-    }
-  }
+	/**
+	 * Add a source of text for this typescript. The text will read until EOF is
+	 * reached and appended to the document in the specified style. The cursor
+	 * is advanced to the new end of the document and the text scrolled so the
+	 * cursor is visible if scroll lock is off or if scroll lock is automatic
+	 * and the cursor was at the end of the document.
+	 * 
+	 * @param reader
+	 * @param styleName
+	 * @return the FilterReader version of reader
+	 */
+	@Override
+	public Reader addSource(final Reader reader, final String styleName) {
+		return new FilterReader(reader) {
 
-  /**
-   * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.Object...)
-   */
-  @Override
-  public void log(Object...msg) {
-    StringBuilder sb = new StringBuilder();
-    buildMsg(sb, msg);
-    processString(sb.toString(), "stdout");
-  }
+			/**
+			 * @see java.io.FilterInputStream#read()
+			 */
+			@Override
+			public int read() throws IOException {
+				int b = super.read();
+				if (b > 0) {
+					char[] bf = { (char) b };
+					processChars(bf, 0, 1, styleName);
+				}
+				return b;
+			}
 
-  private void buildMsg(StringBuilder sb, Object... msg) {
-    for (Object o : msg) {
-      if (o.getClass().isArray()) {
-        buildMsg(sb, (Object[]) o);
-        continue;
-      }
-      if (sb.length() > 0) {
-        sb.append(" ");
-      }
-      sb.append(o);
-    }
-  }
+			/**
+			 * @see java.io.FilterInputStream#read(byte[], int, int)
+			 */
+			@Override
+			public int read(char[] b, int off, int len) throws IOException {
+				int ret = super.read(b, off, len);
+				if (ret > 0) {
+					processChars(b, off, ret, styleName);
+				}
+				return ret;
+			}
 
-  /**
-   * @see com.bbn.rpki.test.objects.TypescriptLogger#suckOn(java.io.InputStreamReader, java.lang.String)
-   */
-  @Override
-  public void suckOn(final InputStreamReader inputStreamReader, final String styleName) {
-    Thread t = new Thread("SuckOn " + styleName) {
-      @Override
-      public void run() {
-        char[] bf = new char[1000];
-        int nc;
-        try {
-          while ((nc = inputStreamReader.read(bf)) > 0) {
-            processChars(bf, 0, nc, styleName);
-          }
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-    };
-    t.start();
-  }
+			/**
+			 * @see java.io.FilterInputStream#read(byte[])
+			 */
+			@Override
+			public int read(char[] b) throws IOException {
+				return read(b, 0, b.length);
+			}
+		};
+	}
+
+	private void processChars(char[] b, int off, int len, String styleName) {
+		String s = new String(b, off, len);
+		processString(s, styleName);
+	}
+
+	/**
+	 * @param styleName
+	 * @param s
+	 */
+	private synchronized void processString(String s, String styleName) {
+		int end = styledDocument.getLength();
+		int caret = textPane.getCaretPosition();
+		boolean doScroll = false;
+		switch (scrollLock) {
+		case ON:
+			doScroll = false;
+			break;
+		case OFF:
+			doScroll = true;
+			break;
+		case AUTO:
+			doScroll = caret == end;
+			break;
+		}
+		Style style = styleContext.getStyle(styleName);
+		try {
+			styledDocument.insertString(end, s, style);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+		if (doScroll) {
+			textPane.setCaretPosition(styledDocument.getLength());
+		}
+	}
+
+	/**
+	 * @see com.bbn.rpki.test.objects.TypescriptLogger#log(java.lang.Object...)
+	 */
+	@Override
+	public void log(Object... msg) {
+		StringBuilder sb = new StringBuilder();
+		buildMsg(sb, msg);
+		processString(sb.toString(), "stdout");
+	}
+
+	private void buildMsg(StringBuilder sb, Object... msg) {
+		for (Object o : msg) {
+			if (o.getClass().isArray()) {
+				buildMsg(sb, (Object[]) o);
+				continue;
+			}
+			if (sb.length() > 0) {
+				sb.append(" ");
+			}
+			sb.append(o);
+		}
+	}
+
+	/**
+	 * @see com.bbn.rpki.test.objects.TypescriptLogger#suckOn(java.io.InputStreamReader,
+	 *      java.lang.String)
+	 */
+	@Override
+	public void suckOn(final InputStreamReader inputStreamReader,
+			final String styleName) {
+		Thread t = new Thread("SuckOn " + styleName) {
+			@Override
+			public void run() {
+				char[] bf = new char[1000];
+				int nc;
+				try {
+					while ((nc = inputStreamReader.read(bf)) > 0) {
+						processChars(bf, 0, nc, styleName);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		t.start();
+	}
 }

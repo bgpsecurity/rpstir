@@ -10,62 +10,68 @@ import java.util.Map;
 
 /**
  * Represents a particular breakdown of a task
- *
+ * 
  * @author tomlinso
  */
 public class TaskBreakdown {
-  private final List<TaskFactory.Task> tasks;
-  private Map<String, TaskFactory.Task> taskMap = null;
-  private final String breakdownName;
-  private final TaskFactory.Task parentTask;
+	private final List<TaskFactory.Task> tasks;
 
-  /**
-   * @param breakdownName
-   * @param parentTask
-   * @param tasks
-   */
-  public TaskBreakdown(String breakdownName, TaskFactory.Task parentTask, TaskFactory.Task...tasks) {
-    this(breakdownName, parentTask, Arrays.asList(tasks));
-  }
+	private Map<String, TaskFactory.Task> taskMap = null;
 
-  /**
-   * @param breakdownName
-   * @param parentTask
-   * @param tasks
-   */
-  public TaskBreakdown(String breakdownName, TaskFactory.Task parentTask, List<TaskFactory.Task> tasks) {
-    super();
-    this.breakdownName = breakdownName;
-    this.parentTask = parentTask;
-    this.tasks = tasks;
-  }
+	private final String breakdownName;
 
-  /**
-   * @param taskName
-   * @return the named task or null if none found
-   */
-  public TaskFactory.Task getTask(String taskName) {
-    if (taskMap == null) {
-      taskMap = new HashMap<String, TaskFactory.Task>();
-      for (TaskFactory.Task task : tasks) {
-        taskMap.put(task.getTaskName(), task);
-      }
-    }
-    return taskMap.get(taskName);
-  }
+	private final TaskFactory.Task parentTask;
 
-  /**
-   * @return the tasks
-   */
-  public List<TaskFactory.Task> getTasks() {
-    return tasks;
-  }
+	/**
+	 * @param breakdownName
+	 * @param parentTask
+	 * @param tasks
+	 */
+	public TaskBreakdown(String breakdownName, TaskFactory.Task parentTask,
+			TaskFactory.Task... tasks) {
+		this(breakdownName, parentTask, Arrays.asList(tasks));
+	}
 
-  /**
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return "Breakdown " + breakdownName + " for " + parentTask.getTaskName();
-  }
+	/**
+	 * @param breakdownName
+	 * @param parentTask
+	 * @param tasks
+	 */
+	public TaskBreakdown(String breakdownName, TaskFactory.Task parentTask,
+			List<TaskFactory.Task> tasks) {
+		super();
+		this.breakdownName = breakdownName;
+		this.parentTask = parentTask;
+		this.tasks = tasks;
+	}
+
+	/**
+	 * @param taskName
+	 * @return the named task or null if none found
+	 */
+	public TaskFactory.Task getTask(String taskName) {
+		if (taskMap == null) {
+			taskMap = new HashMap<String, TaskFactory.Task>();
+			for (TaskFactory.Task task : tasks) {
+				taskMap.put(task.getTaskName(), task);
+			}
+		}
+		return taskMap.get(taskName);
+	}
+
+	/**
+	 * @return the tasks
+	 */
+	public List<TaskFactory.Task> getTasks() {
+		return tasks;
+	}
+
+	/**
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Breakdown " + breakdownName + " for "
+				+ parentTask.getTaskName();
+	}
 }

@@ -8,144 +8,158 @@ import java.util.List;
 /**
  * Keeps track of the allocations for an entity (e.g. CA)
  * 
- * Maintains two lists for each of three types of numbers (as, ipv4, ipv6).
- * The "free" lists show the currently available numbers that can be allocated from this entity.
- * The "allocated" lists show the total allocates received by this entity.
+ * Maintains two lists for each of three types of numbers (as, ipv4, ipv6). The
+ * "free" lists show the currently available numbers that can be allocated from
+ * this entity. The "allocated" lists show the total allocates received by this
+ * entity.
  * 
- * Ranges can be added in two ways representing either the receipt of a new allocation from another
- * entity or the return of a previous allocation to another entity. The former adds the ranges to
- * both lists while the latter only adds to the free list. Similarly, ranges can be removed in two
- * ways representing the cancellation of a previous allocation from another entity or the allocation
- * of ranges to another entity. The latter affects the free list. the former is more complex.
+ * Ranges can be added in two ways representing either the receipt of a new
+ * allocation from another entity or the return of a previous allocation to
+ * another entity. The former adds the ranges to both lists while the latter
+ * only adds to the free list. Similarly, ranges can be removed in two ways
+ * representing the cancellation of a previous allocation from another entity or
+ * the allocation of ranges to another entity. The latter affects the free list.
+ * the former is more complex.
  * 
- * Normally, if we lose our allocation, allocations from us to another must also cancelled. In a
- * perfect world, we would already have cancelled the suballocations. Not having a perfect world at
- * our disposal, we simply remove from both lists, if present and when the suballocation is
- * cancelled, we do not add anything that is not in the allocated list back to the free list.
- *
+ * Normally, if we lose our allocation, allocations from us to another must also
+ * cancelled. In a perfect world, we would already have cancelled the
+ * suballocations. Not having a perfect world at our disposal, we simply remove
+ * from both lists, if present and when the suballocation is cancelled, we do
+ * not add anything that is not in the allocated list back to the free list.
+ * 
  * @author RTomlinson
  */
 public abstract class Allocator implements Constants {
-  private static class ResourcePair {
-    IPRangeList free;
-    IPRangeList rcvd;
-    ResourcePair(IPRangeType rangeType) {
-      free = new IPRangeList(rangeType);
-      rcvd = new IPRangeList(rangeType);
-    }
-  }
-  private final ResourcePair asResources = new ResourcePair(IPRangeType.as);
-  private final ResourcePair ipv4Resources = new ResourcePair(IPRangeType.ipv4);
-  private final ResourcePair ipv6Resources = new ResourcePair(IPRangeType.ipv6);
-  private boolean modified = false;
+	private static class ResourcePair {
+		IPRangeList free;
 
-  protected IPRangeList subAllocate(IPRangeType rangeType, List<? extends Pair> ipList) {
-    if (DEBUG_ON) {
-      System.out.println("Request " + rangeType + ": " + ipList);
-    }
-    ResourcePair resources = selectResources(rangeType);
+		IPRangeList rcvd;
 
-    //  Note that the following may raise an exception!
-    IPRangeList allocated_pairs =
-        resources.free.allocate(ipList, true);
+		ResourcePair(IPRangeType rangeType) {
+			free = new IPRangeList(rangeType);
+			rcvd = new IPRangeList(rangeType);
+		}
+	}
 
-    return allocated_pairs;
-  }
+	private final ResourcePair asResources = new ResourcePair(IPRangeType.as);
 
-  protected void addRcvdRanges(IPRangeList rangeList) {
-    ResourcePair resources = selectResources(rangeList.getIpVersion());
-    resources.rcvd.addAll(rangeList);
-    resources.free.addAll(rangeList);
-    setModified(true);
-  }
+	private final ResourcePair ipv4Resources = new ResourcePair(
+			IPRangeType.ipv4);
 
-  /**
-   * Represents a cancellation of allocation to this allocator.
-   * Remove from rcvd list and remove what we can from free list
-   * 
-   * @param rangeList
-   */
-  public void removeRcvdRanges(IPRangeList rangeList) {
-    ResourcePair resources = selectResources(rangeList.getIpVersion());
-    resources.rcvd.removeAll(rangeList);
-    resources.free.removeAll(rangeList.intersection(resources.free));
-    setModified(true);
-  }
+	private final ResourcePair ipv6Resources = new ResourcePair(
+			IPRangeType.ipv6);
 
-  protected void removeRcvdRange(Range range) {
-    ResourcePair resources = selectResources(range.version);
-    resources.rcvd.remove(range);
-  }
+	private boolean modified = false;
 
-  private ResourcePair selectResources(IPRangeType rangeType) {
-    ResourcePair resources;
-    switch (rangeType) {
-    case ipv4:
-      resources = ipv4Resources;
-      break;
-    case ipv6:
-      resources = ipv6Resources;
-      break;
-    case as:
-      resources = asResources;
-      break;
-    default:
-      resources = null;
-    }
-    assert resources != null;
-    return resources;
-  }
+	protected IPRangeList subAllocate(IPRangeType rangeType,
+			List<? extends Pair> ipList) {
+		if (DEBUG_ON) {
+			System.out.println("Request " + rangeType + ": " + ipList);
+		}
+		ResourcePair resources = selectResources(rangeType);
 
-  /**
-   * Represents the return of a suballocation
-   * 
-   * @param rangeType
-   * @param range
-   */
-  protected void addFreeRanges(IPRangeList rangeList) {
-    ResourcePair resources = selectResources(rangeList.getIpVersion());
-    IPRangeList intersection = resources.rcvd.intersection(rangeList);
-    resources.free.addAll(intersection);
-  }
+		// Note that the following may raise an exception!
+		IPRangeList allocated_pairs = resources.free.allocate(ipList, true);
 
-  /**
-   * @return the modified
-   */
-  public boolean isModified() {
-    return modified;
-  }
+		return allocated_pairs;
+	}
 
-  /**
-   * @param modified the modified to set
-   */
-  public void setModified(boolean modified) {
-    this.modified = modified;
-  }
+	protected void addRcvdRanges(IPRangeList rangeList) {
+		ResourcePair resources = selectResources(rangeList.getIpVersion());
+		resources.rcvd.addAll(rangeList);
+		resources.free.addAll(rangeList);
+		setModified(true);
+	}
 
-  /**
-   * @param rangeType
-   * @return
-   */
-  protected IPRangeList getRcvdRanges(IPRangeType rangeType) {
-    return selectResources(rangeType).rcvd;
-  }
+	/**
+	 * Represents a cancellation of allocation to this allocator. Remove from
+	 * rcvd list and remove what we can from free list
+	 * 
+	 * @param rangeList
+	 */
+	public void removeRcvdRanges(IPRangeList rangeList) {
+		ResourcePair resources = selectResources(rangeList.getIpVersion());
+		resources.rcvd.removeAll(rangeList);
+		resources.free.removeAll(rangeList.intersection(resources.free));
+		setModified(true);
+	}
 
-  /**
-   * @param rangeType
-   * @return
-   */
-  protected IPRangeList getFreeRanges(IPRangeType rangeType) {
-    return selectResources(rangeType).free;
-  }
+	protected void removeRcvdRange(Range range) {
+		ResourcePair resources = selectResources(range.version);
+		resources.rcvd.remove(range);
+	}
 
-  /**
-   * @return
-   */
-  protected boolean hasResources() {
-    // TODO fix this when create_objects allows missing resources
-    if (asResources.rcvd.isEmpty() || ipv4Resources.rcvd.isEmpty() || ipv6Resources.rcvd.isEmpty()) {
-      return false;
-    }
-    return true;
-  }
+	private ResourcePair selectResources(IPRangeType rangeType) {
+		ResourcePair resources;
+		switch (rangeType) {
+		case ipv4:
+			resources = ipv4Resources;
+			break;
+		case ipv6:
+			resources = ipv6Resources;
+			break;
+		case as:
+			resources = asResources;
+			break;
+		default:
+			resources = null;
+		}
+		assert resources != null;
+		return resources;
+	}
+
+	/**
+	 * Represents the return of a suballocation
+	 * 
+	 * @param rangeType
+	 * @param range
+	 */
+	protected void addFreeRanges(IPRangeList rangeList) {
+		ResourcePair resources = selectResources(rangeList.getIpVersion());
+		IPRangeList intersection = resources.rcvd.intersection(rangeList);
+		resources.free.addAll(intersection);
+	}
+
+	/**
+	 * @return the modified
+	 */
+	public boolean isModified() {
+		return modified;
+	}
+
+	/**
+	 * @param modified
+	 *            the modified to set
+	 */
+	public void setModified(boolean modified) {
+		this.modified = modified;
+	}
+
+	/**
+	 * @param rangeType
+	 * @return
+	 */
+	protected IPRangeList getRcvdRanges(IPRangeType rangeType) {
+		return selectResources(rangeType).rcvd;
+	}
+
+	/**
+	 * @param rangeType
+	 * @return
+	 */
+	protected IPRangeList getFreeRanges(IPRangeType rangeType) {
+		return selectResources(rangeType).free;
+	}
+
+	/**
+	 * @return
+	 */
+	protected boolean hasResources() {
+		// TODO fix this when create_objects allows missing resources
+		if (asResources.rcvd.isEmpty() || ipv4Resources.rcvd.isEmpty()
+				|| ipv6Resources.rcvd.isEmpty()) {
+			return false;
+		}
+		return true;
+	}
 }

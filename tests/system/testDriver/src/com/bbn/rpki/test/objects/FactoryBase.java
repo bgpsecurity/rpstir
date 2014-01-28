@@ -10,43 +10,45 @@ import com.bbn.rpki.test.tasks.Model;
 
 /**
  * <Enter the description of this type here>
- *
+ * 
  * @author RTomlinson
  */
 public abstract class FactoryBase<T> {
 
-  /**
-   * bp name
-   */
-  protected String bluePrintName;
-  /**
-   * time to live in days
-   */
-  String subjKeyFile;
-  String serverName;
-  String SIA_path;
+	/**
+	 * bp name
+	 */
+	protected String bluePrintName;
 
-  final List<Pair> childSpec;
+	/**
+	 * time to live in days
+	 */
+	String subjKeyFile;
 
-  protected FactoryBase(String bluePrintName,
-                        List<Pair> childSpec,
-                        String serverName,
-                        String subjKeyFile) {
-    this.bluePrintName = bluePrintName;
-    this.childSpec = childSpec;
-    this.serverName = serverName;
-    this.subjKeyFile = subjKeyFile;
-  }
+	String serverName;
 
-  /**
-   * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
-   */
-  abstract T create(Model model, InitializeAction initializeAction, CA_Object parent, int id);
+	String SIA_path;
 
-  /**
-   * @return the serverName
-   */
-  public String getServerName() {
-    return serverName;
-  }
+	final List<Pair> childSpec;
+
+	protected FactoryBase(String bluePrintName, List<Pair> childSpec,
+			String serverName, String subjKeyFile) {
+		this.bluePrintName = bluePrintName;
+		this.childSpec = childSpec;
+		this.serverName = serverName;
+		this.subjKeyFile = subjKeyFile;
+	}
+
+	/**
+	 * @see com.bbn.rpki.test.objects.FactoryBase#create(com.bbn.rpki.test.objects.CA_Object)
+	 */
+	abstract T create(Model model, InitializeAction initializeAction,
+			CA_Object parent, int id);
+
+	/**
+	 * @return the serverName
+	 */
+	public String getServerName() {
+		return serverName;
+	}
 }

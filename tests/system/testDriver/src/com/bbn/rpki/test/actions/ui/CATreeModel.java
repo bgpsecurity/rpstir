@@ -15,100 +15,103 @@ import com.bbn.rpki.test.objects.CA_Object;
 
 /**
  * <Enter the description of this type here>
- *
+ * 
  * @author tomlinso
  */
 public class CATreeModel implements TreeModel {
 
-  private final CA_Object rootCA;
-  private final List<TreeModelListener> listeners =
-      new ArrayList<TreeModelListener>(1);
+	private final CA_Object rootCA;
 
-  /**
-   * @param rootCA
-   */
-  public CATreeModel(CA_Object rootCA) {
-    this.rootCA = rootCA;
-  }
+	private final List<TreeModelListener> listeners = new ArrayList<TreeModelListener>(
+			1);
 
-  /**
-   * @see javax.swing.tree.TreeModel#getRoot()
-   */
-  @Override
-  public Object getRoot() {
-    return rootCA;
-  }
+	/**
+	 * @param rootCA
+	 */
+	public CATreeModel(CA_Object rootCA) {
+		this.rootCA = rootCA;
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#getChild(java.lang.Object, int)
-   */
-  @Override
-  public Object getChild(Object parent, int index) {
-    CA_Object p = (CA_Object) parent;
-    return p.getChild(index);
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#getRoot()
+	 */
+	@Override
+	public Object getRoot() {
+		return rootCA;
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#getChildCount(java.lang.Object)
-   */
-  @Override
-  public int getChildCount(Object parent) {
-    CA_Object p = (CA_Object) parent;
-    return p.getChildCount();
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#getChild(java.lang.Object, int)
+	 */
+	@Override
+	public Object getChild(Object parent, int index) {
+		CA_Object p = (CA_Object) parent;
+		return p.getChild(index);
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#isLeaf(java.lang.Object)
-   */
-  @Override
-  public boolean isLeaf(Object node) {
-    // There are no leaf nodes
-    return false;
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#getChildCount(java.lang.Object)
+	 */
+	@Override
+	public int getChildCount(Object parent) {
+		CA_Object p = (CA_Object) parent;
+		return p.getChildCount();
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#valueForPathChanged(javax.swing.tree.TreePath, java.lang.Object)
-   */
-  @Override
-  public void valueForPathChanged(TreePath path, Object newValue) {
-    // Nothing to do
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#isLeaf(java.lang.Object)
+	 */
+	@Override
+	public boolean isLeaf(Object node) {
+		// There are no leaf nodes
+		return false;
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#getIndexOfChild(java.lang.Object, java.lang.Object)
-   */
-  @Override
-  public int getIndexOfChild(Object parent, Object child) {
-    CA_Object p = (CA_Object) parent;
-    CA_Object c = (CA_Object) child;
-    return p.indexOf(c);
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#valueForPathChanged(javax.swing.tree.TreePath,
+	 *      java.lang.Object)
+	 */
+	@Override
+	public void valueForPathChanged(TreePath path, Object newValue) {
+		// Nothing to do
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#addTreeModelListener(javax.swing.event.TreeModelListener)
-   */
-  @Override
-  public void addTreeModelListener(TreeModelListener l) {
-    listeners.add(l);
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#getIndexOfChild(java.lang.Object,
+	 *      java.lang.Object)
+	 */
+	@Override
+	public int getIndexOfChild(Object parent, Object child) {
+		CA_Object p = (CA_Object) parent;
+		CA_Object c = (CA_Object) child;
+		return p.indexOf(c);
+	}
 
-  /**
-   * @see javax.swing.tree.TreeModel#removeTreeModelListener(javax.swing.event.TreeModelListener)
-   */
-  @Override
-  public void removeTreeModelListener(TreeModelListener l) {
-    listeners.remove(l);
-  }
+	/**
+	 * @see javax.swing.tree.TreeModel#addTreeModelListener(javax.swing.event.TreeModelListener)
+	 */
+	@Override
+	public void addTreeModelListener(TreeModelListener l) {
+		listeners.add(l);
+	}
 
-  /**
+	/**
+	 * @see javax.swing.tree.TreeModel#removeTreeModelListener(javax.swing.event.TreeModelListener)
+	 */
+	@Override
+	public void removeTreeModelListener(TreeModelListener l) {
+		listeners.remove(l);
+	}
+
+	/**
    * 
    */
-  public void update() {
-    TreePath treePath = new TreePath(rootCA);
-    TreeModelEvent e = new TreeModelEvent(this, treePath);
-    for (TreeModelListener l : listeners) {
-      l.treeStructureChanged(e);
-    }
-  }
+	public void update() {
+		TreePath treePath = new TreePath(rootCA);
+		TreeModelEvent e = new TreeModelEvent(this, treePath);
+		for (TreeModelListener l : listeners) {
+			l.treeStructureChanged(e);
+		}
+	}
 
 }

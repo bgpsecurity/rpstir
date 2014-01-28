@@ -14,87 +14,90 @@ import com.bbn.rpki.test.tasks.ExtensionHandler.ExtensionFilter;
  * Delete a bunch of files from a publication point.
  * 
  * The group is defined by the publication point and the extension of the files
- *
+ * 
  * @author tomlinso
  */
 public class DeleteGroupFromRepository extends DeleteRemoteFiles {
-  /**
-   * Encapsulates the factory-specific parameters
-   * @author tomlinso
-   */
-  public static class Args {
+	/**
+	 * Encapsulates the factory-specific parameters
+	 * 
+	 * @author tomlinso
+	 */
+	public static class Args {
 
-    private final File publicationSource;
-    private final ExtensionHandler.ExtensionFilter filter;
+		private final File publicationSource;
 
-    /**
-     * @param publicationSource
-     * @param filter
-     */
-    public Args(File publicationSource, ExtensionFilter filter) {
-      this.publicationSource = publicationSource;
-      this.filter = filter;
-    }
+		private final ExtensionHandler.ExtensionFilter filter;
 
-  }
+		/**
+		 * @param publicationSource
+		 * @param filter
+		 */
+		public Args(File publicationSource, ExtensionFilter filter) {
+			this.publicationSource = publicationSource;
+			this.filter = filter;
+		}
 
-  protected class Task extends DeleteRemoteFiles.Task {
+	}
 
-    private final List<File> groupFiles;
+	protected class Task extends DeleteRemoteFiles.Task {
 
-    /**
-     * @param taskName
-     * @param publicationSource
-     */
-    protected Task(String taskName, File publicationSource, List<File> groupFiles) {
-      super(taskName, publicationSource);
-      this.groupFiles = groupFiles;
-    }
+		private final List<File> groupFiles;
 
-    /**
-     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
-     */
-    @Override
-    protected String getLogDetail() {
-      return String.format("Delete Group of %d Files", groupFiles.size());
-    }
+		/**
+		 * @param taskName
+		 * @param publicationSource
+		 */
+		protected Task(String taskName, File publicationSource,
+				List<File> groupFiles) {
+			super(taskName, publicationSource);
+			this.groupFiles = groupFiles;
+		}
 
-    /**
-     * @see com.bbn.rpki.test.tasks.DeleteRemoteFiles#getSupercededFiles()
-     */
-    @Override
-    protected List<File> getSupercededFiles() {
-      return groupFiles;
-    }
-  }
+		/**
+		 * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+		 */
+		@Override
+		protected String getLogDetail() {
+			return String.format("Delete Group of %d Files", groupFiles.size());
+		}
 
-  private final Args args;
+		/**
+		 * @see com.bbn.rpki.test.tasks.DeleteRemoteFiles#getSupercededFiles()
+		 */
+		@Override
+		protected List<File> getSupercededFiles() {
+			return groupFiles;
+		}
+	}
 
-  /**
-   * @param model
-   * @param args
-   */
-  public DeleteGroupFromRepository(Model model, Args args) {
-    super(model);
-    this.args = args;
-  }
+	private final Args args;
 
-  @Override
-  protected Task reallyCreateTask(String extension) {
-    File[] files = args.publicationSource.listFiles(args.filter);
-    return new Task(extension, args.publicationSource, Arrays.asList(files));
-  }
+	/**
+	 * @param model
+	 * @param args
+	 */
+	public DeleteGroupFromRepository(Model model, Args args) {
+		super(model);
+		this.args = args;
+	}
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
-   */
-  @Override
-  protected void appendBreakdowns(List<Breakdown> list) {
-    // There are no breakdowns here
-  }
+	@Override
+	protected Task reallyCreateTask(String extension) {
+		File[] files = args.publicationSource.listFiles(args.filter);
+		return new Task(extension, args.publicationSource, Arrays.asList(files));
+	}
 
-  @Override
-  protected Collection<String> getRelativeTaskNames() {
-    return Arrays.asList(ExtensionHandler.extensions);
-  }
+	/**
+	 * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
+	 */
+	@Override
+	protected void appendBreakdowns(List<Breakdown> list) {
+		// There are no breakdowns here
+	}
+
+	@Override
+	protected Collection<String> getRelativeTaskNames() {
+		return Arrays.asList(ExtensionHandler.extensions);
+	}
 }

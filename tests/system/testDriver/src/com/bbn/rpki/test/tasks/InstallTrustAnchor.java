@@ -22,91 +22,86 @@ import com.bbn.rpki.test.objects.Util;
  * @author tomlinso
  */
 public class InstallTrustAnchor extends TaskFactory {
-  protected class Task extends TaskFactory.Task {
+	protected class Task extends TaskFactory.Task {
 
-    /**
-     * @param taskName
-     */
-    protected Task() {
-      super(TASK_NAME);
-    }
+		/**
+		 * @param taskName
+		 */
+		protected Task() {
+			super(TASK_NAME);
+		}
 
-    /**
-     * @see com.bbn.rpki.test.tasks.TaskFactory.Task#run()
-     */
-    @Override
-    public void run() {
-      File certFile = getCertFile();
-      File talFile = model.getTALFile();
-      String talPrefix = String.format("%n%s/%s%n", model.getTrustAnchorURL(), certFile.getName());
-      try {
-        String rawOutput = Util.exec("openssl", false, false, null,
-                                     null,
-                                     null,
-                                     "openssl",
-                                     "x509",
-                                     "-inform",
-                                     "DER",
-                                     "-in",
-                                     certFile.getPath(), "-pubkey", "-noout");
-        String cookedOutput = Util.exec("awk", false, false, Util.RPKI_ROOT,
-                                        rawOutput, null, "awk", "!/-----(BEGIN|END)/");
-        Writer talWriter = new FileWriter(talFile);
-        talWriter.write(talPrefix);
-        talWriter.write(cookedOutput);
-        talWriter.close();
+		/**
+		 * @see com.bbn.rpki.test.tasks.TaskFactory.Task#run()
+		 */
+		@Override
+		public void run() {
+			File certFile = getCertFile();
+			File talFile = model.getTALFile();
+			String talPrefix = String.format("%n%s/%s%n",
+					model.getTrustAnchorURL(), certFile.getName());
+			try {
+				String rawOutput = Util.exec("openssl", false, false, null,
+						null, null, "openssl", "x509", "-inform", "DER", "-in",
+						certFile.getPath(), "-pubkey", "-noout");
+				String cookedOutput = Util.exec("awk", false, false,
+						Util.RPKI_ROOT, rawOutput, null, "awk",
+						"!/-----(BEGIN|END)/");
+				Writer talWriter = new FileWriter(talFile);
+				talWriter.write(talPrefix);
+				talWriter.write(cookedOutput);
+				talWriter.close();
 
-        Util.exec("updateTA", false, true, Util.RPKI_ROOT,
-                  null,
-                  null,
-                  "run_scripts/updateTA.py", "--verbose", talFile.getPath());
-        model.addTrustAnchor(certFile);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
+				Util.exec("updateTA", false, true, Util.RPKI_ROOT, null, null,
+						"run_scripts/updateTA.py", "--verbose",
+						talFile.getPath());
+				model.addTrustAnchor(certFile);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-    /**
-     * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
-     */
-    @Override
-    protected String getLogDetail() {
-      return getCertFile().toString();
-    }
-  }
+		/**
+		 * @see com.bbn.rpki.test.tasks.TaskFactory#getLogDetail()
+		 */
+		@Override
+		protected String getLogDetail() {
+			return getCertFile().toString();
+		}
+	}
 
-  private static final String TASK_NAME = "";
+	private static final String TASK_NAME = "";
 
-  /**
-   * @param model
-   */
-  public InstallTrustAnchor(Model model) {
-    super(model);
-  }
+	/**
+	 * @param model
+	 */
+	public InstallTrustAnchor(Model model) {
+		super(model);
+	}
 
-  /**
-   * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
-   */
-  @Override
-  public void appendBreakdowns(List<Breakdown> list) {
-    // There are no breakdowns
-  }
+	/**
+	 * @see com.bbn.rpki.test.tasks.TaskFactory#appendBreakdowns(java.util.List)
+	 */
+	@Override
+	public void appendBreakdowns(List<Breakdown> list) {
+		// There are no breakdowns
+	}
 
-  @Override
-  protected Task reallyCreateTask(String taskName) {
-    assert TASK_NAME.equals(taskName);
-    return new Task();
-  }
+	@Override
+	protected Task reallyCreateTask(String taskName) {
+		assert TASK_NAME.equals(taskName);
+		return new Task();
+	}
 
-  @Override
-  protected Collection<String> getRelativeTaskNames() {
-    return Collections.singleton(TASK_NAME);
-  }
+	@Override
+	protected Collection<String> getRelativeTaskNames() {
+		return Collections.singleton(TASK_NAME);
+	}
 
-  /**
-   * @return
-   */
-  public File getCertFile() {
-    return model.getTrustAnchorCert();
-  }
+	/**
+	 * @return
+	 */
+	public File getCertFile() {
+		return model.getTrustAnchorCert();
+	}
 }

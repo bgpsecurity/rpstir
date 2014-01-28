@@ -8,50 +8,52 @@ import java.io.Reader;
 
 /**
  * <Enter the description of this type here>
- *
+ * 
  * @author tomlinso
  */
 public class Sucker extends Thread {
-  private final Reader reader;
-  private final StringBuilder sb = new StringBuilder();
-  private IOException threadException;
+	private final Reader reader;
 
-  /**
-   * @param is
-   * @param name
-   */
-  public Sucker(Reader is, String name) {
-    super(name);
-    this.reader = is;
-    start();
-  }
+	private final StringBuilder sb = new StringBuilder();
 
-  /**
-   * @return the string captured from the process
-   * @throws IOException
-   */
-  public String getString() throws IOException {
-    if (threadException != null) {
-      throw threadException;
-    }
-    return sb.toString();
-  }
+	private IOException threadException;
 
-  /**
-   * @see java.lang.Thread#run()
-   */
-  @Override
-  public void run() {
-    char[] bf = new char[1024];
-    int n;
-    try {
-      while ((n = reader.read(bf)) > 0) {
-        String s = new String(bf, 0, n);
-        sb.append(s);
-      }
-      reader.close();
-    } catch (IOException e) {
-      threadException = e;
-    }
-  }
+	/**
+	 * @param is
+	 * @param name
+	 */
+	public Sucker(Reader is, String name) {
+		super(name);
+		this.reader = is;
+		start();
+	}
+
+	/**
+	 * @return the string captured from the process
+	 * @throws IOException
+	 */
+	public String getString() throws IOException {
+		if (threadException != null) {
+			throw threadException;
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * @see java.lang.Thread#run()
+	 */
+	@Override
+	public void run() {
+		char[] bf = new char[1024];
+		int n;
+		try {
+			while ((n = reader.read(bf)) > 0) {
+				String s = new String(bf, 0, n);
+				sb.append(s);
+			}
+			reader.close();
+		} catch (IOException e) {
+			threadException = e;
+		}
+	}
 }

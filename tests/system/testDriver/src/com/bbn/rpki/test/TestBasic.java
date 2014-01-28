@@ -8,15 +8,15 @@ import com.bbn.rpki.test.tasks.Model;
 /**
  * Performs the simplest possible execution of the model by initializing and
  * then uploading everything and updating the cache for every epoch
- *
+ * 
  * @author tomlinso
  */
 public class TestBasic extends Test {
-  
-  /**
-   * @param model
-   */
-  public TestBasic(Model model) {
-    super(model);
-  }
+
+	/**
+	 * @param model
+	 */
+	public TestBasic(Model model) {
+		super(model);
+	}
 }
