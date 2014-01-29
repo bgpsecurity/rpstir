@@ -523,29 +523,6 @@ static int sock1line(
 }
 
 /*
- * Determine if the peer of a socket has disconnected. This function returns 0 
- * if the other end appears to still be connected, and a negative error code
- * otherwise. 
- */
-/*
- * Probe routine commented out by A. Chi, on 3/18/11 because if we are in
- * blocking mode, it is unnecessary. 
- */
-/*
- * static int probe(int s) { struct sockaddr_in from; unsigned int fromlen =
- * sizeof(from); // char one; // int serrno; int rd; int e;
- * 
- * if ( s < 0 ) return(-1); // test 1: zero byte write // e = send(s, NULL, 0, 
- * 0); // test 1 hangs synchronization // if ( e < 0 ) // return(-2); // test
- * 2: getpeername memset(&from, 0, fromlen); e = getpeername(s, (struct
- * sockaddr *)&from, &fromlen); if ( e < 0 ) return(-3); // test 3: peek //
- * errno = 0; // test 3 hangs synchronization // e = recv(s, &one, 1,
- * MSG_PEEK); // serrno = errno; // if ( e == 0 ) // return(-4); // if ( e < 0 
- * && serrno == ECONNRESET ) // return(-5); // test 4: socket ioctl e =
- * ioctl(s, FIONREAD, &rd); if ( e < 0 || rd < 0 ) return(-6); return(0); } 
- */
-
-/*
  * Receive one or more lines of data over the socket and process them.  The
  * lines received will look like TAG whitespace VALUE CRLF. The following tags 
  * are defined:
@@ -609,14 +586,6 @@ static int sockline(
 
     for (done = 0; !done;)
     {
-        /*
-         * If we are in blocking mode, probe() is unnecessary. Commented out
-         * by A. Chi, 3/18/11. 
-         */
-        /*
-         * if ( (sta=probe(s)) < 0 ) { LOG(LOG_ERR, "Probe error %d",
-         * sta); return(sta); } 
-         */
         sta = sock1line(s, &left, &ptr);
         if (sta != 0)
             return sta;
