@@ -116,6 +116,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/badRootBadCRLDP.raw \
 	tests/conformance/raw/badRootBadSig.raw \
 	tests/conformance/raw/badRootNameDiff.raw \
+	tests/conformance/raw/badRootResourcesASInherit.raw \
+	tests/conformance/raw/badRootResourcesEmpty.raw \
+	tests/conformance/raw/badRootResourcesIP4Inherit.raw \
+	tests/conformance/raw/badRootResourcesIP6Inherit.raw \
 	tests/conformance/raw/goodRootAKIMatches.raw \
 	tests/conformance/raw/goodRootAKIOmitted.raw \
 	tests/conformance/raw/keys/CRL2CRLNums.mft.p15 \
