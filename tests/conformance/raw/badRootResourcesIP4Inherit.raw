@@ -1,0 +1,74 @@
+seq seq ctx+0x20
+            int 0x02 /* 2 */ 
+        int 0x6C /* 108 */ 
+        seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+            nul 
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "badRootResourcesIP4Inherit"
+        seq utc "110411185728Z"
+            utc "460515185928Z"
+        seq set seq oid 2.5.4.3 /* id_commonName */
+                    prt "badRootResourcesIP4Inherit"
+        seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
+                nul 
+            bit 0x003082010A0282010100DA78AD7C2A3E
+                0xAF953F14DFD3309F3204FF83CB625DC4
+                0x087F7666936ADA56DF17EA87205482E2
+                0x826A3CEBA6608B740A1BC395D7D25D40
+                0xF5379F95408B3099A38AF2072371BC0F
+                0x618AAED0B601183277364E6D6E0AE295
+                0xE29C3D4ACAFB3E2F5FB4FB0DF4D47BF8
+                0x875869873519387E02640060D69914A6
+                0x34A3D58C503952F7345CA0A96EEB2B59
+                0x810ACD9BF5DCA5A3CDAAFF1808AFA83D
+                0x9BAE0CC5DFBE0CD574A5BC5ED64CCA7D
+                0x7329BD2E32BC939894195F9274EF261F
+                0x73C41CC3F14D347CA0E5508CB5CF8301
+                0x6456CE2DC8B667825B1403B1FE89C10B
+                0x47076285C76B8F4507B7ECACF7550811
+                0x8FA18B33F296B1A78E2CCA8546C5C784
+                0xEBC26B4F40BC9EB909450203010001
+        ctx+0x23
+            seq seq oid 2.5.29.19 /* id_basicConstraints */
+                    boo 0xFF
+                    ocw seq boo 0xFF
+                seq oid 2.5.29.14 /* id_subjectKeyIdentifier */
+                    ocw oct 0xD27F6E783B2B5CE535940D54C0A6F38F
+                            0x5B7804D4
+                seq oid 2.5.29.15 /* id_keyUsage */
+                    boo 0xFF
+                    ocw bit 0x0106
+                seq oid 1.3.6.1.5.5.7.1.11 /* id_pe_subjectInfoAccess */
+                    ocw seq seq oid 1.3.6.1.5.5.7.48.5 /* id_ad_caRepository */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/badRootRe"
+                                    "sourcesIP4Inherit/"
+                            seq oid 1.3.6.1.5.5.7.48.10 /* id_ad_rpkiManifest */
+                                ctx+0x06
+                                    "rsync://rpki.bbn.com/conformance/badRootRe"
+                                    "sourcesIP4Inherit/root.mft"
+                seq oid 2.5.29.32 /* id_certificatePolicies */
+                    boo 0xFF
+                    ocw seq seq oid 1.3.6.1.5.5.7.14.2 /* id_pkix_rescerts_policy */
+                seq oid 1.3.6.1.5.5.7.1.7 /* id_pe_ipAddrBlock */
+                    boo 0xFF
+                    ocw seq seq oct 0x0001
+                                nul 
+                            seq oct 0x0002
+                                seq bit 0x000102
+                seq oid 1.3.6.1.5.5.7.1.8 /* id_pe_autonomousSysNum */
+                    boo 0xFF
+                    ocw seq ctx+0x20
+                                seq seq int 0x01 /* 1 */ 
+                                        int 0x010000 /* 65536 */ 
+    seq oid 1.2.840.113549.1.1.11 /* id_sha_256WithRSAEncryption */
+        nul 
+    bit 0x0082A06583AF8A92B82C941EC7C792C99B31F477FE735502400D8322D536424F
+        0x704882422840BDB54F2A17497720EEBE00696944DAC97107626D183A49FF6E1D
+        0xCC1E689E3B3DC7030E182EBF03FBCE04AE2723787F7828B4A4589BA1E17D4F85
+        0x7FE97733704057C086A78365315302C1AAD18EBF574A3B095776D9879498FDAA
+        0xE2005DCE99A5E759A8654BD1882CBFE11B72B10137C66233AD96B0EB9A71C624
+        0x16A98DB78170828F5A1A78BC8430015D5C2BD0822E3FACE3C2FEBA63CF62C315
+        0xCD1DC75A9176FE9E4DC184DD8D893A96C414D7B6C949C96F0344A1C40FB19273
+        0x2E6CEDCF8FF1EE575B0DF9F0DE54BB12761C87BABB2707FC0F581B9D7116D807
+        0x99
