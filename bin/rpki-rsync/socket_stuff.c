@@ -111,12 +111,12 @@ int udpsocket(
     return (TRUE);
 }
 
-int outputMsg(
+ssize_t outputMsg(
     struct write_port *wport,
     char *str,
     unsigned int len)
 {
-    int ret = -1;
+    ssize_t ret = -1;
     char *str_copy = NULL;
 
     /*
@@ -136,8 +136,8 @@ int outputMsg(
         ret = write(wport->out_desc, (const void *)str, len);
         if (ret < 0)
             perror("write()");
-        else if ((ssize_t)ret != (ssize_t)len)
-            LOG(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
+        else if (ret != (ssize_t)len)
+            LOG(LOG_ERR, "Wrote %zd bytes instead of %u", ret, len);
         return (ret);
     }
     else if (wport->protocol == TCP)
@@ -148,8 +148,8 @@ int outputMsg(
         ret = write(wport->out_desc, (const void *)str, len);
         if (ret < 0)
             perror("write()");
-        else if ((ssize_t)ret != (ssize_t)len)
-            LOG(LOG_ERR, "Wrote %d bytes instead of %u", ret, len);
+        else if (ret != (ssize_t)len)
+            LOG(LOG_ERR, "Wrote %zd bytes instead of %u", ret, len);
         return (ret);
     }
     else if (wport->protocol == UDP)
@@ -162,8 +162,8 @@ int outputMsg(
                      wport->to_length);
         if (ret < 0)
             perror("sendto()");
-        else if ((ssize_t)ret != (ssize_t)len)
-            LOG(LOG_ERR, "Sent %d bytes instead of %u", ret, len);
+        else if (ret != (ssize_t)len)
+            LOG(LOG_ERR, "Sent %zd bytes instead of %u", ret, len);
     }
     else
     {
