@@ -1587,7 +1587,7 @@ crl_fields *crl2fields(
                 break;
             }
             int numbytes = BN_num_bytes(bn);
-            if (numbytes <= SER_NUM_MAX_SZ && !BN_is_zero(bn) &&
+            if (BN_num_bits(bn) < SER_NUM_MAX_SZ * 8 && !BN_is_zero(bn) &&
                 !BN_is_negative(bn))
             {
                 memset(tov, 0, SER_NUM_MAX_SZ - numbytes);
