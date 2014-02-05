@@ -1452,6 +1452,7 @@ crl_fields *crl2fields(
     int snerr;
     int need;
     int i;
+    unsigned int snlen; // snlen (total num of serials) >= cf->snlen (num of valid serials)
 
     if (stap == NULL || crlstap == NULL)
         return (NULL);
@@ -1551,20 +1552,21 @@ crl_fields *crl2fields(
         cf->flags |= SCM_FLAG_STALECRL;
     rev = X509_CRL_get_REVOKED(x);
     if (rev == NULL)
-        cf->snlen = 0;
+        snlen = 0;
     else
-        cf->snlen = sk_X509_REVOKED_num(rev);
+        snlen = sk_X509_REVOKED_num(rev);
+    cf->snlen = 0;
     snerr = 0;
-    if (cf->snlen > 0)
+    if (snlen > 0)
     {
-        cf->snlist = (void *)calloc(cf->snlen, SER_NUM_MAX_SZ);
+        cf->snlist = (void *)calloc(snlen, SER_NUM_MAX_SZ);
         if (cf->snlist == NULL)
         {
             *stap = ERR_SCM_NOMEM;
             return (NULL);
         }
         tov = (uint8_t *)(cf->snlist);
-        for (ui = 0; ui < cf->snlen; ui++)
+        for (ui = 0; ui < snlen; ui++)
         {
             r = sk_X509_REVOKED_value(rev, ui);
             if (r == NULL)
@@ -1584,20 +1586,21 @@ crl_fields *crl2fields(
                 snerr = ERR_SCM_BIGNUMERR;
                 break;
             }
-            int numbytes = (unsigned)BN_num_bytes(bn);
-            if (numbytes <= SER_NUM_MAX_SZ)
+            int numbytes = BN_num_bytes(bn);
+            if (numbytes <= SER_NUM_MAX_SZ && !BN_is_zero(bn) &&
+                !BN_is_negative(bn))
             {
                 memset(tov, 0, SER_NUM_MAX_SZ - numbytes);
                 tov += SER_NUM_MAX_SZ - numbytes;
                 BN_bn2bin(bn, tov);
                 tov += numbytes;
                 BN_free(bn);
+                ++cf->snlen;
             }
             else
             {
-                snerr = ERR_SCM_BIGNUMERR;
+                // ignore the invalid serial number
                 BN_free(bn);
-                break;
             }
         }
     }
@@ -4237,36 +4240,37 @@ static int crl_entry_chk(
     // check serial number
     if (vsize_casn(&entryp->userCertificate) > CRL_MAX_SNUM_LTH)
     {
-        LOG(LOG_ERR, "Revoked serial number too long");
-        return ERR_SCM_BADREVSNUM;
+        LOG(LOG_WARNING, "Revoked serial number too long");
     }
-
-    snum_length = read_casn(&entryp->userCertificate, snum);
-    if (snum_length <= 0)
+    else
     {
-        LOG(LOG_ERR, "Invalid revoked serial number");
-        return ERR_SCM_BADREVSNUM;
-    }
-
-    if (snum[0] & 0x80)
-    {
-        LOG(LOG_ERR, "Negative revoked serial number");
-        return ERR_SCM_BADREVSNUM;
-    }
-
-    bool snum_is_zero = true;
-    for (i = 0; i < snum_length; ++i)
-    {
-        if (snum[i] != 0)
+        snum_length = read_casn(&entryp->userCertificate, snum);
+        if (snum_length <= 0)
         {
-            snum_is_zero = false;
-            break;
+            LOG(LOG_ERR, "Invalid revoked serial number");
+            return ERR_SCM_BADREVSNUM;
         }
-    }
-    if (snum_is_zero)
-    {
-        LOG(LOG_ERR, "Revoked serial number is zero");
-        return ERR_SCM_BADREVSNUM;
+
+        if (snum[0] & 0x80)
+        {
+            LOG(LOG_WARNING, "Negative revoked serial number");
+        }
+        else
+        {
+            bool snum_is_zero = true;
+            for (i = 0; i < snum_length; ++i)
+            {
+                if (snum[i] != 0)
+                {
+                    snum_is_zero = false;
+                    break;
+                }
+            }
+            if (snum_is_zero)
+            {
+                LOG(LOG_WARNING, "Revoked serial number is zero");
+            }
+        }
     }
 
     // and the date
