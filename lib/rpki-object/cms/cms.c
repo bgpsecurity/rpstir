@@ -220,10 +220,12 @@ const char *signCMS(
     if (hashContext_initialized)
     {
         cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
     }
     if (sigKeyContext_initialized)
     {
         cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
     }
 
     // did we have any trouble above? if so, bail
@@ -369,10 +371,12 @@ const char *signCMSBlob(
     if (hashContext_initialized)
     {
         cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
     }
     if (sigKeyContext_initialized)
     {
         cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
     }
 
     if (!errmsg)

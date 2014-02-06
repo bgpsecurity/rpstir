@@ -75,10 +75,12 @@ const char *signCRL(
     if (hashContext_initialized)
     {
         cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
     }
     if (sigKeyContext_initialized)
     {
         cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
     }
 
     if (signstring)
