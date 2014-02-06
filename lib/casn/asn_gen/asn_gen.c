@@ -1361,7 +1361,7 @@ void mk_subclass(
     struct name_table *ntbp = find_name(from);
     struct parent *parentp;
     char *b,
-       *c;
+       *c = NULL;
     definee = ntbp - (struct name_table *)name_area.area;
     if ((b = find_child(from)))
         c = find_child(b);
