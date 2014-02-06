@@ -3771,7 +3771,7 @@ static int revoke_cert_and_children(
                  i < cert_answersp->num_ansrs; i++, cert_ansrp++)
             {
                 if ((cert_ansrp->
-                     flags & (SCM_FLAG_HASPARACERT || SCM_FLAG_ISTARGET)))
+                     flags & (SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET)))
                 {               // if so, clear them
                     flags = (cert_ansrp->flags &
                              ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
