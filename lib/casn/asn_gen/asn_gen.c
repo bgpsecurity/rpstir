@@ -839,24 +839,6 @@ static char assign_table[] = "0114202000100000002222112";
 #define CHAR_ASSIGN 2
 #define BIT_ASSIGN 4
 
-char *derived_dup(
-    long loctype)
-{
-    char *c;
-
-    if (loctype == ASN_SET)
-        c = "AsnArrayOfSets";
-    else if (loctype >= (long)sizeof(assign_table) || assign_table[loctype] == '0')
-        c = "AsnArray";
-    else if ((assign_table[loctype] & CHAR_ASSIGN))
-        c = "AsnStringArray";
-    else if ((assign_table[loctype] & NUM_ASSIGN))
-        c = "AsnNumericArray";
-    else if ((assign_table[loctype] & BIT_ASSIGN))
-        c = "AsnBitStringArray";
-    return c;
-}
-
 void end_definition(
     )
 {

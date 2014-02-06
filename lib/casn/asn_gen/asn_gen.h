@@ -299,8 +299,6 @@ extern char token[],
    *cat(
     char *,
     char *),
-   *derived_dup(
-    long),
    *expand_area(
     struct name_area *),
    *find_child(
