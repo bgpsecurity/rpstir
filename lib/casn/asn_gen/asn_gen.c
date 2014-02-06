@@ -834,11 +834,6 @@ void cvt_number(
     strcpy(to, from);
 }
 
-static char assign_table[] = "0114202000100000002222112";
-#define NUM_ASSIGN 1
-#define CHAR_ASSIGN 2
-#define BIT_ASSIGN 4
-
 void end_definition(
     )
 {
