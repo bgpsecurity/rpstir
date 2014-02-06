@@ -974,7 +974,7 @@ static int conflict_test(
             }
             else if (savranges.iprangep[jj].typ == IPv6)
             {
-                for (; ruleranges.iprangep[kk].typ == IPv6; kk++)
+                for (kk = 0; ruleranges.iprangep[kk].typ == IPv6; kk++)
                 {
                     copy_text(&ruleranges.iprangep[kk], savp);
                 }
