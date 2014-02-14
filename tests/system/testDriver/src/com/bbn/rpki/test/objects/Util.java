@@ -440,8 +440,10 @@ public class Util implements Constants {
 	 * @param dirs
 	 */
 	public static void deleteDirectories(File... dirs) {
-		for (File dir : dirs) {
-			deleteDirectory(dir);
+		if (dirs != null && dirs.length > 0) {
+			for (File dir : dirs) {
+				deleteDirectory(dir);
+			}
 		}
 	}
 

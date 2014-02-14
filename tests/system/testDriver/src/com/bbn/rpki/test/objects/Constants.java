@@ -23,10 +23,10 @@ public interface Constants {
 
 	/** Path to the objects directory */
 	public static final String OBJECT_PATH = buildDir +
-			"/testbed/javaObjects/";
+			"/tests/system/testbed/javaObjects/";
 
 	/** Path to the log directory */
-	public static final String LOG_DIR = buildDir + "/testbed/log";
+	public static final String LOG_DIR = buildDir + "/tests/system/testbed/log";
 
 	/** Path to the repository directory */
 	public static final String REPO_PATH = OBJECT_PATH + "REPOSITORY/";
