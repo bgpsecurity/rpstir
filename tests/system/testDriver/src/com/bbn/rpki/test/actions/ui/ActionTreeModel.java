@@ -59,7 +59,7 @@ public class ActionTreeModel implements TreeModel {
 		}
 		if (parent instanceof Epoch) {
 			Epoch epochGroup = (Epoch) parent;
-			return epochGroup.getEpoch(index);
+			return epochGroup.getEpochEvent(index);
 		}
 		// No more non-leaf nodes
 		return null;

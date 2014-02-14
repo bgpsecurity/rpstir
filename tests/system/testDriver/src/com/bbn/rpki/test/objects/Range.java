@@ -70,7 +70,6 @@ public class Range implements Constants, Comparable<Range> {
 	 */
 	public Range(BigInteger min, BigInteger max, IPRangeType version,
 			boolean range) {
-		super();
 		this.version = version;
 		this.min = min;
 		this.max = max;
@@ -118,7 +117,7 @@ public class Range implements Constants, Comparable<Range> {
 				appendIPv4(sb, min);
 				break;
 			case as:
-				// Should not happen
+				// Cannot happen. Here for completeness
 				appendAS(sb, min);
 				break;
 			}

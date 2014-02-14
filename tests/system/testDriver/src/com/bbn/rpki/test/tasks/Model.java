@@ -432,7 +432,7 @@ public class Model implements Constants, XMLConstants {
 		if (caObject.isBreakAway()) {
 			serverNames.add(caObject.getServerName());
 		}
-		for (int i = 0, n = caObject.getChildCount(); i < n; i++) {
+		for (int i = 0; i < caObject.getChildCount(); i++) {
 			CA_Object childCA = caObject.getChild(i);
 			addServerNames(serverNames, childCA);
 		}
@@ -469,7 +469,7 @@ public class Model implements Constants, XMLConstants {
 						epochIndex, delay);
 				Thread.sleep(delay);
 			} catch (InterruptedException e) {
-				// should not happen
+				//TODO should not happen?
 			}
 		}
 		addTask(getTaskFactory(UploadEpoch.class).createOnlyTask());
@@ -593,9 +593,7 @@ public class Model implements Constants, XMLConstants {
 	 */
 	public String[] getSourcePath(File publicationSource) {
 		String path = publicationSource.getPath();
-		String repo = REPO_PATH;
-		String repoRelativePath1 = path.substring(repo.length());
-		String repoRelativePath = repoRelativePath1;
+		String repoRelativePath = path.substring(REPO_PATH.length());
 		return repoRelativePath.split(FILE_SEP);
 	}
 
@@ -605,7 +603,7 @@ public class Model implements Constants, XMLConstants {
 	 * @return the path to the given rootName on the given rsync server
 	 */
 	public String getRsyncBase(String serverName, String rootName) {
-		// For now assume roots are sub-directories of /home/rsync
+		//TODO For now assume roots are sub-directories of /home/rsync
 		return "/home/rsync/" + rootName + "/";
 	}
 

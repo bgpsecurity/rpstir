@@ -7,12 +7,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.bbn.rpki.test.objects.Constants;
 import com.bbn.rpki.test.objects.TypescriptLogger;
 import com.bbn.rpki.test.objects.Util;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author tomlinso
  */
 public class RunLoader {
@@ -52,11 +53,11 @@ public class RunLoader {
 		try {
 			Util.killProcessesRunning("rcli");
 			Util.killProcessesRunning("rsync_aur/rsync_listener");
-			new File(Util.RPKI_ROOT, RunLoader.RCLI_LOG).delete();
-			new File(Util.RPKI_ROOT, RunLoader.RSYNC_AUR_LOG).delete();
-			String rpkiPort = System.getenv("RPKI_PORT");
+			new File(Constants.LOG_DIR, RunLoader.RCLI_LOG).delete();
+			new File(Constants.LOG_DIR, RunLoader.RSYNC_AUR_LOG).delete();
+			String rpkiPort = Util.config_get("RPKIPort");
 			process = Runtime.getRuntime().exec("rcli -w " + rpkiPort + " -p",
-					null, Util.RPKI_ROOT);
+					null, null);
 			if (typescriptLogger != null) {
 				typescriptLogger.suckOn(
 						new InputStreamReader(process.getErrorStream()),
@@ -87,8 +88,8 @@ public class RunLoader {
 	}
 
 	/**
-   * 
-   */
+	 *
+	 */
 	public void stop() {
 		stopping = true;
 		process.destroy();

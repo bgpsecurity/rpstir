@@ -19,7 +19,7 @@ import com.bbn.rpki.test.tasks.Epoch;
  * may be ordered relative to other epochs: before, after and coincident. Epochs
  * are "named" such that other epochs can be identified for the purpose of
  * establishing these orderings.
- * 
+ *
  * @author tomlinso
  */
 public final class EpochEvent implements XMLConstants {
@@ -204,7 +204,7 @@ public final class EpochEvent implements XMLConstants {
 	 * Find all epochs that must follow this one. This includes all direct
 	 * successors of this epoch plus those that are constrained to follow the
 	 * successors or those that are coincident with any successor.
-	 * 
+	 *
 	 * @return all epochs constrained to follow this one
 	 */
 	public Set<EpochEvent> findSuccessorEpochs() {
@@ -287,7 +287,7 @@ public final class EpochEvent implements XMLConstants {
 		if (isCoincident(other) && !canRemoveCoincident(other)) {
 			return false;
 		}
-		if (isCoincident(other) && !canRemoveCoincident(other)) {
+		if (isSuccessor(other) && !canRemoveSuccessor(other)) {
 			return false;
 		}
 		removeSuccessor(other);
@@ -367,7 +367,7 @@ public final class EpochEvent implements XMLConstants {
 
 	/**
 	 * @param other
-	 *            the othger Epoch to remove
+	 *            the other Epoch to remove
 	 */
 	public void removeSuccessor(EpochEvent other) {
 		successorEpochs.remove(other);

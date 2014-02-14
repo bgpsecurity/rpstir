@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * <Enter the description of this type here>
- * 
+ * Bimap between ref and EpochEvent objects. If there is no ref assigned a unique integer is assigned.
+ *
  * @author tomlinso
  */
 public class ActionContext {

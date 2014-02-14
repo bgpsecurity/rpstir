@@ -11,7 +11,7 @@ import com.bbn.rpki.test.objects.Util;
 
 /**
  * Checks the cache for agreement with the most recent uploads.
- * 
+ *
  * @author tomlinso
  */
 public class CheckCacheStatus extends TaskFactory {
@@ -25,8 +25,8 @@ public class CheckCacheStatus extends TaskFactory {
 
 		@Override
 		public void run() {
-			Util.exec("Reports", false, false, Util.RPKI_ROOT, null, null,
-					"run_scripts/results.py", "-v");
+			Util.exec("Reports", false, false, null, null, null,
+					"results.py", "-v");
 		}
 
 		/**

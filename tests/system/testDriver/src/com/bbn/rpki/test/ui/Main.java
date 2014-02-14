@@ -34,6 +34,7 @@ import com.bbn.rpki.test.actions.XMLConstants;
 import com.bbn.rpki.test.actions.ui.ActionsEditor;
 import com.bbn.rpki.test.objects.AllocationId;
 import com.bbn.rpki.test.objects.CA_Object;
+import com.bbn.rpki.test.objects.Constants;
 import com.bbn.rpki.test.objects.IPRangeType;
 import com.bbn.rpki.test.objects.TypedPair;
 import com.bbn.rpki.test.objects.Util;
@@ -48,7 +49,7 @@ import com.bbn.rpki.test.tasks.UploadTrustAnchors;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author tomlinso
  */
 public class Main implements XMLConstants {
@@ -110,10 +111,10 @@ public class Main implements XMLConstants {
 			SAXBuilder saxBuilder = new SAXBuilder(false);
 			Document doc = saxBuilder.build(xmlFile);
 			Element rootElement = doc.getRootElement();
-			model = new Model(Util.RPKI_ROOT, rootElement, tlPanel);
+			model = new Model(new File(Constants.OBJECT_PATH), rootElement, tlPanel);
 			AbstractAction.createActions(rootElement, model);
 		} else {
-			model = new Model(Util.RPKI_ROOT, null, tlPanel);
+			model = new Model(new File(Constants.OBJECT_PATH), null, tlPanel);
 		}
 		final ActionsEditor actionsEditor = new ActionsEditor(model);
 		final JDialog dialog = new JDialog(
@@ -212,9 +213,9 @@ public class Main implements XMLConstants {
 				if (task.isTestEnabled()) {
 					TaskFactory.Task[] subArray = {
 							model.getTaskFactory(UpdateCache.class)
-									.createOnlyTask(),
+							.createOnlyTask(),
 							model.getTaskFactory(CheckCacheStatus.class)
-									.createOnlyTask(), };
+							.createOnlyTask(), };
 					subtasks = Arrays.asList(subArray);
 				}
 			} else {
@@ -229,9 +230,9 @@ public class Main implements XMLConstants {
 			if (!uploadedTrustAnchors
 					&& task.getTaskFactory() instanceof UploadEpoch) {
 				model.getTaskFactory(UploadTrustAnchors.class).createOnlyTask()
-						.run();
+				.run();
 				model.getTaskFactory(InstallTrustAnchor.class).createOnlyTask()
-						.run();
+				.run();
 			}
 		}
 	}

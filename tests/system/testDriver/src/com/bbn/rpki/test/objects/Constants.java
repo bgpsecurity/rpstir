@@ -11,9 +11,22 @@ import java.math.BigInteger;
  * @author RTomlinson
  */
 public interface Constants {
+	/**
+	 * Path to binaries
+	 */
+	public static final String buildDir = System.getenv("TESTS_TOP_BUILDDIR");
+
+	/**
+	 * Path to source
+	 */
+	public static final String srcDir = System.getenv("TESTS_TOP_SRCDIR");
+
 	/** Path to the objects directory */
-	public static final String OBJECT_PATH = //TODO
+	public static final String OBJECT_PATH = buildDir +
 			"/testbed/javaObjects/";
+
+	/** Path to the log directory */
+	public static final String LOG_DIR = buildDir + "/testbed/log";
 
 	/** Path to the repository directory */
 	public static final String REPO_PATH = OBJECT_PATH + "REPOSITORY/";

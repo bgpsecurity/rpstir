@@ -8,11 +8,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.bbn.rpki.test.objects.Constants;
 import com.bbn.rpki.test.objects.Util;
 
 /**
  * A task for re-initializing the cache
- * 
+ *
  * @author tomlinso
  */
 public class InitializeCache extends TaskFactory {
@@ -25,12 +26,11 @@ public class InitializeCache extends TaskFactory {
 		}
 
 		/**
-     */
+		 */
 		@Override
 		public void run() {
-			Util.deleteDirectories(new File(model.getRPKIRoot(), REPOSITORY),
-					new File(model.getRPKIRoot(), LOGS));
-			new File(Util.RPKI_ROOT, "chaser.log").delete();
+			Util.deleteDirectories(new File(Constants.OBJECT_PATH, REPOSITORY),
+					new File(Constants.LOG_DIR));
 
 			Util.initDB();
 			model.clearDatabase();
@@ -46,8 +46,6 @@ public class InitializeCache extends TaskFactory {
 	}
 
 	private static final String REPOSITORY = "REPOSITORY";
-
-	private static final String LOGS = "LOGS";
 
 	/**
 	 * @param model

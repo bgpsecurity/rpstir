@@ -9,5 +9,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.bbn.rpki.test.ui.Main"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="testDriver"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea -Dsun.awt.disablegrab=true"/>
-<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:testbed/src}"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="/home/ebarnes/rpstir/tests/system/testbed/src"/>
 </launchConfiguration>

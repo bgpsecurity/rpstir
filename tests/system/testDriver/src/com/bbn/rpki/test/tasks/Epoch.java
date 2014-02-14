@@ -9,13 +9,14 @@ import java.util.List;
 import com.bbn.rpki.test.actions.EpochEvent;
 
 /**
- * Contains a Epochs that are simultaneous
- * 
+ * Contains all Epochs that are simultaneous
+ *
  * @author tomlinso
  */
 public class Epoch {
 	private final List<EpochEvent> epochEvents = new ArrayList<EpochEvent>();
 
+	//TODO is it ok for this to be an Integer?
 	private Integer epochIndex;
 
 	private long epochTime;
@@ -49,7 +50,7 @@ public class Epoch {
 	 * @param index
 	 * @return the epoch at the specified index
 	 */
-	public EpochEvent getEpoch(int index) {
+	public EpochEvent getEpochEvent(int index) {
 		return epochEvents.get(index);
 	}
 
@@ -87,11 +88,11 @@ public class Epoch {
 	/**
 	 * This Epoch takes over the specified epoch. The specified epoch is left
 	 * empty.
-	 * 
+	 *
 	 * @param epoch
 	 */
 	public void subsumeEpoch(Epoch epoch) {
-		if (epoch != this) {
+		if (epoch != null && epoch != this) {
 			List<EpochEvent> subsumedEpochEvents = epoch.getEpochEvents();
 			for (int i = subsumedEpochEvents.size(); --i >= 0;) {
 				EpochEvent epochEvent = subsumedEpochEvents.get(i);
@@ -100,7 +101,7 @@ public class Epoch {
 		}
 	}
 
-	/**
+	/**Locks the epoch time
 	 * @return the time at which this epoch should be executed
 	 */
 	public long getEpochTime() {

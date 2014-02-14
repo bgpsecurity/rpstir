@@ -11,14 +11,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.bbn.rpki.test.objects.Constants;
 import com.bbn.rpki.test.objects.Util;
 
 /**
  * Installs a new trust anchor certificate
- * 
+ *
  * Trust anchors are normally delivered by a secure method. This is emulated by
  * simply specifying a local file containing
- * 
+ *
  * @author tomlinso
  */
 public class InstallTrustAnchor extends TaskFactory {
@@ -45,14 +46,14 @@ public class InstallTrustAnchor extends TaskFactory {
 						null, null, "openssl", "x509", "-inform", "DER", "-in",
 						certFile.getPath(), "-pubkey", "-noout");
 				String cookedOutput = Util.exec("awk", false, false,
-						Util.RPKI_ROOT, rawOutput, null, "awk",
+						new File(Constants.OBJECT_PATH), rawOutput, null, "awk",
 						"!/-----(BEGIN|END)/");
 				Writer talWriter = new FileWriter(talFile);
 				talWriter.write(talPrefix);
 				talWriter.write(cookedOutput);
 				talWriter.close();
 
-				Util.exec("updateTA", false, true, Util.RPKI_ROOT, null, null,
+				Util.exec("updateTA", false, true, null, null, null,
 						"run_scripts/updateTA.py", "--verbose",
 						talFile.getPath());
 				model.addTrustAnchor(certFile);

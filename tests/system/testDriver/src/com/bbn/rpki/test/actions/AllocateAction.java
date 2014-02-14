@@ -26,7 +26,7 @@ import com.bbn.rpki.test.tasks.Model;
  * 
  * There are four epoch events associated with an allocation action: Validity
  * start time -- when the allocation becomes effective validity start
- * publication time -- when the certificate containg the allocation is published
+ * publication time -- when the certificate containing the allocation is published
  * validity end time -- when the allocation ceases to be in effect validity end
  * publication time -- when the certificate containing the allocation is revoked
  * This would seem to imply that allocations have a planned lifetime, but they

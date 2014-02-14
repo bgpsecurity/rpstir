@@ -70,7 +70,6 @@ public class TestbedConfig implements Constants {
 			Util.deleteDirectories(objectsDir.listFiles());
 		}
 		try {
-			//ebarnes unclear what wini is
 			wini = new Wini(new StringReader(iniFile));
 			Collection<Map.Entry<String, Section>> sectionEntries = wini
 					.entrySet();

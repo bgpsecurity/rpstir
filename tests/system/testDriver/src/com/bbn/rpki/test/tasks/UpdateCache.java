@@ -29,9 +29,7 @@ public class UpdateCache extends TaskFactory {
 
 		@Override
 		public void run() {
-			// TODO fix RPKI_ROOT
-			// TODO should Chaser name be changed
-			Util.exec("Chaser", false, false, Util.RPKI_ROOT, null, null,
+			Util.exec("Chaser", false, false, null, null, null,
 					"synchronize");
 		}
 

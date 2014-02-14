@@ -3,6 +3,7 @@
  */
 package com.bbn.rpki.test.objects;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -58,11 +59,6 @@ public class Util implements Constants {
 		dateFormat2.setTimeZone(TimeZone.getTimeZone("GMT"));
 	}
 
-	/**
-	 * The value of the RPKI_ROOT environment variable
-	 */
-	public static File RPKI_ROOT;
-
 	private static TypescriptLogger typescriptLogger = null;
 
 	/**
@@ -78,10 +74,6 @@ public class Util implements Constants {
 	 */
 	public static void setTypescriptLogger(TypescriptLogger typescriptLogger) {
 		Util.typescriptLogger = typescriptLogger;
-	}
-
-	static {
-		RPKI_ROOT = new File(System.getenv("RPKI_ROOT")).getAbsoluteFile();
 	}
 
 	/**
@@ -493,7 +485,7 @@ public class Util implements Constants {
 			}
 		}
 		if (cmd.size() > 1) {
-			exec("Kill", true, RPKI_ROOT, null, null, cmd);
+			exec("Kill", true, null, null, null, cmd);
 		}
 	}
 
@@ -501,10 +493,25 @@ public class Util implements Constants {
 	 * Initialize the database
 	 */
 	public static void initDB() {
-		File repositoryDir = new File(RPKI_ROOT, "REPOSITORY");
+		File repositoryDir = new File(Constants.OBJECT_PATH, "REPOSITORY");
 		repositoryDir.mkdirs();
-		new File(RPKI_ROOT, "LOGS").mkdirs();
-		exec("initDB", true, false, RPKI_ROOT, null, null, "rcli", "-x", "-t",
+		new File(Constants.LOG_DIR).mkdirs();
+		exec("initDB", true, false, null, null, null, "rcli", "-x", "-t",
 				repositoryDir.getPath(), "-y");
+	}
+
+	public static String config_get(String variableName){
+		ProcessBuilder portProcessBuilder = new ProcessBuilder("config_get", variableName);
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new InputStreamReader(portProcessBuilder.start().getInputStream()));
+		} catch (IOException e1) {
+			return "";
+		}
+		try {
+			return reader.readLine();
+		} catch (IOException e) {
+			return "";
+		}
 	}
 }

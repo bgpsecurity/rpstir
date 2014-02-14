@@ -7,12 +7,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bbn.rpki.test.objects.Constants;
 import com.bbn.rpki.test.objects.Util;
 import com.bbn.rpki.test.tasks.ExtensionHandler.ExtensionFilter;
 
 /**
  * UPloads multiple files to a publication point
- * 
+ *
  * @author tomlinso
  */
 public abstract class UploadFiles extends TaskFactory {
@@ -47,7 +48,7 @@ public abstract class UploadFiles extends TaskFactory {
 			}
 			cmd.add(repository);
 			String title = UploadFiles.this.getClass().getSimpleName();
-			Util.exec(title, false, Util.RPKI_ROOT, null, null, cmd);
+			Util.exec(title, false, new File(Constants.OBJECT_PATH), null, null, cmd);
 		}
 
 		public List<File> getFilesToUpload() {

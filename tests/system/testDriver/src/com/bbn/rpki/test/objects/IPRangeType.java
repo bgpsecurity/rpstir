@@ -8,10 +8,10 @@ import java.math.BigInteger;
  * @author tomlinso
  */
 public enum IPRangeType implements Constants {
-	/** ipv6 address range */
+	/** ipv4 address range */
 	ipv4(32),
 
-	/** ipv4 address range */
+	/** ipv6 address range */
 	ipv6(128),
 
 	/** as range */
