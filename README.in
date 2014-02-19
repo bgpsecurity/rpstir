@@ -906,12 +906,12 @@ rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPST
 
 A.3.4 Mac OS X 10.8.5 (64-bit)
 
-These are the exact instructions for installing rpstir on a fresh copy
-of Mac OS X 10.8.5 (64-bit), as of [TODO: date]. Note that rpstir is not tested
-on Mac as much as on other platforms. Additionally, the rpki-rtr daemon is
-susceptible to a denial of service by local users, so do not run rpstir on a
-shared Mac system. RPSTIR currently only supports running in 32-bit mode, so
-the instructions below build various ports with the +universal flag, and rpstir
+These are the exact instructions for installing rpstir on a fresh copy of Mac OS
+X 10.8.5 (64-bit), as of January 2, 2014. Note that rpstir is not tested on Mac
+as much as on other platforms. Additionally, the rpki-rtr daemon is susceptible
+to a denial of service by local users, so do not run rpstir on a shared Mac
+system. RPSTIR has only been tested running in 32-bit mode on Mac, so the
+instructions below build various ports with the +universal flag, and rpstir
 itself is built for i386.
 
 First, install Mac Ports from http://www.macports.org/. This requires an Apple
@@ -930,13 +930,13 @@ sudo port install autoconf
 # Install rpstir's dependencies.
 sudo port install openssl +rfc3779 +universal
 sudo port install cryptlib +universal
-sudo port install mysql5 +universal # TODO: use a newer version of mysql once there's an appropriate ODBC connector (https://lists.macosforge.org/pipermail/macports-users/2013-December/034241.html)
-sudo port install mysql5-server # TODO: newer version, as above
+sudo port install mysql5 +universal
+sudo port install mysql5-server
 sudo port install unixODBC +universal
-sudo port install mysql-connector-odbc build_arch=i386 # TODO: use +universal instead of build_arch=i386 once https://trac.macports.org/ticket/41755 is done
+sudo port install mysql-connector-odbc build_arch=i386 # NOTE: this uses build_arch=i386 instead of +universal because of https://trac.macports.org/ticket/41755
 
 # Configure MySQL
-export PATH="/opt/local/lib/mysql5/bin:$PATH" # Consider adding this to your shell's startup file too. TODO: use "port select" with a newer mysql port instead of messing with the user's PATH
+export PATH="/opt/local/lib/mysql5/bin:$PATH" # Consider adding this to your shell's startup file too.
 sudo -u _mysql mysql_install_db5
 sudo port load mysql5
 mysql_secure_installation5 # MySQL root password: rpstir
