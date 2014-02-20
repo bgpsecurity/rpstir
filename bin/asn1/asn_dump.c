@@ -247,7 +247,7 @@ static int putform(
             }
         }
         if (aflag < 0)
-            fprintf(outf, "(%d) ", (d - locbuf));
+            fprintf(outf, "(%td) ", (d - locbuf));
         fprintf(outf, "%s", (char *)locbuf);
         return row;
     }

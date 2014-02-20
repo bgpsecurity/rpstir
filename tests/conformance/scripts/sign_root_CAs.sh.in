@@ -17,6 +17,10 @@ sign_root_ca badRootBadAKI
 sign_root_ca badRootBadCRLDP
 #sign_root_ca badRootBadSig # This is omitted because it should have a bad signature
 sign_root_ca badRootNameDiff
+sign_root_ca badRootResourcesASInherit
+sign_root_ca badRootResourcesEmpty
+sign_root_ca badRootResourcesIP4Inherit
+sign_root_ca badRootResourcesIP6Inherit
 sign_root_ca goodRootAKIMatches
 sign_root_ca goodRootAKIOmitted
 sign_root_ca root
