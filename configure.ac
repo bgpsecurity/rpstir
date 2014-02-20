@@ -275,14 +275,6 @@ if test "$ac_cv_func_getline" != yes; then
 fi
 
 
-# warn if the target isn't 32-bit
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([void *])
-if test "$ac_cv_sizeof_int" != 4 -o "$ac_cv_sizeof_long" != 4 -o "$ac_cv_sizeof_void_p" != 4; then
-	AC_MSG_WARN([currently only 32-bit targets are supported])
-fi
-
 AC_CONFIG_FILES([
     Makefile
     README
