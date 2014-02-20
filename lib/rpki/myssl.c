@@ -3072,7 +3072,8 @@ static int rescert_cert_policy_chk(
  *                                                           *
  ************************************************************/
 static int rescert_ip_resources_chk(
-    struct Certificate *certp)
+    struct Certificate *certp,
+    int ct)
 {
     int ext_count = 0;
     struct Extension *extp = get_extension(certp, id_pe_ipAddrBlock,
@@ -3138,6 +3139,13 @@ static int rescert_ip_resources_chk(
         {
             have_contents = true;
         }
+
+        if (size_casn(&ipAddrFamA->ipAddressChoice.inherit) &&
+            ct == TA_CERT)
+        {
+            LOG(LOG_ERR, "IP resources marked inherit in a trust anchor");
+            return ERR_SCM_TAINHERIT;
+        }
     }
 
     if (!have_contents)
@@ -3162,7 +3170,8 @@ static int rescert_ip_resources_chk(
  * contains Rob Austein's patch from Dec, 20101 
  */
 static int rescert_as_resources_chk(
-    struct Certificate *certp)
+    struct Certificate *certp,
+    int ct)
 {
     int ext_count = 0;
     struct Extension *extp = get_extension(certp, id_pe_autonomousSysNum,
@@ -3220,6 +3229,12 @@ static int rescert_as_resources_chk(
         &extp->extnValue.autonomousSysNum.asnum;
     if (size_casn(&asidcap->inherit))
     {
+        if (ct == TA_CERT)
+        {
+            LOG(LOG_ERR, "AS resources marked inherit in a trust anchor");
+            return ERR_SCM_TAINHERIT;
+        }
+
         LOG(LOG_DEBUG, "AS resources marked as inherit");
         return 1;
     }
@@ -3247,18 +3262,19 @@ static int rescert_as_resources_chk(
  ************************************************************/
 static int rescert_ip_asnum_chk(
     X509 * x,
-    struct Certificate *certp)
+    struct Certificate *certp,
+    int ct)
 {
     int have_ip_resources,
         have_as_resources;
     ASIdentifiers *as_ext;
     IPAddrBlocks *ip_ext;
 
-    have_ip_resources = rescert_ip_resources_chk(certp);
+    have_ip_resources = rescert_ip_resources_chk(certp, ct);
     if (have_ip_resources < 0)
         return (have_ip_resources);
 
-    have_as_resources = rescert_as_resources_chk(certp);
+    have_as_resources = rescert_as_resources_chk(certp, ct);
     if (have_as_resources < 0)
         return (have_as_resources);
 
@@ -3998,7 +4014,7 @@ int rescert_profile_chk(
     if (ret < 0)
         return (ret);
 
-    ret = rescert_ip_asnum_chk(x, certp);
+    ret = rescert_ip_asnum_chk(x, certp, ct);
     LOG(LOG_DEBUG, "rescert_ip_asnum_chk");
     if (ret < 0)
         return (ret);
