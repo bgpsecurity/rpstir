@@ -179,6 +179,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Invalid character sequence", /* ERR_SCM_BADCHAR */
     "AIA in TA cert", /* ERR_SCM_AIATA */
     "Invalid signed attribute", /* ERR_SCM_INVALSATTR */
+    "TA cert has inherit resources", /* ERR_SCM_TAINHERIT */
 };
 
 char *err2string(
