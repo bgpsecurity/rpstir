@@ -36,6 +36,4 @@ void myusage(
     fprintf(stderr, "\t-i         \tcreate informational message(s)\n");
     fprintf(stderr, "\t-s         \tsynchronize with rcli at the end\n");
     fprintf(stderr, "\t-h         \tthis help listing\n");
-
-    exit(1);
 }

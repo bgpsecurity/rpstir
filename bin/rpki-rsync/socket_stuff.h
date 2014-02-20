@@ -40,7 +40,7 @@ int tcpsocket(
 int udpsocket(
     struct write_port *,
     int);
-int outputMsg(
+ssize_t outputMsg(
     struct write_port *,
     char *,
     unsigned int);
