@@ -835,6 +835,94 @@ sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir #
 sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
 
+A.2.4 Mac OS X 10.8.5 (64-bit)
+
+These are the exact instructions for installing rpstir on a fresh copy of Mac OS
+X 10.8.5 (64-bit), as of January 2, 2014. Note that rpstir is not tested on Mac
+as much as on other platforms. Additionally, the rpki-rtr daemon is susceptible
+to a denial of service by local users, so do not run rpstir on a shared Mac
+system. RPSTIR has only been tested running in 32-bit mode on Mac, so the
+instructions below build various ports with the +universal flag, and rpstir
+itself is built for i386.
+
+First, install Mac Ports from http://www.macports.org/. This requires an Apple
+ID to download Xcode. Make sure to also install the Xcode Command Line Tools.
+
+# Make sure that +universal will cause ports to be built for i386. Edit the file
+# below and find the line that sets universal_archs. It must include i386.
+sudo vim /opt/local/etc/macports/macports.conf
+
+# Run the below commands if you're getting rpstir from git instead of from a
+# tarball.
+sudo port install git-core
+sudo port install automake
+sudo port install autoconf
+
+# Install rpstir's dependencies.
+sudo port install openssl +rfc3779 +universal
+sudo port install cryptlib +universal
+sudo port install mysql5 +universal
+sudo port install mysql5-server
+sudo port install unixODBC +universal
+sudo port install mysql-connector-odbc build_arch=i386 # NOTE: this uses build_arch=i386 instead of +universal because of https://trac.macports.org/ticket/41755
+
+# Configure MySQL
+export PATH="/opt/local/lib/mysql5/bin:$PATH" # Consider adding this to your shell's startup file too.
+sudo -u _mysql mysql_install_db5
+sudo port load mysql5
+mysql_secure_installation5 # MySQL root password: rpstir
+mysql5 -u root -p
+  CREATE USER 'rpstir'@'localhost' IDENTIFIED BY 'bbn';
+  CREATE DATABASE rpstir;
+  GRANT ALL PRIVILEGES ON rpstir.* TO 'rpstir'@'localhost';
+  CREATE DATABASE rpstir_test;
+  GRANT ALL PRIVILEGES ON rpstir_test.* TO 'rpstir'@'localhost';
+  quit
+
+# Configure ODBC
+sudo vim /opt/local/etc/odbcinst.ini
+  [MySQL]
+  Description = ODBC for MySQL
+  Driver = /opt/local/lib/libmyodbc5.so
+sudo vim /opt/local/etc/odbc.ini
+  [myodbc]
+  Description = myodbc
+  Driver = MySQL
+  Server = localhost
+  Port =
+  User = arbitraryuser
+  Password = arbitrarypassword
+  Database = arbitrarydbname
+
+# Configure, build, test, and install rpstir
+cd path/to/rpstir # the directory this file is in
+./autogen.sh # Only do this if running from git instead of from a tarball
+./configure --with-cryptlib-include=/opt/local/include --with-cryptlib-lib=/opt/local/lib CFLAGS="-arch i386" LDFLAGS="-arch i386"
+make
+cp etc/test.conf ~/.rpstir.test.conf
+chmod 600 ~/.rpstir.test.conf
+vim ~/.rpstir.test.conf # set these options:
+  Database rpstir_test
+  DatabaseUser rpstir
+  DatabasePassword bbn
+make check # There's one test that does not work yet on Mac: tests/conformance/scripts/run_tests.sh
+sudo make install
+
+# Setup rpstir
+sudo mkdir -p /usr/local/etc/rpstir
+sudo cp /usr/local/share/doc/rpstir/examples/rpstir.conf /usr/local/etc/rpstir/
+sudo chown root:rpstir /usr/local/etc/rpstir /usr/local/etc/rpstir/rpstir.conf # substitute 'rpstir' in 'root:rpstir' for the group of the user you plan to run rpstir as
+sudo chmod 750 /usr/local/etc/rpstir
+sudo chmod 640 /usr/local/etc/rpstir/rpstir.conf
+sudo vim /usr/local/etc/rpstir/rpstir.conf # read the comments for each option, and make sure to set these:
+  Database rpstir
+  DatabaseUser rpstir
+  DatabasePassword bbn
+sudo mkdir -p /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir # substitute rpstir:rpstir with your username and group
+sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
+rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
+
 
 A.3 Configure can't find installed software
 
