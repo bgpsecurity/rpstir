@@ -49,7 +49,7 @@ void sig_handler(
             free(outStr);
         }
         close(global_wport->out_desc);
-        exit(FALSE);
+        exit(EXIT_FAILURE);
     }
     else if (sig == SIGQUIT)
     {
@@ -68,7 +68,7 @@ void sig_handler(
             free(outStr);
         }
         close(global_wport->out_desc);
-        exit(FALSE);
+        exit(EXIT_FAILURE);
     }
     else if (sig == SIGTERM)
     {
@@ -87,7 +87,7 @@ void sig_handler(
             free(outStr);
         }
         close(global_wport->out_desc);
-        exit(FALSE);
+        exit(EXIT_FAILURE);
     }
 }
 
