@@ -203,7 +203,8 @@ void done(
     bool is_error,
     const char * format,
     ...)
-    WARN_PRINTF(2, 3);
+    WARN_PRINTF(2, 3)
+    NO_RETURN;
 
 extern char token[],
     itemname[],
@@ -298,8 +299,6 @@ extern char token[],
    *cat(
     char *,
     char *),
-   *derived_dup(
-    long),
    *expand_area(
     struct name_area *),
    *find_child(

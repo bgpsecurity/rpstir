@@ -22,6 +22,7 @@
 #define MSG_USAGE "Usage: file names for certificate/CRL, subject key, [authority certificate]"
 #define MSG_DIFFER "Subject and issuer differ in %s; need authority certificate"
 #define MSG_GET "Couldn't get %s"
+#define MSG_UNK_EXT "Unknown file extension for %s"
 
 
 static struct Extension *find_CRLextension(
@@ -122,6 +123,10 @@ int main(
         siz = dump_size(&scert.self);
         buf = (char *)calloc(1, siz + 2);
         dump_casn(&scert.self, buf);
+    }
+    else
+    {
+        FATAL(MSG_UNK_EXT, argv[1]);
     }
     char fname[80];
     strcat(strcpy(fname, argv[1]), ".raw");

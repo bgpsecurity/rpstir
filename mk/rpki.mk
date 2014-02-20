@@ -99,6 +99,10 @@ dist_conformanceta_DATA = \
 	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
 	etc/sample-ta/bbn_conformance/badRootBadSig.tal \
 	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesASInherit.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesEmpty.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesIP4Inherit.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesIP6Inherit.tal \
 	etc/sample-ta/bbn_conformance/goodRootAKIMatches.tal \
 	etc/sample-ta/bbn_conformance/goodRootAKIOmitted.tal \
 	etc/sample-ta/bbn_conformance/root.tal
@@ -112,6 +116,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/badRootBadCRLDP.raw \
 	tests/conformance/raw/badRootBadSig.raw \
 	tests/conformance/raw/badRootNameDiff.raw \
+	tests/conformance/raw/badRootResourcesASInherit.raw \
+	tests/conformance/raw/badRootResourcesEmpty.raw \
+	tests/conformance/raw/badRootResourcesIP4Inherit.raw \
+	tests/conformance/raw/badRootResourcesIP6Inherit.raw \
 	tests/conformance/raw/goodRootAKIMatches.raw \
 	tests/conformance/raw/goodRootAKIOmitted.raw \
 	tests/conformance/raw/keys/CRL2CRLNums.mft.p15 \

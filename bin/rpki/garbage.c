@@ -41,7 +41,7 @@ static scmtab *certTable,
 static int handleTimestamps(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(numLine);
@@ -57,7 +57,7 @@ static int handleTimestamps(
 static int handleIfStale(
     scmcon * conp,
     scmsrcha * s,
-    int cnt)
+    ssize_t cnt)
 {
     UNREFERENCED_PARAMETER(s);
     char msg[600];
@@ -84,7 +84,7 @@ static int handleIfStale(
 static int handleIfCurrent(
     scmcon * conp,
     scmsrcha * s,
-    int cnt)
+    ssize_t cnt)
 {
     char msg[128];
     UNREFERENCED_PARAMETER(s);
@@ -105,7 +105,7 @@ static scmsrcha *cntSrch = NULL;
 static int countCurrentCRLs(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(numLine);
     if (cntSrch == NULL)
@@ -155,7 +155,7 @@ static int handleStaleMan2(
 static int handleStaleMan(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(numLine);
     UNREFERENCED_PARAMETER(conp);
@@ -200,8 +200,8 @@ int main(
         i;
 
     // initialize
-    argc = argc;
-    argv = argv;                // silence compiler warnings
+    (void)argc;
+    (void)argv;                // silence compiler warnings
     (void)setbuf(stdout, NULL);
     OPEN_LOG("garbage", LOG_USER);
     if (!my_config_load())

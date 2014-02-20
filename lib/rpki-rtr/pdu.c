@@ -40,7 +40,7 @@ static uint_fast32_t extract_uint(
     size_t i;
 
     for (i = 0; i < length; ++i)
-        ret |= buffer[i] << (8 * (length - 1 - i));
+        ret |= (uint_fast32_t)buffer[i] << (8 * (length - 1 - i));
 
     return ret;
 }

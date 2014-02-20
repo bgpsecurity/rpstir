@@ -21,6 +21,7 @@
 #include "create_roa.h"
 #include "obj_err.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "config/config.h"
 
 /*
@@ -89,6 +90,11 @@ void warn(
 {
     fprintf(stderr, msgs[err], param);
 }
+
+static void fatal(
+    int err,
+    char *param)
+    NO_RETURN;
 
 static void fatal(
     int err,

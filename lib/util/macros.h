@@ -25,11 +25,14 @@
 
 #define PACKED_STRUCT __attribute__((__packed__))
 
+#define NO_RETURN __attribute__((noreturn))
+
 #else
 
 #define WARN_PRINTF(fmtstring, vararg)
 #define WARN_IF_UNUSED
 #define PACKED_STRUCT NOT_IMPLEMENTED_ERROR
+#define NO_RETURN
 
 #endif
 
