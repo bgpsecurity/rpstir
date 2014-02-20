@@ -13,19 +13,19 @@ import com.bbn.rpki.test.actions.ExecutionTimeContext;
 
 /**
  * The interface for all tasks.
- * 
+ *
  * Tasks have names composed of the name of the TaskFactory and a
  * factory-relative part. Generally, factory-relative names are used with a Task
  * and its factory and full names are used externally. The form of a full name
  * is: TaskFactory(relativePart) TaskFactory provides convenience functions for
  * conversion from factory-relative names to full names and vice versa.
- * 
+ *
  * @author tomlinso
  */
 public abstract class TaskFactory {
 	/**
 	 * All Tasks are inner classes of TaskFactorys.
-	 * 
+	 *
 	 * @author tomlinso
 	 */
 	public abstract class Task {

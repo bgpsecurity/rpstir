@@ -40,13 +40,11 @@ public abstract class UploadFiles extends TaskFactory {
 				return;
 			}
 			List<String> cmd = new ArrayList<String>();
-			String repository = model.getSCPFileNameArg(directory);
-			cmd.add("scp");
-			cmd.add("-qB");
+			cmd.add("cp");
 			for (File file : filesToUpload) {
 				cmd.add(file.getPath());
 			}
-			cmd.add(repository);
+			cmd.add(Constants.RSYNC_LOCAL);
 			String title = UploadFiles.this.getClass().getSimpleName();
 			Util.exec(title, false, new File(Constants.OBJECT_PATH), null, null, cmd);
 		}

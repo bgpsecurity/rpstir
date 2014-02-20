@@ -43,6 +43,8 @@ public interface Constants {
 	/** Prefix for rsync URL */
 	public static final String RSYNC_EXTENSION = "r:rsync://";
 
+	public static final String RSYNC_LOCAL = buildDir + "/tests/system/testbed/rsync_temp";
+
 	/** Generally useful 16-bit mask */
 	public static final BigInteger SXTN_BIT_MASK = new BigInteger("ffff", 16);
 

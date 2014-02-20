@@ -54,7 +54,7 @@ public class InstallTrustAnchor extends TaskFactory {
 				talWriter.close();
 
 				Util.exec("updateTA", false, true, null, null, null,
-						"run_scripts/updateTA.py", "--verbose",
+						"updateTA.py", "--verbose",
 						talFile.getPath());
 				model.addTrustAnchor(certFile);
 			} catch (IOException e) {

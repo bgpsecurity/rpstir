@@ -20,6 +20,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jdom.Document;
 import org.jdom.Element;
@@ -100,13 +101,18 @@ public class Main implements XMLConstants {
 			xmlFile = new File(args[0]).getAbsoluteFile();
 			fileChooser = new JFileChooser(xmlFile.getParentFile());
 		} else {
-			fileChooser = new JFileChooser();
+			fileChooser = new JFileChooser(Constants.buildDir);
+			fileChooser.setDialogTitle("Open Existing Test File");
+			FileNameExtensionFilter filter = new FileNameExtensionFilter("*.xml", "xml");
+			fileChooser.addChoosableFileFilter(filter);
+			fileChooser.setFileFilter(filter);
 			if (fileChooser.showOpenDialog(topBottom) != JOptionPane.OK_OPTION) {
 				xmlFile = null;
 			} else {
 				xmlFile = fileChooser.getSelectedFile();
 			}
 		}
+
 		if (xmlFile != null) {
 			SAXBuilder saxBuilder = new SAXBuilder(false);
 			Document doc = saxBuilder.build(xmlFile);
@@ -167,8 +173,10 @@ public class Main implements XMLConstants {
 		model.estimateEpochTimes();
 		Iterable<TaskFactory.Task> tasks = model.getTasks();
 		uploadedTrustAnchors = false;
+		//rsync server needs to be setup here before running executeTasks...tear down before it exits
 		executeTasks(tasks, model, "");
 		tlPanel.format("Completed%n");
+
 		RunLoader.singleton().stop();
 	}
 

@@ -70,9 +70,6 @@ public class TestbedConfig implements Constants {
 			Util.deleteDirectories(objectsDir.listFiles());
 		} else if (!objectsDir.exists()) {
 			System.err.println("Could not create directory: " + objectsDir.getAbsolutePath());
-			System.err.println("Source dir: " + Constants.srcDir);
-			System.err.println("Build dir: " + Constants.buildDir);
-			System.err.println("objects dir: " + Constants.OBJECT_PATH);
 		}
 		try {
 			wini = new Wini(new StringReader(iniFile));

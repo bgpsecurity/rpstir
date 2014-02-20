@@ -158,11 +158,7 @@ public class Model implements Constants, XMLConstants {
 
 	private static final String DEFAULT_SERVER_NAME;
 	static {
-		String rsyncServer = System.getenv("RSYNC_SERVER");
-		if (rsyncServer == null) {
-			rsyncServer = "rpki.bbn.com/rpki";
-		}
-		DEFAULT_SERVER_NAME = System.getProperty("defaultServer", rsyncServer);
+		DEFAULT_SERVER_NAME = "localhost";
 	}
 
 	private final File rpkiRoot;
@@ -258,7 +254,7 @@ public class Model implements Constants, XMLConstants {
 	 */
 	private CA_Object createIANA() {
 		CA_Object caObject = new CA_Object(null, "IANA-0", DEFAULT_SERVER_NAME,
-				System.getProperty("ianaSubjKeyFile", "../templates/IANA.p15"));
+				System.getProperty("ianaSubjKeyFile", Constants.srcDir + "/var/templates/IANA.p15"));
 		return caObject;
 	}
 
@@ -603,8 +599,7 @@ public class Model implements Constants, XMLConstants {
 	 * @return the path to the given rootName on the given rsync server
 	 */
 	public String getRsyncBase(String serverName, String rootName) {
-		//TODO For now assume roots are sub-directories of /home/rsync
-		return "/home/rsync/" + rootName + "/";
+		return Constants.RSYNC_LOCAL + "/";
 	}
 
 	/**

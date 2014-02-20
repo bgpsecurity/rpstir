@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <test-actions>
-  <ini-file>[C-IANA]
+	<ini-file>[C-IANA]
 max_nodes = 75
 childSpec = AFRINIC%1, APNIC%1, RIPE%1
 max_depth = 3
-serverName = rpki.bbn.com/rst
+serverName = localhost/rst
 breakAway = False
-subjkeyfile = ../templates/IANA.p15
 ttl = 365
 
 [C-AFRINIC]
@@ -55,47 +54,47 @@ ttl = 365
 ROAipv4List = p%4, p%4
 ROAipv6List = p%4, p%4
 asid = 1</ini-file>
-  <action actionType="allocate" parentName="IANA-0.RIPE-2" childName="IANA-0.RIPE-2.LIR-2" allocationId="a1">
-    <ALLOCATION_PUBLICATION_TIME id="1">
-      <coincident ref="2" locked="false" />
-    </ALLOCATION_PUBLICATION_TIME>
-    <DEALLOCATION_PUBLICATION_TIME id="3">
-      <coincident ref="4" locked="false" />
-      <coincident ref="5" locked="false" />
-    </DEALLOCATION_PUBLICATION_TIME>
-    <VALIDITY_START_TIME id="2">
-      <successor ref="4" locked="true" />
-      <coincident ref="1" locked="false" />
-    </VALIDITY_START_TIME>
-    <VALIDITY_END_TIME id="4">
-      <successor ref="6" locked="false" />
-      <predecessor ref="2" locked="true" />
-      <coincident ref="3" locked="false" />
-    </VALIDITY_END_TIME>
-    <pair tag="p" arg="8" rangeType="ipv4" />
-  </action>
-  <action actionType="chooseCacheCheckTask" path="UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)">
-    <epoch id="5">
-      <coincident ref="3" locked="false" />
-    </epoch>
-  </action>
-  <action actionType="allocateROA" parentName="IANA-0.RIPE-2.LIR-2" allocationId="a2">
-    <ALLOCATION_PUBLICATION_TIME id="6">
-      <predecessor ref="4" locked="false" />
-      <coincident ref="7" locked="false" />
-    </ALLOCATION_PUBLICATION_TIME>
-    <DEALLOCATION_PUBLICATION_TIME id="8">
-      <coincident ref="9" locked="false" />
-    </DEALLOCATION_PUBLICATION_TIME>
-    <VALIDITY_START_TIME id="7">
-      <successor ref="9" locked="true" />
-      <coincident ref="6" locked="false" />
-    </VALIDITY_START_TIME>
-    <VALIDITY_END_TIME id="9">
-      <predecessor ref="7" locked="true" />
-      <coincident ref="8" locked="false" />
-    </VALIDITY_END_TIME>
-    <pair tag="p" arg="16" rangeType="ipv4" />
-  </action>
+	<action actionType="allocate" parentName="IANA-0.RIPE-2" childName="IANA-0.RIPE-2.LIR-2" allocationId="a1">
+		<ALLOCATION_PUBLICATION_TIME id="1">
+			<coincident ref="2" locked="false" />
+		</ALLOCATION_PUBLICATION_TIME>
+		<DEALLOCATION_PUBLICATION_TIME id="3">
+			<coincident ref="4" locked="false" />
+			<coincident ref="5" locked="false" />
+		</DEALLOCATION_PUBLICATION_TIME>
+		<VALIDITY_START_TIME id="2">
+			<successor ref="4" locked="true" />
+			<coincident ref="1" locked="false" />
+		</VALIDITY_START_TIME>
+		<VALIDITY_END_TIME id="4">
+			<successor ref="6" locked="false" />
+			<predecessor ref="2" locked="true" />
+			<coincident ref="3" locked="false" />
+		</VALIDITY_END_TIME>
+		<pair tag="p" arg="8" rangeType="ipv4" />
+	</action>
+	<action actionType="chooseCacheCheckTask" path="UploadEpoch():byNode:UploadNode(IANA-0.RIPE-2.LIR-3):deleteFirst:UploadNodeFiles(IANA-0.RIPE-2.LIR-3):cer-mft-roa-crl:UploadGroupFiles(cer)">
+		<epoch id="5">
+			<coincident ref="3" locked="false" />
+		</epoch>
+	</action>
+	<action actionType="allocateROA" parentName="IANA-0.RIPE-2.LIR-2" allocationId="a2">
+		<ALLOCATION_PUBLICATION_TIME id="6">
+			<predecessor ref="4" locked="false" />
+			<coincident ref="7" locked="false" />
+		</ALLOCATION_PUBLICATION_TIME>
+		<DEALLOCATION_PUBLICATION_TIME id="8">
+			<coincident ref="9" locked="false" />
+		</DEALLOCATION_PUBLICATION_TIME>
+		<VALIDITY_START_TIME id="7">
+			<successor ref="9" locked="true" />
+			<coincident ref="6" locked="false" />
+		</VALIDITY_START_TIME>
+		<VALIDITY_END_TIME id="9">
+			<predecessor ref="7" locked="true" />
+			<coincident ref="8" locked="false" />
+		</VALIDITY_END_TIME>
+		<pair tag="p" arg="16" rangeType="ipv4" />
+	</action>
 </test-actions>
 

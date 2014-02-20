@@ -24,20 +24,20 @@ import com.bbn.rpki.test.actions.XMLConstants;
  * earliest end time of any active allocation. If a new allocation is
  * "published", then in general, a new certificate must be published and the old
  * certificate revoked.
- * 
+ *
  * @author RTomlinson
  */
 public class CA_Object extends Allocator {
 
 	/**
 	 * Interface to be implemented when iteration over the tree.
-	 * 
+	 *
 	 * @author tomlinso
 	 */
 	public interface IterationAction {
 		/**
 		 * Implementation performs the desired action
-		 * 
+		 *
 		 * @param caObject
 		 * @return true to continue the iteration
 		 */
@@ -87,14 +87,13 @@ public class CA_Object extends Allocator {
 		this.nextChildSN = 0;
 		setNickname(nickname);
 		this.parent = parent;
-		this.subjKeyFile = null;
 		setServerName(serverName);
 		this.subjKeyFile = subjKeyFile;
 	}
 
 	/**
 	 * Construct from XML
-	 * 
+	 *
 	 * @param parent
 	 * @param element
 	 */
@@ -212,7 +211,7 @@ public class CA_Object extends Allocator {
 	/**
 	 * Take an allocation from our parent according to the specified pairs and
 	 * rangeType
-	 * 
+	 *
 	 * @param pairs
 	 * @param rangeType
 	 * @param validityStartTime
@@ -245,7 +244,7 @@ public class CA_Object extends Allocator {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param allocationId
 	 */
 	public void returnAllocation(AllocationId allocationId) {
@@ -268,7 +267,7 @@ public class CA_Object extends Allocator {
 
 	/**
 	 * Recursively find RPKI objects
-	 * 
+	 *
 	 * @param list
 	 */
 	public void appendObjectsToWrite(List<CA_Obj> list) {
@@ -451,7 +450,7 @@ public class CA_Object extends Allocator {
 
 	/**
 	 * sia directory path (ends with /)
-	 * 
+	 *
 	 * @return the sIA_path
 	 */
 	public String getSIA_path() {

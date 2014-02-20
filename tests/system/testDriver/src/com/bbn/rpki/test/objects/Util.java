@@ -6,6 +6,7 @@ package com.bbn.rpki.test.objects;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -97,7 +98,11 @@ public class Util implements Constants {
 			} finally {
 				is.close();
 			}
-		} catch (Exception e) {
+		} catch (FileNotFoundException e) {
+			System.err.println("could not find file: " + new File(from).getAbsolutePath());
+			System.out.println(Arrays.toString(Thread.currentThread().getStackTrace()));
+		}
+		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -351,7 +356,9 @@ public class Util implements Constants {
 				cwd = new File(System.getProperty("user.dir"))
 				.getAbsoluteFile();
 			}
-			final Process f = runtime.exec(cmdArray, null, cwd);
+			ProcessBuilder builder = new ProcessBuilder(cmdArray);
+			builder.directory(cwd);
+			final Process f = builder.start();
 			Reader stdoutReader = new InputStreamReader(f.getInputStream());
 			Reader stderrReader = new InputStreamReader(f.getErrorStream());
 			if (showStdOut && typescriptLogger != null) {
@@ -375,7 +382,6 @@ public class Util implements Constants {
 			stdout.join();
 			stderr.join();
 			String string = stdout.getString();
-			@SuppressWarnings("unused")
 			// For debugging
 			String errString = stderr.getString();
 			if (DEBUG_ON && typescriptLogger != null) {
@@ -448,7 +454,7 @@ public class Util implements Constants {
 	}
 
 	private static void deleteDirectory(File dir) {
-		if (!dir.exists()) {
+		if (!dir.exists() || dir == null || dir.isFile()) {
 			return;
 		}
 		assert dir.isDirectory();
