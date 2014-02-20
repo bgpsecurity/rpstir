@@ -162,7 +162,7 @@ int findorcreatedir(
 static int ok(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(s);
@@ -983,7 +983,7 @@ struct cert_answers cert_answers;
 static int addCert2List(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
@@ -1211,7 +1211,7 @@ static uint8_t *revokedSN = NULL;
 static int revokedHandler(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(s);
@@ -1605,7 +1605,7 @@ static int make_goodoids(
 static int verifyChildCRL(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     crl_fields *cf;
     X509_CRL *x = NULL;
@@ -1660,7 +1660,7 @@ static int verifyChildCRL(
 static int verifyChildROA(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     struct CMS roa;
     int typ,
@@ -1713,12 +1713,12 @@ static char updateManHash[HASHSIZE];
 static int revoke_cert_and_children(
     scmcon * conp,
     scmsrcha * s,
-    int idx);
+    ssize_t idx);
 
 static int handleUpdateMan(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     (void)conp;
     (void)s;
@@ -1879,7 +1879,7 @@ static int updateManifestObjs(
 static int verifyChildManifest(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     int sta;
     struct CMS cms;
@@ -1910,7 +1910,7 @@ static int verifyChildManifest(
 static int verifyChildGhostbusters(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     (void)idx;
 
@@ -2033,7 +2033,7 @@ typedef struct _mcf {
 static int cparents(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
@@ -2113,7 +2113,7 @@ static scmsrcha *invalidateCRLSrch = NULL;
 static int invalidate_roa(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     unsigned int lid,
         flags;
@@ -2136,7 +2136,7 @@ static int invalidate_roa(
 static int invalidate_gbr(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     char ski[512];
 
@@ -2158,7 +2158,7 @@ static int invalidate_gbr(
 static int invalidate_mft(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     char ski[512];
 
@@ -2194,7 +2194,7 @@ static int invalidate_mft(
 static int invalidate_crl(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     char aki[SKISIZE + 1];
     char issuer[SUBJSIZE + 1];
@@ -2306,7 +2306,7 @@ PropDataList *prevPropData = NULL;
 static int registerChild(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     PropData *propData;
 
@@ -2437,7 +2437,7 @@ static char validManPath[PATH_MAX];
 static int handleValidMan(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     (void)conp;
     (void)idx;
@@ -3509,7 +3509,7 @@ int add_object(
 static int crliterator(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     uint8_t *snlist;
     unsigned int snlen;
@@ -3539,16 +3539,16 @@ static int crliterator(
     if (aki == NULL || aki[0] == 0 || s->vec[6].avalsize == 0)
         return (0);
     snlen = *(unsigned int *)(s->vec[1].valptr);
-    if (snlen == 0 || s->vec[1].avalsize < (int)(sizeof(unsigned int)))
+    if (snlen == 0 || s->vec[1].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     sninuse = *(unsigned int *)(s->vec[2].valptr);
-    if (sninuse == 0 || s->vec[2].avalsize < (int)(sizeof(unsigned int)))
+    if (sninuse == 0 || s->vec[2].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     flags = *(unsigned int *)(s->vec[3].valptr);
     // ?????????? test for this in where of select statement ???????????????
     if ((flags & SCM_FLAG_VALIDATED) == 0 ||
         (flags & SCM_FLAG_NOCHAIN) != 0 ||
-        s->vec[3].avalsize < (int)(sizeof(unsigned int)))
+        s->vec[3].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     lid = *(unsigned int *)(s->vec[4].valptr);
     if (s->vec[5].avalsize <= 0)
@@ -3747,7 +3747,7 @@ static void fillInColumns(
 static int revoke_cert_and_children(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     unsigned int lid;
     int sta;
@@ -3771,7 +3771,7 @@ static int revoke_cert_and_children(
                  i < cert_answersp->num_ansrs; i++, cert_ansrp++)
             {
                 if ((cert_ansrp->
-                     flags & (SCM_FLAG_HASPARACERT || SCM_FLAG_ISTARGET)))
+                     flags & (SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET)))
                 {               // if so, clear them
                     flags = (cert_ansrp->flags &
                              ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
@@ -4050,7 +4050,7 @@ int deletebylid(
 static int certmaybeok(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     unsigned int pflags;
     scmkva where;
@@ -4084,7 +4084,7 @@ static int certmaybeok(
 static int certtoonew(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     unsigned int pflags;
     scmkva where;
@@ -4115,7 +4115,7 @@ static int certtoonew(
 static int certtooold(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     char *ws;
     int tl;

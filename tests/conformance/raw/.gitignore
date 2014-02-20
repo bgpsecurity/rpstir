@@ -5,5 +5,9 @@ badRootBadAKI.cer
 badRootBadCRLDP.cer
 badRootBadSig.cer
 badRootNameDiff.cer
+badRootResourcesASInherit.cer
+badRootResourcesEmpty.cer
+badRootResourcesIP4Inherit.cer
+badRootResourcesIP6Inherit.cer
 goodRootAKIMatches.cer
 goodRootAKIOmitted.cer

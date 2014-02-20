@@ -317,6 +317,7 @@ int statementscm(
     char *stm)
 {
     SQLINTEGER istm;
+    SQLLEN len;
     SQLRETURN ret;
 
     if (conp == NULL || conp->connected == 0 || stm == NULL || stm[0] == 0)
@@ -330,8 +331,8 @@ int statementscm(
              conp->mystat.errmsg, conp->mystat.emlen);
         return (ERR_SCM_SQL);
     }
-    istm = 0;
-    ret = SQLRowCount(conp->hstmtp->hstmt, &istm);
+    len = 0;
+    ret = SQLRowCount(conp->hstmtp->hstmt, &len);
     if (!SQLOK(ret))
     {
         heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
@@ -701,7 +702,7 @@ int getuintscm(
     unsigned int *ival)
 {
     SQLUINTEGER f1;
-    SQLINTEGER f1len;
+    SQLLEN f1len;
     SQLRETURN rc;
     int fnd = 0;
 
@@ -814,7 +815,7 @@ int searchscm(
     int what,
     char *orderp)
 {
-    SQLINTEGER nrows = 0;
+    SQLLEN nrows = 0;
     SQLRETURN rc;
     scmsrch *vecp;
     char *stmt = NULL;
@@ -824,7 +825,7 @@ int searchscm(
     int sta = 0;
     int nfnd = 0;
     int bset = 0;
-    int ridx = 0;
+    ssize_t ridx = 0;
     int nok = 0;
     int didw = 0;
     int fnd;
@@ -977,7 +978,7 @@ int searchscm(
             pophstmt(conp);
             return (ERR_SCM_SQL);
         }
-        sta = (*cnter) (conp, srch, (int)nrows);
+        sta = (*cnter) (conp, srch, nrows);
         if (sta < 0 && (what & SCM_SRCH_BREAK_CERR))
         {
             SQLCloseCursor(conp->hstmtp->hstmt);
@@ -995,7 +996,7 @@ int searchscm(
             SQLBindCol(conp->hstmtp->hstmt,
                        vecp->colno <= 0 ? i + 1 : vecp->colno, vecp->sqltype,
                        vecp->valptr, vecp->valsize,
-                       (SQLINTEGER *) & vecp->avalsize);
+                       &vecp->avalsize);
         }
         while (1)
         {
@@ -1230,12 +1231,12 @@ int addcolsrchscm(
 static int socvaluefunc(
     scmcon * conp,
     scmsrcha * s,
-    int idx)
+    ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
     if (s->vec[0].sqltype == SQL_C_ULONG &&
-        (unsigned)(s->vec[0].avalsize) >= sizeof(unsigned int) &&
+        (size_t)(s->vec[0].avalsize) >= sizeof(unsigned int) &&
         s->context != NULL)
     {
         memcpy(s->context, s->vec[0].valptr, sizeof(unsigned int));

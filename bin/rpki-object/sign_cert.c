@@ -23,6 +23,7 @@
 #define MSG_USAGE "Usage: TBS filename, Key filename [1 to adjust dates | 2 to keep tbs alg]"
 #define MSG_OPEN "Couldn't open %s"
 #define MSG_MEM "Error getting memory"
+#define MSG_UNK_EXT "Unknown file extension for %s"
 
 static void adjust_time(
     struct casn *fromp,
@@ -89,6 +90,10 @@ int main(
         tbsalgp = NULL;
         sigp = &blob.signature;
         algp = &blob.algorithm;
+    }
+    else
+    {
+        FATAL(MSG_UNK_EXT, argv[1]);
     }
     if (get_casn_file(selfp, argv[1], 0) < 0)
         FATAL(MSG_OPEN, argv[1]);

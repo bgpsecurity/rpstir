@@ -180,6 +180,8 @@ static void make_sem_name(
 
     for (i = 1; i < SEM_NAME_SIZE - 1; ++i)
     {
+        // In general, this is not a uniform distribution, but it should be
+        // close enough.
         buf[i] = SEM_NAME_ALPHABET[random() % (sizeof(SEM_NAME_ALPHABET) - 1)];
     }
 

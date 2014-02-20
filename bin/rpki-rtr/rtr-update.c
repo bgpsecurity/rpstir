@@ -45,7 +45,7 @@ static void setupSnQuery(
 static int setLastSN(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     (void)conp;
     (void)numLine;
@@ -77,7 +77,7 @@ static unsigned int getLastSerialNumber(
 static int writeROAData(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     unsigned int asn = *((unsigned int *) s->vec[0].valptr);
     char *ptr = (char *)s->vec[1].valptr,
