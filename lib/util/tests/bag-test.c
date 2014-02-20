@@ -58,12 +58,12 @@ bool correctness_test(
 			{ \
 				data = get(bag, iterator); \
 				\
-				TEST(int, "%d", (int)data, >=, 0); \
-				TEST(int, "%d", (int)data, <, 64); \
+				TEST(const void *, "%p", data, >=, (void *)0); \
+				TEST(const void *, "%p", data, <, (void *)64); \
 				\
-				TEST_BOOL(found & ((uint64_t)1 << (int)data), false); \
+				TEST_BOOL(found & ((uint64_t)1 << (size_t)data), false); \
 				\
-				found |= (uint64_t)1 << (int)data; \
+				found |= (uint64_t)1 << (size_t)data; \
 			} \
 			TEST_BOOL(stop_iteration(bag), true); \
 			\

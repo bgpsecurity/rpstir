@@ -57,7 +57,7 @@ static char *nextSKI,
 static int registerParent(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(s);

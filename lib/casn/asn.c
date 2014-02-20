@@ -178,6 +178,7 @@ Procedure:
     uchar *c = *from,
         *e = (uchar *) 0;
     struct asn asn;
+    memset(&asn, 0, sizeof(asn));
     do                          /* step 1 */
     {
         asn.stringp = c;
