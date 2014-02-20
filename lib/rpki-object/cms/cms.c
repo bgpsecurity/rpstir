@@ -50,7 +50,9 @@ const char *signCMS(
     const char *keyfilename,
     bool bad)
 {
+    bool hashContext_initialized = false;
     CRYPT_CONTEXT hashContext;
+    bool sigKeyContext_initialized = false;
     CRYPT_CONTEXT sigKeyContext;
     CRYPT_KEYSET cryptKeyset;
     int signatureLength,
@@ -128,6 +130,7 @@ const char *signCMS(
         // create the context
         CALL(cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2),
              "creating context");
+        hashContext_initialized = true;
 
         // generate the hash
         CALL(cryptEncrypt(hashContext, tbsp, tbs_lth), "hashing");
@@ -189,6 +192,7 @@ const char *signCMS(
               CRYPT_KEYOPT_READONLY), "opening key set");
         CALL(cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA),
              "creating RSA context");
+        sigKeyContext_initialized = true;
         CALL(cryptGetPrivateKey
              (cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label",
               "password"), "getting key");
@@ -213,8 +217,16 @@ const char *signCMS(
     } while (0);
 
     // done with cryptlib, shut it down
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
+    if (hashContext_initialized)
+    {
+        cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
+    }
+    if (sigKeyContext_initialized)
+    {
+        cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
+    }
 
     // did we have any trouble above? if so, bail
     if (msg != 0)
@@ -261,8 +273,10 @@ const char *signCMSBlob(
     struct CMSBlob *cms,
     const char *keyfilename)
 {
+    bool sigKeyContext_initialized = false;
     CRYPT_CONTEXT sigKeyContext;
     CRYPT_KEYSET cryptKeyset;
+    bool hashContext_initialized = false;
     CRYPT_CONTEXT hashContext;
     int tbs_lth;                /* to-be-signed length */
     unsigned char *tbsp = NULL; /* to-be-signed pointer */
@@ -315,7 +329,8 @@ const char *signCMSBlob(
     }
 
     // compute SHA-256 of signedAttrs
-    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) < 0)
+    if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2) < 0 ||
+        !(hashContext_initialized = true))
         errmsg = "creating hash context";
     else if (cryptEncrypt(hashContext, tbsp, tbs_lth) < 0 ||
              cryptEncrypt(hashContext, tbsp, 0) < 0)
@@ -329,7 +344,8 @@ const char *signCMSBlob(
                              keyfilename, CRYPT_KEYOPT_READONLY) < 0)
         errmsg = "opening key set";
     else if (cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                                CRYPT_ALGO_RSA) < 0)
+                                CRYPT_ALGO_RSA) < 0 ||
+             !(sigKeyContext_initialized = true))
         errmsg = "creating RSA context";
     else if (cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME,
                                 "label", "password") < 0)
@@ -352,8 +368,16 @@ const char *signCMSBlob(
                                  hashContext) < 0)
         errmsg = "verifying";
 
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
+    if (hashContext_initialized)
+    {
+        cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
+    }
+    if (sigKeyContext_initialized)
+    {
+        cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
+    }
 
     if (!errmsg)
     {

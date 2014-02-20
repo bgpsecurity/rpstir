@@ -200,8 +200,8 @@ int main(
         i;
 
     // initialize
-    argc = argc;
-    argv = argv;                // silence compiler warnings
+    (void)argc;
+    (void)argv;                // silence compiler warnings
     (void)setbuf(stdout, NULL);
     OPEN_LOG("garbage", LOG_USER);
     if (!my_config_load())
