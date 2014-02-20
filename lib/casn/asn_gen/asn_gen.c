@@ -1529,7 +1529,7 @@ void print_tables(
             if (ntbp->generation != gen)
                 continue;
             did++;
-            printf("#%d %s ", ntbp - (struct name_table *)name_area.area,
+            printf("#%td %s ", ntbp - (struct name_table *)name_area.area,
                    ntbp->name);
             printf("has:\n");
             print_gen(ntbp);
