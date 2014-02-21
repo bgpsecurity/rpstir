@@ -53,7 +53,6 @@ show_msgs () {
 
 
 upgrade_from_0_9 () {
-    # TODO: anything that needs to be upgraded
     return 0
 }
 
