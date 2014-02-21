@@ -17,7 +17,7 @@ void unix_error(
     char *msg)                  /* unix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 /*
@@ -29,7 +29,7 @@ void posix_error(
     char *msg)                  /* posix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(code));
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 void dns_error(
@@ -43,7 +43,7 @@ void app_error(
     char *msg)                  /* application error */
 {
     fprintf(stderr, "%s\n", msg);
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 /*

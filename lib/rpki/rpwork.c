@@ -472,7 +472,9 @@ static int sign_cert(
     struct keyring *keyring,
     struct Certificate *certp)
 {
+    bool hashContext_initialized = false;
     CRYPT_CONTEXT hashContext;
+    bool sigKeyContext_initialized = false;
     CRYPT_CONTEXT sigKeyContext;
     CRYPT_KEYSET cryptKeyset;
     uchar hash[40];
@@ -492,9 +494,11 @@ static int sign_cert(
         return ERR_SCM_CRYPTLIB;
     if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
+        || !(hashContext_initialized = true)
         || (ansr =
             cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                               CRYPT_ALGO_RSA)) != 0)
+                               CRYPT_ALGO_RSA)) != 0
+        || !(sigKeyContext_initialized = true))
         msg = "creating context";
     else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
              (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
@@ -525,8 +529,16 @@ static int sign_cert(
                                              sigKeyContext, hashContext)) != 0)
             msg = "verifying";
     }
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
+    if (hashContext_initialized)
+    {
+        cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
+    }
+    if (sigKeyContext_initialized)
+    {
+        cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
+    }
     if (signstring)
         free(signstring);
     signstring = NULL;
@@ -964,7 +976,7 @@ static int conflict_test(
             }
             else if (savranges.iprangep[jj].typ == IPv6)
             {
-                for (; ruleranges.iprangep[kk].typ == IPv6; kk++)
+                for (kk = 0; ruleranges.iprangep[kk].typ == IPv6; kk++)
                 {
                     copy_text(&ruleranges.iprangep[kk], savp);
                 }

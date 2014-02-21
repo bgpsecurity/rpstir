@@ -1,5 +1,5 @@
---- /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSeqSerName.raw.old	2013-10-01 16:31:25.386898811 -0400
-+++ /home/dmandelb/rpstir/tests/conformance/scripts/../raw/root/NAMSeqSerName.raw	2013-10-01 16:32:58.334894924 -0400
+--- NAMSeqSerName.raw.old	2013-10-01 16:31:25.386898811 -0400
++++ NAMSeqSerName.raw	2013-10-01 16:32:58.334894924 -0400
 @@ -7,7 +7,9 @@
                      prt "root"
          seq utc "110411185728Z"

@@ -373,10 +373,7 @@ CRLs
 674 CRLNumberZero            # (good) CRL number is zero 5280#5.2.3
 675 CRLNumberNeg             # CRL number is negative 5280#5.2.3
 670 CRL2CRLNums              # has 2 CRL numbers 6487#errata
-684 CRLEntrySerNumNeg        # CRL has entry with negative serial number 5280#5.1.2.6 6487#4.2 5280#4.1.2.2
-685 CRLEntrySerNum0          # CRL has entry with zero serial number 5280#5.1.2.6 6487#4.2 5280#4.1.2.2
 671 CRLEntrySerNumMax        # (good) CRL has entry with maximum serial number 5280#5.1.2.6, 5280#4.1.2.2
-672 CRLEntrySerNumTooBig     # CRL has entry with serial number that is one more than maximum allowable 5280#5.1.2.6, 5280#4.1.2.2
 
 Manifests
 
@@ -432,3 +429,7 @@ Trust Anchor (self-signed) certificates
 102 RootNameDiff            # Subject and Issuer don't match (tricky, will be interpreted as non-self-signed) 5280#3.2
 105 RootBadAIA              # AIA is present in the trust anchor 6487#4.8.7
 106 RootBadSig              # signature is invalid 5280#4.1.1.3
+107 RootResourcesEmpty      # empty set of INRs 6490#2.2
+108 RootResourcesIP4Inherit # IPv4 resources are inherit 6490#2.2
+109 RootResourcesIP6Inherit # IPv6 resources are inherit 6490#2.2
+110 RootResourcesASInherit  # AS resources are inherit 6490#2.2

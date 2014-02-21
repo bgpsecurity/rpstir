@@ -99,6 +99,10 @@ dist_conformanceta_DATA = \
 	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
 	etc/sample-ta/bbn_conformance/badRootBadSig.tal \
 	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesASInherit.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesEmpty.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesIP4Inherit.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesIP6Inherit.tal \
 	etc/sample-ta/bbn_conformance/goodRootAKIMatches.tal \
 	etc/sample-ta/bbn_conformance/goodRootAKIOmitted.tal \
 	etc/sample-ta/bbn_conformance/root.tal
@@ -112,6 +116,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/badRootBadCRLDP.raw \
 	tests/conformance/raw/badRootBadSig.raw \
 	tests/conformance/raw/badRootNameDiff.raw \
+	tests/conformance/raw/badRootResourcesASInherit.raw \
+	tests/conformance/raw/badRootResourcesEmpty.raw \
+	tests/conformance/raw/badRootResourcesIP4Inherit.raw \
+	tests/conformance/raw/badRootResourcesIP6Inherit.raw \
 	tests/conformance/raw/goodRootAKIMatches.raw \
 	tests/conformance/raw/goodRootAKIOmitted.raw \
 	tests/conformance/raw/keys/CRL2CRLNums.mft.p15 \
@@ -142,14 +150,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLEntryHasExtension.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.mft.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNum0.mft.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNum0.p15 \
 	tests/conformance/raw/keys/CRLEntrySerNumMax.mft.p15 \
 	tests/conformance/raw/keys/CRLEntrySerNumMax.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumNeg.mft.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumNeg.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumTooBig.mft.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumTooBig.p15 \
 	tests/conformance/raw/keys/CRLIssAltName.mft.p15 \
 	tests/conformance/raw/keys/CRLIssAltName.p15 \
 	tests/conformance/raw/keys/CRLIssDistPt.mft.p15 \
@@ -617,12 +619,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRLEntryHasExtension.stage1.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage0.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage1.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNum0.stage0.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNum0.stage1.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumNeg.stage0.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumNeg.stage1.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage0.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage1.patch \
 	tests/conformance/raw/patches/badCRLIssAltName.stage0.patch \
 	tests/conformance/raw/patches/badCRLIssAltName.stage1.patch \
 	tests/conformance/raw/patches/badCRLIssDistPt.stage0.patch \
