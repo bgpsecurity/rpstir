@@ -1,7 +1,7 @@
 0.10
 
-	* Add preliminary support for running rpstir in 64-bit mode.
-	* Add preliminary support for running rpstir on Mac OS X.
+	* Add beta support for running rpstir in 64-bit mode.
+	* Add beta support for running rpstir on Mac OS X.
 	* Significantly improve performance of incremental updates by adding an
 	  rsync flag to preserve file modification times.
 	* Fix multiple potential SQL-injection bugs.
@@ -19,7 +19,7 @@
 	  and for running multiple simultaneous statistics collections.
 	* Change handling of CRLs that list syntactically invalid serial
 	  numbers. These CRLs are now accepted, but the certificates with
-	  syntactically invalid serials are still not accepted.
+	  syntactically invalid serial numbers are still not accepted.
 
 0.9
 
