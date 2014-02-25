@@ -43,9 +43,16 @@ setup_statistics_environment () {
 
     # The builtin config file statistics-internal.conf includes the
     # user-supplied statistics.conf, but allows scripts to influence where data
-    # is stored using environment variables.
+    # is stored using environment variables. If $STATS_VARIANT is set, then
+    # the user-supplied configuration is statistics-$STATS_VARIANT.conf instead.
+    # This allows multiple concurrent statistics collections.
     export @CONFIG_ENV_VAR@="@pkgdatadir@/statistics-internal.conf"
-    export @PACKAGE_NAME_UC@_STATISTICS_CONFIG="@pkgsysconfdir@/statistics.conf"
+    if test -n "$STATS_VARIANT"; then
+        export @PACKAGE_NAME_UC@_STATISTICS_CONFIG="@pkgsysconfdir@/statistics-${STATS_VARIANT}.conf"
+    else
+        export @PACKAGE_NAME_UC@_STATISTICS_CONFIG="@pkgsysconfdir@/statistics.conf"
+    fi
+
     test -e "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}" || {
         echo >&2 "This script will not work without the configuration file"
         echo >&2 "${@PACKAGE_NAME_UC@_STATISTICS_CONFIG}."

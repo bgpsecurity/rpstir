@@ -1844,8 +1844,7 @@ int roaFromFile(
         fd;
     off_t iSize;
     ssize_t amt_read;
-    int buf_tmp_size,
-        sta = 0;
+    int buf_tmp_size;
     unsigned char *buf,
        *buf_tmp;
     struct stat sb;
@@ -1865,18 +1864,16 @@ int roaFromFile(
     {
         iSize = sb.st_size;
         if ((buf = calloc(1, iSize)) == NULL)
-            sta = ERR_SCM_NOMEM;
-        else
-            amt_read = read(fd, buf, iSize);
+        {
+            (void)close(fd);
+            return ERR_SCM_NOMEM;
+        }
+        amt_read = read(fd, buf, iSize);
         (void)close(fd);
         if (amt_read != iSize)
         {
             free(buf);
-            sta = ERR_SCM_BADFILE;
-        }
-        if (sta != 0)
-        {
-            return sta;
+            return ERR_SCM_BADFILE;
         }
     }
     // handle format-specific processing

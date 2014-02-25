@@ -119,7 +119,7 @@ int main(
             split_string(buf, WHITESPACE, &my_argv, &my_argc) != 0)
         {
             fprintf(stderr, "failed to open/parse %s\n", argv[1]);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         /*
          * Prepend executable name to my_argv and increment my_argc 
@@ -129,7 +129,7 @@ int main(
         if (!expanded_argv)
         {
             fprintf(stderr, "out of memory\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         my_argv = expanded_argv;
         my_argc++;
@@ -145,7 +145,7 @@ int main(
     else if (argc > 2 && *argv[1] != '-')       // more than one script file?
     {
         fprintf(stderr, "Too many script files: %s\n", argv[2]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     else                        // normal command line
     {
@@ -189,8 +189,12 @@ int main(
             sflag = 1;
             break;
         case 'h':              /* help */
+            myusage(argv[0]);
+            exit(EXIT_SUCCESS);
+            break;
         default:
             myusage(argv[0]);
+            exit(EXIT_FAILURE);
             break;
         }
     }
@@ -202,7 +206,7 @@ int main(
     {
         fprintf(stderr,
                 "please specify rsync logfile with -f. Or -h for help\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /*
@@ -212,14 +216,14 @@ int main(
     {
         fprintf(stderr,
                 "choose either tcp or udp, not both. or -h for help\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (!tflag && !uflag && !nflag)
     {                           /* if nflag then we don't care */
         fprintf(stderr,
                 "must choose tcp or udp, or specify -n. -h for help\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /*
@@ -229,7 +233,7 @@ int main(
     if (!fp)
     {
         LOG(LOG_ERR, "failed to open %s", inputLogFile);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     LOG(LOG_INFO, "Opened rsync log file: %s", inputLogFile);
     FLUSH_LOG();
@@ -246,7 +250,7 @@ int main(
             if (tcpsocket(&wport, portno) != TRUE)
             {
                 LOG(LOG_ERR, "tcpsocket failed...");
-                exit(-1);
+                exit(EXIT_FAILURE);
             }
             LOG(LOG_INFO, "Established connection to port %d", portno);
         }
@@ -255,7 +259,7 @@ int main(
             if (udpsocket(&wport, portno) != TRUE)
             {
                 LOG(LOG_ERR, "udpsocket failed...");
-                exit(-1);
+                exit(EXIT_FAILURE);
             }
         }
     }
@@ -276,7 +280,7 @@ int main(
     if (setup_sig_catchers() != TRUE)
     {
         LOG(LOG_ERR, "failed to setup signal catchers... bailing.");
-        exit(FALSE);
+        exit(EXIT_FAILURE);
     }
 
   /****************************************************/
@@ -294,7 +298,7 @@ int main(
     if (!sendStr)
     {
         LOG(LOG_ERR, "failed to make Start String... bailing...");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     outputMsg(&wport, sendStr, retlen);
@@ -316,7 +320,7 @@ int main(
     if (!sendStr)
     {
         LOG(LOG_ERR, "failed to make Directory String... bailing...");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     outputMsg(&wport, sendStr, retlen);
@@ -450,7 +454,7 @@ int main(
     if (!sendStr)
     {
         LOG(LOG_ERR, "failed to make End String... bailing...");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     outputMsg(&wport, sendStr, retlen);
     free(sendStr);

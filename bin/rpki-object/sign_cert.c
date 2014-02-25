@@ -18,13 +18,12 @@
 #include <rpki-object/signature.h>
 #include <util/logging.h>
 
-char *msgs[] = {
-    "Finished %s OK\n",
-    "Error in %s\n",
-    "Usage: TBS filename, Key filename [1 to adjust dates | 2 to keep tbs alg]\n",
-    "Couldn't open %s\n",
-    "Error getting memory\n",
-};
+#define MSG_OK "Finished %s OK"
+#define MSG_IN "Error in %s"
+#define MSG_USAGE "Usage: TBS filename, Key filename [1 to adjust dates | 2 to keep tbs alg]"
+#define MSG_OPEN "Couldn't open %s"
+#define MSG_MEM "Error getting memory"
+#define MSG_UNK_EXT "Unknown file extension for %s"
 
 static void adjust_time(
     struct casn *fromp,
@@ -39,15 +38,6 @@ static void adjust_time(
     till += begt;
     write_casn_time(fromp, begt);
     write_casn_time(tillp, till);
-}
-
-static void fatal(
-    int err,
-    char *paramp)
-{
-    fprintf(stderr, msgs[err], paramp);
-    if (err)
-        exit(err);
 }
 
 
@@ -74,7 +64,7 @@ int main(
     OPEN_LOG("sign_cert", LOG_USER);
 
     if (argc < 3)
-        fatal(2, (char *)0);
+        FATAL(MSG_USAGE);
     char *sfx = strrchr(argv[1], (int)'.');
     keyfile = argv[2];
     if (!strcmp(sfx, ".cer"))
@@ -101,8 +91,12 @@ int main(
         sigp = &blob.signature;
         algp = &blob.algorithm;
     }
+    else
+    {
+        FATAL(MSG_UNK_EXT, argv[1]);
+    }
     if (get_casn_file(selfp, argv[1], 0) < 0)
-        fatal(3, argv[1]);
+        FATAL(MSG_OPEN, argv[1]);
     if (argv[3] && (*argv[3] & 1))
     {
         if (!strcmp(sfx, ".cer"))
@@ -120,7 +114,7 @@ int main(
     }
     if (!set_signature(casnp, sigp, keyfile, "label", "password", false))
     {
-        fatal(1, "set_signature()");
+        FATAL(MSG_IN, "set_signature()");
     }
     if (!argv[3] || !(*argv[3] & 4))
     {
@@ -129,6 +123,6 @@ int main(
                    (uchar *) "", 0);
     }
     put_casn_file(selfp, argv[1], 0);
-    fatal(0, argv[1]);
+    DONE(MSG_OK, argv[1]);
     return 0;
 }

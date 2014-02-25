@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>
+#include <stdbool.h>
 #ifndef WIN32
 #include <unistd.h>
 #ifndef DOS
@@ -30,6 +31,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+
+#include "util/macros.h"
 
 #define GLOBAL 0                /* states used in construct, print_hdr and
                                  * tabulate */
@@ -191,6 +194,18 @@ struct chain {
     struct chain *,
     size_t);
 
+void warn(
+    const char * format,
+    ...)
+    WARN_PRINTF(1, 2);
+
+void done(
+    bool is_error,
+    const char * format,
+    ...)
+    WARN_PRINTF(2, 3)
+    NO_RETURN;
+
 extern char token[],
     itemname[],
     classname[],
@@ -257,7 +272,6 @@ extern char token[],
     many_w[],
     min_w[],
     max_w[],
-   *msgs[],
     none_w[],
     null_w[],
     null_ptr_w[],
@@ -285,8 +299,6 @@ extern char token[],
    *cat(
     char *,
     char *),
-   *derived_dup(
-    long),
    *expand_area(
     struct name_area *),
    *find_child(
@@ -475,9 +487,6 @@ extern void add_class_member(
 )  ,
     end_item(
 )  ,
-    fatal(
-    int,
-    char *),
     fill_name(
     char **,
     char *),
@@ -530,9 +539,6 @@ extern void add_class_member(
     char *,
     char *,
     char **,
-    char *),
-    warn(
-    int,
     char *);
 
 extern struct name_table *find_name(
@@ -568,3 +574,46 @@ extern struct macro_table *find_macro(
    occurs, generation 0 being the highest.
  */
 extern int vflag;
+
+
+#define MSG_OK "Asn_gen finished %s OK\n"
+#define MSG_INVAL_PARAM "Invalid parameter: %s\n"
+#define MSG_OPEN "Can't open %s\n"
+#define MSG_AMBIGUOUS_DER "Construct has ambiguous DER\n"
+#define MSG_INVAL_STATE "invalid state %d\n"
+#define MSG_NO_CHILD "no child of %s in table\n"
+#define MSG_INVAL_WORD "invalid word: %s\n"
+#define MSG_MEM "memory error\n"
+#define MSG_OVERFLOW "overflow in area %s\n"
+#define MSG_NO_PATH "can't find definer/defined path for %s\n"
+#define MSG_SYNTAX_ERR "syntax error at %s\n"
+#define MSG_NESTING "nesting detected\n"
+#define MSG_EOF "unexpected EOF at %s\n"
+#define MSG_EXTRA_TAG_DEF "extra tag definition 0x%lX\n"
+#define MSG_UNDEF_UPPER "undefined upper bound %s\n"
+#define MSG_DUP_DEF "duplicate definition of %s\n"
+#define MSG_ID_UNDEF "ID %s is not defined\n"
+#define MSG_NO_TABLE "no table defined for %s\n"
+#define MSG_MISSING "missing %s\n"
+#define MSG_NOT_EXPORT "%s is not on the export list\n"
+#define MSG_LOOP "stuck in loop at %s, Check syntax.\n"
+#define MSG_AMBIGUOUS_TAG "ambiguous tagging of %s\n"
+#define MSG_INTERNAL "internal error in %s\n"
+#define MSG_MULTIPLE_DEFINERS "multiple definers for %s\n"
+#define MSG_MACRO_PARAMS "too %s parameters in macro\n"
+#define MSG_UNDEF_MACRO "undefined macro %s\n"
+#define MSG_UNDEF_ITEM "undefined item %s in syntax\n"
+#define MSG_FEW_COLS "not enough columns defined in table\n"
+#define MSG_UNDEF_CLASS "undefined class %s\n"
+#define MSG_NOT_SUPPORTED "%s not supported for this type\n"
+#define MSG_MANDATORY "%s must not be optional or absent\n"
+#define MSG_DETERMINE_CONSTRAINT "Can't determine constraint %s\n"
+#define MSG_UNDEF_TYPE "undefined type for %s\n"
+#define MSG_NO_ANY_DEFINED_BY "no ANY DEFINED BY for %s\n"
+#define MSG_BIG_TOKEN "token %s is too big\n"
+#define MSG_BIG_LINE "line bigger than buffer: %s\n"
+#define MSG_CREATE_DIR "Can't create directory named %s\n"
+#define MSG_FIND_STREAM "Can't find stream for fd %d\n"
+#define MSG_INCOMPLETE_ITEM "Incomplete table item %s\n"
+#define MSG_FIND_CONSTRAINT "Couldn't find constraint for %s\n"
+#define MSG_RENAME_FILE "Can't rename file: %s\n"

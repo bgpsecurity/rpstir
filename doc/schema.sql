@@ -1,3 +1,8 @@
+--
+-- This is a sketch of a plan for modifying the schema. It is not the schema
+-- that rpstir currently uses.
+--
+
 -- NOTE: all the tables begin with 'rpstir_'. This prefix may be configurable.
 
 -- NOTE: unless otherwise specified, all hash columns of type binary(32) are the sha256 of the entire file

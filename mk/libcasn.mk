@@ -1,6 +1,7 @@
 noinst_PROGRAMS += lib/casn/asn_gen/asn_gen
 
 lib_casn_asn_gen_asn_gen_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-DCONSTRAINTS \
 	-DINTEL \
 	-Dasn_constr_id=casn_constr_id \

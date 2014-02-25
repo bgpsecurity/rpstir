@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "util/cryptlib_compat.h"
 #include "rpki-asn1/cms.h"
 
@@ -8,7 +10,9 @@ const char *signCRL(
     struct CertificateRevocationList *crlp,
     const char *keyfile)
 {
+    bool hashContext_initialized = false;
     CRYPT_CONTEXT hashContext;
+    bool sigKeyContext_initialized = false;
     CRYPT_CONTEXT sigKeyContext;
     CRYPT_KEYSET cryptKeyset;
     uchar hash[40];
@@ -30,9 +34,11 @@ const char *signCRL(
     }
     else if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
+        || !(hashContext_initialized = true)
         || (ansr =
             cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
-                               CRYPT_ALGO_RSA)) != 0)
+                               CRYPT_ALGO_RSA)) != 0
+        || !(sigKeyContext_initialized = true))
         msg = "creating context";
     else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
              (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
@@ -66,8 +72,17 @@ const char *signCRL(
             msg = "verifying";
     }
 
-    cryptDestroyContext(hashContext);
-    cryptDestroyContext(sigKeyContext);
+    if (hashContext_initialized)
+    {
+        cryptDestroyContext(hashContext);
+        hashContext_initialized = false;
+    }
+    if (sigKeyContext_initialized)
+    {
+        cryptDestroyContext(sigKeyContext);
+        sigKeyContext_initialized = false;
+    }
+
     if (signstring)
         free(signstring);
     signstring = NULL;

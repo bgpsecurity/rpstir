@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 #include "queue.h"
 

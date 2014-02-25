@@ -14,22 +14,13 @@
 #include <rpki-object/cms/cms.h>
 #include <casn/casn.h>
 #include <util/hashutils.h>
+#include "util/logging.h"
 
-char *msgs[] = {
-    "Finished OK\n",
-    "Couldn't get %s\n",
-    "Error inserting %s\n",     // 2
-    "EEcert has no key identifier\n",
-    "Error signing in %s\n",
-};
-
-static void fatal(
-    int err,
-    char *paramp)
-{
-    fprintf(stderr, msgs[err], paramp);
-    exit(err);
-}
+#define MSG_OK "Finished OK"
+#define MSG_GET "Couldn't get %s"
+#define MSG_INSERT "Error inserting %s"     // 2
+#define MSG_NO_AKI "EEcert has no key identifier"
+#define MSG_SIGN "Error signing in %s"
 
 struct keyring {
     char filename[80];
@@ -61,14 +52,14 @@ int main(
     Certificate(&EEcert, (ushort) 0);
     // get the EE cert
     if (get_casn_file(&EEcert.self, argv[1], 0) < 0)
-        fatal(1, "EE certificate");
+        FATAL(MSG_GET, "EE certificate");
     // get the CMS object
     if (get_casn_file(&cms.self, argv[2], 0) < 0)
-        fatal(1, "CMS file");
+        FATAL(MSG_GET, "CMS file");
     struct Extension *sextp;
     // get EE's Auth Key ID
     if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
-        fatal(3, "key identifier");
+        FATAL(MSG_NO_AKI);
     // add cert to CMS object 
     struct SignedData *signedDatap = &cms.content.signedData;
     struct Certificate *certp;
@@ -76,14 +67,14 @@ int main(
     certp =
         (struct Certificate *)inject_casn(&signedDatap->certificates.self, 0);
     if (!certp)
-        fatal(2, "EE certificate");
+        FATAL(MSG_INSERT, "EE certificate");
     copy_casn(&certp->self, &EEcert.self);
     num_items(&signedDatap->certificates.self);
     // check CMS suffix
     char *c = strrchr(argv[2], (int)'.');
     if (!c || (strcmp(c, ".roa") && strcmp(c, ".man") && strcmp(c, ".mft") &&
                strcmp(c, ".mnf")))
-        fatal(1, "CMSfile suffix");
+        FATAL(MSG_GET, "CMSfile suffix");
     // sign it!
     const char *msg = signCMS(&cms, argv[3], 0);
     if (msg)

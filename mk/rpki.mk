@@ -99,6 +99,10 @@ dist_conformanceta_DATA = \
 	etc/sample-ta/bbn_conformance/badRootBadCRLDP.tal \
 	etc/sample-ta/bbn_conformance/badRootBadSig.tal \
 	etc/sample-ta/bbn_conformance/badRootNameDiff.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesASInherit.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesEmpty.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesIP4Inherit.tal \
+	etc/sample-ta/bbn_conformance/badRootResourcesIP6Inherit.tal \
 	etc/sample-ta/bbn_conformance/goodRootAKIMatches.tal \
 	etc/sample-ta/bbn_conformance/goodRootAKIOmitted.tal \
 	etc/sample-ta/bbn_conformance/root.tal
@@ -112,6 +116,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/badRootBadCRLDP.raw \
 	tests/conformance/raw/badRootBadSig.raw \
 	tests/conformance/raw/badRootNameDiff.raw \
+	tests/conformance/raw/badRootResourcesASInherit.raw \
+	tests/conformance/raw/badRootResourcesEmpty.raw \
+	tests/conformance/raw/badRootResourcesIP4Inherit.raw \
+	tests/conformance/raw/badRootResourcesIP6Inherit.raw \
 	tests/conformance/raw/goodRootAKIMatches.raw \
 	tests/conformance/raw/goodRootAKIOmitted.raw \
 	tests/conformance/raw/keys/CRL2CRLNums.mft.p15 \
@@ -142,14 +150,8 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/CRLEntryHasExtension.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.mft.p15 \
 	tests/conformance/raw/keys/CRLEntryReason.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNum0.mft.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNum0.p15 \
 	tests/conformance/raw/keys/CRLEntrySerNumMax.mft.p15 \
 	tests/conformance/raw/keys/CRLEntrySerNumMax.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumNeg.mft.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumNeg.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumTooBig.mft.p15 \
-	tests/conformance/raw/keys/CRLEntrySerNumTooBig.p15 \
 	tests/conformance/raw/keys/CRLIssAltName.mft.p15 \
 	tests/conformance/raw/keys/CRLIssAltName.p15 \
 	tests/conformance/raw/keys/CRLIssDistPt.mft.p15 \
@@ -353,6 +355,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4OnlyPfxTouchRanges.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv4PrefixLong.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv4SAFI.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAbovePfx.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxAboveRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6ExtraPfxBelowPfx.ee.p15 \
@@ -379,6 +382,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxSupersetLowRange.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6OnlyPfxTouchRanges.ee.p15 \
 	tests/conformance/raw/keys/badROAIPv6PrefixLong.ee.p15 \
+	tests/conformance/raw/keys/badROAIPv6SAFI.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1Explicit.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV1ExplicitBadSig.ee.p15 \
 	tests/conformance/raw/keys/badROAVersionV2.ee.p15 \
@@ -615,12 +619,6 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badCRLEntryHasExtension.stage1.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage0.patch \
 	tests/conformance/raw/patches/badCRLEntryReason.stage1.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNum0.stage0.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNum0.stage1.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumNeg.stage0.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumNeg.stage1.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage0.patch \
-	tests/conformance/raw/patches/badCRLEntrySerNumTooBig.stage1.patch \
 	tests/conformance/raw/patches/badCRLIssAltName.stage0.patch \
 	tests/conformance/raw/patches/badCRLIssAltName.stage1.patch \
 	tests/conformance/raw/patches/badCRLIssDistPt.stage0.patch \
@@ -1249,6 +1247,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv4PrefixLong.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv4SAFI.stage3.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6ExtraPfxAbovePfx.stage2.patch \
@@ -1353,6 +1355,10 @@ EXTRA_DIST += \
 	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage1.patch \
 	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage2.patch \
 	tests/conformance/raw/patches/badROAIPv6PrefixLong.stage3.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.ee.stage0.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.stage1.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.stage2.patch \
+	tests/conformance/raw/patches/badROAIPv6SAFI.stage3.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.ee.stage0.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage1.patch \
 	tests/conformance/raw/patches/badROAVersionV1Explicit.stage2.patch \
@@ -2056,6 +2062,6 @@ CLEANFILES += \
 
 
 TESTS += \
-	$(srcdir)/tests/subsystem/runSubsystemTest1.sh \
-	$(srcdir)/tests/subsystem/runSubsystemTest2.sh \
-	$(srcdir)/tests/subsystem/runSubsystemTest3.sh
+	tests/subsystem/runSubsystemTest1.sh \
+	tests/subsystem/runSubsystemTest2.sh \
+	tests/subsystem/runSubsystemTest3.sh

@@ -21,10 +21,8 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include <strings.h>
 #include "casn/asn.h"
 #include "casn/casn.h"
+#include "util/logging.h"
 
-extern void fatal(
-    int,
-    char *);
 extern int aflag;
 
 static int putform(
@@ -159,7 +157,9 @@ int asn1dump(
     }
     fprintf(outf, "\n");
     if (ansr < 0)
-        fatal(5, (char *)(-ansr));
+    {
+        FATAL("ASN.1 error at offset 0x%x", -ansr);
+    }
     return 0;
 }
 
@@ -247,7 +247,7 @@ static int putform(
             }
         }
         if (aflag < 0)
-            fprintf(outf, "(%d) ", (d - locbuf));
+            fprintf(outf, "(%td) ", (d - locbuf));
         fprintf(outf, "%s", (char *)locbuf);
         return row;
     }

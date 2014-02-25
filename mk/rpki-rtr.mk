@@ -78,6 +78,7 @@ check_DATA += \
 	tests/subsystem/rtr/as-4.roa \
 	tests/subsystem/rtr/as-5.roa \
 	tests/subsystem/rtr/as-6.roa \
+	tests/subsystem/rtr/as-2147483647.roa \
 	tests/subsystem/rtr/root.cer
 
 EXTRA_DIST += \
@@ -100,6 +101,7 @@ RPKI_RTR_TEST_KEYS = \
 	tests/subsystem/rtr/ee-4.key \
 	tests/subsystem/rtr/ee-5.key \
 	tests/subsystem/rtr/ee-6.key \
+	tests/subsystem/rtr/ee-2147483647.key \
 	tests/subsystem/rtr/root.key
 
 CLEANFILES += $(RPKI_RTR_TEST_KEYS)
@@ -109,7 +111,7 @@ $(RPKI_RTR_TEST_KEYS):
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/gen_key "$@" 2048
+		$(LOG_COMPILER) bin/rpki-object/gen_key "$@" 2048
 
 CLEANFILES += tests/subsystem/rtr/root.cer
 
@@ -118,7 +120,7 @@ tests/subsystem/rtr/root.cer: tests/subsystem/rtr/root.key $(top_srcdir)/tests/s
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/root.options \
 		CERT \
 		outputfilename="$@" \
@@ -149,7 +151,7 @@ $(RPKI_RTR_TEST_EE_CERTS): tests/subsystem/rtr/root.key tests/subsystem/rtr/root
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
 		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
 		CERT \
 		outputfilename="$@" \
@@ -161,6 +163,35 @@ $(RPKI_RTR_TEST_EE_CERTS): tests/subsystem/rtr/root.key tests/subsystem/rtr/root
 		ipv4="$$IP4" \
 		ipv6="$$IP6" \
 		as="$$number"
+
+RPKI_RTR_TEST_MAX_AS_EE_CERT = \
+	tests/subsystem/rtr/as-2147483647.ee.cer
+
+CLEANFILES += $(RPKI_RTR_TEST_MAX_AS_EE_CERT)
+
+tests/subsystem/rtr/as-2147483647.ee.cer: tests/subsystem/rtr/ee-2147483647.key
+$(RPKI_RTR_TEST_MAX_AS_EE_CERT): tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
+	mkdir -p "$(@D)"
+	ASnumber=2147483647; \
+	number=2; \
+	key="$(@D)/ee-$$ASnumber.key"; \
+	IP4="`printf '%u.0.1.0-%u.0.%u.255,%u.1.0.0-%u.%u.255.255' $$number $$number $$number $$number $$number $$number`"; \
+	IP6="`printf '%x::100-%x::%xff,%x:1::-%x:%x:ffff:ffff:ffff:ffff:ffff:ffff' $$number $$number $$number $$number $$number $$number`"; \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
+		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
+		CERT \
+		outputfilename="$@" \
+		parentcertfile=tests/subsystem/rtr/root.cer \
+		parentkeyfile=tests/subsystem/rtr/root.key \
+		subjkeyfile="$$key" \
+		serial="$$ASnumber" \
+		subject="as$$ASnumber" \
+		ipv4="$$IP4" \
+		ipv6="$$IP6" \
+		as=inherit
 
 RPKI_RTR_TEST_ROAS = \
 	tests/subsystem/rtr/as-1.roa \
@@ -197,7 +228,7 @@ $(RPKI_RTR_TEST_ROAS):
 	TEST_LOG_NAME=`basename "$@"` \
 		TEST_LOG_DIR=`dirname "$@"` \
 		STRICT_CHECKS=0 \
-		$(TESTS_ENVIRONMENT) bin/rpki-object/create_object/create_object \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
 		ROA \
 		outputfilename="$@" \
 		eecertlocation="$$ee_cer" \
@@ -206,6 +237,40 @@ $(RPKI_RTR_TEST_ROAS):
 		roaipv4="$$IP4" \
 		roaipv6="$$IP6"
 
+RPKI_RTR_TEST_MAX_AS_ROA = \
+	tests/subsystem/rtr/as-2147483647.roa 
+
+CLEANFILES += $(RPKI_RTR_TEST_MAX_AS_ROA)
+
+tests/subsystem/rtr/as-2147483647.roa: tests/subsystem/rtr/as-2147483647.ee.cer tests/subsystem/rtr/ee-2147483647.key
+$(RPKI_RTR_TEST_MAX_AS_ROA):
+	mkdir -p "$(@D)"
+	number=2; \
+	ASnumber=2147483647; \
+	ee_cer="$(@D)/as-$$ASnumber.ee.cer"; \
+	key="$(@D)/ee-$$ASnumber.key"; \
+	IP4=""; IP6=""; \
+	for IP_OCTET in `seq 1 "$$number"`; do \
+		IP4="$$IP4,`printf '%u.0.%u.0/24%%25' $$number $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x::%x00/120' $$number $$IP_OCTET`"; \
+	done; \
+	for IP_OCTET in `seq 1 "$$number"`; do \
+		IP4="$$IP4,`printf '%u.%u.0.0/16' $$number $$IP_OCTET`"; \
+		IP6="$$IP6,`printf '%x:%x::/32%%127' $$number $$IP_OCTET`"; \
+	done; \
+	IP4=`echo "$$IP4" | cut -c 2-`; \
+	IP6=`echo "$$IP6" | cut -c 2-`; \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
+		ROA \
+		outputfilename="$@" \
+		eecertlocation="$$ee_cer" \
+		eekeylocation="$$key" \
+		asid="$$ASnumber" \
+		roaipv4="$$IP4" \
+		roaipv6="$$IP6"
 
 CLEANFILES += \
 	tests/subsystem/rtr/*.diff \

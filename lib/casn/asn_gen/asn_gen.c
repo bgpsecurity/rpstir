@@ -21,6 +21,7 @@ char asn_gen_id[] = "@(#)asn_gen.c 828P";
 #ifdef WIN32
 #include <io.h>
 #endif
+#include <stdarg.h>
 
 static void print_define_tables(
     FILE *);
@@ -202,51 +203,6 @@ identified-organization OBJECT IDENTIFIER ::= {3}\n",
     union_w, unique_w, universal_w, universalstring_w, utctime_w,
     utf8string_w,
     videotexstring_w, visiblestring_w, with_w, 0
-}, *msgs[] =
-
-{
-    "Asn_gen finished %s OK\n", "Invalid parameter: %s\n",      /* 1 */
-        "Can't open %s\n",      /* 2 */
-        "Construct has ambiguous DER\n",        /* 3 */
-        "invalid state %d\n",   /* 4 */
-        "no child of %s in table\n",    /* 5 */
-        "invalid word: %s\n",   /* 6 */
-        "memory error\n",       /* 7 */
-        "Unused error message 8\n",     /* 8 */
-        "overflow in area %s\n",        /* 9 */
-        "Unused error message 10\n",    /* 10 */
-        "can't find definer/defined path for %s\n",     /* 11 */
-        "syntax error at %s\n", /* 12 */
-        "nesting detected\n",   /* 13 */
-        "unexpected EOF at %s\n",       /* 14 */
-        "extra tag definition 0x%lX\n", /* 15 */
-        "undefined upper bound %s\n",   /* 16 */
-        "duplicate definition of %s\n", /* 17 */
-        "ID %s is not defined\n",       /* 18 */
-        "no table defined for %s\n",    /* 19 */
-        "missing %s\n",         /* 20 */
-        "%s is not on the export list\n",       /* 21 */
-        "stuck in loop at %s, Check syntax.\n", /* 22 */
-        "ambiguous tagging of %s\n",    /* 23 */
-        "internal error in %s\n",       /* 24 */
-        "multiple definers for %s\n",   /* 25 */
-        "too %s parameters in macro\n", /* 26 */
-        "undefined macro %s\n", /* 27 */
-        "undefined item %s in syntax\n",        /* 28 */
-        "not enough columns defined in table\n",        /* 29 */
-        "undefined class %s\n", /* 30 */
-        "%s not supported for this type\n",     /* 31 */
-        "%s must not be optional or absent\n",  /* 32 */
-        "Can't determine constraint %s\n",      /* 33 */
-        "undefined type for %s\n",      /* 34 */
-        "no ANY DEFINED BY for %s\n",   /* 35 */
-        "token %s is too big\n",        /* 36 */
-        "line bigger than buffer: %s\n",        /* 37 */
-        "Can't create directory named %s\n",    /* 38 */
-        "Can't find stream for fd %d\n",        /* 39 */
-        "Incomplete table item %s\n",   /* 40 */
-        "Couldn't find constraint for %s\n",    /* 41 */
-        "Can't rename file: %s\n",      /* 42 */
 }, *sfcsids[] =
 
 {
@@ -254,7 +210,6 @@ asn_gen_id,
         asn_constr_id, asn_hdr_id,
         asn_pproc_id, asn_read_id, asn_tabulate_id, casn_constr_id,
         casn_hdr_id, 0}, *i_names = NULL, *i_paths = NULL, *mktemp(char *);
-
 
 void clear_globals(
 )  ,
@@ -391,7 +346,7 @@ int main(
                     if ((!i_paths && !(i_paths = (char *)calloc(did, 1))) ||
                         !(i_paths = recalloc(i_paths, (size_t) i_pathsize,
                                              (size_t) (i_pathsize + did))))
-                        fatal(7, (char *)0);
+                        done(true, MSG_MEM);
                     strcpy(&i_paths[i_pathsize], c);
                     i_pathsize += did;
                 }
@@ -399,7 +354,7 @@ int main(
             else if (*c == 'l')
             {
                 if (*fname)
-                    fatal(1, c);
+                    done(true, MSG_INVAL_PARAM, c);
                 lflag = 1;
             }
             else if (*c == 'o')
@@ -415,20 +370,20 @@ int main(
             else if (*c == 'w')
             {
                 for (did = 0; sfcsids[did]; puts(&sfcsids[did++][4]));
-                fatal(0, "");
+                done(false, MSG_OK, "");
             }
             else
-                fatal(1, *p);
+                done(true, MSG_INVAL_PARAM, *p);
         }
         else if (!source)
             source = *p;
         else if (lflag)
-            fatal(1, *p);
+            done(true, MSG_INVAL_PARAM, *p);
         else
             cat(fname, *p);
     }
     if (!source)
-        fatal(2, "source file");
+        done(true, MSG_OPEN, "source file");
     if (!lflag)
     {
         if (*fname)
@@ -445,7 +400,7 @@ int main(
     if (!do_flag)
         do_flag = 3;
     if ((fd = open(source, (O_RDONLY | O_BINARY))) < 0)
-        fatal(2, source);
+        done(true, MSG_OPEN, source);
     dup2(fd, 0);
     close(fd);
     if (vflag > 0)
@@ -464,7 +419,7 @@ int main(
     {
         made_change = 0;
         if (!(tmpstr = fopen(pprocname, "w")))
-            fatal(2, pprocname);
+            done(true, MSG_OPEN, pprocname);
         state = PRE_GLOBAL;
         streams.str = fdopen(0, "r");
         strcpy(curr_file, c);
@@ -476,7 +431,7 @@ int main(
             fclose(tmpstr);
             cat(cat(locbuf, pprocname), "~");
             if (rename(pprocname, locbuf))
-                fatal(42, strerror(errno));
+                done(true, MSG_RENAME_FILE, strerror(errno));
             c = locbuf;
             close(fd);
             for (ntbp = (struct name_table *)name_area.area,
@@ -487,7 +442,7 @@ int main(
             }
             fd = open(c, (O_RDONLY | O_BINARY));
             if (fd == -1)
-                fatal(2, c);
+                done(true, MSG_OPEN, c);
             dup2(fd, 0);
             close(fd);
         }
@@ -586,7 +541,7 @@ int main(
             if (vflag > 0)
                 printf("File %s\n", fname);
             if (!(outstr = fopen(fname, "w")))
-                fatal(2, fname);
+                done(true, MSG_OPEN, fname);
             cat(sfx, ".h");
         }
         print_if_include(outstr, fname);
@@ -611,7 +566,7 @@ int main(
             if (vflag > 0)
                 printf("File %s\n", fname);
             if (!(outstr = fopen(fname, "w")))
-                fatal(2, fname);
+                done(true, MSG_OPEN, fname);
             for (b = strcpy(locbuf, fname); *b; b++)
             {
                 if (*b == '.')
@@ -663,7 +618,7 @@ int main(
             unlink(pprocname);
     }
     if (vflag > 0)
-        fatal(0, source);
+        done(false, MSG_OK, source);
     return 0;
 }
 
@@ -703,7 +658,7 @@ Procedure:
     {
         if (!(parentp->next =
               (struct parent *)calloc(sizeof(struct parent), 1)))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         parentp = parentp->next;
     }
     parentp->index = parent;
@@ -711,7 +666,7 @@ Procedure:
     {
         parentp->map_lth = 1;
         if (!(parentp->mymap = (char *)calloc(16, 1)))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         *parentp->mymap = (char)offset + '0';
     }
     return ansr;
@@ -727,7 +682,7 @@ void add_constraint(
     {
         if ((constraint_area.size + constraint_area.chunk) >
             constraint_area.limit)
-            fatal(9, constraint_area.name);
+            done(true, MSG_OVERFLOW, constraint_area.name);
         if ((!constraint_area.area
              && !(constraint_area.area =
                   (char *)calloc(constraint_area.chunk, 1)))
@@ -737,7 +692,7 @@ void add_constraint(
                                       constraint_area.size,
                                       constraint_area.size +
                                       constraint_area.chunk))))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         constraint_area.size += constraint_area.chunk;
     }
     c = cat(&constraint_area.area[constraint_area.next], buf);
@@ -752,10 +707,10 @@ struct id_table *add_id(
     for (idp = (struct id_table *)id_area.area, eidp = &idp[id_area.next];
          idp < eidp && strcmp(idp->name, name); idp++);
     if (idp < eidp)
-        fatal(17, name);
+        done(true, MSG_DUP_DEF, name);
     idp = (struct id_table *)expand_area(&id_area);
     if (!(idp->name = (char *)calloc((strlen(name) + 1), 1)))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     cat(idp->name, name);
     return idp;
 }
@@ -774,7 +729,7 @@ int add_include_name(
     if ((!i_names && !(i_names = (char *)calloc((size_t) (lth + 3), 1))) ||
         !(i_names = recalloc(i_names, (size_t) i_namesize,
                              (size_t) (i_namesize + lth + 3))))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     strncpy((b = &i_names[i_namesize]), fname, (size_t) lth);
     c = &b[lth];
     c = cat(c, ".h");
@@ -821,10 +776,10 @@ void add_ub(
     for (ubp = (struct ub_table *)ub_area.area, eubp = &ubp[ub_area.next];
          ubp < eubp && strcmp(ubp->name, name); ubp++);
     if (ubp < eubp)
-        fatal(17, name);
+        done(true, MSG_DUP_DEF, name);
     ubp = (struct ub_table *)expand_area(&ub_area);
     if (!(ubp->name = (char *)calloc(strlen(name) + 1, 1)))
-        fatal(7, (char *)0);
+        done(true, MSG_MEM);
     cat(ubp->name, name);
     ubp->val = val;
     ubp->status = (active < 0) ? 1 : 0;
@@ -879,29 +834,6 @@ void cvt_number(
     strcpy(to, from);
 }
 
-static char assign_table[] = "0114202000100000002222112";
-#define NUM_ASSIGN 1
-#define CHAR_ASSIGN 2
-#define BIT_ASSIGN 4
-
-char *derived_dup(
-    long loctype)
-{
-    char *c;
-
-    if (loctype == ASN_SET)
-        c = "AsnArrayOfSets";
-    else if (loctype >= (long)sizeof(assign_table) || assign_table[loctype] == '0')
-        c = "AsnArray";
-    else if ((assign_table[loctype] & CHAR_ASSIGN))
-        c = "AsnStringArray";
-    else if ((assign_table[loctype] & NUM_ASSIGN))
-        c = "AsnNumericArray";
-    else if ((assign_table[loctype] & BIT_ASSIGN))
-        c = "AsnBitStringArray";
-    return c;
-}
-
 void end_definition(
     )
 {
@@ -944,7 +876,7 @@ char *expand_area(
     if (area->next + 1 >= area->size)
     {
         if ((area->size + area->chunk) > area->limit)
-            fatal(9, area->name);
+            done(true, MSG_OVERFLOW, area->name);
         if ((!area->size
              && !(area->area = (char *)calloc(area->chunk, area->item)))
             || (area->size
@@ -952,22 +884,36 @@ char *expand_area(
                      recalloc(area->area, (size_t) (area->size * area->item),
                               (size_t) ((area->size +
                                          area->chunk) * area->item)))))
-            fatal(7, (char *)0);
+            done(true, MSG_MEM);
         area->size += area->chunk;
     }
     return &area->area[area->next++ * area->item];
 }
 
-void fatal(
-    int err,
-    char *param)
+void done(
+    bool is_error,
+    const char * format,
+    ...)
 {
+    va_list ap;
+
     if (!*classname)
         cat(classname, "(null}");
-    warn(err, param);
-    if (err && !did_tables)
+
+    if (is_error)
+    {
+        fprintf(stderr, "****** In line %ld of file %s, class %s, \007",
+                curr_line, curr_file, classname);
+    }
+
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+
+    if (is_error && !did_tables)
         print_tables();
-    exit(err);
+
+    exit(is_error ? EXIT_FAILURE : EXIT_SUCCESS);
 }
 
 char *find_child(
@@ -1021,7 +967,7 @@ char *find_defined_class(
     {
         if (ntbp->parent.index >= 0)
             ntbp = &((struct name_table *)name_area.area)[ntbp->parent.index];
-        fatal(35, ntbp->name);
+        done(true, MSG_NO_ANY_DEFINED_BY, ntbp->name);
     }
     ntbp = &((struct name_table *)name_area.area)[parentp->index];
     return ntbp->name;
@@ -1098,7 +1044,7 @@ FILE *find_stream(
     struct fd_to_stream *fdstrp;
     for (fdstrp = &streams; fdstrp && fdstrp->fd != fd; fdstrp = fdstrp->next);
     if (!fdstrp)
-        fatal(39, (char *)fd);
+        done(true, MSG_FIND_STREAM, fd);
     return fdstrp->str;
 }
 
@@ -1126,7 +1072,7 @@ long find_ub(
 {
     struct ub_table *ntbp;
     if (!(ntbp = is_ub(name)))
-        fatal(16, name);
+        done(true, MSG_UNDEF_UPPER, name);
     return ntbp->val;
 }
 
@@ -1150,7 +1096,7 @@ void get_expected(
     if (!get_token(fd, c))
         syntax(find_typestring(loctag));
     if (strcmp(c, string))
-        fatal(6, c);
+        done(true, MSG_INVAL_WORD, c);
 }
 
 int get_known(
@@ -1172,7 +1118,7 @@ int get_must(
 {
     int ansr = get_token(fd, buf);
     if (!ansr)
-        fatal(14, buf);
+        done(true, MSG_EOF, buf);
     return ansr;
 }
 
@@ -1384,7 +1330,7 @@ Procedure:
                                                                       sizeof
                                                                       (int)),
                                                             (size_t) ((indexsize + 4) * sizeof(int))))))
-                fatal(7, (char *)0);
+                done(true, MSG_MEM);
             indexsize += 4;
         }
         indexlist[loops] = cparentp->index;
@@ -1410,7 +1356,7 @@ void mk_subclass(
     struct name_table *ntbp = find_name(from);
     struct parent *parentp;
     char *b,
-       *c;
+       *c = NULL;
     definee = ntbp - (struct name_table *)name_area.area;
     if ((b = find_child(from)))
         c = find_child(b);
@@ -1560,7 +1506,7 @@ void print_tables(
             if (ntbp->generation != gen)
                 continue;
             did++;
-            printf("#%d %s ", ntbp - (struct name_table *)name_area.area,
+            printf("#%td %s ", ntbp - (struct name_table *)name_area.area,
                    ntbp->name);
             printf("has:\n");
             print_gen(ntbp);
@@ -1744,7 +1690,7 @@ void set_alt_subtype(
         }
     }
     if (!altscp || !altscp->name)
-        fatal(29, (char *)0);
+        done(true, MSG_FEW_COLS);
     *subclass = 0;
     type = -1;
     if ((ttype = find_type(altscp->name)) == ASN_NOTYPE)
@@ -1770,7 +1716,7 @@ void syntax(
 {
     if (!*name)
         name = "no item name";
-    fatal(12, name);
+    done(true, MSG_SYNTAX_ERR, name);
 }
 
 int test_dup(
@@ -1846,13 +1792,17 @@ long tell_pos(
 }
 
 void warn(
-    int err,
-    char *param)
+    const char * format,
+    ...)
 {
-    if (err)
-        fprintf(stderr, "****** In line %ld of file %s, class %s, \007",
-                curr_line, curr_file, classname);
-    fprintf(stderr, msgs[err], (param) ? param : "(null)");
+    va_list ap;
+
+    fprintf(stderr, "****** In line %ld of file %s, class %s, \007",
+            curr_line, curr_file, classname);
+
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
 }
 
 int wdcmp(

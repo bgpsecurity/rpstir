@@ -17,7 +17,7 @@ void unix_error(
     char *msg)                  /* unix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 /*
@@ -29,7 +29,7 @@ void posix_error(
     char *msg)                  /* posix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(code));
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 void dns_error(
@@ -43,7 +43,7 @@ void app_error(
     char *msg)                  /* application error */
 {
     fprintf(stderr, "%s\n", msg);
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 /*
@@ -671,33 +671,6 @@ void Pthread_once(
     void (*init_function) ())
 {
     pthread_once(once_control, init_function);
-}
-
-/*******************************
- * Wrappers for Posix semaphores
- *******************************/
-
-void Sem_init(
-    sem_t * sem,
-    int pshared,
-    unsigned int value)
-{
-    if (sem_init(sem, pshared, value) < 0)
-        unix_error("Sem_init error");
-}
-
-void P(
-    sem_t * sem)
-{
-    if (sem_wait(sem) < 0)
-        unix_error("P error");
-}
-
-void V(
-    sem_t * sem)
-{
-    if (sem_post(sem) < 0)
-        unix_error("V error");
 }
 
 /*********************************************************************

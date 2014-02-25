@@ -24,7 +24,7 @@ static scmtab *updateTable = NULL;
 static scmsrcha *snSrch = NULL;
 
 // serial number of this and previous update
-static uint prevSerialNum,
+static unsigned int prevSerialNum,
     currSerialNum,
     lastSerialNum;
 
@@ -45,18 +45,18 @@ static void setupSnQuery(
 static int setLastSN(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
     (void)conp;
     (void)numLine;
-    lastSerialNum = *((uint *) (s->vec[0].valptr));
+    lastSerialNum = *((unsigned int *) (s->vec[0].valptr));
     return -1;                  // stop after first row
 }
 
 /****
  * find the serial number from the most recent update
  ****/
-static uint getLastSerialNumber(
+static unsigned int getLastSerialNumber(
     scmcon * connect,
     scm * scmp)
 {
@@ -77,9 +77,9 @@ static uint getLastSerialNumber(
 static int writeROAData(
     scmcon * conp,
     scmsrcha * s,
-    int numLine)
+    ssize_t numLine)
 {
-    uint asn = *((uint *) s->vec[0].valptr);
+    unsigned int asn = *((unsigned int *) s->vec[0].valptr);
     char *ptr = (char *)s->vec[1].valptr,
         *end;
     char msg[1024];
@@ -119,11 +119,11 @@ int main(
 {
     char msg[1024];
     int sta;
-    uint session_count;
-    uint update_count;
-    uint update_had_changes;    // whether there are any changes from
-                                // prevSerialNum to currSerialNum
-    uint dont_proceed;
+    unsigned int session_count;
+    unsigned int update_count;
+    unsigned int update_had_changes;    // whether there are any changes from
+                                        // prevSerialNum to currSerialNum
+    unsigned int dont_proceed;
     int first_time = 0;
     int force_update = 0;
 
@@ -208,7 +208,7 @@ int main(
     if (first_time)
     {
         srandom((unsigned int)time(NULL));
-        prevSerialNum = (uint) random();
+        prevSerialNum = (unsigned int) random();
     }
     else
     {
