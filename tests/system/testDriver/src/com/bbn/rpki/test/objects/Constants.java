@@ -50,4 +50,6 @@ public interface Constants {
 
 	/** BigInteger 2 is useful */
 	public static final BigInteger TWO = new BigInteger("2");
+
+	public static final int RSYNC_PORT = 12346;
 }

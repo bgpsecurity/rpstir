@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author RTomlinson
  */
 public class EE_cert extends Certificate {

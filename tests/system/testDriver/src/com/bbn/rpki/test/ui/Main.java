@@ -9,8 +9,12 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -174,10 +178,56 @@ public class Main implements XMLConstants {
 		Iterable<TaskFactory.Task> tasks = model.getTasks();
 		uploadedTrustAnchors = false;
 		//rsync server needs to be setup here before running executeTasks...tear down before it exits
+		Process rsyncServer = startRsync();
 		executeTasks(tasks, model, "");
+		if(rsyncServer != null) {
+			rsyncServer.destroy();
+		}
 		tlPanel.format("Completed%n");
-
 		RunLoader.singleton().stop();
+	}
+
+	private Process startRsync() {
+		String fullPath = Constants.buildDir + "/tests/system/testbed/rsync.config";
+		File configFile = new File(fullPath);
+		if(configFile.exists()) {
+			configFile.delete();
+		}
+		try {
+			PrintWriter p = new PrintWriter(configFile);
+			p.println("lock file = "+Constants.buildDir+"/lock.lock");
+			p.println("address = localhost");
+			p.println("port = " + Constants.RSYNC_PORT);
+			p.println("max connections = 32");
+			p.println("[testbed]");
+			p.println("    comment = RPSTIR testbed");
+			p.println("    path = " + Constants.RSYNC_LOCAL);
+			p.println("    read only = yes");
+			p.println("    dont compress = *");
+			p.println("    use chroot = false");
+			p.close();
+		} catch (FileNotFoundException e1) {
+			System.err.println("Could not create config file at " + fullPath);
+			e1.printStackTrace();
+			return null;
+		}
+		List<String> cmd = new ArrayList<String>();
+		cmd.add("rsync");
+		cmd.add("--daemon");
+		cmd.add("--config=" + fullPath);
+		cmd.add("--no-detach");
+		ProcessBuilder builder = new ProcessBuilder(cmd);
+		File log = new File(Constants.buildDir + "/tests/system/testbed/log/rsyncserver.log");
+
+		builder.redirectError(log);
+		builder.redirectOutput(log);
+		try {
+			return builder.start();
+		} catch (IOException e) {
+			System.err.println("Error starting rsync server, see rsync log at " + log.getAbsolutePath());
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	/**

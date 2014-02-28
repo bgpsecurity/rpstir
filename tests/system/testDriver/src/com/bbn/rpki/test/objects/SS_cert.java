@@ -5,7 +5,7 @@ package com.bbn.rpki.test.objects;
 
 /**
  * <Enter the description of this type here>
- * 
+ *
  * @author RTomlinson
  */
 public class SS_cert extends Certificate {

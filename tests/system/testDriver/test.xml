@@ -4,7 +4,7 @@
 max_nodes = 75
 childSpec = AFRINIC%1, APNIC%1, RIPE%1
 max_depth = 3
-serverName = localhost/rst
+serverName = localhost:12346/testbed
 breakAway = False
 ttl = 365
 
