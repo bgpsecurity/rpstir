@@ -179,9 +179,12 @@ public class Main implements XMLConstants {
 		uploadedTrustAnchors = false;
 		//rsync server needs to be setup here before running executeTasks...tear down before it exits
 		Process rsyncServer = startRsync();
-		executeTasks(tasks, model, "");
-		if(rsyncServer != null) {
-			rsyncServer.destroy();
+		try{
+			executeTasks(tasks, model, "");
+		} finally {
+			if(rsyncServer != null) {
+				rsyncServer.destroy();
+			}
 		}
 		tlPanel.format("Completed%n");
 		RunLoader.singleton().stop();
