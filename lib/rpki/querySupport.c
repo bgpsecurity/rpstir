@@ -142,6 +142,7 @@ int checkValidity(
     // now do the part specific to this cert
     int firstTime = 1;
     char prevSKI[128];
+    char whichCerts[WHERESTR_SIZE]; // for debugging: which certs are we looking for
     // keep going until trust anchor, where either AKI = SKI or no AKI
     while (firstTime ||
 	   !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
@@ -153,12 +154,15 @@ int checkValidity(
             {
                 snprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
                          " and ski=\"%s\"", ski);
+                snprintf(whichCerts, sizeof(whichCerts), "ski=\"%s\"", ski);
                 strncpy(prevSKI, ski, 128);
             }
             else
             {
                 snprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
                          " and local_id=\"%d\"", localID);
+                snprintf(whichCerts, sizeof(whichCerts), "local_id=\"%d\"",
+                         localID);
                 prevSKI[0] = 0;
             }
         }
@@ -170,6 +174,8 @@ int checkValidity(
             snprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
                      " and ski=\"%s\" and subject=\"%s\"", nextSKI,
                      escaped_subject);
+            snprintf(whichCerts, sizeof(whichCerts),
+                     "ski=\"%s\" and subject=\"%s\"", nextSKI, escaped_subject);
             strncpy(prevSKI, nextSKI, 128);
         }
         parentsFound = 0;
@@ -177,8 +183,8 @@ int checkValidity(
                            registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (parentsFound > 1)
         {
-            LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
-                parentsFound);
+            LOG(LOG_WARNING, "multiple parents (%d) found (%s); results suspect",
+                parentsFound, whichCerts);
         }
         else if (parentsFound == 0)
         {                       // no parent cert
@@ -190,8 +196,9 @@ int checkValidity(
                 searchscm(connect, validTable, anySrch, NULL, registerParent,
                           SCM_SRCH_DOVALUE_ALWAYS, NULL);
             if (parentsFound > 1)
-                LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
-                    parentsFound);
+                LOG(LOG_WARNING, "multiple parents (%d) found with stale "
+                    "validation chain (%s); results suspect",
+                    parentsFound, whichCerts);
             return !parentsFound;
         }
     }
