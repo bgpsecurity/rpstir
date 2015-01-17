@@ -70,11 +70,6 @@ struct badfile {
     int err;
 };
 
-int roaFromConfig(
-    char *fname,
-    int doval,
-    struct CMS *rp);
-
 /*
  * This function reads the file at "fname" and parses it.  Presuming the file
  * represents a ROA in syntactically correct openssl conf file format, the
@@ -87,10 +82,10 @@ int roaFromConfig(
  * The non-NULL return from this function is allocated memory that must be
  * freed by a call to roaFree(). 
  */
-
-int roaToConfig(
-    struct CMS *r,
-    char *fname);
+int roaFromConfig(
+    char *fname,
+    int doval,
+    struct CMS *rp);
 
 /*
  * NOT REQUIRED to be implemented
@@ -102,12 +97,9 @@ int roaToConfig(
  * On success this function returns 0; on failure it returns a negative error
  * code. 
  */
-
-int roaFromFile(
-    char *fname,
-    int fmt,
-    int doval,
-    struct CMS *rp);
+int roaToConfig(
+    struct CMS *r,
+    char *fname);
 
 /*
  * This is a more generalized function for similar purposes.  It reads in a
@@ -128,11 +120,11 @@ int roaFromFile(
  * The non-NULL return from this function is allocated memory that must be
  * freed by a call to roaFree(). 
  */
-
-int roaToFile(
-    struct CMS *r,
+int roaFromFile(
     char *fname,
-    int fmt);
+    int fmt,
+    int doval,
+    struct CMS *rp);
 
 /*
  * This function is the inverse of the previous function.  The ROA defined by
@@ -142,13 +134,10 @@ int roaToFile(
  * On success this function returns 0; on failure it returns a negative error
  * code. 
  */
-
-int roaGenerateFilter(
+int roaToFile(
     struct CMS *r,
-    uchar * cert,
-    FILE * fp,
-    char *str,
-    int strLen);
+    char *fname,
+    int fmt);
 
 /*
  * This function is used to create BGP filter tables from a ROA and its
@@ -162,24 +151,27 @@ int roaGenerateFilter(
  * On success this function returns 0; on failure it returns a negative error
  * code. 
  */
-
-int roaGenerateFilter2(
+int roaGenerateFilter(
     struct CMS *r,
-    char **str);
+    uchar * cert,
+    FILE * fp,
+    char *str,
+    int strLen);
+
 /*
  * Similar to above but allocates space for result as needed 
  */
-
-int roaGetIPAddresses(
+int roaGenerateFilter2(
     struct CMS *r,
     char **str);
+
 /*
  * Fills the IP addresses assigned by a ROA into a multiline string, where
  * each line has the form address/prefix_length[/max_prefix_len] 
  */
-
-unsigned char *roaSKI(
-    struct CMS *r);
+int roaGetIPAddresses(
+    struct CMS *r,
+    char **str);
 
 /*
  * This utility function extracts the SKI from a ROA and formats it in the
@@ -189,10 +181,8 @@ unsigned char *roaSKI(
  * Note that this function returns a pointer to allocated memory that must be
  * free()d by the caller. 
  */
-
-unsigned char *roaSignature(
-    struct CMS *r,
-    int *lenp);
+unsigned char *roaSKI(
+    struct CMS *r);
 
 /*
  * This utility function extracts the binary signature from the ROA and
@@ -201,16 +191,15 @@ unsigned char *roaSignature(
  * binary data into an alternate form, if desired. On failure this function
  * returns NULL. 
  */
-
-uint32_t roaAS_ID(
-    struct CMS *r);
+unsigned char *roaSignature(
+    struct CMS *r,
+    int *lenp);
 
 /*
  * This utility function extracts the AS# from a ROA and returns it. Only
  * call this after roaValidate() passes.
  */
-
-int roaValidate(
+uint32_t roaAS_ID(
     struct CMS *r);
 
 /*
@@ -218,28 +207,25 @@ int roaValidate(
  * database access.  On success it returns 0; on failure, it returns a
  * negative error code. 
  */
-
-int manifestValidate(
-    struct CMS *r,
-    int *stalep);
+int roaValidate(
+    struct CMS *r);
 
 /*
  * This function performs all validation steps on a manifest that do
  * not require database access.  On success it returns 0; on failure,
  * it returns a negative error code.
  */
-
-int ghostbustersValidate(
-    struct CMS *cms);
+int manifestValidate(
+    struct CMS *r,
+    int *stalep);
 
 /*
  * This function performs all validation steps on a ghostbusters
  * record that do not require database access.  On success it returns
  * 0; on failure, it returns a negative error code.
  */
-
-extern int roaValidate2(
-    struct CMS *r);
+int ghostbustersValidate(
+    struct CMS *cms);
 
 /*
  * This function performs all validations steps on a ROA that require an X509
@@ -256,6 +242,8 @@ extern int roaValidate2(
  * NULL && sta == 0 ) { blob = read cert from file (fn); valid =
  * roaValidate2(r, blob); } } } 
  */
+extern int roaValidate2(
+    struct CMS *r);
 
 int check_fileAndHash(
     struct FileAndHash *fahp,
@@ -264,11 +252,6 @@ int check_fileAndHash(
     int inhashlen,
     int inhashtotlen);
 
-int manifestValidate2(
-    struct CMS *r,
-    char *dir,
-    struct badfile ***badfilesppp);
-
 /*
  * This function performs all validations steps on a ROA that require an X509
  * certificate to have been fetched from the database. It returns 0 on success 
@@ -276,12 +259,13 @@ int manifestValidate2(
  * in badfilespp as an array of char*, the last of which is null. The caller
  * is responsible for freeing each char* and then the array. 
  */
+int manifestValidate2(
+    struct CMS *r,
+    char *dir,
+    struct badfile ***badfilesppp);
 
 void free_badfiles(
     struct badfile **badfilespp);
-
-void roaFree(
-    struct CMS *r);
 
 /*
  * This function frees all memory allocated when "r" was created. It is
@@ -289,21 +273,15 @@ void roaFree(
  * non-NULL, however, it must point to a syntatically valid ROA structure
  * (which need not have been semantically validated, however). 
  */
-
-int check_sig(
-    struct CMS *rp,
-    struct Certificate *certp);
+void roaFree(
+    struct CMS *r);
 
 /*
  * This function checks the signature on a ROA. 
  */
-
-int decode_b64(
-    unsigned char *bufIn,
-    int inSize,
-    unsigned char **bufOut,
-    int *outSize,
-    char *armor);
+int check_sig(
+    struct CMS *rp,
+    struct Certificate *certp);
 
 /*
  * This function decodes a PEM encoded file whose contents are stored in
@@ -311,6 +289,12 @@ int decode_b64(
  * data in "bufOut" of length "outSize". Note that it allocates memory to do
  * this, which the caller must free. 
  */
+int decode_b64(
+    unsigned char *bufIn,
+    int inSize,
+    unsigned char **bufOut,
+    int *outSize,
+    char *armor);
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(A) ((void)A)
