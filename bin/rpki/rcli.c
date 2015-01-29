@@ -1167,7 +1167,7 @@ int main(
             status = splitdf(NULL, NULL, line, &outdir, &outfile, &outfull);
             if (status != 0)
             {
-                LOG(LOG_ERR, "%s (%d)", err2string(sta), status);
+                LOG(LOG_ERR, "%s (%d)", err2string(status), status);
                 continue;
             }
 
