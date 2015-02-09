@@ -1,8 +1,3 @@
-/*
- * $Id$
- */
-
-
 #include "rpki/cms/roa_utils.h"
 
 #include "rpki/scm.h"

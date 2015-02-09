@@ -3,10 +3,6 @@
 #include "util/cryptlib_compat.h"
 #include <string.h>
 
-/*
- * $Id: genkey.c 506 2008-06-03 21:20:05Z gardiner $
- */
-
 #define STANDARD_KEY_SIZE 2048
 
 

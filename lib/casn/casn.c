@@ -13,7 +13,6 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_sfcsid[] = "@(#)casn.c 871P";
 #include "casn.h"
 #include <stdio.h>
 #include "util/logging.h"

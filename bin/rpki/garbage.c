@@ -13,10 +13,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-/*
- * $Id$
- */
-
 
 /****************
  * This is the garbage collector client, which tracks down all the

@@ -1,8 +1,3 @@
-/*
- * $Id$
- */
-
-
 #ifndef _SCM_H_
 #define _SCM_H_
 

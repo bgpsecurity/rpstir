@@ -1,10 +1,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-/*
- * $Id$
- */
-
 
 #include <stdio.h>
 #include <unistd.h>

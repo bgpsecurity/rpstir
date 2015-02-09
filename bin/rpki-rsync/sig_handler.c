@@ -16,10 +16,6 @@
 #include "main.h"
 #include "util/stringutils.h"
 
-/*
- * $Id$
- */
-
 extern struct write_port *global_wport;
 
 void sig_handler(

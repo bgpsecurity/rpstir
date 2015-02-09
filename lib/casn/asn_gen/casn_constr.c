@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_cconstr.c
 Contents: Functions to generate .c files as part of ASN_CGEN program.
@@ -11,8 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-char casn_constr_id[] = "@(#)casn_constr.c 828P";
 
 #include "asn_gen.h"
 

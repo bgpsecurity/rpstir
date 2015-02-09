@@ -1,8 +1,3 @@
-/*
- * $Id: roa_serialize.c 453 2007-07-25 15:30:40Z mreynolds $
- */
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

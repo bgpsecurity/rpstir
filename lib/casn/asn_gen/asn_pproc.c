@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_pproc.c
 Contents: Functions to pre-process ASN.1 files as part of the ASN_GEN
@@ -12,10 +9,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-const char asn_pproc_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_pproc.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
-char asn_pproc_id[] = "@(#)asn_pproc.c 828P";
 
 #include "asn_gen.h"
 #ifdef WIN32

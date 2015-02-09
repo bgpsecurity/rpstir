@@ -1,8 +1,3 @@
-/*
- * $Id$
- */
-
-
 #ifndef _SQHL_H_
 #define _SQHL_H_
 

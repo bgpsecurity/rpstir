@@ -9,10 +9,6 @@
 #include <limits.h>
 #include <time.h>
 
-/*
- * $Id$
- */
-
 char *getMessageFromString(
     const char *,
     unsigned int,

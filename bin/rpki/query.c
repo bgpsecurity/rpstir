@@ -17,11 +17,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-
-/*
- * $Id$
- */
-
 /****************
  * This is the query client, which allows a user to read information
  * out of the database and the repository.

@@ -4,10 +4,6 @@
 #include "main.h"
 #include "util/stringutils.h"
 
-/*
- * $Id$
- */
-
 
 static const char *WHITESPACE = "\n\r\t ";
 

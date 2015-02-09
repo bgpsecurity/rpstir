@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     casn_real.c
 Contents: Functions for AsnReal objects
@@ -11,7 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-char casn_real_sfcsid[] = "@(#)casn_real.c 860P";
 
 #include <stdio.h>
 #include <stdlib.h>

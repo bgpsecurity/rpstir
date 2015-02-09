@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     casn.c
 Contents: Basic functions for ASN.1 objects.
@@ -12,7 +9,6 @@ Remarks:
 
 *****************************************************************************/
 
-char casn_other_sfcsid[] = "@(#)casn_other.c 872P";
 #include "casn.h"
 
 int encodesize_casn(

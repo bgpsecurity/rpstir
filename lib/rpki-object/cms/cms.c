@@ -1,7 +1,3 @@
-/*
- * $Id: signCMS.c 453 2008-07-25 15:30:40Z cgardiner $
- */
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

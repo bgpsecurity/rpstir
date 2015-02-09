@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_flags.h
 Contents: Definitions of flags for asn_(c)gen, asn_obj and casn
@@ -13,9 +10,6 @@ Remarks:
 *****************************************************************************/
 #ifndef _ASN_FLAGS_H
 #define _ASN_FLAGS_H
-/*
- * sfcsid[] = "@(#)asn_flags.h 768P"
- */
 /*
  * AsnObj flags defines
  */

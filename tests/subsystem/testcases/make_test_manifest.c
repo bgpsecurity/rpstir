@@ -1,8 +1,3 @@
-/*
- * $Id: make_manifest.c 453 2007-07-25 15:30:40Z gardiner $
- */
-
-
 #include "rpki-asn1/manifest.h"
 #include "rpki-asn1/cms.h"
 #include "rpki-asn1/certificate.h"

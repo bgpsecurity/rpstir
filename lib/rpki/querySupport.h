@@ -1,8 +1,3 @@
-
-/*
- * $Id: query.c 857 2009-09-30 15:27:40Z dmontana $
- */
-
 /****************
  * Functions and flags shared by query and server code
  ****************/

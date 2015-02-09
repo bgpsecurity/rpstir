@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_chdr.c
 Contents: Functions to generate .h files as part of the ASN_CGEN program.
@@ -11,8 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-char casn_hdr_id[] = "@(#)casn_hdr.c 828P";
 
 #include "asn_gen.h"
 

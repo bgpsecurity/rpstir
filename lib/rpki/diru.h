@@ -1,8 +1,3 @@
-/*
- * $Id$
- */
-
-
 #ifndef _DIRU_H_
 #define _DIRU_H_
 

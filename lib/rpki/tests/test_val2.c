@@ -2,10 +2,6 @@
 #include "rpki/cms/roa_utils.h"
 #include "util/cryptlib_compat.h"
 
-/*
- * $Id$
- */
-
 
 int main(
     int argc,

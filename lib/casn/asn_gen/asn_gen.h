@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /***
  *
  * FILE:        asn_gen.h
@@ -10,9 +7,6 @@
  *
  */
 
-/*
- * sfcsid[] = "@(#)asn_gen.h 828P"
- */
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>
@@ -224,13 +218,7 @@ extern char token[],
     curr_file[],
    *def_constraintp,
    *sub_val,
-    asn_constr_id[],
-    asn_gen_id[],
-    asn_hdr_id[],
     asn_java_id[],
-    asn_pproc_id[],
-    asn_read_id[],
-    asn_tabulate_id[],
     absent_w[],
     algid_w[],
     all_w[],
@@ -239,8 +227,6 @@ extern char token[],
     array_w[],
     begin_w[],
     by_w[],
-    casn_constr_id[],
-    casn_hdr_id[],
     casn_w[],
     choice_w[],
     class_w[],

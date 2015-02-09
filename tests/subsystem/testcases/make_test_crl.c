@@ -1,8 +1,3 @@
-/*
- * $Id: make_crl.c 453 2008-05-28 15:30:40Z cgardiner $
- */
-
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

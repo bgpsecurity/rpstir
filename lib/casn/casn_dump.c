@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     casn_dump.c
 Contents: Functions to dump ASN.1 objects.
@@ -15,8 +12,6 @@ COPYRIGHT 2004 BBN Systems and Technologies
 Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
-
-char casn_dump_sfcsid[] = "@(#)casn_dump.c 858P";
 
 #include <stdio.h>
 #include <stdlib.h>

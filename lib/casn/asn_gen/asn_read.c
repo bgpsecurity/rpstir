@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_read.c
 Contents: Functions to parse ASN.1 as part of the ASN_GEN program.
@@ -11,10 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-const char asn_read_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_read.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
-char asn_read_id[] = "@(#)asn_read.c 828P";
 
 #include "asn_gen.h"
 

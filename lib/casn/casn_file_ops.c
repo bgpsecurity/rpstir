@@ -1,8 +1,3 @@
-/*
- * $Id$
- */
-/*
- */
 /*****************************************************************************
 File:     casn_file_ops.c
 Contents: Functions to handle ASN.1 objects in files.
@@ -18,7 +13,6 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_file_ops_sfcsid[] = "@(#)casn_file_ops.c 864P";
 #include "casn.h"
 #include <fcntl.h>
 #include <unistd.h>

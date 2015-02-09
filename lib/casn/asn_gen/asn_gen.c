@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_gen.c
 Contents: Main function of the ASN_GEN program plus various functions
@@ -12,10 +9,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-const char asn_gen_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_gen.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
-char asn_gen_id[] = "@(#)asn_gen.c 828P";
 
 #include "asn_gen.h"
 #ifdef WIN32
@@ -203,13 +196,8 @@ identified-organization OBJECT IDENTIFIER ::= {3}\n",
     union_w, unique_w, universal_w, universalstring_w, utctime_w,
     utf8string_w,
     videotexstring_w, visiblestring_w, with_w, 0
-}, *sfcsids[] =
-
-{
-asn_gen_id,
-        asn_constr_id, asn_hdr_id,
-        asn_pproc_id, asn_read_id, asn_tabulate_id, casn_constr_id,
-        casn_hdr_id, 0}, *i_names = NULL, *i_paths = NULL, *mktemp(char *);
+},
+    *i_names = NULL, *i_paths = NULL, *mktemp(char *);
 
 void clear_globals(
 )  ,
@@ -367,11 +355,6 @@ int main(
                 vflag = 1;
             else if (*c == 'V')
                 vflag = 2;
-            else if (*c == 'w')
-            {
-                for (did = 0; sfcsids[did]; puts(&sfcsids[did++][4]));
-                done(false, MSG_OK, "");
-            }
             else
                 done(true, MSG_INVAL_PARAM, *p);
         }

@@ -1,20 +1,8 @@
--- $Id$
--- Jun 21 2001 672E  */
--- Jun 21 2001 GARDINER commented out FUNCTION stuff for java
--- May 21 2001 656E  */
--- May 10 2001 GARDINER changed SBGP extensions, per C. Lynn
--- Jan 23 2001 539E  */
--- Jan 23 2001 GARDINER combined CMS version & S-BGP version
--- Nov 13 2000 467E  */
--- Nov 13 2000 GARDINER started
--- sfcsid = "@(#)extensions.asn 672E"
 -- File:     extensions.asn
 -- Contents: ASN.1 specification for X.509 certificate (version 3)
 -- System:   PKIM development.
 -- Created:  1-nov-1996
 -- Author:   charlie/jduffy
---
--- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/extensions.asn,v 1.20 1997/11/12 16:27:29 mcasagni Exp $
 --
 
 

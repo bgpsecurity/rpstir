@@ -19,10 +19,6 @@
  * made using the write_port descriptor.          *
  **************************************************/
 
-/*
- * $Id$
- */
-
 int tcpsocket(
     struct write_port *wport,
     int portno)

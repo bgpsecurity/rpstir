@@ -1,8 +1,3 @@
-/*
- * $Id: scmmain.h 1285 2010-10-01 19:43:05Z bkohler $
- */
-
-
 #ifndef _SCMMAIN_H_
 #define _SCMMAIN_H_
 

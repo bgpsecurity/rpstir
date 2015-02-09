@@ -1,8 +1,3 @@
-/*
- * $Id$
- */
-/*
- */
 /*****************************************************************************
 File:     casn_copy_diff.c
 Contents: Basic functions for ASN.1 objects.
@@ -18,7 +13,6 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 #include "casn.h"
-char casn_copy_diff_sfcsid[] = "@(#)casn_copy_diff.c 864P";
 
 extern void _clear_casn(
     struct casn *,

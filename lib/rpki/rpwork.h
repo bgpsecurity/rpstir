@@ -1,7 +1,3 @@
-/*
- * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $
- */
-
 #ifndef _RPWORK_H
 #define _RPWORK_H
 

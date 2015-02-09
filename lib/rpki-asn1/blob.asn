@@ -1,5 +1,3 @@
--- $Id: blob.asn 1135 2010-05-24 13:17:17Z gardiner $
--- sfcsid = "@(#)blob.asn 672E"
 -- File:     blob.asn
 -- Contents: ASN.1 specification for a signed blob
 -- System:   PKIM development.

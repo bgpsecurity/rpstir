@@ -1,9 +1,3 @@
--- $Id$
--- Dec 20 2000 511E  */
--- Dec 20 2000 PFOLEY added domain name form
--- Nov 13 2000 466E  */
--- Nov 13 2000 GARDINER started
--- sfcsid = "@(#)name.asn 511E"
 -- File:     name.asn
 -- Contents: ASN.1 specification for X.509 Name
 -- System:   PKIM development.
@@ -11,8 +5,6 @@
 -- Author:   nyang
 --
 -- Remarks:
---
--- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/name.asn,v 1.3 1997/11/05 20:51:07 mcasagni Exp $
 --
 
 

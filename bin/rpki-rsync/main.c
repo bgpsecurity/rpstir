@@ -3,11 +3,6 @@
 #include "util/logging.h"
 #include "config/config.h"
 
-
-/*
- * $Id$
- */
-
 extern void usage(
     const char *);
 

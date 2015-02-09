@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_pprocx.c
 Contents: Functions to do all pre-processing sub-functions as part of the
@@ -12,10 +9,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-const char asn_pprocx_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_pproc.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
-char asn_pprocx_id[] = "@(#)asn_pprocx.c 828P";
 
 #include "asn_gen.h"
 

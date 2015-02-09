@@ -1,30 +1,3 @@
-/*
- * $Id$
- */
-/*
- * May 26 2004 768U
- */
-/*
- * May 26 2004 GARDINER moved BOOL flags to asn_flags.h
- */
-/*
- * May 25 2004 767U
- */
-/*
- * May 25 2004 GARDINER added ASN_SET_FLAG
- */
-/*
- * May 25 2004 766U
- */
-/*
- * May 25 2004 GARDINER added ASN_LAST_FLAG
- */
-/*
- * May 25 2004 765U
- */
-/*
- * May 25 2004 GARDINER moved flags to asn_flags.h
- */
 /*****************************************************************************
 File:     asn_flags.h
 Contents: Definitions of flags for asn_(c)gen, asn_obj and casn
@@ -37,9 +10,6 @@ Remarks:
 *****************************************************************************/
 #ifndef _ASN_FLAGS_H
 #define _ASN_FLAGS_H
-/*
- * sfcsid[] = "@(#)asn_flags.h 768P"
- */
 /*
  * AsnObj flags defines
  */

@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn_tabulate.c
 Contents: functions to create the name table as part of the ASN_GEN program.
@@ -11,10 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-const char asn_tabulate_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_tabulate.c,v 1.1 1995/01/11 22:43:11 jlowry Exp $";
-char asn_tabulate_id[] = "@(#)asn_tabulate.c 737P";
 
 #include "asn_gen.h"
 

@@ -13,7 +13,6 @@ COPYRIGHT 1995 BBN Systems and Technologies, A Division of Bolt Beranek and
 Cambridge, Ma. 02140
 617-873-4000
 *****************************************************************************/
-char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>

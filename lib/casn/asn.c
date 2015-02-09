@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /**************************************************************************
  * FILE:        asn.c
  * AUTHORs:     Charles Gardiner (gardiner@bbn.com),
@@ -9,11 +6,6 @@
  * DESCRIPTION: Routines to support Distinguished Encoding of ASN.1
  *              defined structures.
  *
- *
- * $Revision: 1.19 $
- * $Source: /u1/MSP/Dev/rcs/lib/asn1utils/local/asn.c,v $
- * $State: Exp $
- *
  *************************************************************************/
 
 #include <stdlib.h>
@@ -21,7 +13,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include "asn.h"
-char asn_sfcsid[] = "@(#)asn.c 838P";
 
 uchar asn_typ(
     uchar **),

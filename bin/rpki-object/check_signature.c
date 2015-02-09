@@ -1,7 +1,3 @@
-/*
- * $Id: check_signature.c c 506 2008-06-03 21:20:05Z gardiner $
- */
-
 #include "util/logging.h"
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/crlv2.h"

@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     dump.c
 Contents: Main function of the dump utility
@@ -35,8 +32,6 @@ Remarks:
 #define MSG_DUMP "Error dumping ASN.1"
 #define MSG_PIPE "Can't start in pipe with indefinite-length-encoded item"
 #define MSG_LEN "File is shorter than first item's length implies"
-
-char dump_sfcsid[] = "@(#)dump.c 840P";
 
 extern int asn1dump(
     unsigned char *,

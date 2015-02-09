@@ -1,8 +1,3 @@
-/*
- * $Id: make_oidtable.c 453 2008-07-25 15:30:40Z cgardiner $
- */
-
-char make_oidtable_sfcsid[] = "@(#)make_oidtable.c 869P";
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>

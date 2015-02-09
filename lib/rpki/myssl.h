@@ -1,10 +1,6 @@
 #ifndef _MYSSL_H_
 #define _MYSSL_H_
 
-/*
- * $Id$
- */
-
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>

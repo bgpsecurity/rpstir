@@ -1,27 +1,3 @@
-/*
- * $Id$
- */
-/*
- * Dec 6 1996 411U
- */
-/*
- * Dec 6 1996 GARDINER changed
- */
-/*
- * Jul 10 1996 378U
- */
-/*
- * Jul 10 1996 GARDINER changed for Solaris 2
- */
-/*
- * Mar 8 1994 1U
- */
-/*
- * Mar 8 1994 GARDINER Started on SPARC
- */
-/*
- * Mar 8 1994
- */
 #define MSP 1
 
 #ifdef MSP
@@ -29,8 +5,6 @@
 #define ushort unsigned short
 #define ulong unsigned long
 #endif
-
-char util_sfcsid[] = "@(#)util.c 411P";
 
 
 /*

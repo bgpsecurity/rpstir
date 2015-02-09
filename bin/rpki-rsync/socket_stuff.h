@@ -23,10 +23,6 @@
 #define TCP 1
 #define UDP 2
 
-/*
- * $Id$
- */
-
 struct write_port {
     int out_desc;
     struct sockaddr_in server_addr;

@@ -1,7 +1,3 @@
-/*
- * $Id: rcli.c 836 2008-12-29 20:32:04Z cgardiner $
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

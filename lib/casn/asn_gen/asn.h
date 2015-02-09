@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     asn.h
 Contents: Header file for basic ASN.1 functions.
@@ -11,9 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-/*
- * sfcsid[] = "@(#)asn.h 824P"
- */
 #ifndef _ASN_H
 #define _ASN_H
 

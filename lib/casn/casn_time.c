@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     casn_time.c
 Contents: Functions to handle ASN.1 time objects.
@@ -55,7 +52,6 @@ year 2100.  In addition, it is not clear that [read/write]_casn_time
 handle time zones correctly.
 *****************************************************************************/
 
-char casn_time_sfcsid[] = "@(#)casn_time.c 851P";
 #include "casn.h"
 #include <stdio.h>
 #include <stdint.h>

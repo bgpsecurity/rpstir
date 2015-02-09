@@ -1,8 +1,3 @@
-/*
- * $Id: roa_utils.h 498 2008-05-05 17:36:33Z dmontana $
- */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

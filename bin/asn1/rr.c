@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 #include <sys/types.h>
 #include <fcntl.h>
 
@@ -18,8 +15,6 @@
 #define MSG_EXTRA "Extra '}'"
 #define MSG_OPEN "Can't open %s"
 #define MSG_OVERFLOW "Area %s overflowed"
-
-char rr_sfcsid[] = "@(#)rr.c 845p";
 
 void dump_asn(
     );

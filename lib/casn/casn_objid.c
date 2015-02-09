@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 /*****************************************************************************
 File:     casn_objid.c
 Contents: Basic functions for ASN.1 objects.
@@ -16,7 +13,6 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
-char casn_objid_sfcsid[] = "@(#)casn_objid.c 866P";
 #include "casn.h"
 
 #define ASN_READ 1              // modes for encode & read
