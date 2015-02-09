@@ -72,12 +72,29 @@ struct goodoid {
  * Prototypes
  */
 
+/*
+ * Find a directory in the directory table, or create it if it is not found.
+ * Return the id in idp. The function returns 0 on success and a negative
+ * error code on failure.
+ *
+ * It is assumed that the existence of the putative directory has already been
+ * verified.
+ */
 extern int findorcreatedir(
     scm *scmp,
     scmcon *conp,
     char *dirname,
     unsigned int *idp);
 
+/*
+ * Add the indicated object to the DB. If "trusted" is set then verify that
+ * the object is self-signed. Note that this add operation may result in the
+ * directory also being added.
+ *
+ * Symlinks and files that are not regular files are not processed.
+ *
+ * This function returns 0 on success and a negative error code on failure.
+ */
 extern int add_object(
     scm *scmp,
     scmcon *conp,
@@ -86,6 +103,11 @@ extern int add_object(
     char *outfull,
     int utrust);
 
+/*
+ * Delete an object. First find the object's directory. If it is not found
+ * then we are done. If it is found, then find the corresponding (filename,
+ * dir_id) combination in the appropriate table and issue the delete SQL call.
+ */
 extern int delete_object(
     scm *scmp,
     scmcon *conp,
@@ -117,6 +139,12 @@ extern int delete_object(
 extern int infer_filetype(
     const char *fname);
 
+/*
+ * Add a certificate to the DB. If utrust is set, check that it is self-signed
+ * first. Validate the cert and add it.
+ *
+ * This function returns 0 on success and a negative error code on failure.
+ */
 extern int add_cert(
     scm *scmp,
     scmcon *conp,
@@ -128,6 +156,10 @@ extern int add_cert(
     unsigned int *cert_id,
     int constraining);
 
+/*
+ * Add a CRL to the DB.  This function returns 0 on success and a negative
+ * error code on failure.
+ */
 extern int add_crl(
     scm *scmp,
     scmcon *conp,
@@ -147,6 +179,9 @@ extern int add_roa(
     int utrust,
     int typ);
 
+/*
+ * Add a manifest to the database
+ */
 extern int add_manifest(
     scm *scmp,
     scmcon *conp,
@@ -157,6 +192,9 @@ extern int add_manifest(
     int utrust,
     int typ);
 
+/*
+    Add a ghostbusters record to the database
+*/
 extern int add_ghostbusters(
     scm *scmp,
     scmcon *conp,
@@ -177,11 +215,30 @@ extern int add_rta(
     int utrust,
     int typ);
 
+/*
+ * Iterate through all CRLs in the DB, recursively processing each CRL to
+ * obtain its (issuer, snlist) information. For each SN in the list, call a
+ * specified function (persumably a certificate revocation function) on that
+ * (issuer, sn) combination.
+ *
+ * On success this function returns 0.  On failure it returns a negative error
+ * code.
+ */
 extern int iterate_crl(
     scm *scmp,
     scmcon *conp,
     crlfunc cfunc);
 
+/*
+ * This is the model callback function for iterate_crl. For each (issuer, sn)
+ * pair with sn != 0 it attempts to find a certificate with those values in
+ * the DB. If found, it then attempts to delete the certificate and all its
+ * children. Note that in deleting an EE certificate, some of its children may
+ * be ROAs, so this table has to be searched as well.
+ *
+ * This function returns 1 if it deleted something, 0 if it deleted nothing
+ * and a negative error code on failure.
+ */
 extern int revoke_cert_by_serial(
     scm *scmp,
     scmcon *conp,
@@ -189,15 +246,28 @@ extern int revoke_cert_by_serial(
     char *aki,
     uint8_t *sn);
 
+/*
+ * Delete a particular local_id from a table.
+ */
 extern int deletebylid(
     scmcon *conp,
     scmtab *tabp,
     unsigned int lid);
 
+/*
+ * This function sweeps through all certificates. If it finds any that are
+ * valid but marked as NOTYET, it clears the NOTYET bit and sets the VALID
+ * bit. If it finds any where the start validity date (valfrom) is in the
+ * future, it marks them as NOTYET. If it finds any where the end validity
+ * date (valto) is in the past, it deletes them.
+ */
 extern int certificate_validity(
     scm *scmp,
     scmcon *conp);
 
+/*
+ * Update the metadata table to indicate when a particular client ran last.
+ */
 extern int ranlast(
     scm *scmp,
     scmcon *conp,
@@ -222,6 +292,13 @@ extern struct cert_answers *find_cert_by_aKI(
     scm *sscmp,
     scmcon *conp);
 
+/*
+ * Get the parent certificate by using the issuer and the aki of "x" to look
+ * it up in the db. If "x" has already been broken down in "cf" just use the
+ * issuer/aki from there, otherwise look it up from "x". The db lookup will
+ * return the filename and directory name of the parent cert, as well as its
+ * flags. Set those flags into "pflags"
+ */
 extern struct cert_answers *find_parent_cert(
     char *,
     char *,
@@ -246,6 +323,10 @@ extern char *retrieve_tdir(
     scmcon *conp,
     int *stap);
 
+/*
+ * Given the SKI of a ROA, this function returns the X509 * structure for the
+ * corresponding EE certificate (or NULL on error).
+ */
 // return code is really an X509 *
 extern void *roa_parent(
     scm *scmp,

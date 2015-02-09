@@ -125,23 +125,20 @@ uchar *asn_typ_lth(
     return from;
 }
 
-int count_asns(
-    unsigned char *from)
-{
 /**
 Function: Counts number of ASN.1 items in string pointed to by from
 Inputs: Pointer to ASN.1-encoded string
 Outputs: Count of number of items
 Procedure: Calls the recursive version
 **/
+int count_asns(
+    unsigned char *from)
+{
     int count_sub_asns(
         uchar **);
     return (1 + count_sub_asns(&from));
 }
 
-int count_sub_asns(
-    uchar **from)
-{
 /**
 Function: Counts ASN.1 items in recursive fashion
 Inputs: Pointer to address of start of item
@@ -165,6 +162,9 @@ Procedure:
 3. Set 'from' pointer
    Return count
 **/
+int count_sub_asns(
+    uchar **from)
+{
     int count = 0;
     uchar *c = *from;
     uchar *e = (uchar *)0;

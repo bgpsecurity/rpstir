@@ -623,18 +623,6 @@ int add_child(
     long type,
     int option)
 {
-/**
-Function: Adds 'name' to object name table with 'parent', path defined by
-'offset', tag of 'type' and flags of 'option'
-Procedure:
-1. Add name to table
-   Set its tag and flags
-   Go to its last filled in parent structure (note: items may have been
-        addeas children by find_definer without a known offset)
-   IF need another parent structure, make one
-   Fill in parent index
-   IF offset is >= 0, put count of this subordinate into mymap
-**/
     struct parent *parentp;
     struct name_table *ntbp;
     int ansr;

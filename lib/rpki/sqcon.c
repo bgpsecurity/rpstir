@@ -54,10 +54,6 @@ static void freehstack(
     }
 }
 
-/*
- * Disconnect from a DSN and free all memory.
- */
-
 void disconnectscm(
     scmcon *conp)
 {
@@ -99,11 +95,6 @@ void disconnectscm(
  * SQL_IS_UINTEGER);
  */
 
-/*
- * Create a new STMT and push it onto the top of the stack of STMTs in the
- * connection.
- */
-
 SQLRETURN newhstmt(
     scmcon *conp)
 {
@@ -134,11 +125,6 @@ SQLRETURN newhstmt(
     return (0);
 }
 
-/*
- * Pop the top element off the hstmt stack of a connection, free the hstmt and
- * the associated memory.
- */
-
 void pophstmt(
     scmcon *conp)
 {
@@ -154,11 +140,6 @@ void pophstmt(
         SQLFreeHandle(SQL_HANDLE_STMT, stackp->hstmt);
     free((void *)stackp);
 }
-
-/*
- * Initialize a connection to the named DSN. Return a connection object on
- * success and a negative error code on failure.
- */
 
 scmcon *connectscm(
     char *dsnp,
@@ -259,10 +240,6 @@ scmcon *connectscm(
     return (conp);
 }
 
-/*
- * Get the error message from a connection.
- */
-
 char *geterrorscm(
     scmcon *conp)
 {
@@ -271,10 +248,6 @@ char *geterrorscm(
     return (conp->mystat.errmsg);
 }
 
-/*
- * Get the name of the table that had an error.
- */
-
 char *gettablescm(
     scmcon *conp)
 {
@@ -282,11 +255,6 @@ char *gettablescm(
         return (NULL);
     return (conp->mystat.tabname);
 }
-
-
-/*
- * Get the number of rows returned by a statement.
- */
 
 int getrowsscm(
     scmcon *conp)
@@ -298,16 +266,6 @@ int getrowsscm(
     r = conp->mystat.rows;
     return (r);
 }
-
-/*
- * Execute an SQL statement.
- *
- * Before calling statementscm: You must call newhstmt(conp) and verify its
- * return value.
- *
- * After calling statementscm and using its statement handle: You must call
- * pophstmt(conp).
- */
 
 int statementscm(
     scmcon *conp,
@@ -339,10 +297,6 @@ int statementscm(
     return (0);
 }
 
-/*
- * Execute a SQL statement, ignoring any returned rows.
- */
-
 int statementscm_no_data(
     scmcon *conp,
     char *stm)
@@ -359,12 +313,6 @@ int statementscm_no_data(
 
     return ret;
 }
-
-
-/*
- * Create a database and grant the mysql default user the standard set of
- * privileges for that database.
- */
 
 int createdbscm(
     scmcon *conp,
@@ -387,10 +335,6 @@ int createdbscm(
     free((void *)mk);
     return (sta);
 }
-
-/*
- * Delete a database.
- */
 
 int deletedbscm(
     scmcon *conp,
@@ -438,11 +382,6 @@ static int createonetablescm(
     free((void *)mk);
     return (sta);
 }
-
-/*
- * Create all the tables listed in scmp. This assumes that the database has
- * already been created through a call to createdbscm().
- */
 
 int createalltablesscm(
     scmcon *conp,
@@ -596,11 +535,6 @@ static int quote_value(
     }
 }
 
-
-/*
- * Insert an entry into a database table.
- */
-
 int insertscm(
     scmcon *conp,
     scmtab *tabp,
@@ -725,11 +659,6 @@ int getuintscm(
         return (0);
 }
 
-/*
- * Get the maximum of the specified id field of the given table.  If table is
- * empty, then sets *ival to 0.
- */
-
 int getmaxidscm(
     scm *scmp,
     scmcon *conp,
@@ -793,15 +722,6 @@ static int validsrchscm(
     }
     return (0);
 }
-
-/*
- * This function searches in a database table for entries that match the
- * stated search criteria.
- *
- * Note that searchscm can be call recursively, so that there can be more than
- * one cursor open at a time. For this reason, searchscm() must create its own
- * STMT and then destroy it when it is done.
- */
 
 int searchscm(
     scmcon *conp,
@@ -1049,10 +969,6 @@ int searchscm(
         return (0);
 }
 
-/*
- * Free all the memory in a search array
- */
-
 void freesrchscm(
     scmsrcha *srch)
 {
@@ -1098,9 +1014,6 @@ void freesrchscm(
     }
 }
 
-/*
- * add clause for testing the value of a flag to a where string
- */
 void addFlagTest(
     char *whereStr,
     int flagVal,
@@ -1125,10 +1038,6 @@ void addFlagTest(
               isSet ? ">=" : "<",
               flagVal);
 }
-
-/*
- * Create a new empty srch array
- */
 
 scmsrcha *newsrchscm(
     char *name,
@@ -1178,12 +1087,6 @@ scmsrcha *newsrchscm(
     }
     return (newp);
 }
-
-/*
- * Add a new column to a search array. Note that this function does not grow
- * the size of the column array, so enough space must have already been
- * allocated when the array was created.
- */
 
 int addcolsrchscm(
     scmsrcha *srch,
@@ -1236,37 +1139,6 @@ static int socvaluefunc(
     }
     return (-1);
 }
-
-/*
- * This function performs a find-or-create operation for a specific id. It
- * first searches in table "tab" with search criteria "srch". If the entry is
- * found it returns the value of the id. If it isn't found then the max_id is
- * looked up in the metadata table and incremented, a new entry is created in
- * "tab" using the creation criteria "ins", and the max id in the metadata
- * table is updated and returned.
- *
- * Since this is somewhat convoluted and contains several steps, consider an
- * example.  Suppose I wish to find or create two directories in the directory
- * table.  These directories are /path/to/somewhere and /path/to/elsewhere.  I
- * want to get the directory ids for these directories in either case, e.g.
- * whether they are already there or have to be created. If a new directory is
- * created I also want the maximum directory id in the metadata table to be
- * updated.
- *
- * Consider the following putative sequence.  I construct a search for
- * "/path/to/somewhere" in the directory table. The first element of the
- * search is the id. The search succeeds, and the id is returned. The metadata
- * table is unchanged. Now I construct a second search for
- * "/path/to/elsewhere". That search fails. So I fetch the maximum directory
- * id from the metadata table and increment it. I then create an entry in the
- * directory table with elements "/path/to/elsewhere" and that (incremented)
- * id. I update the metadata table's value for the max directory id to the
- * new, incremented id, and, finally, I return that new, incremented id.
- *
- * Certs, CRLs, ROAs and directories all have ids and their tables all have
- * max ids in the metadata table and so all of them have to be managed using
- * this (sadly prolix) function.
- */
 
 int searchorcreatescm(
     scm *scmp,
@@ -1324,11 +1196,6 @@ int searchorcreatescm(
     *idp = mid;
     return (0);
 }
-
-/*
- * This function deletes entries in a database table that match the stated
- * search criteria.
- */
 
 int deletescm(
     scmcon *conp,
@@ -1413,12 +1280,6 @@ int deletescm(
     return (sta);
 }
 
-/*
- * Set the flags value on a match corresponding to a search criterion.
- *
- * This function returns 0 on success and a negative error code on failure.
- */
-
 int setflagsscm(
     scmcon *conp,
     scmtab *tabp,
@@ -1482,10 +1343,6 @@ int setflagsscm(
     return (sta);
 }
 
-/*
- * Convert a binary array into a hex string. Allocates memory.
- */
-
 char *hexify(
     int bytelen,
     void const *ptr,
@@ -1536,11 +1393,6 @@ char *hexify(
     return (aptr);
 }
 
-/*
- * Convert a hex string into a byte array. Allocates memory. The string must
- * not begin with 0x or ^x.
- */
-
 void *unhexify(
     int strnglen,
     char const *strng)
@@ -1575,11 +1427,6 @@ void *unhexify(
     return oot;
 }
 
-/*
- * This very specific function updates the sninuse and snlist entries on a CRL
- * using the local_id as the where criterion.
- */
-
 int updateblobscm(
     scmcon *conp,
     scmtab *tabp,
@@ -1612,11 +1459,6 @@ int updateblobscm(
     free((void *)hexi);
     return (sta);
 }
-
-/*
- * This specialized function updates the appropriate xx_last field in the
- * metadata table for the indicated time when the client completed.
- */
 
 int updateranlastscm(
     scmcon *conp,

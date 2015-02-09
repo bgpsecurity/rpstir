@@ -29,29 +29,6 @@
 
 int strict_profile_checks = 0;
 
-/*
- * Convert between a time string in a certificate and a time string that will
- * be acceptable to the DB. The return value is allocated memory.
- *
- * The time string can be either UTC or GENERALIZED. If only_gentime is false,
- * UTC is used for dates <= 2049 and GENERALIZED is used for dates after >=
- * 2050. Otherwise, GENERALIZED is use for all dates.
- *
- * The UTC format takes the form YYMMDDHHMMSST, where each of the fields is as
- * follows: if YY <= 49 the year is 2000+YY otherwise it is 1900+YY 1 <= MM <=
- * 12 1 <= DD <= 31 0 <= HH <= 24 0 <= MM <= 60 0 <= SS <= 60 (seconds field
- * is optional) T, is present and == Z indicates GMT
- *
- * The GENERALIZED format takes the form YYYYMMDDHHMMSST, where the year is
- * given in the full four digit form, and all other fields are the same. Note
- * that seconds can be given as either SS or SS.S.
- *
- * Both fields can have an optional suffix of the form +HHMM or -HHMM.
- *
- * On success, *stap ("status pointer") is set to 0.  On failure, it is set to
- * the appropriate error code (e.g. ERR_SCM_INVALDT).
- */
-
 #define UTC10    10             // UTC format without seconds
 #define UTC12    12             // UTC format with seconds
 #define GEN14    14             // generalized format without fractions of a
@@ -207,11 +184,6 @@ char *ASNTimeToDBTime(
               year, mon, day, hour, min, sec);
     return (out);
 }
-
-/*
- * This function converts the local time into GMT in a form recognized by the
- * DB.
- */
 
 char *LocalTimeToDBTime(
     int *stap)
@@ -860,26 +832,6 @@ static cf_validator validators[] = {
     {NULL, 0, 0}                /* terminator */
 };
 
-/*
- * This function can operate in two ways.  If "fname" and "fullname" are both
- * given, then it opens a certificate from a file and extracts all the fields
- * from it.  If "xp" points to an already available certificate, then it just
- * manipulates that. This function does not touch the DB at all, it just
- * manipulates the certificate.
- *
- * On success this function returns a pointer to allocated memory containing
- * all the indicated fields (except the "dirid" field) and sets stap to 0, and
- * x509stap to 1.
- *
- * Note carefully that this function does NOT set all the fields in the cf. In
- * particular, it is the responsibility of the caller to set the dirid field.
- * This field requires DB access and are therefore is not part of this
- * function.
- *
- * On failure this function returns NULL and sets stap to a negative error
- * code. If an X509 error occurred, x509stap is set to that error.
- */
-
 cert_fields *cert2fields(
     char *fname,
     char *fullname,
@@ -1069,10 +1021,6 @@ cert_fields *cert2fields(
     *xp = x;
     return (cf);
 }
-
-/*
- * This utility function just gets the SKI from an X509 data structure.
- */
 
 char *X509_to_ski(
     X509 *x,
@@ -1406,24 +1354,6 @@ static crfx_validator *crfx_find(
     return (NULL);
 }
 
-/*
- * This function can operate in two ways.  If "fname" and "fullname" are both
- * given, then it opens a CRL from a file and extracts all the fields from it.
- * If "xp" points to an already available CRL, then it just manipulates that.
- * This function does not touch the DB at all, it just manipulates the CRL.
- *
- * On success this function returns a pointer to allocated memory containing
- * all the indicated fields (except the "dirid" field) and sets stap to 0, and
- * crlstap to 1.
- *
- * Note carefully that this function does NOT set all the fields in the crf.
- * In particular, it is the responsibility of the caller to set the dirid
- * field.  This field requires DB access and are therefore is not part of this
- * function.
- *
- * On failure this function returns NULL and sets stap to a negative error
- * code. If an X509 error occurred, crlstap is set to that error.
- */
 crl_fields *crl2fields(
     char *fname,
     char *fullname,
@@ -3939,10 +3869,6 @@ static int rescert_extensions_chk(
 }
 
 
-/*
- * Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
- * on a single file.
- */
 int rescert_profile_chk(
     X509 *x,
     struct Certificate *certp,
@@ -4464,14 +4390,6 @@ static int crl_extensions_chk(
     return 0;
 }
 
-/**=============================================================================
- * @brief Check CRL conformance to rescert profile, standalone/syntax only
- *
- * @param crlp (struct CertificateRevocationList*)
- * @return 0 on success<br />a negative integer on failure
- *
- * Check CRL conformance with respect to RFCs 5280 and 6487.
-  -----------------------------------------------------------------------------*/
 int crl_profile_chk(
     struct CertificateRevocationList *crlp)
 {

@@ -1046,26 +1046,26 @@ static int conflict_test(
     return ansr;
 }
 
+/*
+ * Function: Reads through list of addresses and cert extensions to expand
+ * or perforate them.
+ * inputs:  run: 0 = expand, 1 = perforate,
+ *         index to first iprange of this typ.  At least one guaranteed
+ *         index "   " certrange "   "    " .  Not guaranteed
+ *         Ptr to record changes
+ * Returns: Index to next constraint beyond this type
+ * Procedure:
+ * 1. IF expanding, expand cert
+ *    ELSE IF have certificate items of this type, perforate them
+ *    Reconstruct IP addresses in cert from ruleranges
+ *    Note ending point in list
+ */
 static int run_through_typlist(
     int run,
     int numrulerange,
     int numcertrange,
     int *changesp)
 {
-    /*
-     * Function: Reads through list of addresses and cert extensions to expand
-     * or perforate them.
-     * inputs:  run: 0 = expand, 1 = perforate,
-     *         index to first iprange of this typ.  At least one guaranteed
-     *         index "   " certrange "   "    " .  Not guaranteed
-     *         Ptr to record changes
-     * Returns: Index to next constraint beyond this type
-     * Procedure:
-     * 1. IF expanding, expand cert
-     *    ELSE IF have certificate items of this type, perforate them
-     *    Reconstruct IP addresses in cert from ruleranges
-     *    Note ending point in list
-     */
     int did;
     // step 1
     if (!run)
@@ -1224,24 +1224,24 @@ static void remake_cert_ranges(
      */
 }
 
+/*
+ * Function: Applies constraints to paracert
+ * Inputs: number for enlarge (0) or perforate (>0)
+ *         ptr to array of ranges
+ *         number of ranges
+ *         ptr to paracert
+ * Returns: number of changes made
+ * Procedure:
+ * 1. Enlarge or perforate paracertificate's IPv4 addresses
+ * 2. Enlarge or perforate paracertificate's IPv6 addresses
+ * 3. Enlarge or perforate paracertificate's AS numbers
+ *    Return count of changes made. if any
+ */
 static int modify_paracert(
     struct keyring *keyring,
     int run,
     struct Certificate *paracertp)
 {
-    /*
-     * Function: Applies constraints to paracert
-     * Inputs: number for enlarge (0) or perforate (>0)
-     *         ptr to array of ranges
-     *         number of ranges
-     *         ptr to paracert
-     * Returns: number of changes made
-     * Procedure:
-     * 1. Enlarge or perforate paracertificate's IPv4 addresses
-     * 2. Enlarge or perforate paracertificate's IPv6 addresses
-     * 3. Enlarge or perforate paracertificate's AS numbers
-     *    Return count of changes made. if any
-     */
     int numcertrange = 0;
     int numrulerange = 0;
     int typ;
@@ -1291,27 +1291,27 @@ static int modify_paracert(
     return changes;
 }
 
+/*
+ * Function: Looks for any instances of ruleranges in the children of the
+ *   cert and perforates them
+ * Inputs: starting certificate
+ * Procedure:
+ * 1.  Get topcert's SKI
+ *     FOR each of its children
+ *       Get child's AKI
+ *       IF haven't done this cert already, make a temporary done_cert
+ *       ELSE use the one we have
+ *       Make a paracert just in case
+ * 2.    Punch out any listed resources
+ * 3.    IF it's a temporary cert
+ *         IF there was any error OR nothing was done, free the cert
+ *         ELSE add the cert & paracert to the done list
+ * 4.    IF something was done, call this function with this child
+ */
 static int search_downward(
     struct keyring *keyring,
     struct Certificate *topcertp)
 {
-    /*
-     * Function: Looks for any instances of ruleranges in the children of the
-     *   cert and perforates them
-     * Inputs: starting certificate
-     * Procedure:
-     * 1.  Get topcert's SKI
-     *     FOR each of its children
-     *       Get child's AKI
-     *       IF haven't done this cert already, make a temporary done_cert
-     *       ELSE use the one we have
-     *       Make a paracert just in case
-     * 2.    Punch out any listed resources
-     * 3.    IF it's a temporary cert
-     *         IF there was any error OR nothing was done, free the cert
-     *         ELSE add the cert & paracert to the done list
-     * 4.    IF something was done, call this function with this child
-     */
     struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, 0);
     struct Certificate *childcertp;
@@ -1447,26 +1447,26 @@ static int process_trust_anchors(
     return 0;
 }
 
+/*
+ * Function: processes an SKI block, including ancestors
+ * Inputs: ptr to base cert
+ * Returns: 0 if OK else error code
+ * Procedure:
+ * 1. FOR each run until a self-signed certificate is done
+ *      IF there's a conflict AND
+ *        the conflict test returns error, return error code
+ *      Modify paracert in accordance with run
+ * 2.   IF current cert is self-signed, break out of FOR
+ * 3.   Get the current cert's AKI
+ *      Get that parent cert (and make paracert if necessaru)
+ * 4. FOR all other self-signed certificates, search downward perforating
+ *      them
+ *    Return 0
+ */
 static int process_control_block(
     struct keyring *keyring,
     struct done_cert *done_certp)
 {
-    /*
-     * Function: processes an SKI block, including ancestors
-     * Inputs: ptr to base cert
-     * Returns: 0 if OK else error code
-     * Procedure:
-     * 1. FOR each run until a self-signed certificate is done
-     *      IF there's a conflict AND
-     *        the conflict test returns error, return error code
-     *      Modify paracert in accordance with run
-     * 2.   IF current cert is self-signed, break out of FOR
-     * 3.   Get the current cert's AKI
-     *      Get that parent cert (and make paracert if necessaru)
-     * 4. FOR all other self-signed certificates, search downward perforating
-     *      them
-     *    Return 0
-     */
     // step 1
     int run = 0;
     struct Extension *extp;
@@ -1512,25 +1512,25 @@ static int process_control_block(
     return 0;
 }
 
+/*
+ * Function processes successive "SKI blocks" until EOF
+ * Inputs: File descriptor for SKI file
+ *         buffer having first SKI line
+ *         pointer to certificate??
+ * Procedure:
+ * 1. DO
+ *      IF SKI entry not valid, return BADSKIBLOCK
+ *      IF can't locate certificate having SKI with a valid chain to a
+ *        trust anchor
+ *        Return error
+ *      Process the block
+ *      Process the trust anchors with these constraints
+ *    WHILE skibuf has anything
+ */
 static int process_control_blocks(
     struct keyring *keyring,
     FILE *SKI)
 {
-    /*
-     * Function processes successive "SKI blocks" until EOF
-     * Inputs: File descriptor for SKI file
-     *         buffer having first SKI line
-     *         pointer to certificate??
-     * Procedure:
-     * 1. DO
-     *      IF SKI entry not valid, return BADSKIBLOCK
-     *      IF can't locate certificate having SKI with a valid chain to a
-     *        trust anchor
-     *        Return error
-     *      Process the block
-     *      Process the trust anchors with these constraints
-     *    WHILE skibuf has anything
-     */
     struct done_cert *done_certp;
     int ansr = 1;
     do

@@ -81,9 +81,6 @@ static int registerParent(
     return 0;
 }
 
-/*
- * check the validity via the db of the cert whose ski or localID is given
- */
 int checkValidity(
     char *ski,
     unsigned int localID,
@@ -760,9 +757,6 @@ static QueryField fields[] = {
     }
 };
 
-/*
- * look up particular query field in the list of all possible fields
- */
 QueryField *findField(
     char *name)
 {

@@ -227,14 +227,84 @@ uint32_t roaAS_ID(
  * This function performs all validations steps on a ROA that do not require
  * database access.  On success it returns 0; on failure, it returns a
  * negative error code.
+ *
+ * Make sure that the ROA meets the provisions outlined in RFC 6482.
+ * Checks are limited to those that can be done using the standalone
+ * ROA.
  */
 int roaValidate(
     struct CMS *r);
 
-/*
+/**=========================================================================
+ * @brief Check conformance to manifest profile
+ *
  * This function performs all validation steps on a manifest that do
- * not require database access.  On success it returns 0; on failure,
- * it returns a negative error code.
+ * not require database access.
+ *
+ * @param manp (struct ROA *)
+ * @param stalep Return parameter to store whether or not the manifest is
+ *               stale. It's value is only guaranteed to be initialized if
+ *               this function returns 0.
+ * @return 0 on success<br />a negative integer on failure
+ *
+ * Check manifest conformance with respect to the manifest profile
+ *   (draft-ietf-sidr-rpki-manifests).
+ *
+ * 4. Manifest definition
+ *
+ * A manifest is an RPKI signed object, as specified in
+ * [ID.sidr-signed-object].  The RPKI signed object template requires
+ * specification of the following data elements in the context of the
+ * manifest structure.
+ *
+ * 4.1 eContentType
+ *
+ * The eContentType for a Manifest is defined as id-ct-rpkiManifest, and
+ * has the numerical value of 1.2.840.113549.1.9.16.1.26.
+ *
+ *   id-smime OBJECT IDENTIFIER ::= { iso(1) member-body(2) us(840)
+ *                                    rsadsi(113549) pkcs(1) pkcs9(9) 16 }
+ *
+ *   id-ct OBJECT IDENTIFIER ::= { id-smime 1 }
+ *
+ *   id-ct-rpkiManifest OBJECT IDENTIFIER ::= { id-ct 26 }
+ *
+ * 4.2 eContent
+ *
+ *   The content of a manifest is defined as follows:
+ *
+ * Manifest ::= SEQUENCE {
+ *   version     [0] INTEGER DEFAULT 0,
+ *   manifestNumber  INTEGER (0..MAX),
+ *   thisUpdate      GeneralizedTime,
+ *   nextUpdate      GeneralizedTime,
+ *   fileHashAlg     OBJECT IDENTIFIER,
+ *   fileList        SEQUENCE SIZE (0..MAX) OF FileAndHash
+ *   }
+ *
+ * FileAndHash ::=     SEQUENCE {
+ *   file            IA5String,
+ *   hash            BIT STRING
+ *   }
+ *
+ * 4.2.1 Manifest
+ *
+ *   The manifestNumber, thisUpdate, and nextUpdate fields are modeled
+ *   after the corresponding fields in X.509 CRLs (see [RFC5280]).
+ *   Analogous to CRLs, a manifest is nominally current until the time
+ *   specified in nextUpdate or until a manifest is issued with a greater
+ *   manifest number, whichever comes first.
+ *
+ *   If a "one-time-use" EE certificate is employed to verify a manifest,
+ *   the EE certificate MUST have an validity period that coincides with
+ *   the interval from thisUpdate to nextUpdate, to prevent needless
+ *   growth of the CA's CRL.
+ *
+ *   If a "sequential-use" EE certificate is employed to verify a
+ *   manifest, the EE certificate's validity period needs to be no shorter
+ *   than the nextUpdate time of the current manifest.  The extended
+ *   validity time raises the possibility of a substitution attack using a
+ *   stale manifest, as described in Section 6.4.
  */
 int manifestValidate(
     struct CMS *r,
@@ -278,6 +348,17 @@ int ghostbustersValidate(
 extern int roaValidate2(
     struct CMS *r);
 
+/*
+ * If the hash is given as "inhash", check to see that the hash inside the
+ * FileAndHash struct is the same. If the hash is not given in "inhash" then
+ * compute the hash, check it against the hash in FileAndHash, and then store
+ * the hash (if the comparison succeeded) in "inhash". "inhashlen" is the
+ * number of bytes actually used in "inhash" (which is a binary array, not a
+ * string), and "inhashtotlen" is the total space available in that array.
+ *
+ * On success this function returns the length, in bytes, of the hash. On
+ * failure it returns a negative error code.
+ */
 int check_fileAndHash(
     struct FileAndHash *fahp,
     int fd,

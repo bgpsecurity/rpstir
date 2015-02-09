@@ -112,15 +112,6 @@ static void initTables(
     }
 }
 
-/*
- * Find a directory in the directory table, or create it if it is not found.
- * Return the id in idp. The function returns 0 on success and a negative
- * error code on failure.
- *
- * It is assumed that the existence of the putative directory has already been
- * verified.
- */
-
 int findorcreatedir(
     scm *scmp,
     scmcon *conp,
@@ -1032,14 +1023,6 @@ static int addCert2List(
     return 0;
 }
 
-/*
- * Get the parent certificate by using the issuer and the aki of "x" to look
- * it up in the db. If "x" has already been broken down in "cf" just use the
- * issuer/aki from there, otherwise look it up from "x". The db lookup will
- * return the filename and directory name of the parent cert, as well as its
- * flags. Set those flags into "pflags"
- */
-
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *parentSrch = NULL;
@@ -1729,6 +1712,20 @@ static unsigned int updateManLid;
 static char updateManPath[PATH_MAX];
 static char updateManHash[HASHSIZE];
 
+/*
+ * This is the model revocation function for certificates. It handles the case
+ * where a certificate is expired or revoked. Given that this function can be
+ * called recursively it must be careful in what it does. If the top level
+ * certificate it is handed has either the EXPIRED or REVOKED bit set in its
+ * flags field, or the toplevel flag in the search context, then it is
+ * deleted. If none of these bits it set then it checks to see if it has been
+ * reparented. If it has not been reparented, it is deleted, otherwise the
+ * function just returns.
+ *
+ * If a certificate is deleted, then this function is invoked recursively to
+ * check to see if any of its children (certificate children or ROA children)
+ * also need to be deleted.
+ */
 static int revoke_cert_and_children(
     scmcon *conp,
     scmsrcha *s,
@@ -2684,13 +2681,6 @@ static int add_cert_2(
     return (sta);
 }
 
-/*
- * Add a certificate to the DB. If utrust is set, check that it is self-signed
- * first. Validate the cert and add it.
- *
- * This function returns 0 on success and a negative error code on failure.
- */
-
 int add_cert(
     scm *scmp,
     scmcon *conp,
@@ -2723,11 +2713,6 @@ int add_cert(
     cf = NULL;
     return sta;
 }
-
-/*
- * Add a CRL to the DB.  This function returns 0 on success and a negative
- * error code on failure.
- */
 
 int add_crl(
     scm *scmp,
@@ -3309,10 +3294,6 @@ int add_roa(
     return (sta);
 }
 
-/*
- * Add a manifest to the database
- */
-
 int add_manifest(
     scm *scmp,
     scmcon *conp,
@@ -3499,9 +3480,6 @@ int add_manifest(
     return sta;
 }
 
-/*
-    Add a ghostbusters record to the database
-*/
 int add_ghostbusters(
     scm *scmp,
     scmcon *conp,
@@ -3621,16 +3599,6 @@ int add_ghostbusters(
     delete_casn(&cms.self);
     return 0;
 }
-
-/*
- * Add the indicated object to the DB. If "trusted" is set then verify that
- * the object is self-signed. Note that this add operation may result in the
- * directory also being added.
- *
- * Symlinks and files that are not regular files are not processed.
- *
- * This function returns 0 on success and a negative error code on failure.
- */
 
 int add_object(
     scm *scmp,
@@ -3781,16 +3749,6 @@ static int crliterator(
     return (sta);
 }
 
-/*
- * Iterate through all CRLs in the DB, recursively processing each CRL to
- * obtain its (issuer, snlist) information. For each SN in the list, call a
- * specified function (persumably a certificate revocation function) on that
- * (issuer, sn) combination.
- *
- * On success this function returns 0.  On failure it returns a negative error
- * code.
- */
-
 static uint8_t *snlist = NULL;
 
 int iterate_crl(
@@ -3924,21 +3882,6 @@ static void fillInColumns(
     srch->vald = 0;
 }
 
-/*
- * This is the model revocation function for certificates. It handles the case
- * where a certificate is expired or revoked. Given that this function can be
- * called recursively it must be careful in what it does. If the top level
- * certificate it is handed has either the EXPIRED or REVOKED bit set in its
- * flags field, or the toplevel flag in the search context, then it is
- * deleted. If none of these bits it set then it checks to see if it has been
- * reparented. If it has not been reparented, it is deleted, otherwise the
- * function just returns.
- *
- * If a certificate is deleted, then this function is invoked recursively to
- * check to see if any of its children (certificate children or ROA children)
- * also need to be deleted.
- */
-
 static int revoke_cert_and_children(
     scmcon *conp,
     scmsrcha *s,
@@ -3980,12 +3923,6 @@ static int revoke_cert_and_children(
     return verifyOrNotChildren(conp, (char *)s->vec[1].valptr,
                                (char *)s->vec[2].valptr, NULL, NULL, lid, 0);
 }
-
-/*
- * Delete an object. First find the object's directory. If it is not found
- * then we are done. If it is found, then find the corresponding (filename,
- * dir_id) combination in the appropriate table and issue the delete SQL call.
- */
 
 int delete_object(
     scm *scmp,
@@ -4136,17 +4073,6 @@ int delete_object(
     return (sta);
 }
 
-/*
- * This is the model callback function for iterate_crl. For each (issuer, sn)
- * pair with sn != 0 it attempts to find a certificate with those values in
- * the DB. If found, it then attempts to delete the certificate and all its
- * children. Note that in deleting an EE certificate, some of its children may
- * be ROAs, so this table has to be searched as well.
- *
- * This function returns 1 if it deleted something, 0 if it deleted nothing
- * and a negative error code on failure.
- */
-
 int revoke_cert_by_serial(
     scm *scmp,
     scmcon *conp,
@@ -4207,10 +4133,6 @@ int revoke_cert_by_serial(
     else
         return (mymcf.did == 0 ? 0 : 1);
 }
-
-/*
- * Delete a particular local_id from a table.
- */
 
 int deletebylid(
     scmcon *conp,
@@ -4326,14 +4248,6 @@ static int certtooold(
     return (sta);
 }
 
-/*
- * This function sweeps through all certificates. If it finds any that are
- * valid but marked as NOTYET, it clears the NOTYET bit and sets the VALID
- * bit. If it finds any where the start validity date (valfrom) is in the
- * future, it marks them as NOTYET. If it finds any where the end validity
- * date (valto) is in the past, it deletes them.
- */
-
 int certificate_validity(
     scm *scmp,
     scmcon *conp)
@@ -4406,10 +4320,6 @@ int certificate_validity(
     return (retsta);
 }
 
-/*
- * Update the metadata table to indicate when a particular client ran last.
- */
-
 int ranlast(
     scm *scmp,
     scmcon *conp,
@@ -4434,11 +4344,6 @@ int ranlast(
     free((void *)now);
     return (sta);
 }
-
-/*
- * Given the SKI of a ROA, this function returns the X509 * structure for the
- * corresponding EE certificate (or NULL on error).
- */
 
 void *roa_parent(
     scm *scmp,
