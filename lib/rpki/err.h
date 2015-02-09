@@ -1,6 +1,8 @@
 #ifndef _MYERR_H_
 #define _MYERR_H_
 
+#include <stdio.h>
+
 /*
  * Error codes
  */

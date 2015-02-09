@@ -5,6 +5,7 @@
 #ifndef PREP_STMS_H_
 #define PREP_STMS_H_
 
+#include "connect.h"
 
 int stmtAddAll(
     dbconn * conn);

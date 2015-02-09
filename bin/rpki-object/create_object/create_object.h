@@ -28,6 +28,10 @@
 #define IPv6 6
 #define ASNUM 8
 
+struct ASNum;
+struct Extensions;
+struct IPAddressFamilyA;
+
 typedef int (
     *my_func) (
     void *,

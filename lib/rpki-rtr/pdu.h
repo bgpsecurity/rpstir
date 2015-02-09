@@ -2,6 +2,7 @@
 #define _RTR_PDU_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #include <sys/socket.h>

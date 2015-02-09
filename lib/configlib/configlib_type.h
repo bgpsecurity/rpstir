@@ -1,6 +1,9 @@
 #ifndef _LIB_CONFIGLIB_CONFIGLIB_TYPE_H
 #define _LIB_CONFIGLIB_CONFIGLIB_TYPE_H
 
+#include "util/macros.h"
+#include <stddef.h>
+
 /**
    This file contains the declarations necessary to define new
    configuration types, e.g. string, tcp/udp port number, or

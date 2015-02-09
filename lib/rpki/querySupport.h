@@ -5,6 +5,8 @@
  * Functions and flags shared by query and server code
  ****************/
 
+#include "scmf.h"
+
 /******
  * put the appropriate tests for SCM_FLAG_XXX flags in the where
  *   string of a query

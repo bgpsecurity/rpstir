@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include "db_constants.h"
+#include "scm.h"
+#include "scmf.h"
 
 #include "rpki-object/certificate.h"
 
