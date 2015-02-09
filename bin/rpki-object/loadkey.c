@@ -8,7 +8,7 @@
 #include "util/logging.h"
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 uchar *setmember(

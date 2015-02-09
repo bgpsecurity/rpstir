@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 
 
@@ -12,7 +12,7 @@
 #include "rpki-object/certificate.h"
 
 /*
- * Object types 
+ * Object types
  */
 
 #define OT_UNKNOWN      0
@@ -31,7 +31,7 @@
 #define OT_MAN_PEM      (OT_MAN+OT_PEM_OFFSET)  /* PEM encoded manifest */
 
 /*
- * Certificate types 
+ * Certificate types
  */
 
 #define CA_CERT       1
@@ -42,19 +42,19 @@
 
 /*
  * certain fields need to have "rsync URIs". The only test we perform for now
- * is to verify that the field starts with this text 
+ * is to verify that the field starts with this text
  */
 #define RSYNC_PREFIX "rsync://"
 #define RSYNC_PREFIX_LEN (sizeof(RSYNC_PREFIX) - 1)
 
 /*
- * Data types 
+ * Data types
  */
 
 typedef int (
-    *crlfunc) (
-    scm * scmp,
-    scmcon * conp,
+    *crlfunc)(
+    scm *scmp,
+    scmcon *conp,
     char *issuer,
     char *aki,
     uint8_t *sn);
@@ -72,24 +72,26 @@ struct goodoid {
 };
 
 /*
- * Prototypes 
+ * Prototypes
  */
 
 extern int findorcreatedir(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *dirname,
     unsigned int *idp);
+
 extern int add_object(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
     int utrust);
+
 extern int delete_object(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
@@ -119,8 +121,8 @@ extern int infer_filetype(
     const char *fname);
 
 extern int add_cert(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outfull,
     unsigned int id,
@@ -128,119 +130,139 @@ extern int add_cert(
     int typ,
     unsigned int *cert_id,
     int constraining);
+
 extern int add_crl(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outfull,
     unsigned int id,
     int utrust,
     int typ);
+
 extern int add_roa(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
     unsigned int id,
     int utrust,
     int typ);
+
 extern int add_manifest(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
     unsigned int id,
     int utrust,
     int typ);
+
 extern int add_ghostbusters(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
     unsigned int id,
     int utrust,
     int typ);
+
 extern int add_rta(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
     unsigned int id,
     int utrust,
     int typ);
+
 extern int iterate_crl(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     crlfunc cfunc);
+
 extern int revoke_cert_by_serial(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *issuer,
     char *aki,
     uint8_t *sn);
+
 extern int deletebylid(
-    scmcon * conp,
-    scmtab * tabp,
+    scmcon *conp,
+    scmtab *tabp,
     unsigned int lid);
+
 extern int certificate_validity(
-    scm * scmp,
-    scmcon * conp);
+    scm *scmp,
+    scmcon *conp);
+
 extern int ranlast(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *whichcli);
+
 extern int addStateToFlags(
     unsigned int *flags,
     int isValid,
     char *filename,
     char *fullpath,
-    scm * scmp,
-    scmcon * conp);
+    scm *scmp,
+    scmcon *conp);
+
 extern int set_cert_flag(
-    scmcon * conp,
+    scmcon *conp,
     unsigned int id,
     unsigned int flags);
+
 extern struct cert_answers *find_cert_by_aKI(
     char *ski,
     char *aki,
-    scm * sscmp,
-    scmcon * conp);
+    scm *sscmp,
+    scmcon *conp);
+
 extern struct cert_answers *find_parent_cert(
     char *,
     char *,
     scmcon *);
+
 extern struct cert_answers *find_trust_anchors(
-    scm * sscmp,
-    scmcon * conp);
+    scm *sscmp,
+    scmcon *conp);
+
 extern struct Extension *get_extension(
     struct Certificate *certp,
     char *idp,
     int *count);
+
 extern int read_SKI_blocks(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *skiblockfile);
+
 extern char *retrieve_tdir(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     int *stap);
 
 // return code is really an X509 *
 extern void *roa_parent(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *ski,
     char **fn,
     int *stap);
 
 extern void startSyslog(
     char *appName);
+
 extern void stopSyslog(
     void);
+
 extern void setallowexpired(
     int v);
 

@@ -1,29 +1,29 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*
- * May 26 2004 768U 
+ * May 26 2004 768U
  */
 /*
- * May 26 2004 GARDINER moved BOOL flags to asn_flags.h 
+ * May 26 2004 GARDINER moved BOOL flags to asn_flags.h
  */
 /*
- * May 25 2004 767U 
+ * May 25 2004 767U
  */
 /*
- * May 25 2004 GARDINER added ASN_SET_FLAG 
+ * May 25 2004 GARDINER added ASN_SET_FLAG
  */
 /*
- * May 25 2004 766U 
+ * May 25 2004 766U
  */
 /*
- * May 25 2004 GARDINER added ASN_LAST_FLAG 
+ * May 25 2004 GARDINER added ASN_LAST_FLAG
  */
 /*
- * May 25 2004 765U 
+ * May 25 2004 765U
  */
 /*
- * May 25 2004 GARDINER moved flags to asn_flags.h 
+ * May 25 2004 GARDINER moved flags to asn_flags.h
  */
 /*****************************************************************************
 File:     asn_flags.h
@@ -38,17 +38,17 @@ Remarks:
 #ifndef _ASN_FLAGS_H
 #define _ASN_FLAGS_H
 /*
- * sfcsid[] = "@(#)asn_flags.h 768P" 
+ * sfcsid[] = "@(#)asn_flags.h 768P"
  */
 /*
- * AsnObj flags defines 
+ * AsnObj flags defines
  */
 #define ASN_FILLED_FLAG    1
 #define ASN_POINTER_FLAG   2
 #define ASN_OPTIONAL_FLAG  4
 #define ASN_OF_FLAG        8
 /*
- * #define ASN_CHOICE_FLAG 0x10 
+ * #define ASN_CHOICE_FLAG 0x10
  */
 #define ASN_FALSE_FLAG  0x20    /* used only in asn_gen */
 #define ASN_SUB_INDEF_FLAG 0x20 /* used only in C++ */
@@ -68,7 +68,7 @@ Remarks:
 #define ASN_ENUM_FLAG     0x8000
 
 /*
- * BOOLEAN default masks 
+ * BOOLEAN default masks
  */
 #define BOOL_DEFAULT    1       /* value of default */
 #define BOOL_DEFINED    2       /* flag indicating if table specifies a value */

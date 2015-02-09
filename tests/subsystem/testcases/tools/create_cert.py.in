@@ -26,7 +26,7 @@ def sign_cert(cert):
 
     key = None
     dir = None
-    
+
     if cert is None:
         return
 
@@ -58,23 +58,23 @@ def sign_cert(cert):
     p = subprocess.Popen(cmdline, shell=True, stdout = subprocess.PIPE,
                          stderr = subprocess.STDOUT)
     print p.communicate()[0]
-    return 
+    return
 
 def main(argv=None):
-    
-    usage = """usage: %prog [options] <filename.raw> 
+
+    usage = """usage: %prog [options] <filename.raw>
     Create a signed certificate from a raw asn file.
 
     Note: filename must be a name.raw file or \"*.raw\" (with quotes)
 
-    rr is run on the .raw file(s) and output is stored in a \".cer\" file  
-    The \".cer\" file is then signed using sign_cert. 
+    rr is run on the .raw file(s) and output is stored in a \".cer\" file
+    The \".cer\" file is then signed using sign_cert.
 
-    The key used to sign the cert is determined by  
-    the first letter of the filename, i.e.: 
-      PXXX.cer is signed by R.p15 
-      CXXX.cer is signed by P.p15 
-      GCXXX.cer is signed by C.p15 
+    The key used to sign the cert is determined by
+    the first letter of the filename, i.e.:
+      PXXX.cer is signed by R.p15
+      CXXX.cer is signed by P.p15
+      GCXXX.cer is signed by C.p15
       GGCXXX.cer is signed by GC.p15"""
 
     if argv is None:
@@ -89,15 +89,15 @@ def main(argv=None):
         sys.exit(-1)
 
     dirlist = glob.glob(argv[1])
-    
+
     for dir in dirlist:
         root, ext = os.path.splitext(dir)
         if ext == '.raw':
-            cert = make_cert(dir, root)    
+            cert = make_cert(dir, root)
             sign_cert(cert)
         else:
             print 'not processing ' + dir
-            
+
 
 if __name__ == "__main__":
     sys.exit(main())

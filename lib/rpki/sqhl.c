@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 
 #include <stdio.h>
@@ -30,9 +30,9 @@
 #include "util/stringutils.h"
 
 
-#define ADDCOL(a, b, c, d, e, f)  \
-       e = addcolsrchscm (a, b, c, d);  \
-       if ( e < 0 ) return f;
+#define ADDCOL(a, b, c, d, e, f)                                        \
+    e = addcolsrchscm(a, b, c, d);                                      \
+    if (e < 0) return f;
 
 /*
  * static variables that hold tables and function to initialize them
@@ -117,14 +117,14 @@ static void initTables(
  * Find a directory in the directory table, or create it if it is not found.
  * Return the id in idp. The function returns 0 on success and a negative
  * error code on failure.
- * 
+ *
  * It is assumed that the existence of the putative directory has already been
- * verified. 
+ * verified.
  */
 
 int findorcreatedir(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *dirname,
     unsigned int *idp)
 {
@@ -168,8 +168,8 @@ int findorcreatedir(
 }
 
 static int ok(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -180,12 +180,12 @@ static int ok(
 
 /*
  * Ask the DB about the top level repos directory. If found return a copy of
- * the dirname. On error return NULL and set stap. 
+ * the dirname. On error return NULL and set stap.
  */
 
 char *retrieve_tdir(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     int *stap)
 {
     unsigned int blah;
@@ -239,13 +239,13 @@ char *retrieve_tdir(
 
 /*
  * Ask the DB if it has any matching signatures to the one passed in. This
- * function works on any of the three tables that have signatures. 
+ * function works on any of the three tables that have signatures.
  */
 
 static int dupsigscm(
-    scm * scmp,
-    scmcon * conp,
-    scmtab * tabp,
+    scm *scmp,
+    scmcon *conp,
+    scmtab *tabp,
     char *msig)
 {
     unsigned int blah;
@@ -359,9 +359,9 @@ static char *certf[CF_NFIELDS] = {
 };
 
 static int add_cert_internal(
-    scm * scmp,
-    scmcon * conp,
-    cert_fields * cf,
+    scm *scmp,
+    scmcon *conp,
+    cert_fields *cf,
     unsigned int *cert_id)
 {
     scmkva aone;
@@ -375,7 +375,7 @@ static int add_cert_internal(
     int idx = 0;
     int sta;
     int i;
-    char* escaped_strings[CF_NFIELDS];
+    char *escaped_strings[CF_NFIELDS];
     memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
 
     initTables(scmp);
@@ -445,9 +445,9 @@ static char *crlf[CRF_NFIELDS] = {
 };
 
 static int add_crl_internal(
-    scm * scmp,
-    scmcon * conp,
-    crl_fields * cf)
+    scm *scmp,
+    scmcon *conp,
+    crl_fields *cf)
 {
     unsigned int crl_id = 0;
     scmkva aone;
@@ -461,7 +461,7 @@ static int add_crl_internal(
     int idx = 0;
     int sta;
     int i;
-    char* escaped_strings[CRF_NFIELDS];
+    char *escaped_strings[CRF_NFIELDS];
 
     memset(escaped_strings, 0, CRF_NFIELDS*sizeof(char*));
 
@@ -533,14 +533,14 @@ cleanup:
 }
 
 /*
- * Callback function used in verification. 
+ * Callback function used in verification.
  */
 
 static int cbx509err = 0;
 
 static int verify_callback(
     int ok2,
-    X509_STORE_CTX * store)
+    X509_STORE_CTX *store)
 {
     if (!ok2)
     {
@@ -555,11 +555,11 @@ static int verify_callback(
 
 /*
  * This function gets the sigval parameter from a table based on the type. It
- * returns one of the SIGVAL_ constants indicating what happened. 
+ * returns one of the SIGVAL_ constants indicating what happened.
  */
 
 static int get_cert_sigval(
-    scmcon * conp,
+    scmcon *conp,
     char *subj,
     char *ski)
 {
@@ -595,7 +595,7 @@ static int get_cert_sigval(
 }
 
 static int get_roa_sigval(
-    scmcon * conp,
+    scmcon *conp,
     char *ski)
 {
     static scmsrcha *sigsrch = NULL;
@@ -629,7 +629,7 @@ static int get_roa_sigval(
 }
 
 static int get_sigval(
-    scmcon * conp,
+    scmcon *conp,
     int typ,
     char *item1,
     char *item2)
@@ -649,12 +649,12 @@ static int get_sigval(
 
 /*
  * This function attempts to set the sigval parameter in a table based on the
- * type. It has no return value, since the only negative effect it can have is 
- * on performance. 
+ * type. It has no return value, since the only negative effect it can have is
+ * on performance.
  */
 
 static int set_cert_sigval(
-    scmcon * conp,
+    scmcon *conp,
     char *subj,
     char *ski,
     int valu)
@@ -678,7 +678,7 @@ static int set_cert_sigval(
 }
 
 static int set_roa_sigval(
-    scmcon * conp,
+    scmcon *conp,
     char *ski,
     int valu)
 {
@@ -699,7 +699,7 @@ static int set_roa_sigval(
 }
 
 static int set_sigval(
-    scmcon * conp,
+    scmcon *conp,
     int typ,
     char *item1,
     char *item2,
@@ -723,15 +723,15 @@ static int set_sigval(
 }
 
 /*
- * A verification function type 
+ * A verification function type
  */
 
 typedef int (
-    *vfunc) (
+    *vfunc)(
     X509_STORE_CTX *);
 
 /*
- * Global variables used by the verification callback 
+ * Global variables used by the verification callback
  */
 
 static vfunc old_vfunc = NULL;
@@ -739,13 +739,13 @@ static scmcon *thecon = NULL;
 
 /*
  * Our replacement for X509_verify. Consults the database first to see if the
- * certificate is already valid, otherwise calls X509_verify and then sets the 
- * state in the db based on that. It returns 1 on success and 0 on failure. 
+ * certificate is already valid, otherwise calls X509_verify and then sets the
+ * state in the db based on that. It returns 1 on success and 0 on failure.
  */
 
 static int local_verify(
-    X509 * cert,
-    EVP_PKEY * pkey)
+    X509 *cert,
+    EVP_PKEY *pkey)
 {
     int x509sta = 0;
     int sta = 0;
@@ -800,18 +800,17 @@ static int local_verify(
 
 /*
  * Our own internal verifier, replacing the internal_verify function in
- * openSSL (x509_vfy.c). It returns 1 on success and 0 on failure. 
+ * openSSL (x509_vfy.c). It returns 1 on success and 0 on failure.
  */
 
 static int our_verify(
-    X509_STORE_CTX * ctx)
+    X509_STORE_CTX *ctx)
 {
     int mok;
     int n;
-    int (
-    *cb) (
-    int,
-    X509_STORE_CTX *);
+    int (*cb)(
+        int,
+        X509_STORE_CTX *);
     X509 *xsubject;
     X509 *xissuer;
     EVP_PKEY *pkey = NULL;
@@ -871,7 +870,7 @@ static int our_verify(
         }
         xsubject->valid = 1;
         /*
-         * mok = check_cert_time(ctx, xsubject); if ( !mok ) goto end; 
+         * mok = check_cert_time(ctx, xsubject); if ( !mok ) goto end;
          */
         ctx->current_issuer = xissuer;
         ctx->current_cert = xsubject;
@@ -914,13 +913,13 @@ static int our_verify(
  ******************************************************/
 
 static int checkit(
-    scmcon * conp,
-    X509_STORE * ctx,
-    X509 * x,
-    STACK_OF(X509) * uchain,
-    STACK_OF(X509) * tchain,
+    scmcon *conp,
+    X509_STORE *ctx,
+    X509 *x,
+    STACK_OF(X509) *uchain,
+    STACK_OF(X509) *tchain,
     int purpose,
-    ENGINE * e)
+    ENGINE *e)
 {
     X509_STORE_CTX *csc;
     int i;
@@ -1002,8 +1001,8 @@ static scmsrcha *certSrch = NULL;
 struct cert_answers cert_answers;
 
 static int addCert2List(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -1039,7 +1038,7 @@ static int addCert2List(
  * it up in the db. If "x" has already been broken down in "cf" just use the
  * issuer/aki from there, otherwise look it up from "x". The db lookup will
  * return the filename and directory name of the parent cert, as well as its
- * flags. Set those flags into "pflags" 
+ * flags. Set those flags into "pflags"
  */
 
 // static variables for efficiency, so only need to set up query once
@@ -1054,7 +1053,7 @@ static char *parentAKI,
 struct cert_answers *find_parent_cert(
     char *ski,
     char *subject,
-    scmcon * conp)
+    scmcon *conp)
 {
     int sta;
     if (certSrch == NULL)
@@ -1099,7 +1098,7 @@ struct cert_answers *find_parent_cert(
 }
 
 static X509 *parent_cert(
-    scmcon * conp,
+    scmcon *conp,
     char *ski,
     char *subject,
     int *stap,
@@ -1153,8 +1152,8 @@ static X509 *parent_cert(
 struct cert_answers *find_cert_by_aKI(
     char *ski,
     char *aki,
-    scm * scmp,
-    scmcon * conp)
+    scm *scmp,
+    scmcon *conp)
 {
     int sta;
     initTables(scmp);
@@ -1189,8 +1188,8 @@ struct cert_answers *find_cert_by_aKI(
 }
 
 struct cert_answers *find_trust_anchors(
-    scm * scmp,
-    scmcon * conp)
+    scm *scmp,
+    scmcon *conp)
 {
     int sta;
     initTables(scmp);
@@ -1226,12 +1225,12 @@ static int isRevoked;
 static uint8_t *revokedSN = NULL;
 
 /*
- * callback function for cert_revoked 
+ * callback function for cert_revoked
  */
 
 static int revokedHandler(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -1258,8 +1257,8 @@ static int revokedHandler(
  */
 
 static int cert_revoked(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *sn,
     char *issuer)
 {
@@ -1304,20 +1303,20 @@ static int cert_revoked(
 }
 
 /*
- * Certificate verification code by mudge 
+ * Certificate verification code by mudge
  */
 
 static int verify_cert(
-    scmcon * conp,
-    X509 * x,
+    scmcon *conp,
+    X509 *x,
     int isTrusted,
     char *parentSKI,
     char *parentSubject,
     int *x509stap,
     int *chainOK)
 {
-    STACK_OF(X509) * sk_trusted = NULL;
-    STACK_OF(X509) * sk_untrusted = NULL;
+    STACK_OF(X509) *sk_trusted = NULL;
+    STACK_OF(X509) *sk_untrusted = NULL;
     X509_VERIFY_PARAM *vpm = NULL;
     X509_STORE *cert_ctx = NULL;
     X509_LOOKUP *lookup = NULL;
@@ -1338,7 +1337,7 @@ static int verify_cert(
     xptmp = X509_PURPOSE_get0(i);
     purpose = X509_PURPOSE_get_id(xptmp);
     // setup the verification parameters
-    vpm = (X509_VERIFY_PARAM *) X509_VERIFY_PARAM_new();
+    vpm = (X509_VERIFY_PARAM *)X509_VERIFY_PARAM_new();
     X509_VERIFY_PARAM_set_purpose(vpm, purpose);
     X509_STORE_set1_param(cert_ctx, vpm);
     lookup = X509_STORE_add_lookup(cert_ctx, X509_LOOKUP_file());
@@ -1409,8 +1408,8 @@ static int verify_cert(
  */
 
 static int verify_crl(
-    scmcon * conp,
-    X509_CRL * x,
+    scmcon *conp,
+    X509_CRL *x,
     char *parentSKI,
     char *parentSubject,
     int *x509sta,
@@ -1508,7 +1507,7 @@ static unsigned char *readfile(
  */
 
 static int verify_roa(
-    scmcon * conp,
+    scmcon *conp,
     struct CMS *r,
     char *ski,
     int *chainOK)
@@ -1562,12 +1561,12 @@ static int verify_roa(
 
 /*
  * utility function for setting and zeroing the flags dealing with validation
- * and validation staleness 
+ * and validation staleness
  */
 
 static int updateValidFlags(
-    scmcon * conp,
-    scmtab * tabp,
+    scmcon *conp,
+    scmtab *tabp,
     unsigned int id,
     unsigned int prevFlags,
     int isValid)
@@ -1583,7 +1582,7 @@ static int updateValidFlags(
 
 // Used by rpwork
 int set_cert_flag(
-    scmcon * conp,
+    scmcon *conp,
     unsigned int id,
     unsigned int flags)
 {
@@ -1624,8 +1623,8 @@ static int make_goodoids(
  */
 
 static int verifyChildCRL(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     crl_fields *cf;
@@ -1679,8 +1678,8 @@ static int verifyChildCRL(
  */
 
 static int verifyChildROA(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     struct CMS roa;
@@ -1732,13 +1731,13 @@ static char updateManPath[PATH_MAX];
 static char updateManHash[HASHSIZE];
 
 static int revoke_cert_and_children(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx);
 
 static int handleUpdateMan(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     (void)conp;
@@ -1753,7 +1752,7 @@ static int handleUpdateMan(
 }
 
 static int updateManifestObjs(
-    scmcon * conp,
+    scmcon *conp,
     struct Manifest *manifest)
 {
     struct FileAndHash *fahp = NULL;
@@ -1825,7 +1824,7 @@ static int updateManifestObjs(
             continue;
         /*
          * Note that the hash is stored in the db as a string, but the
-         * function check_fileAndHash wants it as a byte array. 
+         * function check_fileAndHash wants it as a byte array.
          */
         if (updateManHash[0] != 0)
         {
@@ -1853,7 +1852,7 @@ static int updateManifestObjs(
         (void)close(fd);
         if (sta >= 0)
         {
-            // if hash okay, set ONMAN flag and optionally the hash if we just 
+            // if hash okay, set ONMAN flag and optionally the hash if we just
             // computed it
             if (gothash == 1)
                 xsnprintf(flagStmt, sizeof(flagStmt),
@@ -1898,8 +1897,8 @@ static int updateManifestObjs(
  */
 
 static int verifyChildManifest(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     int sta;
@@ -1929,8 +1928,8 @@ static int verifyChildManifest(
 /** callback function for verifyChildCert.  This is used, for example,
     to mark GBRs as valid when their EE certs become valid.  */
 static int verifyChildGhostbusters(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     (void)idx;
@@ -1969,8 +1968,8 @@ static char manFiles[MANFILES_SIZE];
  */
 
 static int verifyChildCert(
-    scmcon * conp,
-    PropData * data,
+    scmcon *conp,
+    PropData *data,
     int doVerify)
 {
     X509 *x = NULL;
@@ -2047,25 +2046,25 @@ typedef struct _mcf {
 
 
 /*
- * This function returns the number of valid certificates that have subject=IS 
- * and ski=AK, or a negative error code on failure. 
+ * This function returns the number of valid certificates that have subject=IS
+ * and ski=AK, or a negative error code on failure.
  */
 
 static int cparents(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
-    mcf *mymcf = (mcf *) (s->context);
+    mcf *mymcf = (mcf *)(s->context);
     // ???????????? don't have this function, instead use where clause ?????
     mymcf->did++;
     return (0);
 }
 
 static int countvalidparents(
-    scmcon * conp,
+    scmcon *conp,
     char *IS,
     char *AK)
 {
@@ -2079,7 +2078,7 @@ static int countvalidparents(
     char ws[256];
     char *now;
     int sta;
-    char escaped [(IS != NULL) ? strlen(IS)*2+1 : 0];
+    char escaped[(IS != NULL) ? strlen(IS)*2+1 : 0];
 
     w[0].column = "ski";
     w[0].value = AK;
@@ -2132,8 +2131,8 @@ static scmsrcha *invalidateCRLSrch = NULL;
  */
 
 static int invalidate_roa(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     unsigned int lid,
@@ -2155,8 +2154,8 @@ static int invalidate_roa(
  */
 
 static int invalidate_gbr(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     char ski[512];
@@ -2177,8 +2176,8 @@ static int invalidate_gbr(
 
 /** callback function for invalidateChildCert */
 static int invalidate_mft(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     char ski[512];
@@ -2213,8 +2212,8 @@ static int invalidate_mft(
 
 /** callback function for invalidateChildCert */
 static int invalidate_crl(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     char aki[SKISIZE + 1];
@@ -2242,8 +2241,8 @@ static int invalidate_crl(
  * utility function for verify_children
  */
 static int invalidateChildCert(
-    scmcon * conp,
-    PropData * data,
+    scmcon *conp,
+    PropData *data,
     int doUpdate)
 {
     int sta;
@@ -2278,7 +2277,7 @@ static int invalidateChildCert(
         ADDCOL(invalidateCRLSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
     }
-    char escaped [strlen(data->subject)*2+1];
+    char escaped[strlen(data->subject)*2+1];
     mysql_escape_string(escaped, data->subject, strlen(data->subject));
     xsnprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
               "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
@@ -2325,8 +2324,8 @@ PropDataList *prevPropData = NULL;
  */
 
 static int registerChild(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     PropData *propData;
@@ -2365,7 +2364,7 @@ static int registerChild(
  * verify the children certs of the current cert
  */
 static int verifyOrNotChildren(
-    scmcon * conp,
+    scmcon *conp,
     char *ski,
     char *subject,
     char *aki,
@@ -2456,8 +2455,8 @@ static scmsrcha *validManSrch = NULL;
 static char validManPath[PATH_MAX];
 
 static int handleValidMan(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     (void)conp;
@@ -2472,8 +2471,8 @@ int addStateToFlags(
     int isValid,
     char *filename,
     char *fullpath,
-    scm * scmp,
-    scmcon * conp)
+    scm *scmp,
+    scmcon *conp)
 {
     int sta,
         fd;
@@ -2504,8 +2503,8 @@ int addStateToFlags(
     sta = get_casn_file(&cms.self, validManPath, 0);
     struct Manifest *manifest =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
-    simple_constructor(&ccasn, (ushort) 0, ASN_IA5_STRING);
-    write_casn(&ccasn, (uchar *) filename, strlen(filename));
+    simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING);
+    write_casn(&ccasn, (uchar *)filename, strlen(filename));
     for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
          fahp && diff_casn(&fahp->file, &ccasn);
          fahp = (struct FileAndHash *)next_of(&fahp->self));
@@ -2569,10 +2568,10 @@ struct Extension *get_extension(
  */
 
 static int add_cert_2(
-    scm * scmp,
-    scmcon * conp,
-    cert_fields * cf,
-    X509 * x,
+    scm *scmp,
+    scmcon *conp,
+    cert_fields *cf,
+    X509 *x,
     unsigned int id,
     int utrust,
     unsigned int *cert_id,
@@ -2585,7 +2584,7 @@ static int add_cert_2(
 
     cf->dirid = id;
     struct Certificate cert;
-    Certificate(&cert, (ushort) 0);
+    Certificate(&cert, (ushort)0);
     struct Extension *ski_extp,
        *aki_extp;
     int locerr = 0;
@@ -2683,15 +2682,15 @@ static int add_cert_2(
 }
 
 /*
- * Add a certificate to the DB. If utrust is set, check that it is self-signed 
+ * Add a certificate to the DB. If utrust is set, check that it is self-signed
  * first. Validate the cert and add it.
- * 
- * This function returns 0 on success and a negative error code on failure. 
+ *
+ * This function returns 0 on success and a negative error code on failure.
  */
 
 int add_cert(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outfull,
     unsigned int id,
@@ -2724,12 +2723,12 @@ int add_cert(
 
 /*
  * Add a CRL to the DB.  This function returns 0 on success and a negative
- * error code on failure. 
+ * error code on failure.
  */
 
 int add_crl(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outfull,
     unsigned int id,
@@ -2847,8 +2846,8 @@ static int hexify_ski(
 */
 static int extractAndAddCert(
     struct CMS *cmsp,
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outdir,
     int utrust,
     int typ,
@@ -2886,7 +2885,7 @@ static int extractAndAddCert(
     unsigned char *buf = calloc(1, siz + 4);
     siz = encode_casn(&certp->self, buf);
     /*
-     * d2i_X509 changes "used" to point past end of the object 
+     * d2i_X509 changes "used" to point past end of the object
      */
     unsigned char *used = buf;
     X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
@@ -2966,7 +2965,7 @@ static int extractAndAddCert(
                     pathname);
             /*
              * Leave the file there for debugging purposes.  FIXME: add code
-             * to clean this up later. 
+             * to clean this up later.
              */
             // unlink(pathname);
         }
@@ -2980,14 +2979,14 @@ static int extractAndAddCert(
 }
 
 static int add_roa_internal(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     unsigned int dirid,
     char *ski,
     uint32_t asid,
     size_t prefixes_length,
-    struct roa_prefix const * prefixes,
+    struct roa_prefix const *prefixes,
     char *sig,
     unsigned int flags)
 {
@@ -3210,12 +3209,12 @@ done:
 
 /*
  * Add a ROA to the DB.  This function returns 0 on success and a negative
- * error code on failure. 
+ * error code on failure.
  */
 
 int add_roa(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
@@ -3228,7 +3227,7 @@ int add_roa(
        *sig = NULL,
         certfilename[PATH_MAX];
     size_t prefixes_length = 0;
-    struct roa_prefix * prefixes = NULL;
+    struct roa_prefix *prefixes = NULL;
     unsigned char *bsig = NULL;
     int sta,
         chainOK,
@@ -3308,12 +3307,12 @@ int add_roa(
 }
 
 /*
- * Add a manifest to the database 
+ * Add a manifest to the database
  */
 
 int add_manifest(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
@@ -3501,8 +3500,8 @@ int add_manifest(
     Add a ghostbusters record to the database
 */
 int add_ghostbusters(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
@@ -3623,15 +3622,15 @@ int add_ghostbusters(
  * Add the indicated object to the DB. If "trusted" is set then verify that
  * the object is self-signed. Note that this add operation may result in the
  * directory also being added.
- * 
+ *
  * Symlinks and files that are not regular files are not processed.
- * 
- * This function returns 0 on success and a negative error code on failure. 
+ *
+ * This function returns 0 on success and a negative error code on failure.
  */
 
 int add_object(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
@@ -3694,13 +3693,13 @@ int add_object(
 /*
  * This is the internal iteration function used by iterate_crl below. It
  * processes CRLs one at a time.
- * 
- * On failure it returns a negative error code. On success it returns 0. 
+ *
+ * On failure it returns a negative error code. On success it returns 0.
  */
 
 static int crliterator(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     uint8_t *snlist;
@@ -3719,7 +3718,7 @@ static int crliterator(
     UNREFERENCED_PARAMETER(idx);
     if (conp == NULL || s == NULL || s->context == NULL)
         return (ERR_SCM_INVALARG);
-    crlip = (crlinfo *) (s->context);
+    crlip = (crlinfo *)(s->context);
     if (crlip->conp != conp)
         return (ERR_SCM_INVALARG);
     // if sninuse or snlen is 0 or if the flags mark the CRL as invalid, or
@@ -3749,8 +3748,8 @@ static int crliterator(
     for (i = 0; i < snlen; i++)
     {
         ista =
-            (*crlip->cfunc) (crlip->scmp, crlip->conp, issuer, aki,
-                             &snlist[SER_NUM_MAX_SZ * i]);
+            (*crlip->cfunc)(crlip->scmp, crlip->conp, issuer, aki,
+                            &snlist[SER_NUM_MAX_SZ * i]);
         if (ista < 0)
             sta = ista;
         if (ista == 1)
@@ -3783,16 +3782,16 @@ static int crliterator(
  * obtain its (issuer, snlist) information. For each SN in the list, call a
  * specified function (persumably a certificate revocation function) on that
  * (issuer, sn) combination.
- * 
- * On success this function returns 0.  On failure it returns a negative error 
- * code. 
+ *
+ * On success this function returns 0.  On failure it returns a negative error
+ * code.
  */
 
 static uint8_t *snlist = NULL;
 
 int iterate_crl(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     crlfunc cfunc)
 {
     unsigned int snlen = 0;
@@ -3883,12 +3882,12 @@ int iterate_crl(
  */
 
 static void fillInColumns(
-    scmsrch * srch1,
+    scmsrch *srch1,
     unsigned int *lid,
     char *ski,
     char *subject,
     unsigned int *flags,
-    scmsrcha * srch)
+    scmsrcha *srch)
 {
     srch1[0].colno = 1;
     srch1[0].sqltype = SQL_C_ULONG;
@@ -3922,7 +3921,7 @@ static void fillInColumns(
 }
 
 /*
- * This is the model revocation function for certificates. It handles the case 
+ * This is the model revocation function for certificates. It handles the case
  * where a certificate is expired or revoked. Given that this function can be
  * called recursively it must be careful in what it does. If the top level
  * certificate it is handed has either the EXPIRED or REVOKED bit set in its
@@ -3930,15 +3929,15 @@ static void fillInColumns(
  * deleted. If none of these bits it set then it checks to see if it has been
  * reparented. If it has not been reparented, it is deleted, otherwise the
  * function just returns.
- * 
+ *
  * If a certificate is deleted, then this function is invoked recursively to
  * check to see if any of its children (certificate children or ROA children)
- * also need to be deleted. 
+ * also need to be deleted.
  */
 
 static int revoke_cert_and_children(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     unsigned int lid;
@@ -3951,7 +3950,7 @@ static int revoke_cert_and_children(
     char *ski = (char *)(s->vec[1].valptr);
     ulong flags = *(unsigned int *)(s->vec[3].valptr);
     if ((flags & SCM_FLAG_ISPARACERT))
-    {                           // is its regular cert in the DB with unneeded 
+    {                           // is its regular cert in the DB with unneeded
                                 // flags?
         struct cert_answers *cert_answersp;
         struct cert_ansr *cert_ansrp;
@@ -3981,12 +3980,12 @@ static int revoke_cert_and_children(
 /*
  * Delete an object. First find the object's directory. If it is not found
  * then we are done. If it is found, then find the corresponding (filename,
- * dir_id) combination in the appropriate table and issue the delete SQL call. 
+ * dir_id) combination in the appropriate table and issue the delete SQL call.
  */
 
 int delete_object(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *outfile,
     char *outdir,
     char *outfull,
@@ -4137,16 +4136,16 @@ int delete_object(
  * This is the model callback function for iterate_crl. For each (issuer, sn)
  * pair with sn != 0 it attempts to find a certificate with those values in
  * the DB. If found, it then attempts to delete the certificate and all its
- * children. Note that in deleting an EE certificate, some of its children may 
+ * children. Note that in deleting an EE certificate, some of its children may
  * be ROAs, so this table has to be searched as well.
- * 
+ *
  * This function returns 1 if it deleted something, 0 if it deleted nothing
- * and a negative error code on failure. 
+ * and a negative error code on failure.
  */
 
 int revoke_cert_by_serial(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *issuer,
     char *aki,
     uint8_t *sn)
@@ -4206,12 +4205,12 @@ int revoke_cert_by_serial(
 }
 
 /*
- * Delete a particular local_id from a table. 
+ * Delete a particular local_id from a table.
  */
 
 int deletebylid(
-    scmcon * conp,
-    scmtab * tabp,
+    scmcon *conp,
+    scmtab *tabp,
     unsigned int lid)
 {
     scmkva lids;
@@ -4233,13 +4232,13 @@ int deletebylid(
 }
 
 /*
- * This is the callback for certificates that are may have been NOTYET but are 
- * now actually valid. Mark them as such. 
+ * This is the callback for certificates that are may have been NOTYET but are
+ * now actually valid. Mark them as such.
  */
 
 static int certmaybeok(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     unsigned int pflags;
@@ -4267,13 +4266,13 @@ static int certmaybeok(
 }
 
 /*
- * This is the callback for certificates that are too new, e.g. not yet valid. 
- * Mark them as NOTYET in the flags field. 
+ * This is the callback for certificates that are too new, e.g. not yet valid.
+ * Mark them as NOTYET in the flags field.
  */
 
 static int certtoonew(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     unsigned int pflags;
@@ -4299,12 +4298,12 @@ static int certtoonew(
 
 /*
  * This is the callback for certificates that are too old, e.g. no longer
- * valid. Delete them (and their children) unless they have been reparented. 
+ * valid. Delete them (and their children) unless they have been reparented.
  */
 
 static int certtooold(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     char *ws;
@@ -4328,12 +4327,12 @@ static int certtooold(
  * valid but marked as NOTYET, it clears the NOTYET bit and sets the VALID
  * bit. If it finds any where the start validity date (valfrom) is in the
  * future, it marks them as NOTYET. If it finds any where the end validity
- * date (valto) is in the past, it deletes them. 
+ * date (valto) is in the past, it deletes them.
  */
 
 int certificate_validity(
-    scm * scmp,
-    scmcon * conp)
+    scm *scmp,
+    scmcon *conp)
 {
     unsigned int lid,
         flags;
@@ -4404,12 +4403,12 @@ int certificate_validity(
 }
 
 /*
- * Update the metadata table to indicate when a particular client ran last. 
+ * Update the metadata table to indicate when a particular client ran last.
  */
 
 int ranlast(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *whichcli)
 {
     char *now;
@@ -4434,12 +4433,12 @@ int ranlast(
 
 /*
  * Given the SKI of a ROA, this function returns the X509 * structure for the
- * corresponding EE certificate (or NULL on error). 
+ * corresponding EE certificate (or NULL on error).
  */
 
 void *roa_parent(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *ski,
     char **fn,
     int *stap)
@@ -4486,7 +4485,7 @@ void stopSyslog(
 }
 
 /*
- * Free all memory held in global variables 
+ * Free all memory held in global variables
  */
 
 void sqcleanup(

@@ -313,16 +313,16 @@ static void service_request(
 
         /*
          * NOTE: after putting the request back in db_currently_processing
-         * db_semaphore should be incremented to prevent problems in the below 
+         * db_semaphore should be incremented to prevent problems in the below
          * case:
-         * 
+         *
          * 1. DB Thread 1: take CXN Thread 1's request out of
          * db_currently_processing and start servicing it 2. CXN Thread 1:
          * take a previous response out if its response queue and increment
          * db_semaphore 3. DB Thread 2: decrement db_semaphore, do nothing
-         * because it can't see CXN Thread 1's request because DB Thread 1 has 
+         * because it can't see CXN Thread 1's request because DB Thread 1 has
          * it 4. DB Thread 1: finish servicing CXN Thread 1's request and put
-         * it back in db_currently_processing 
+         * it back in db_currently_processing
          */
 
         if (sem_post(run_state->semaphore) != 0)
@@ -492,7 +492,7 @@ static void cleanup(
      * Unfortunately there doesn't seem to be a better option for request,
      * request_state, and response than letting their memory be potentially
      * lost. This is mitigated by making the thread not cancelable when their
-     * values are non-null. 
+     * values are non-null.
      */
 }
 

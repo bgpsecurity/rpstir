@@ -2,7 +2,7 @@
 #define __MAIN_H
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 

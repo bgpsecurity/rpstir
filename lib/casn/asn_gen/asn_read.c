@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     asn_read.c
@@ -19,9 +19,9 @@ char asn_read_id[] = "@(#)asn_read.c 828P";
 #include "asn_gen.h"
 
 static void do_components(
-    void (*func) ()),
+    void (*func)()),
     do_defined(
-)  ,
+    ),
     get_min_max(
     char *,
     long *,
@@ -58,18 +58,18 @@ int read_global(
 Function: Reads file in global state
 Inputs: File descriptor
 Returns: IF reaches end of file, -1
-	 ELSE 0
+         ELSE 0
 Procedure:
 1. DO
-    	IF token is '::='
-	    Return IN_DEFINITION  
-	ELSE IF token is DEFINITIONS
-	    WHILE next token is not '::='
-	        IF token is IMPLICIT, clear implicit flag for file
-	        ELSE IF token is EXPLICIT, set explicit flag for file
-		ELSE IF token is not TAGS, error
-	ELSE IF token is EXPORTS OR IMPORTS, throw away everything up to ';'
-	ELSE IF haven't a classname, copy token into classname
+        IF token is '::='
+            Return IN_DEFINITION
+        ELSE IF token is DEFINITIONS
+            WHILE next token is not '::='
+                IF token is IMPLICIT, clear implicit flag for file
+                ELSE IF token is EXPLICIT, set explicit flag for file
+                ELSE IF token is not TAGS, error
+        ELSE IF token is EXPORTS OR IMPORTS, throw away everything up to ';'
+        ELSE IF haven't a classname, copy token into classname
 2. WHILE have another token
    Return -1
 **/
@@ -115,39 +115,39 @@ int read_definition(
 {
 /**
 Function: General function to read a definition and fill in the appropriate
-	    global variables
+            global variables
 Inputs: file descriptor for input file
 Outputs: Sets flags in option and in flags.
-	 Fills in tag, type, min, max, and subclass
-	 Sets state as follows:
+         Fills in tag, type, min, max, and subclass
+         Sets state as follows:
              IF definition is an upper bound, GLOBAL
-             ELSE IF '{' OR '\n' is found, IN_DEFINITION 
+             ELSE IF '{' OR '\n' is found, IN_DEFINITION
 Returns: IF end of file is reached, -1
-	 ELSE 0
+         ELSE 0
 Procedure:
 1. DO
-	IF token is CHOICE, set type of ASN_CHOICE
-	ELSE IF token is DEFINED, do the defined thing to fill in defined_by
-	ELSE IF token is EMPTY, do nothing
-	ELSE IF token is EXPLICIT, set temporary explicit flag
-	ELSE IF token is IMPLICIT, clear temporary explicit flag
-	ELSE IF token is OF, set OF bit in options and get the subclass name
-	ELSE IF token is SIZE, get sizes
-	ELSE IF token is TABLE, set table bit in flags and note file position
-	ELSE IF token is '[', get tag
-	ELSE IF token is '(', get min-max
-	ELSE IF token is ',' AND not at a real definition, reset type
-	ELSE IF token is numeric
-	    Clear any line end 
+        IF token is CHOICE, set type of ASN_CHOICE
+        ELSE IF token is DEFINED, do the defined thing to fill in defined_by
+        ELSE IF token is EMPTY, do nothing
+        ELSE IF token is EXPLICIT, set temporary explicit flag
+        ELSE IF token is IMPLICIT, clear temporary explicit flag
+        ELSE IF token is OF, set OF bit in options and get the subclass name
+        ELSE IF token is SIZE, get sizes
+        ELSE IF token is TABLE, set table bit in flags and note file position
+        ELSE IF token is '[', get tag
+        ELSE IF token is '(', get min-max
+        ELSE IF token is ',' AND not at a real definition, reset type
+        ELSE IF token is numeric
+            Clear any line end
             Set state to GLOBAL
-	ELSE IF token is a known type name
-	    IF type is ENUMERATED, set enumerated flag
-	    IF no type so far, use this one
-	    ELSE IF OF flag set, set subtype to this type
-	    ELSE 'Or' the constructed bit into the present type
-	ELSE IF (token begins with a capital letter OR *) AND
+        ELSE IF token is a known type name
+            IF type is ENUMERATED, set enumerated flag
+            IF no type so far, use this one
+            ELSE IF OF flag set, set subtype to this type
+            ELSE 'Or' the constructed bit into the present type
+        ELSE IF (token begins with a capital letter OR *) AND
             type is not -1, set subclass & options
-	IF no next token, return -1
+        IF no next token, return -1
    WHILE state is IN_DEFINITION AND token is not '{' NOR '\n'
    Return 0
 **/
@@ -234,67 +234,67 @@ Procedure:
 
 int read_item(
     int parent,
-    void (*func) ())
+    void (*func)())
 {
 /**
 Function: General function to read an item and fill in appropriate global
 variables
 Input: File descriptor for input
 Outputs: Sets option flags
-	 Fills in tag, type, min, max, itemname, subclass, subtype, 
-	    defaultname and numstring
+         Fills in tag, type, min, max, itemname, subclass, subtype,
+            defaultname and numstring
 Procedure:
 1. WHILE token is neither ',' NOR '}'
-	IF token is '[', get tag
-	ELSE IF token is '('
-	    IF enumerated flag set, get material for tag or sub_val
-	    ELSE Get min-max
-	ELSE IF token is CHOICE, set constructed bit in type
-	ELSE IF token is COMPONENTS, do components stuff
+        IF token is '[', get tag
+        ELSE IF token is '('
+            IF enumerated flag set, get material for tag or sub_val
+            ELSE Get min-max
+        ELSE IF token is CHOICE, set constructed bit in type
+        ELSE IF token is COMPONENTS, do components stuff
         ELSE IF token is DEFAULT, make defaultname and set default flag
-	ELSE IF token is DEFINED, do the defined thing to fill in defined_by
-	ELSE IF token is EMPTY, do nothing
-	ELSE IF token is EXPLICIT, set temporary explicit flag
-	ELSE IF token is FUNCTION
-	    Set type
+        ELSE IF token is DEFINED, do the defined thing to fill in defined_by
+        ELSE IF token is EMPTY, do nothing
+        ELSE IF token is EXPLICIT, set temporary explicit flag
+        ELSE IF token is FUNCTION
+            Set type
             Get all tokens up to comma or right brace
-	ELSE IF token is IMPLICIT, clear temporary explicit flag
-	ELSE IF token is OF, error
-	ELSE IF token is OPTIONAL, set OPTIONAL flag in options
-	ELSE IF token is SIZE, get min-max
-	ELSE IF token is TABLE
+        ELSE IF token is IMPLICIT, clear temporary explicit flag
+        ELSE IF token is OF, error
+        ELSE IF token is OPTIONAL, set OPTIONAL flag in options
+        ELSE IF token is SIZE, get min-max
+        ELSE IF token is TABLE
             Get table name to skip it
-	    Set table variable
-	ELSE IF token is TAGS OR UNIQUE, swallow it
-	ELSE IF token is a defined type
-	    IF this is a table AND (there's a type OR a subclass already)
-		append token to alt_subclasses
-	    ELSE IF have a subclass already, syntax error
-	    ELSE IF have no type yet, use that
-	    ELSE IF explicit tagging, set subtype
-	    ELSE
-		'Or' the constructed bit into type
-        	Get expected sequel to token, if any
-	ELSE IF token begins with a number
-	    IF TABLE bit is set, convert number 
-	    ELSE IF enumerated flag is set
-		Put token into itemname prefixed with e
-		Set enumerated flag
-	ELSE IF in a table AND (token is TRUE OR FALSE)
+            Set table variable
+        ELSE IF token is TAGS OR UNIQUE, swallow it
+        ELSE IF token is a defined type
+            IF this is a table AND (there's a type OR a subclass already)
+                append token to alt_subclasses
+            ELSE IF have a subclass already, syntax error
+            ELSE IF have no type yet, use that
+            ELSE IF explicit tagging, set subtype
+            ELSE
+                'Or' the constructed bit into type
+                Get expected sequel to token, if any
+        ELSE IF token begins with a number
+            IF TABLE bit is set, convert number
+            ELSE IF enumerated flag is set
+                Put token into itemname prefixed with e
+                Set enumerated flag
+        ELSE IF in a table AND (token is TRUE OR FALSE)
             Make type boolean
-	    Put token in subclass
-	ELSE IF name begins with a capital letter
-	    IF this is a table item AND (there is already a subclass OR a type)
-		Append this to the alt_subclasses
-	    ELSE IF there is already a subclass OR a type, syntax error
-	    ELSE set the subclass and option from the token
-	ELSE IF name begins with a lower-case letter
-	    IF this is a table item, increment the array count
+            Put token in subclass
+        ELSE IF name begins with a capital letter
+            IF this is a table item AND (there is already a subclass OR a type)
+                Append this to the alt_subclasses
+            ELSE IF there is already a subclass OR a type, syntax error
+            ELSE set the subclass and option from the token
+        ELSE IF name begins with a lower-case letter
+            IF this is a table item, increment the array count
             IF no itemname so far, set token in itemname with options
-	IF no next token, return -1
+        IF no next token, return -1
 2. IF token is '}'
-	Peek at the next token
-	IF it's '(', set the constrained flag
+        Peek at the next token
+        IF it's '(', set the constrained flag
    Return 0
 **/
     char *c;
@@ -603,7 +603,7 @@ static char *cvt_size(
 }
 
 static void do_components(
-    void (*func) ())
+    void (*func)())
 {
 /**
 Function: Handles COMPONENTS OF in an item
@@ -611,8 +611,8 @@ Procedure:
 1. IF no next token OR it's not 'OF' OR no next token OR item is not in table
         OR it's imported, syntax error
    IF no function
-	Add token as a child of classname
-	Return
+        Add token as a child of classname
+        Return
    Save current file position
 2. Go to where item starts
    Read tokens until '{' is found
@@ -739,7 +739,7 @@ static void get_size(
 Function: Gets min and max size from input
 Returns: Min and max.  Also token contains the item from which max was derived
 Inputs: token is a buffer
-	min and max are self-explanatory
+        min and max are self-explanatory
 **/
     if (!get_token(0, loctoken))
         done(true, MSG_MISSING, "(");         /* gets the opening '(' */
@@ -778,13 +778,13 @@ static long get_tag(
 Procedure:
 1. IF no next token, exit with fatal message
    IF token is APPLICATION OR PRIVATE OR UNIVERSAL
-     	Set tag to application specific
-       	IF no next token, exit with fatal message
+        Set tag to application specific
+        IF no next token, exit with fatal message
    ELSE set tag to content specific
    IF token is an upper bound, get its value
    IF token is an ID, translate it
    ELSE
-	IF token is an ID, copy that into token
+        IF token is an ID, copy that into token
         Get number in token
 2. Convert number to true tag
    Return tag

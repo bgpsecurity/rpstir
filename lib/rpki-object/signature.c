@@ -60,7 +60,7 @@ bool set_signature(
         free(signstring);
         return false;
     }
-    
+
     if (cryptEncrypt(hashContext, signstring, sign_lth) != 0 ||
         cryptEncrypt(hashContext, signstring, 0) != 0)
     {
@@ -111,7 +111,7 @@ bool set_signature(
         ret = false;
         goto done;
     }
-    
+
     if (cryptCreateSignature(signatureData, signatureLength + 20,
                              &signatureLength, sigKeyContext,
                              hashContext) != 0)
@@ -120,7 +120,7 @@ bool set_signature(
         ret = false;
         goto done;
     }
-    
+
     if (cryptCheckSignature(signatureData, signatureLength,
                             sigKeyContext, hashContext) != 0)
     {

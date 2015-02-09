@@ -1,6 +1,6 @@
 
 /*
- * $Id: query.c 857 2009-09-30 15:27:40Z dmontana $ 
+ * $Id: query.c 857 2009-09-30 15:27:40Z dmontana $
  */
 
 /****************
@@ -17,10 +17,10 @@ extern void addQueryFlagTests(
 
 /****** prototype for a function for displaying a field *****/
 typedef int (
-    *displayfunc) (
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    *displayfunc)(
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr);
 
@@ -63,8 +63,8 @@ extern int getNumFields(
 extern int checkValidity(
     char *ski,
     unsigned int localID,
-    scm * scmp,
-    scmcon * connect);
+    scm *scmp,
+    scmcon *connect);
 
 /*****
  * displayFlags function needs to know if object is a manifes

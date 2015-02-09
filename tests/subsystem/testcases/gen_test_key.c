@@ -6,12 +6,12 @@
 #include <string.h>
 
 /*
- * $Id: genkey.c 506 2008-06-03 21:20:05Z csmall $ 
+ * $Id: genkey.c 506 2008-06-03 21:20:05Z csmall $
  */
 
 /*
  * int fatal(char *msg) { if (msg && *msg) fprintf(stderr, "%s\n", msg);
- * exit(0); } 
+ * exit(0); }
  */
 int main(
     int argc,

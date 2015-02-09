@@ -224,7 +224,7 @@ int main(
     // clean up all the data no longer needed
     // save last two full updates so that no problems at transition
     // (with client still receiving data from previous one)
-    // 
+    //
     // NOTE: The order of these updates and deletes is important.
     // All data must be marked as unusable according to rtr_update
     // before it is deleted from rtr_full or rtr_incremental.

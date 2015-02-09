@@ -24,7 +24,7 @@
 #define UDP 2
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 struct write_port {

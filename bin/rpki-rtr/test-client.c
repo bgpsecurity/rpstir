@@ -34,7 +34,7 @@ enum command_argument {
     ARG_IPv6,
     ARG_AS_NUMBER,
     ARG_ERROR_CODE,
-    ARG_END                     // special argument to indicate the end of the 
+    ARG_END                     // special argument to indicate the end of the
                                 // argument list
 };
 

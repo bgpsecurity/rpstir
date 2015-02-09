@@ -57,9 +57,9 @@ SYNOPSIS
 
     Special Writing and Reading
 
-Apr 20 2006                       1 
+Apr 20 2006                       1
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         int write_casn_num(struct casn *casnp, int val)
@@ -112,9 +112,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
 
-Apr 20 2006                       2 
+Apr 20 2006                       2
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
 
@@ -172,9 +172,9 @@ DESCRIPTION
         name.  For example, suppose that an ASN.1 object is defined as shown  in
         Figure  1  and  that  this specification is translated with casn_gen and
 
-Apr 20 2006                       3 
+Apr 20 2006                       3
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         compiled.  If a programmer then declares a Body object, e.g.
@@ -232,9 +232,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         example in Figure 1, one could refer to:
 
 
-Apr 20 2006                       4 
+Apr 20 2006                       4
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
             body.self
@@ -292,9 +292,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         the stream does not  match  the  object,  the  number  returned  is  the
         negative  of  the  offset  of  the  offending byte, The decode functions
 
-Apr 20 2006                       5 
+Apr 20 2006                       5
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         always clear out and free all  old  data  before  beginning  the  actual
@@ -356,9 +356,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         deal only with the values.  Whereas the call
 
 
-Apr 20 2006                       6 
+Apr 20 2006                       6
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
             decode_casn(&body.trunk.self, from, size)
@@ -416,9 +416,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         The function 'vsize_casn' returns a count of the bytes that  a  call  to
         'read_casn' will return.  The 'vsize_casn' function is the preferred way
 
-Apr 20 2006                       7 
+Apr 20 2006                       7
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         to determine if an object has been filled in.  If  it  returns  a  value
@@ -476,9 +476,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         BOOLEAN, ENUMERATED or INTEGER object.
 
 
-Apr 20 2006                       8 
+Apr 20 2006                       8
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         'Write_casn_time' does a similar thing  with  an  unsigned  long  number
@@ -536,9 +536,9 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         The function to write floating point numbers allows  the  base  for  the
         exponent  to be specified as either 2, or 10.  It returns a count of the
 
-Apr 20 2006                       9 
+Apr 20 2006                       9
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         bytes written into the object.  Although bases 8, 16 and NR1 and NR2  in
@@ -598,7 +598,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       10
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         Writing to a particular object within a  CHOICE clears all the choices.
@@ -652,7 +652,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       11
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         If a SET OF or a SEQUENCE OF is empty, the value returned by 'size_casn'
@@ -697,7 +697,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       12
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
             inject_casn(&body.legs.self, count);
@@ -761,7 +761,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       13
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         objects  do not match, zero if the source object has not been filled in,
@@ -821,7 +821,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       14
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
                 Abbreviation    ASN.1 Name
@@ -881,7 +881,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       15
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         or the second number in the chain could be addressed like this:
@@ -941,7 +941,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       16
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
             inject_casn(&h.self, 0);
@@ -1004,7 +1004,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       17
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
 
@@ -1064,7 +1064,7 @@ DIAGNOSTICS
 
 Apr 20 2006                       18
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         to help in finding the source  of  the  error.   The  contents  of  this
@@ -1124,7 +1124,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       19
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
             Body ::= SEQUENCE {
@@ -1184,7 +1184,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       20
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
           Appendix A - Operations With CHOICEs and DEFINED BY Objects
@@ -1244,7 +1244,7 @@ the contents of 'buf' for the writing operation do not include the tag, however,
 
 Apr 20 2006                       21
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
 the choice must be made by the programmer by addressing the lower level
@@ -1304,7 +1304,7 @@ and then decode the object into 'dummyObj.only', encode that, and decode it into
 
 Apr 20 2006                       22
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
 'x.d'.  Fortunately, ANY DEFINED BYs are rarely tagged like this.
@@ -1364,7 +1364,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       23
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
                           Appendix B - Error Messages
@@ -1424,7 +1424,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       24
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         An attempt was made to copy from an object which had not been filled  in
@@ -1484,7 +1484,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 Apr 20 2006                       25
 
-CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3) 
+CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
 
 
         This indicates that a 'write' to a CHOICE of different character strings

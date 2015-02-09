@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /**************************************************************************
  * FILE:        asn.c
@@ -91,7 +91,7 @@ uchar *asn_set(
 }
 
 uchar asn_typ(
-    uchar ** s)
+    uchar **s)
 {
     uchar typ,
        *from = *s;
@@ -144,39 +144,39 @@ Outputs: Count of number of items
 Procedure: Calls the recursive version
 **/
     int count_sub_asns(
-    uchar **);
+        uchar **);
     return (1 + count_sub_asns(&from));
 }
 
 int count_sub_asns(
-    uchar ** from)
+    uchar **from)
 {
 /**
 Function: Counts ASN.1 items in recursive fashion
 Inputs: Pointer to address of start of item
 Outputs: 'from' pointer set to address of next item
-	 Returns count of items
+         Returns count of items
 Procedure:
 1. DO
- 	Set up local asn for current item
+        Set up local asn for current item
         Count it
         IF current item has indefinite length
             IF item is constructed
-	        DO
-	            Add contents of subordinate items to count
+                DO
+                    Add contents of subordinate items to count
                 UNTIL remaining data is double null
             ELSE scan forward to double null
-2. 	ELSE
-	    IF have no end pointer yet, set end pointer
-	    IF item is primitive, advance pointer by its length
-	    IF no end pointer, return count
+2.      ELSE
+            IF have no end pointer yet, set end pointer
+            IF item is primitive, advance pointer by its length
+            IF no end pointer, return count
    WHILE have an end pointer AND haven't reached it
 3. Set 'from' pointer
    Return count
 **/
     int count = 0;
     uchar *c = *from,
-        *e = (uchar *) 0;
+        *e = (uchar *)0;
     struct asn asn;
     memset(&asn, 0, sizeof(asn));
     do                          /* step 1 */
@@ -219,7 +219,7 @@ int decode_asn(
     nbytes,
     level)
      struct asn **asnpp,
-     *easnp;
+         *easnp;
      uchar *from;
      ulong nbytes;
      ushort level;
@@ -306,7 +306,7 @@ int decode_asn(
 
 int make_asn_table(
     struct asn **asnbase,
-    uchar * c,
+    uchar *c,
     ulong lth)
 {
     struct asn *asnp;
@@ -339,8 +339,8 @@ int put_asn_lth(
 }
 
 int set_asn_lth(
-    uchar * s,
-    uchar * e)
+    uchar *s,
+    uchar *e)
 {
     uchar *c;
     ulong lth,

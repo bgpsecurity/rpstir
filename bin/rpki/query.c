@@ -19,7 +19,7 @@
 
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 /****************
@@ -64,27 +64,21 @@ static scmcon *connection = NULL;
 struct {
     char *objectName;
     char *tableName;
-} tableNames[] =
-{
-    {
-    "cert", "certificate"},
-    {
-    "roa", "roa"},
-    {
-    "crl", "crl"},
-    {
-    "manifest", "manifest"},
-    {
-    "gbr", "ghostbusters"},
+} tableNames[] = {
+    {"cert", "certificate"},
+    {"roa", "roa"},
+    {"crl", "crl"},
+    {"manifest", "manifest"},
+    {"gbr", "ghostbusters"},
 };
 
 
 /*
- * callback function for searchscm that prints the output 
+ * callback function for searchscm that prints the output
  */
 static int handleResults(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     int result = 0;
@@ -161,10 +155,10 @@ static int handleResults(
 }
 
 /*
- * given the object type (aka query type) we are looking for, tell 
+ * given the object type (aka query type) we are looking for, tell
  */
 /*
- * caller which table to search 
+ * caller which table to search
  */
 static char *tableName(
     char *objType)
@@ -179,7 +173,7 @@ static char *tableName(
 }
 
 /*
- * sets up and performs the database query, and handles the results 
+ * sets up and performs the database query, and handles the results
  */
 static int doQuery(
     char **displays,
@@ -211,7 +205,7 @@ static int doQuery(
     checkErr(table == NULL, "Cannot find table %s\n", objectType);
 
     /*
-     * set up where clause, i.e. the filter 
+     * set up where clause, i.e. the filter
      */
     srch.where = NULL;
     whereStr[0] = 0;
@@ -287,7 +281,7 @@ static int doQuery(
         srch.wherestr = whereStr;
     }
     /*
-     * set up columns to select 
+     * set up columns to select
      */
     srch.vec = srch1;
     srch.sname = NULL;
@@ -335,7 +329,7 @@ static int doQuery(
     }
 
     /*
-     * do query 
+     * do query
      */
     status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
                        orderp);
@@ -348,7 +342,7 @@ static int doQuery(
 }
 
 /*
- * show what options the user has for fields for display and filtering 
+ * show what options the user has for fields for display and filtering
  */
 static int listOptions(
     )
@@ -385,7 +379,7 @@ static int listOptions(
 }
 
 /*
- * add all fields appropriate for this type (user sent '-d all') 
+ * add all fields appropriate for this type (user sent '-d all')
  */
 static int addAllFields(
     char *displays[],
@@ -410,7 +404,7 @@ static int addAllFields(
 }
 
 /*
- * Help user by showing the possible arguments 
+ * Help user by showing the possible arguments
  */
 static int printUsage(
     )

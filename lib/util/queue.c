@@ -7,30 +7,30 @@
 
 #ifdef DEBUG
 #include <assert.h>
-#define QUEUE_INVARIANTS(queue) \
-		do { \
-			if (queue != NULL) { \
-				assert(queue->size >= 0); \
-				if (queue->size == 0) { \
-					assert(queue->first == NULL); \
-					assert(queue->last == NULL); \
-				} else { \
-					assert(queue->first != NULL); \
-					assert(queue->last != NULL); \
-					assert(queue->first->prev == NULL); \
-					assert(queue->last->next == NULL); \
-				} \
-			} \
-		} while (false)
-         // Should we also assert that e->next->prev == e and
-         // e->prev->next == e for all relevant entries?
+#define QUEUE_INVARIANTS(queue)                                         \
+    do {                                                                \
+        if (queue != NULL) {                                            \
+            assert(queue->size >= 0);                                   \
+            if (queue->size == 0) {                                     \
+                assert(queue->first == NULL);                           \
+                assert(queue->last == NULL);                            \
+            } else {                                                    \
+                assert(queue->first != NULL);                           \
+                assert(queue->last != NULL);                            \
+                assert(queue->first->prev == NULL);                     \
+                assert(queue->last->next == NULL);                      \
+            }                                                           \
+        }                                                               \
+    } while (false)
+    // Should we also assert that e->next->prev == e and
+    // e->prev->next == e for all relevant entries?
 #else
-#define assert(x) \
-		do { \
-		} while (false)
-#define QUEUE_INVARIANTS(queue) \
-		do { \
-		} while (false)
+#define assert(x)                                                       \
+    do {                                                                \
+    } while (false)
+#define QUEUE_INVARIANTS(queue)                                         \
+    do {                                                                \
+    } while (false)
 #endif
 
 
@@ -95,7 +95,7 @@ void Queue_free(
     /*
      * N.B. The following check is necessary but not sufficient for safety.
      * The caller is responsible for ensuring that all threads are finished
-     * with this queue. 
+     * with this queue.
      */
     assert(queue->size == 0);
 

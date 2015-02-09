@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 void sig_handler(

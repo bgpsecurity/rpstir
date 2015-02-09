@@ -1,5 +1,5 @@
 /*
- * $Id: roa_utils.h 498 2008-05-05 17:36:33Z dmontana $ 
+ * $Id: roa_utils.h 498 2008-05-05 17:36:33Z dmontana $
  */
 
 
@@ -73,14 +73,14 @@ struct badfile {
 /*
  * This function reads the file at "fname" and parses it.  Presuming the file
  * represents a ROA in syntactically correct openssl conf file format, the
- * function will allocate space for and return a ROA structure at the location 
+ * function will allocate space for and return a ROA structure at the location
  * pointed to by "rp".
- * 
+ *
  * On success this function returns 0; on failure it returns a negative error
  * code.
- * 
+ *
  * The non-NULL return from this function is allocated memory that must be
- * freed by a call to roaFree(). 
+ * freed by a call to roaFree().
  */
 int roaFromConfig(
     char *fname,
@@ -89,13 +89,13 @@ int roaFromConfig(
 
 /*
  * NOT REQUIRED to be implemented
- * 
+ *
  * This function is the inverse of the previous function.  The ROA defined by
  * "r" is written to the file named "fname" using the standard conf file
  * format (paired KEY= VALUE statements)
- * 
+ *
  * On success this function returns 0; on failure it returns a negative error
- * code. 
+ * code.
  */
 int roaToConfig(
     struct CMS *r,
@@ -105,20 +105,20 @@ int roaToConfig(
  * This is a more generalized function for similar purposes.  It reads in a
  * ROA from a file and potentially perform validation. "fname" is the name of
  * the file containing the putative ROA. If "fmt" is 0 this function attempts
- * to intuit the file format based on the first CR or LF delimited line in the 
- * file and also the filename; if "fmt" is non-zero then it is an OpenSSL enum 
+ * to intuit the file format based on the first CR or LF delimited line in the
+ * file and also the filename; if "fmt" is non-zero then it is an OpenSSL enum
  * value specifying the file format (binary DER or PEM encoded DER).
- * 
+ *
  * If "doval" is any nonzero value then the ROA will also be semantically
  * validated using all steps that do not require access to the database; if
  * "doval" is 0 only ASN.1 syntatic validation will be performed.
- * 
+ *
  * On success a ROA data structure, as defined in roa.h, is returned and errp
  * is set to 0.  On failure NULL is returned and errp is set to a negative
  * error code.
- * 
+ *
  * The non-NULL return from this function is allocated memory that must be
- * freed by a call to roaFree(). 
+ * freed by a call to roaFree().
  */
 int roaFromFile(
     char *fname,
@@ -130,9 +130,9 @@ int roaFromFile(
  * This function is the inverse of the previous function.  The ROA defined by
  * "r" is written to the file named "fname" using the format "fmt".  If "fmt"
  * is 0 the output form is the default (PEM encoded DER).
- * 
+ *
  * On success this function returns 0; on failure it returns a negative error
- * code. 
+ * code.
  */
 int roaToFile(
     struct CMS *r,
@@ -145,21 +145,21 @@ int roaToFile(
  * and IP-address associations are extracted, and the result is appended to
  * the file "fp".  Note that this function may produce an non-negative number
  * of lines of output (including zero).
- * 
+ *
  * It is assumed that the ROA "r" has already been validated.
- * 
+ *
  * On success this function returns 0; on failure it returns a negative error
- * code. 
+ * code.
  */
 int roaGenerateFilter(
     struct CMS *r,
-    uchar * cert,
-    FILE * fp,
+    uchar *cert,
+    FILE *fp,
     char *str,
     int strLen);
 
 /*
- * Similar to above but allocates space for result as needed 
+ * Similar to above but allocates space for result as needed
  */
 int roaGenerateFilter2(
     struct CMS *r,
@@ -198,21 +198,21 @@ ssize_t roaGetPrefixes(
 
 /*
  * This utility function extracts the SKI from a ROA and formats it in the
- * canonical ASCII format hex:hex:...:hex, suitable for use in DB lookups.  On 
+ * canonical ASCII format hex:hex:...:hex, suitable for use in DB lookups.  On
  * failure this function returns NULL.
- * 
+ *
  * Note that this function returns a pointer to allocated memory that must be
- * free()d by the caller. 
+ * free()d by the caller.
  */
 unsigned char *roaSKI(
     struct CMS *r);
 
 /*
  * This utility function extracts the binary signature from the ROA and
- * returns a pointer to it. It additional sets the (binary) length of the data 
- * pointed to in "lenp". It is the responsibility of the caller to convert the 
+ * returns a pointer to it. It additional sets the (binary) length of the data
+ * pointed to in "lenp". It is the responsibility of the caller to convert the
  * binary data into an alternate form, if desired. On failure this function
- * returns NULL. 
+ * returns NULL.
  */
 unsigned char *roaSignature(
     struct CMS *r,
@@ -228,7 +228,7 @@ uint32_t roaAS_ID(
 /*
  * This function performs all validations steps on a ROA that do not require
  * database access.  On success it returns 0; on failure, it returns a
- * negative error code. 
+ * negative error code.
  */
 int roaValidate(
     struct CMS *r);
@@ -252,18 +252,18 @@ int ghostbustersValidate(
 
 /*
  * This function performs all validations steps on a ROA that require an X509
- * certificate to have been fetched from the database. It returns 0 on success 
+ * certificate to have been fetched from the database. It returns 0 on success
  * and a negative error code on failure. It is assumed that this function is
  * called as follows:
- * 
+ *
  * scm *scmp; // previously opened DB schema scmcon *conp; // previously
  * opened DB connection X509 *cert; uchar *blob; char *ski; char *fn; int
  * valid = -1; int sta;
- * 
+ *
  * sta = roaValidate(r); if ( sta == 0 ) { ski = (char *)roaSKI(r); if ( ski
  * != NULL ) { cert = roa_parent(scmp, conp, ski, &fn, &sta); if ( cert !=
  * NULL && sta == 0 ) { blob = read cert from file (fn); valid =
- * roaValidate2(r, blob); } } } 
+ * roaValidate2(r, blob); } } }
  */
 extern int roaValidate2(
     struct CMS *r);
@@ -271,16 +271,16 @@ extern int roaValidate2(
 int check_fileAndHash(
     struct FileAndHash *fahp,
     int fd,
-    uchar * inhash,
+    uchar *inhash,
     int inhashlen,
     int inhashtotlen);
 
 /*
  * This function performs all validations steps on a ROA that require an X509
- * certificate to have been fetched from the database. It returns 0 on success 
- * and a negative error code on failure.  Any files with bad hashes are listed 
+ * certificate to have been fetched from the database. It returns 0 on success
+ * and a negative error code on failure.  Any files with bad hashes are listed
  * in badfilespp as an array of char*, the last of which is null. The caller
- * is responsible for freeing each char* and then the array. 
+ * is responsible for freeing each char* and then the array.
  */
 int manifestValidate2(
     struct CMS *r,
@@ -294,13 +294,13 @@ void free_badfiles(
  * This function frees all memory allocated when "r" was created. It is
  * permissible for "r" to be NULL, in which case nothing happens. If "r" is
  * non-NULL, however, it must point to a syntatically valid ROA structure
- * (which need not have been semantically validated, however). 
+ * (which need not have been semantically validated, however).
  */
 void roaFree(
     struct CMS *r);
 
 /*
- * This function checks the signature on a ROA. 
+ * This function checks the signature on a ROA.
  */
 int check_sig(
     struct CMS *rp,
@@ -310,7 +310,7 @@ int check_sig(
  * This function decodes a PEM encoded file whose contents are stored in
  * "bufIn" of length "inSize" and produces the corresponding DER (raw ASN.1)
  * data in "bufOut" of length "outSize". Note that it allocates memory to do
- * this, which the caller must free. 
+ * this, which the caller must free.
  */
 int decode_b64(
     unsigned char *bufIn,

@@ -1,5 +1,5 @@
 
-DEFINITIONS IMPLICIT TAGS ::= 
+DEFINITIONS IMPLICIT TAGS ::=
 
 Keyfile ::= SEQUENCE
   {
@@ -32,7 +32,7 @@ GGG ::= SEQUENCE
 III ::= SEQUENCE
   {
   lll LLL,
-  mmm MMM, 
+  mmm MMM,
   nnn [1] EXPLICIT NNN
   }
 

@@ -43,7 +43,7 @@ suffixed ".p15", thus
 
 produces the file "C12.p15".  The script file "makekeys" will generate all
 but the root key, C.p15, which is never changed.  It is not necessary to
-generate the kays more than once.  
+generate the kays more than once.
 
     To make the certificate one must then run
 
@@ -56,7 +56,7 @@ will be the current time adjusted by the "su" parameter, and the ending time
 will be the current time adjusted by the "eu" parameter.  The program allows
 some exceptional cases: To create an invalid signature, add the parameter "b";
 to force a manifest-signing end-entity to have all its signer's IP addresses
-instead of the "inherit" option, add the parameter "e"; to eliminate the IP 
+instead of the "inherit" option, add the parameter "e"; to eliminate the IP
 address extension in ROAs, use the 'n' parameter.  Only one of these
 exceptions is allowed at one time.  The IP address and AS number extensions
 for CAs must be supplied either interactively or by identifying a script file
@@ -201,4 +201,3 @@ pre-existing error file for the test being run is renamed to tXXX_error.sav.N
 
     The file "runtAll.sh" invokes a series of runt.sh scripts, each specifying
 a different test in turn.
-

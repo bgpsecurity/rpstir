@@ -12,4 +12,4 @@ DEFINITIONS ::= -- explicitly encoded !
 
 IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn;
 
-Blob ::= SIGNED  ANY 
+Blob ::= SIGNED  ANY

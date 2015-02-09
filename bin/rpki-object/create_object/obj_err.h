@@ -1,9 +1,9 @@
 /*
  * File: obj_err.h Contents: error codes and strings for object creation
  * Created: Author: Karen Sirois
- * 
+ *
  * Remarks:
- * 
+ *
  * ****************************************************************************
  */
 #ifndef _OBJ_ERR_H

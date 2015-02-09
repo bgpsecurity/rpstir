@@ -27,7 +27,7 @@ struct db_request {
     struct db_query query;
     Queue *response_queue;
     cxn_semaphore_t *response_semaphore;
-    volatile bool cancel_request;       // the cxn thread can set this to true 
+    volatile bool cancel_request;       // the cxn thread can set this to true
                                         // to cancel a request
 };
 

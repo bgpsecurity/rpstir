@@ -24,7 +24,7 @@
 /**
  *
  * This file is designed to provide functions to create a manifest
- *  from a template. 
+ *  from a template.
  *
  **/
 void print_table(
@@ -46,10 +46,10 @@ int write_manNum(
     void *value)
 {
     // first I cast the generic parameters, then I grab the manifest part of
-    // the 
+    // the
     // CMS object, then I parse the value parameter into a long and then I
-    // write 
-    // it into the struct. 
+    // write
+    // it into the struct.
     struct CMS *cms = man;
     struct Manifest *manp =
         &cms->content.signedData.encapContentInfo.eContent.manifest;
@@ -67,7 +67,7 @@ int write_thisUpdate(
 {
     // Same idea here. Cast the generic parameters, grab the manifest part of
     // the
-    // CMS object, clear out the old value and then put in the new one. 
+    // CMS object, clear out the old value and then put in the new one.
     struct CMS *cms = man;
 
     if (value == NULL)
@@ -89,7 +89,7 @@ int write_nextUpdate(
     void *man,
     void *value)
 {
-    // Same as the thisUpdate function above. 
+    // Same as the thisUpdate function above.
     struct CMS *cms = man;
 
     if (value == NULL)
@@ -137,7 +137,7 @@ int write_fileList(
     // Clear the original fileList from the template
     clear_casn(&manp->fileList.self);
 
-    // tokenize the ',' separated list. 
+    // tokenize the ',' separated list.
     buf = strtok(filesAndHashes, token);
     int num = 0;
     while (buf != NULL)
@@ -149,7 +149,7 @@ int write_fileList(
         int fileNameLen;
         char *hash = NULL;
 
-        // Set up two char lengths 
+        // Set up two char lengths
         hash = strchr(testBuf, '%');
         fileNameLen = (char *)hash - (char *)testBuf;
         hash++;
@@ -162,14 +162,14 @@ int write_fileList(
         char *fileName = calloc(fileNameLen + 1, sizeof(char));
         memcpy(fileName, testBuf, fileNameLen);
 
-        // Use a function in create_utils.c to read the hex value from 
-        // the string. 
+        // Use a function in create_utils.c to read the hex value from
+        // the string.
         if (read_hex_val(hash, strlen(hash), &hashBits[1]) > 0)
         {
             if (fileName != NULL && hashBits != NULL)
             {
                 // Use the ASN library functions to insert a new file in the
-                // fileList 
+                // fileList
                 // structure
                 if (!
                     (fahp =
@@ -189,10 +189,10 @@ int write_fileList(
     return SUCCESS;
 }
 
-// This is the generic table that describes all input 
+// This is the generic table that describes all input
 // options to a manifest
 struct object_field manifest_field_table[] = {
-    {"outputfilename", TEXT, NULL, REQUIRED, NULL},     // output filename for 
+    {"outputfilename", TEXT, NULL, REQUIRED, NULL},     // output filename for
                                                         // the manifest
     {"manNum", INTEGER, 0, OPTIONAL, write_manNum},     // sequence number
     {"thisUpdate", TEXT, NULL, OPTIONAL, write_thisUpdate},
@@ -204,7 +204,7 @@ struct object_field manifest_field_table[] = {
 };
 
 /**
- * Accessor for the above manifest table. 
+ * Accessor for the above manifest table.
  *
  */
 struct object_field *get_man_field_table(
@@ -217,7 +217,7 @@ struct object_field *get_man_field_table(
  * create_manifest is the main function call to start the process of
  *  creating a manifest file
  *
- * Params: type -    
+ * Params: type -
  *         table - the filled in object_field that we should fill the new file with
  * Returns:
  **/
@@ -256,8 +256,8 @@ int create_manifest(
         {
             if (table[i].value != NULL)
             {
-                // This is useful to allow us to have a loop over all 
-                // of the manifest table fields. This is an extremely 
+                // This is useful to allow us to have a loop over all
+                // of the manifest table fields. This is an extremely
                 // generic call to a function pointer in the table
                 if (table[i].func(&cms, table[i].value) != SUCCESS)
                 {

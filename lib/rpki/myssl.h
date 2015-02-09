@@ -2,7 +2,7 @@
 #define _MYSSL_H_
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 #include <openssl/err.h>
@@ -28,7 +28,7 @@ extern int strict_profile_checks;
 
 /*
  * This data structure defines the fields that must be extracted from a
- * certificate in order to insert it into the DB. 
+ * certificate in order to insert it into the DB.
  */
 
 #define CF_FIELD_FILENAME    0
@@ -51,7 +51,7 @@ extern int strict_profile_checks;
 #define CRL_MAX_CRLNUM_LTH  20
 /*
  * A certificate X509 * must be torn apart into this type of structure. This
- * structure can then be entered into the database. 
+ * structure can then be entered into the database.
  */
 
 typedef struct _cert_fields {
@@ -63,26 +63,26 @@ typedef struct _cert_fields {
 } cert_fields;
 
 typedef char *(
-    *cf_get) (
-    X509 * x,
+    *cf_get)(
+    X509 *x,
     int *stap,
     int *x509stap);
 
 typedef void (
-    *cfx_get) (
-    const X509V3_EXT_METHOD * meth,
+    *cfx_get)(
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap);
 
 /*
  * For each field in the X509 * that must be extracted, there is a get
  * function. Some fields are mandatory, others are optional. This structure
- * encapsulates the association of field numbers (above), get functions and an 
+ * encapsulates the association of field numbers (above), get functions and an
  * indication of whether they are needed or optional. Note that "need"ed here
  * is not the same as a critical extension; a needed extension is one that is
- * required for a database field. 
+ * required for a database field.
  */
 
 typedef struct _cf_validator {
@@ -92,10 +92,10 @@ typedef struct _cf_validator {
 } cf_validator;
 
 /*
- * For each field that is part of the X509 extension, there is a get function. 
+ * For each field that is part of the X509 extension, there is a get function.
  * As above, some fields are mandatory, others are optional. This structure
  * encapsulates the association of extension tags, get functions, field
- * numbers and an indication of whether they are needed or optional. 
+ * numbers and an indication of whether they are needed or optional.
  */
 
 typedef struct _cfx_validator {
@@ -113,24 +113,29 @@ extern char *ASNTimeToDBTime(
     char *in,
     int *stap,
     int only_gentime);
+
 extern char *LocalTimeToDBTime(
     int *stap);
+
 extern char *UnixTimeToDBTime(
     time_t clck,
     int *stap);
+
 extern char *X509_to_ski(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap);
+
 extern char *X509_to_subject(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap);
 
 extern int rescert_profile_chk(
-    X509 * x,
+    X509 *x,
     struct Certificate *certp,
     int ct);
+
 extern int crl_profile_chk(
     struct CertificateRevocationList *crlp);
 
@@ -138,13 +143,13 @@ extern cert_fields *cert2fields(
     char *fname,
     char *fullname,
     int typ,
-    X509 ** xp,
+    X509 **xp,
     int *stap,
     int *x509stap);
 
 /*
- * This data structure defines the fields that must be extracted from a CRL in 
- * order to insert it into the DB. 
+ * This data structure defines the fields that must be extracted from a CRL in
+ * order to insert it into the DB.
  */
 
 #define CRF_FIELD_FILENAME    0
@@ -160,8 +165,8 @@ extern cert_fields *cert2fields(
 
 
 /*
- * A X509_CRL * must be torn apart into this type of structure. This structure 
- * can then be entered into the database. 
+ * A X509_CRL * must be torn apart into this type of structure. This structure
+ * can then be entered into the database.
  */
 
 typedef struct _crl_fields {
@@ -173,24 +178,24 @@ typedef struct _crl_fields {
 } crl_fields;
 
 typedef char *(
-    *crf_get) (
-    X509_CRL * x,
+    *crf_get)(
+    X509_CRL *x,
     int *stap,
     int *crlstap);
 
 typedef void (
-    *crfx_get) (
-    const X509V3_EXT_METHOD * meth,
+    *crfx_get)(
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    crl_fields * cf,
+    crl_fields *cf,
     int *stap,
     int *crlstap);
 
 /*
  * For each field in the X509_CRL * that must be extracted, there is a get
  * function. Some fields are mandatory, others are optional. This structure
- * encapsulates the association of field numbers (above), get functions and an 
- * indication of whether they are need or optional. 
+ * encapsulates the association of field numbers (above), get functions and an
+ * indication of whether they are need or optional.
  */
 
 typedef struct _crf_validator {
@@ -203,7 +208,7 @@ typedef struct _crf_validator {
  * For each field that is part of the X509_CRL extension, there is a get
  * function. As above, some fields are mandatory, others are optional. This
  * structure encapsulates the association of extension tags, get functions,
- * field numbers and an indication of whether they are needed or optional. 
+ * field numbers and an indication of whether they are needed or optional.
  */
 
 typedef struct _crfx_validator {
@@ -220,7 +225,7 @@ extern crl_fields *crl2fields(
     char *fname,
     char *fullname,
     int typ,
-    X509_CRL ** xp,
+    X509_CRL **xp,
     int *stap,
     int *crlstap,
     void *goodoidp);

@@ -1,12 +1,12 @@
 /*
- * $Id: roa_create.c 453 2007-07-25 15:30:40Z mreynolds $ 
+ * $Id: roa_create.c 453 2007-07-25 15:30:40Z mreynolds $
  */
 
 
 /*
  * This contains the ROA to- and ROA from- conf file function calls.  They
  * wrap the roaToFile and roaFromFile calls defined in roa_serialize.c, and
- * are defined in roa_utils.h. 
+ * are defined in roa_utils.h.
  */
 
 #include "roa_utils.h"

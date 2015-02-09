@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     asn.h
@@ -12,7 +12,7 @@ Remarks:
 
 *****************************************************************************/
 /*
- * sfcsid[] = "@(#)asn.h 824P" 
+ * sfcsid[] = "@(#)asn.h 824P"
  */
 #ifndef _ASN_H
 #define _ASN_H
@@ -56,7 +56,7 @@ Remarks:
 #define ASN_APPL_CONSTR      (ASN_APPL_SPEC | ASN_CONSTRUCTED)
 #define ASN_CONT_SPEC        0x80
 #define ASN_CONT_CONSTR      (ASN_CONT_SPEC | ASN_CONSTRUCTED)
-#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED)  /* bwds compat 
+#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED)  /* bwds compat
                                                                  */
 #define ASN_PRIV_SPEC        0xC0
 #define ASN_PRIV_CONSTR      (ASN_PRIV_SPEC | ASN_CONSTRUCTED)

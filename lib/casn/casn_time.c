@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     casn_time.c
@@ -188,7 +188,7 @@ int _gentime_to_ulong(
         return -1;              // went around the end?
     int modays = _mos[mo] - _mos[mo - 1];
     int leap = 1;
-    // not leap year if not divisible by 4 OR 
+    // not leap year if not divisible by 4 OR
     // at even century that is not divisible by 4
     if ((((yr + UTCBASE)) % 4) > 0 || ((yr / 100) % 4) > 0)
         leap = 0;
@@ -281,7 +281,7 @@ int read_casn_time(
      * Function: Converts contents of decoded UTC or GEN time to a number of
      * seconds from midnight Dec. 31, 1969 Inputs: Pointer to ASN structure
      * Pointer to ulong for count Returns: IF error, -1, ELSE length of time
-     * field 
+     * field
      */
     int ansr;
 
@@ -367,14 +367,14 @@ int write_casn_time(
     put_num(&c[UTCMI], (ulong) min, UTCMISIZ);
     put_num(&c[UTCHR], (ulong) da, UTCHRSIZ);
     time /= 24;                 /* day number */
-    time += (((UTCBASE - 1) % 4) * 365);        /* days since leap year before 
+    time += (((UTCBASE - 1) % 4) * 365);        /* days since leap year before
                                                  * base year */
     da = time % 1461;           /* da # in quadrenniad */
     time /= 1461;               /* quadrenniads since prior leap yr */
     years_since_base =
         ((time * 4) + ((da == 1460) ? 3 : (da / 365)) - ((UTCBASE - 1) % 4));
     /*
-     * yrs since base yr 
+     * yrs since base yr
      */
     if (da == 1460)
         da = 365;
@@ -432,7 +432,7 @@ int adjustTime(
             // absolute time
             if (strlen(deltap) == 15)   /* generalized time? */
                 /*
-                 * this fn doesn't handle generalizedtime, strip century 
+                 * this fn doesn't handle generalizedtime, strip century
                  */
                 deltap += (15 - 13);
             else if (strlen(deltap) != 13)      /* utc time? */

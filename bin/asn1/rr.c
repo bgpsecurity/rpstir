@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 #include <sys/types.h>
 #include <fcntl.h>
@@ -102,7 +102,7 @@ int main(
      * output have been redirected, run with them Scan argvs and at any file
      * name Append .raw and open that as standard input Append .req and open
      * that as standard output Convert the input file Close both standard
-     * input and output 2. Exit with OK message $b) 
+     * input and output 2. Exit with OK message $b)
      */
     char *c,
       **p;
@@ -161,11 +161,11 @@ char *do_it(
 {
     /*
      * $b(+ Function: Converts text PM-request/response to true form
-     * 
+     *
      * Inputs: Standard input is an input file
-     * 
+     *
      * Outputs: Standard output is result
-     * 
+     *
      * 1. IF not at top level, skip to first blank Starting with no left
      * margin, WHILE forever Skip white space IF at line end Get another line
      * Go to first non-blank IF no left margin, set it to greater of this or
@@ -181,7 +181,7 @@ char *do_it(
      * comment ELSE IF starting a hash here, mark that ELSE IF not at a
      * reserved word, skip it ELSE IF had an ASN.1 item started, set its
      * length IF there's a tag, print it ELSE convert the next word from hex
-     * Put out zero length IF it's constructed Call this function for the next 
+     * Put out zero length IF it's constructed Call this function for the next
      * level Set the length of this item IF should be at a higher level,
      * return current pointer IF at end of line, break out of WHILE Continue
      * in WHILE 3. ELSE IF half in a comment IF char is second half, note
@@ -191,8 +191,8 @@ char *do_it(
      * note fully out of comment ELSE IF half out of comment IF char is final
      * exit char, note out of comment ELSE IF char is non-whitespace, note
      * fully in comment IF at a non-null, go to next char 4. IF have anything
-     * in asn_area, put that out IF have any vararea, write it to output IF -r 
-     * switch is set, put length in proper field $b) 
+     * in asn_area, put that out IF have any vararea, write it to output IF -r
+     * switch is set, put length in proper field $b)
      */
 
     char *b,
@@ -502,10 +502,10 @@ char *cvt_out(
     /*
      * $b(+ Function: Converts string pointed to by c and puts it in right
      * place
-     * 
-     * IF string is decimal, convert it to a hex string See if there is an odd 
+     *
+     * IF string is decimal, convert it to a hex string See if there is an odd
      * number of nibbles IF so. put out the first nibble as a number FOR each
-     * byte pair Convert byte pairs to a byte Write the byte to output $b) 
+     * byte pair Convert byte pairs to a byte Write the byte to output $b)
      */
     uchar val;
     char *a,

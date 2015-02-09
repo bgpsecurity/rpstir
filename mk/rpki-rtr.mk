@@ -301,7 +301,7 @@ $(RPKI_RTR_TEST_MANY_PREFIXES_ROA):
 		roaipv6="$$IP6"
 
 RPKI_RTR_TEST_MAX_AS_ROA = \
-	tests/subsystem/rtr/as-2147483647.roa 
+	tests/subsystem/rtr/as-2147483647.roa
 
 CLEANFILES += $(RPKI_RTR_TEST_MAX_AS_ROA)
 

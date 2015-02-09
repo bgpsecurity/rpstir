@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /***
  *
@@ -11,7 +11,7 @@
  */
 
 /*
- * sfcsid[] = "@(#)asn_gen.h 828P" 
+ * sfcsid[] = "@(#)asn_gen.h 828P"
  */
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +73,7 @@ struct name_table {
     long pos;
     long type,
         tag;
-    short subtype;              /* used for SET/SEQ OF universal primitives to 
+    short subtype;              /* used for SET/SEQ OF universal primitives to
                                  * deal with passthroughs */
     int flags,
         generation;
@@ -195,13 +195,13 @@ struct chain {
     size_t);
 
 void warn(
-    const char * format,
+    const char *format,
     ...)
     WARN_PRINTF(1, 2);
 
 void done(
     bool is_error,
-    const char * format,
+    const char *format,
     ...)
     WARN_PRINTF(2, 3)
     NO_RETURN;
@@ -398,10 +398,10 @@ extern int array,
     read_definition(
     int),
     read_global(
-)  ,
+    ),
     read_item(
     int,
-    void (*func) ()),
+    void (*func)()),
     set_name_option(
     char *to,
     char *from),
@@ -466,27 +466,27 @@ extern void add_class_member(
     struct class_table *,
     FILE *),
     cconstruct(
-)  ,
+    ),
     construct(
-)  ,
+    ),
     cdo_hdr(
-)  ,
+    ),
     cvt_number(
     char *,
     char *),
     do_hdr(
-)  ,
+    ),
     do_macro(
     int,
     FILE *,
     struct macro_table *),
     do_subclass(
     int fd,
-    FILE * str),
+    FILE *str),
     end_definition(
-)  ,
+    ),
     end_item(
-)  ,
+    ),
     fill_name(
     char **,
     char *),
@@ -494,7 +494,7 @@ extern void add_class_member(
     int,
     int),
     free_imports(
-)  ,
+    ),
     free_table(
     char **tablepp,
     int ncols),
@@ -508,9 +508,9 @@ extern void add_class_member(
     get_fnames(
     int),
     get_subtype(
-)  ,
+    ),
     jconstruct(
-)  ,
+    ),
     mk_in_name(
     char *,
     char *,
@@ -533,7 +533,7 @@ extern void add_class_member(
     syntax(
     char *),
     tabulate(
-)  ,
+    ),
     test_paren(
     int,
     char *,

@@ -1,9 +1,9 @@
 /*
  * File: create_cert.h Contents: Header file for creating testbed certificates
  * Created: Author: Karen Sirois
- * 
+ *
  * Remarks:
- * 
+ *
  * ****************************************************************************
  */
 #ifndef _CREATE_CERT_H

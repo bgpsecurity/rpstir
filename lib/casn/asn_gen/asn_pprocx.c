@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     asn_pprocx.c
@@ -20,7 +20,7 @@ char asn_pprocx_id[] = "@(#)asn_pprocx.c 828P";
 #include "asn_gen.h"
 
 /*
- * values used by what_type and class_instance 
+ * values used by what_type and class_instance
  */
 #define TYP_REF  1
 #define VAL_REF  2
@@ -28,7 +28,7 @@ char asn_pprocx_id[] = "@(#)asn_pprocx.c 828P";
 
 extern struct import_table *imtbp;
                /*
-                * pointer to entry for imported file currently being read 
+                * pointer to entry for imported file currently being read
                 */
 
 extern FILE *make_substr(
@@ -127,7 +127,7 @@ Procedure:
     uchar *c,
         savec;
     /*
-     * step 1 
+     * step 1
      */
     for (ctbp = (struct class_table *)class_area.area; ctbp && ctbp->name &&
          strcmp(classname, ctbp->name); ctbp++);
@@ -137,7 +137,7 @@ Procedure:
     fill_name(&ctbp->name, classname);
     get_known(fd, token, "{");
     /*
-     * step 2 
+     * step 2
      */
     for (savec = 0; savec != '}';)
     {
@@ -167,7 +167,7 @@ Procedure:
         fill_name(&citp->predicate, token);
     }
     /*
-     * step 3 
+     * step 3
      */
     for (*token = 0; *token <= ' ';)
     {
@@ -260,7 +260,7 @@ Procedure:
 **/
     struct import_item *itemp = &timtbp->item;
     /*
-     * step 1 
+     * step 1
      */
     if (!timtbp)
     {
@@ -277,7 +277,7 @@ Procedure:
         itemp = itemp->next;
     }
     /*
-     * step 2 
+     * step 2
      */
     fill_name(&itemp->objname, itemname);
     return timtbp;
@@ -325,7 +325,7 @@ Procedure:
        *d;
     struct macro_item *mitp;
     /*
-     * step 1 
+     * step 1
      */
     macbuf = (char *)calloc((mac_size = 100), 1);
     if (!fd || is_imported(name))
@@ -342,7 +342,7 @@ Procedure:
     else
         free((char *)argpp);
     /*
-     * step 2 
+     * step 2
      */
     get_known(fd, token, colon_ch);
     get_known(fd, token, colon_ch);
@@ -404,7 +404,7 @@ Procedure:
     if (*token == '}')
         *token = 0;             /* had terminating braces */
     /*
-     * step 3 
+     * step 3
      */
     if (mtbp)
     {
@@ -414,7 +414,7 @@ Procedure:
         mitp->index = -1;       /* makes no difference, since it has no %s */
         free((char *)argpp);
         /*
-         * step 4 
+         * step 4
          */
         if (!*token && *peek_token(fd) == '(')
         {
@@ -512,7 +512,7 @@ Procedure:
        *c,
        *b;
     /*
-     * step 1 
+     * step 1
      */
     nouns[0] = nouns[1] = 0;
     if (!wsxp->verb)
@@ -520,7 +520,7 @@ Procedure:
     if (!wsxp)
         done(true, MSG_MISSING, "syntax entry");
     /*
-     * step 2 
+     * step 2
      */
     for (braces = 1, parens = 0, curr_typ = -2, c = locbuf; braces || parens;)
     {
@@ -598,7 +598,7 @@ Procedure:
             syntax(token);
     }
     /*
-     * step 3 
+     * step 3
      */
     if (do_it)
     {
@@ -687,7 +687,7 @@ Procedure:
         item;
     char locbuf[12];
     /*
-     * step 1 
+     * step 1
      */
     for (tbop = &ctbp->table_out; tbop && tbop->table_name &&
          strcmp(tbop->table_name, classname); tbop = tbop->next);
@@ -746,7 +746,7 @@ Procedure:
     int tbuf_size;
     struct with_syntax *wsxp = &ctbp->with_syntax;
     /*
-     * step 1 
+     * step 1
      */
     if (!wsxp->verb)
         done(true, MSG_MISSING, "syntax table");
@@ -817,7 +817,7 @@ Procedure
         locbuf[80];
     int count;
     /*
-     * step 1 
+     * step 1
      */
     cat(locbuf, classname);
     *locbuf &= ~(0x20);         /* capitalize name */
@@ -829,7 +829,7 @@ Procedure
     if ((count = collect_args(fd, &argpp)) != mtbp->arg_count)
         done(true, MSG_MACRO_PARAMS, (count > mtbp->arg_count) ? many_w : few_w);
     /*
-     * step 2 
+     * step 2
      */
     do_macro_from_string(str, mtbp, argpp);
     free((char *)argpp);
@@ -882,7 +882,7 @@ Procedure
     struct macro_table *tmtbp;
     FILE *substr = (FILE *) 0;
     /*
-     * step 1 
+     * step 1
      */
     c = tbuf = (char *)calloc((tbufsize = 50), 1);
     for (mitp = &mtbp->item, ctbp = (struct class_table *)0; mitp;
@@ -979,7 +979,7 @@ Procedure
         }
     }
     /*
-     * step 3 
+     * step 3
      */
     for (c = tbuf; *c;)
     {
@@ -1074,7 +1074,7 @@ Procedure:
     struct table_out *tbop;
     struct class_item *citp;
     /*
-     * step 1 
+     * step 1
      */
     if (!wsxp->verb)
         done(true, MSG_MISSING, "syntax table");
@@ -1124,7 +1124,7 @@ Procedure:
     else
         *locbuf = 0;            /* no @ item */
     /*
-     * step 2 
+     * step 2
      */
 
     if ((ctbp->with_syntax.next || wsxp->subject))
@@ -1170,7 +1170,7 @@ Procedure:
         }
     }
     /*
-     * step 3 
+     * step 3
      */
     wsxp->table_outp = &ctbp->table_out;
     return string;
@@ -1215,14 +1215,14 @@ Procedure:
     struct table_entry *ftbp,
        *xtbp;
     /*
-     * step 1 
+     * step 1
      */
     if ((ftbp = &ctbp->table_out.table_entry)->id)
         ftbp = (struct table_entry *)add_chain((struct chain *)ftbp,
                                                sizeof(struct table_entry));
     fill_name(&ftbp->item, classname);
     /*
-     * step 2 
+     * step 2
      */
     for (wsxp = &ctbp->with_syntax; wsxp; wsxp = wsxp->next)
     {
@@ -1259,7 +1259,7 @@ Procedure:
         free(tsx.verb);
     }
     /*
-     * step 3 
+     * step 3
      */
     for (xtbp = ftbp; xtbp->next; xtbp = xtbp->next)
         fill_name(&xtbp->next->id, xtbp->id);
@@ -1481,7 +1481,7 @@ Procedure:
         }
         while (*token != ';' && strcmp(token, from_w));
         /*
-         * step 2 
+         * step 2
          */
         if (*token == ';' || !get_token(fd, token))
             syntax(token);
@@ -1505,7 +1505,7 @@ Procedure:
             syntax(token);
         }
         /*
-         * step 3 
+         * step 3
          */
         if (ximtb.item.objname && strcmp(objname, source))
         {

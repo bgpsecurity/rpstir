@@ -5,7 +5,7 @@
 
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 extern void usage(
@@ -21,7 +21,7 @@ struct name_list {
  * static void free_name_list(struct name_list *rootlistp) { struct name_list
  * *currp, *nextp; for (currp = rootlistp; currp; currp = nextp) {
  * free(currp->namep); nextp = currp->nextp; if (currp > rootlistp)
- * free(currp); } } 
+ * free(currp); } }
  */
 
 static char *makeCDStr(
@@ -62,9 +62,9 @@ int main(
 {
 
     /*
-     * tflag = tcp, uflag = udp, nflag = do nothing, just print what you would 
+     * tflag = tcp, uflag = udp, nflag = do nothing, just print what you would
      * have done, {w,e,i}flag = {warning,error, information} flags for what
-     * will be sent, ch is for getopt 
+     * will be sent, ch is for getopt
      */
 
     int tflag,
@@ -109,7 +109,7 @@ int main(
             i;
 
         /*
-         * Read file into buffer and parse as if it were a long command line. 
+         * Read file into buffer and parse as if it were a long command line.
          */
         if ((fd = open(argv[1], O_RDONLY)) < 0 ||
             (bufsize = lseek(fd, 0, SEEK_END)) <= 0 ||
@@ -122,7 +122,7 @@ int main(
             exit(EXIT_FAILURE);
         }
         /*
-         * Prepend executable name to my_argv and increment my_argc 
+         * Prepend executable name to my_argv and increment my_argc
          */
         expanded_argv =
             (char **)realloc(my_argv, sizeof(char *) * (my_argc + 1));
@@ -139,7 +139,7 @@ int main(
 
         /*
          * Intentionally leak buf & my_argv: they've become the "command
-         * line". 
+         * line".
          */
     }
     else if (argc > 2 && *argv[1] != '-')       // more than one script file?
@@ -165,7 +165,7 @@ int main(
             uflag = 1;
             portno = CONFIG_RPKI_PORT_get();
             break;
-        case 'n':              /* do nothing flag - print what messages would 
+        case 'n':              /* do nothing flag - print what messages would
                                  * have been sent */
             nflag = 1;
             break;
@@ -200,7 +200,7 @@ int main(
     }
 
     /*
-     * test for necessary flags 
+     * test for necessary flags
      */
     if (!fflag)
     {
@@ -210,7 +210,7 @@ int main(
     }
 
     /*
-     * test for conflicting flags here... 
+     * test for conflicting flags here...
      */
     if (tflag && uflag)
     {
@@ -227,7 +227,7 @@ int main(
     }
 
     /*
-     * open input rsync log file... 
+     * open input rsync log file...
      */
     fp = fopen(inputLogFile, "r");
     if (!fp)
@@ -241,7 +241,7 @@ int main(
     inputLogFile = NULL;
 
     /*
-     * setup sockets... 
+     * setup sockets...
      */
     if (!nflag)
     {
@@ -273,7 +273,7 @@ int main(
      * set the global pointer to the wport struct here - don't know if this
      * will cause a fault or not. Can't remember. Doing this to be able to
      * communicate with the server through the descriptor after a sigint or
-     * other signal has been caught. 
+     * other signal has been caught.
      */
     global_wport = &wport;
 
@@ -285,13 +285,13 @@ int main(
 
   /****************************************************/
     /*
-     * Make the Start String 
+     * Make the Start String
      */
     /*
-     * send the Start String 
+     * send the Start String
      */
     /*
-     * free it 
+     * free it
      */
   /****************************************************/
     sendStr = makeStartStr(&retlen);
@@ -307,13 +307,13 @@ int main(
 
   /****************************************************/
     /*
-     * Make the Directory String 
+     * Make the Directory String
      */
     /*
-     * send the Directory String 
+     * send the Directory String
      */
     /*
-     * free it 
+     * free it
      */
   /****************************************************/
     sendStr = makeCDStr(&retlen, topDir);
@@ -329,12 +329,12 @@ int main(
 
   /****************************************************/
     /*
-     * do the main parsing and sending of the file loop 
+     * do the main parsing and sending of the file loop
      */
   /****************************************************/
 
     /*
-     * Process entire log file, one directory block at a time. 
+     * Process entire log file, one directory block at a time.
      */
     while (1)
     {
@@ -348,7 +348,7 @@ int main(
 
         /*
          * Find the end of the directory block (actually, where the next one
-         * begins). 
+         * begins).
          */
         this_dirblock_pos = ftell(fp);
         next_dirblock_pos = next_dirblock(fp);
@@ -362,7 +362,7 @@ int main(
             break;
 
         /*
-         * Do two passes: first for non-manifests, second for manifests. 
+         * Do two passes: first for non-manifests, second for manifests.
          */
         for (pass_num = 0; pass_num < NUM_PASSES; pass_num++)
         {
@@ -374,7 +374,7 @@ int main(
                 char *fullpath_start;
 
                 /*
-                 * Get next line. 
+                 * Get next line.
                  */
                 if (!fgets(line, PATH_MAX + 40, fp))
                     break;      /* Stop searching; it's the end of file. */
@@ -383,7 +383,7 @@ int main(
                     continue;   /* Skip blank lines. */
 
                 /*
-                 * Get second field. 
+                 * Get second field.
                  */
                 fullpath_start = start_of_next_field(line, DELIMS);
                 if (!fullpath_start)
@@ -400,7 +400,7 @@ int main(
                 }
 
                 /*
-                 * Create/send socket message. 
+                 * Create/send socket message.
                  */
                 retlen = 0;
                 if (!
@@ -422,7 +422,7 @@ int main(
                 free(sendStr);
             }                   /* per available line */
         }                       /* two passes */
-    }                           /* Process entire logfile, one directory block 
+    }                           /* Process entire logfile, one directory block
                                  * at a time. */
 
     free(topDir);
@@ -441,13 +441,13 @@ int main(
 
   /****************************************************/
     /*
-     * Make the End String 
+     * Make the End String
      */
     /*
-     * send the End String 
+     * send the End String
      */
     /*
-     * free it 
+     * free it
      */
   /****************************************************/
     sendStr = makeEndStr(&retlen);
@@ -460,7 +460,7 @@ int main(
     free(sendStr);
 
     /*
-     * close descriptors etc. 
+     * close descriptors etc.
      */
     if (wport.protocol != LOCAL)
     {

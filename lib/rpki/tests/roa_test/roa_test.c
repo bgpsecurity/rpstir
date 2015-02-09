@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 
 
@@ -151,7 +151,7 @@ int main(
         freescm(scmp);
         return -4;
     }
-    cert = (X509 *) roa_parent(scmp, conp, ski, &fn, &sta);
+    cert = (X509 *)roa_parent(scmp, conp, ski, &fn, &sta);
     disconnectscm(conp);
     freescm(scmp);
     free(ski);

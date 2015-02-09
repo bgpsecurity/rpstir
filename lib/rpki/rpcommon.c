@@ -1,5 +1,5 @@
 /*
- * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $ 
+ * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $
  */
 
 #include "rpwork.h"
@@ -59,16 +59,16 @@ static char *translate_file(
         return strdup(to);
     }
 
-    char * from_for_dirname = strdup(from);
+    char *from_for_dirname = strdup(from);
     if (from_for_dirname == NULL)
     {
         return NULL;
     }
 
-    char * from_dirname = dirname(from_for_dirname);
+    char *from_dirname = dirname(from_for_dirname);
 
     size_t relative_path_len = strlen(from_dirname) + 1 + strlen(to) + 1;
-    char * relative_path = malloc(relative_path_len);
+    char *relative_path = malloc(relative_path_len);
     if (relative_path == NULL)
     {
         free(from_for_dirname);
@@ -79,7 +79,7 @@ static char *translate_file(
 
     free(from_for_dirname);
 
-    char * absolute_path = realpath(relative_path, NULL);
+    char *absolute_path = realpath(relative_path, NULL);
 
     free(relative_path);
 
@@ -116,7 +116,7 @@ static int check_keyring(
             return -1;
         }
 
-        char * filename_raw = strndup(cc, filename_raw_len);
+        char *filename_raw = strndup(cc, filename_raw_len);
         if (filename_raw == NULL)
         {
             return -1;
@@ -180,7 +180,7 @@ static int trueOrFalse(
 static int next_cmd(
     char *outbufp,
     int siz,
-    FILE * SKI)
+    FILE *SKI)
 {
     /*
      * Function: Gets next command in control file, eliminating superfluous white
@@ -196,18 +196,18 @@ static int next_cmd(
      * 1. DO
      *      Read in next line
      *      IF none, return 0
-     *      Check for overflow or initial white space 
+     *      Check for overflow or initial white space
      *    WHILE line is just a comment
      * 2. Starting at input and output buffers
      *    DO
-     *      Copy a word to output up to the limit of output 
+     *      Copy a word to output up to the limit of output
      *      Skip over white space in input
      *      IF the output buffer is full but there's more input
      *        Return error
-     *      Put one space in output   
+     *      Put one space in output
      *    WHILE there is more input
-     *    Overwrite the last space with line end codes 
-     *    Return success  
+     *    Overwrite the last space with line end codes
+     *    Return success
      */
     char locbuf[2 * SKIBUFSIZ],
        *eip = &locbuf[sizeof(locbuf) - 1],      // last allowed char
@@ -235,7 +235,7 @@ static int next_cmd(
         *op++ = ' ';
     }
     while (*ip);
-    op[-1] = '\n';              // <= &outbuf[siz-2] 
+    op[-1] = '\n';              // <= &outbuf[siz-2]
     *op = 0;                    // <= &outbuf[siz-1]
     return 1;
 }
@@ -610,7 +610,7 @@ static int getIPBlock(
 }
 
 int getSKIBlock(
-    FILE * SKI,
+    FILE *SKI,
     char *skibuf,
     int siz)
 {
@@ -667,8 +667,8 @@ static int parse_privatekey(
 static int parse_topcert(
     char *skibuf,
     int siz,
-    FILE * SKI,
-    const char * SKI_filename)
+    FILE *SKI,
+    const char *SKI_filename)
 {
     int ansr = 0,
         val = next_cmd(skibuf, siz, SKI);
@@ -729,7 +729,7 @@ static int parse_topcert(
 static int parse_control_section(
     char *skibuf,
     int siz,
-    FILE * SKI,
+    FILE *SKI,
     int *locflagsp)
 {
     int ansr = 0,
@@ -841,7 +841,7 @@ static int parse_Xcp(
 static int parse_tag_section(
     char *skibuf,
     int siz,
-    FILE * SKI)
+    FILE *SKI)
 {
     int ansr = 0,
         val = 0;
@@ -889,23 +889,23 @@ static int parse_tag_section(
 
 int parse_SKI_blocks(
     struct keyring *keyring,
-    FILE * SKI,
-    const char * SKI_filename,
+    FILE *SKI,
+    const char *SKI_filename,
     char *skibuf,
     int siz,
     int *locflagsp)
 {
     /*
-     * Procedure: 1. Get nformation on the top level certificate Get first SKI 
+     * Procedure: 1. Get nformation on the top level certificate Get first SKI
      * line from the control file 2. IF no error, process the control section
      * IF no error, process the tag section 3. IF no error AND the next is
      * part of the control section, note error
-     * 
+     *
      * FOR each item in done_certs Flag the target cert in the database as
      * having a para Sign the paracertificate Put it into database with para
-     * flag Free all and return error 
+     * flag Free all and return error
      */
-    Certificate(&myrootcert, (ushort) 0);
+    Certificate(&myrootcert, (ushort)0);
     char *c,
        *cc;
     // step 1

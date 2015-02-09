@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     casn_dump.c
@@ -230,7 +230,7 @@ Procedure:
         buf[20];
     struct casn *tcasnp;
     /*
-     * step 1 
+     * step 1
      */
     if (!to)
         return _casn_obj_err(casnp, ASN_NULL_PTR);
@@ -251,7 +251,7 @@ Procedure:
             (!(casnp->flags & ASN_DEFINED_FLAG) ||
              (casnp->flags & ASN_EXPLICIT_FLAG) || casnp->tag < ASN_APPL_SPEC))
         {                       /* a tagged CHOICE is implicitly tagged
-                                 * explicitly and an explicitly tagged DEFINED 
+                                 * explicitly and an explicitly tagged DEFINED
                                  * needs the same, as does a nonANY DEFINED */
             if (casnp->tag != ASN_BOOLEAN)      /* so _dumpsize 7 lines below
                                                  * won't repeat it */
@@ -290,7 +290,7 @@ Procedure:
             return _dumpsize(tcasnp, to, offset, mode);
     }
     /*
-     * step 2 
+     * step 2
      */
     ansr += (j = _dump_tag(casnp->tag, c, offset,
                            (casnp->flags & ASN_INDEF_LTH_FLAG), mode));
@@ -309,7 +309,7 @@ Procedure:
             c += j;
     }
     /*
-     * step 3 
+     * step 3
      */
     if ((tcasnp->type & ASN_CONSTRUCTED))
     {

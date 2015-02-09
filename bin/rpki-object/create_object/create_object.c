@@ -25,7 +25,7 @@
 #include "config/config.h"
 
 /*
- * function declrations 
+ * function declrations
  */
 extern int sign_object(
     int type,
@@ -110,9 +110,9 @@ static void fatal(
  * parse_config Parse the config file into the fields structure. Inputs:
  * configfile Output: the table of name/value pairs for the object being
  * created is filled in with values from the arg list. Returns 0 Success 1 if
- * error For every name/value pair in the config file, search for the name in 
+ * error For every name/value pair in the config file, search for the name in
  * * the field_table (all possible argument names) and fill the value in the
- * table. 
+ * table.
  */
 int parse_config(
     char *configfile,
@@ -184,12 +184,12 @@ int parse_config(
 
 /*
  * parse_args Parse the arguments from the command line into the fields
- * structure. Inputs: argc, argv Output: the table of name/value pairs for the 
+ * structure. Inputs: argc, argv Output: the table of name/value pairs for the
  * object being created is filled in with values from the arg list. Returns 0
  * Success 1 if error For every name/value pair in the arg list, search for
  * the name in the field_table (all possible argument names) and fill the
  * value in the table. Note: An error message is printed for every argument
- * that is not in the fields table. All arguments are parsed. 
+ * that is not in the fields table. All arguments are parsed.
  */
 int parse_args(
     int argc,
@@ -277,7 +277,7 @@ void printUsage(
 
 /*
  * create_object parse the object fields from the command line and call the
- * appropriate object creator with a table of fields filled in. 
+ * appropriate object creator with a table of fields filled in.
  */
 int main(
     int argc,

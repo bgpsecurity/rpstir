@@ -1,5 +1,5 @@
 /*
- * sfcsid[] = "@(#)casn.h 830P" 
+ * sfcsid[] = "@(#)casn.h 830P"
  */
 /*****************************************************************************
 File:     casn.h
@@ -57,7 +57,7 @@ int copy_casn(
     struct casn *),
     decode_casn(
     struct casn *casnp,
-    uchar * from),
+    uchar *from),
     decode_casn_lth(
     struct casn *,
     uchar *,
@@ -113,7 +113,7 @@ int copy_casn(
     struct casn *),
     read_casn_bits(
     struct casn *casnp,
-    uchar * to,
+    uchar *to,
     int *shift),
     read_casn_double(
     struct casn *casnp,
@@ -146,7 +146,7 @@ int copy_casn(
     int),
     _write_casn(
     struct casn *casnp,
-    uchar * c,
+    uchar *c,
     int lth),
     _write_casn_num(
     struct casn *casnp,
@@ -156,7 +156,7 @@ int copy_casn(
     int),
     write_casn_bits(
     struct casn *casnp,
-    uchar * from,
+    uchar *from,
     int lth,
     int shift),
     write_casn_double(
@@ -216,7 +216,7 @@ struct casn *dup_casn(
 char *find_label(
     char *oidp,
     int *diffp,
-    struct oidtable * oidtable,
+    struct oidtable *oidtable,
     int oidtable_size);
 
 #ifndef DEBUG

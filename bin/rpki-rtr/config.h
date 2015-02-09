@@ -16,7 +16,7 @@
 
 /*
  * Quote from draft-ietf-sidr-rpki-rtr-19, Section 6.2: The cache MUST rate
- * limit Serial Notifies to no more frequently than one per minute. 
+ * limit Serial Notifies to no more frequently than one per minute.
  */
 #define CXN_NOTIFY_INTERVAL 60
 

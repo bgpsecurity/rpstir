@@ -55,7 +55,7 @@ int main(
     // get EE's Auth Key ID
     if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
         FATAL(MSG_NO_AKI);
-    // add cert to CMS object 
+    // add cert to CMS object
     struct BlobSignedData *signedDatap = &roa.content.signedData;
     struct Certificate *certp;
     clear_casn(&signedDatap->certificates.self);

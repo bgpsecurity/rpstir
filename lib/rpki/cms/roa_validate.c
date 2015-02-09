@@ -1,5 +1,5 @@
 /*
- * $Id: roa_validate.c 506 2008-06-03 21:20:05Z csmall $ 
+ * $Id: roa_validate.c 506 2008-06-03 21:20:05Z csmall $
  */
 
 
@@ -23,8 +23,8 @@ int strict_profile_checks_cms = 0;
 
 /*
  * This file contains the functions that semantically validate the ROA. Any
- * and all syntactic validation against existing structures is assumed to have 
- * been performed at the translation step (see roa_serialize.c). 
+ * and all syntactic validation against existing structures is assumed to have
+ * been performed at the translation step (see roa_serialize.c).
  */
 
 #define MINMAXBUFSIZE 20
@@ -87,7 +87,7 @@ int check_sig(
     readvsize_casn(&certp->toBeSigned.subjectPublicKeyInfo.subjectPublicKey,
                    &c);
     RSAPubKey(&rsapubkey, 0);
-    decode_casn(&rsapubkey.self, &c[1]);        // skip 1st byte (tag?) in BIT 
+    decode_casn(&rsapubkey.self, &c[1]);        // skip 1st byte (tag?) in BIT
                                                 // STRING
     free(c);
 
@@ -127,7 +127,7 @@ int check_sig(
     SignerInfo(&sigInfo, (ushort) 0);   /* init sigInfo */
     copy_casn(&sigInfo.version.self, &sigInfop->version.self);  /* copy over */
     copy_casn(&sigInfo.sid.self, &sigInfop->sid.self);  /* copy over */
-    write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize);        /* sid 
+    write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize);        /* sid
                                                                          * hash */
 
     // copy over digest algorithm, signature algorithm, signature
@@ -235,15 +235,15 @@ static int check_cert(
  * the hash (if the comparison succeeded) in "inhash". "inhashlen" is the
  * number of bytes actually used in "inhash" (which is a binary array, not a
  * string), and "inhashtotlen" is the total space available in that array.
- * 
+ *
  * On success this function returns the length, in bytes, of the hash. On
- * failure it returns a negative error code. 
+ * failure it returns a negative error code.
  */
 
 int check_fileAndHash(
     struct FileAndHash *fahp,
     int ffd,
-    uchar * inhash,
+    uchar *inhash,
     int inhashlen,
     int inhashtotlen)
 {
@@ -291,29 +291,29 @@ int check_fileAndHash(
 /*
  * Find unique attribute, according to
  * http://tools.ietf.org/html/rfc6488#section-2.1.6.4
- * 
- * SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
- * 
- * Attribute ::= SEQUENCE { attrType OBJECT IDENTIFIER, attrValues SET OF
- * AttributeValue }
- * 
- * AttributeValue ::= ANY
- * 
+ *
+ *       SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
+ *
+ *       Attribute ::= SEQUENCE { attrType OBJECT IDENTIFIER, attrValues SET OF
+ *         AttributeValue }
+ *
+ *       AttributeValue ::= ANY
+ *
  * The signedAttrs element MUST include only a single instance of any
  * particular attribute.  Additionally, even though the syntax allows for a
  * SET OF AttributeValue, in an RPKI signed object, the attrValues MUST
  * consist of only a single AttributeValue.
- * 
+ *
  * @param[in] attrsp Attributes to search for the OID in. @param[in] oidp
  * Attribute OID to search for. @param[out] found_any True indicates any
  * attributes with the OID were found. False indicates no attributes with the
  * OID were found. @return Non-NULL unique attribute, or NULL if the attribute
- * was not found or was not unique. 
+ * was not found or was not unique.
  */
 static struct Attribute *find_unique_attr(
     struct SignedAttributes *attrsp,
     char *oidp,
-    bool * found_any)
+    bool *found_any)
 {
     struct Attribute *attrp,
        *ch_attrp = NULL;
@@ -339,8 +339,8 @@ static struct Attribute *find_unique_attr(
 
 static int setup_cert_minmax(
     struct IPAddressOrRangeA *rpAddrRangep,
-    uchar * cmin,
-    uchar * cmax,
+    uchar *cmin,
+    uchar *cmax,
     int fam)
 {
     memset(cmin, 0, MINMAXBUFSIZE);
@@ -374,8 +374,8 @@ static int setup_cert_minmax(
 
 static int setup_roa_minmax(
     struct IPAddress *ripAddrp,
-    uchar * rmin,
-    uchar * rmax,
+    uchar *rmin,
+    uchar *rmax,
     int fam)
 {
     memset(rmin, 0, MINMAXBUFSIZE);
@@ -409,7 +409,7 @@ static int test_maxLength(
     /*
      * Compute the length of the IP prefix, noting that the ASN.1 encoding of
      * a bit string uses the first byte to specify the number of unused bits
-     * at the end. 
+     * at the end.
      */
     int addrLength = ((lth - 1) * 8) - addr[0];
     free(addr);
@@ -673,11 +673,11 @@ static int cmsValidate(
  * anyone else who calls manifestValidate2 struct badfile **bpp; for (bpp =
  * badfilespp; *bpp; bpp++) { free((*bpp)->fname); free(*bpp); }
  * free(badfilespp); }
- * 
+ *
  * int manifestValidate2(struct ROA *rp, char *dirp, struct badfile
  * ***badfilesppp) { struct FileAndHash *fahp; struct Manifest *manp; struct
  * badfile **badfilespp = (struct badfile **)0; char *fname, *path; int
- * numbadfiles = 0, dir_lth, err = 0, ffd, tmp; // do general checks including 
+ * numbadfiles = 0, dir_lth, err = 0, ffd, tmp; // do general checks including
  * signature if cert is present if ((err = cmsValidate(rp)) < 0) return err;
  * // certificate check if
  * (num_items(&rp->content.signedData.certificates.self) != 1) return
@@ -688,7 +688,7 @@ static int cmsValidate(
  * if (read_casn_time(&manp->thisUpdate, &mlo) <= 0 ||
  * read_casn_time(&manp->nextUpdate, &mhi) <= 0 || mlo >= mhi) return
  * ERR_SCM_BADDATES; // all checks done.  Get to the details if (dirp && *dirp)
- * { dir_lth = strlen(dirp) + 1; if (dirp[dir_lth - 2] == '/') dir_lth--; } else 
+ * { dir_lth = strlen(dirp) + 1; if (dirp[dir_lth - 2] == '/') dir_lth--; } else
  * dir_lth = 0; path = (char *)calloc(1, dir_lth + 1); for (fahp = (struct
  * FileAndHash *)member_casn(&manp->fileList.self, 0); fahp; fahp = (struct
  * FileAndHash *)next_of(&fahp->self)) { int name_lth = vsize_casn(&fahp->file);
@@ -700,10 +700,10 @@ static int cmsValidate(
  * (numbadfiles == 0) badfilespp = (struct badfile **)calloc(2, sizeof(struct
  * badfile *)); else badfilespp = (struct badfile **)realloc(badfilespp,
  * ((numbadfiles + 2) * sizeof(struct badfile *))); struct badfile *badfilep =
- * (struct badfile *)calloc(1, sizeof(struct badfile)); badfilespp[numbadfiles++] 
+ * (struct badfile *)calloc(1, sizeof(struct badfile)); badfilespp[numbadfiles++]
  * = badfilep; badfilespp[numbadfiles] = (struct badfile *)0; badfilep->fname =
  * fname; badfilep->err = tmp; if (!err) err = tmp; } else free(fname); }
- * free(path); *badfilesppp = badfilespp; return err; } 
+ * free(path); *badfilesppp = badfilespp; return err; }
  */
 
 static int check_mft_version(
@@ -928,8 +928,8 @@ static int check_mft_duplicate_filenames(
  *
  * Check manifest conformance with respect to the manifest profile
  *   (draft-ietf-sidr-rpki-manifests).
- *    
- * 4. Manifest definition 
+ *
+ * 4. Manifest definition
  *
  * A manifest is an RPKI signed object, as specified in
  * [ID.sidr-signed-object].  The RPKI signed object template requires
@@ -960,12 +960,12 @@ static int check_mft_duplicate_filenames(
  *   fileHashAlg     OBJECT IDENTIFIER,
  *   fileList        SEQUENCE SIZE (0..MAX) OF FileAndHash
  *   }
- * 
+ *
  * FileAndHash ::=     SEQUENCE {
  *   file            IA5String,
  *   hash            BIT STRING
  *   }
- *   
+ *
  * 4.2.1 Manifest
  *
  *   The manifestNumber, thisUpdate, and nextUpdate fields are modeled
@@ -1050,7 +1050,7 @@ int manifestValidate(
  * int check_asnums(struct Certificate *certp, int iAS_ID) { struct Extension
  * *extp; for (extp = (struct Extension
  * *)member_casn(&certp->toBeSigned.extensions. self, 0); extp &&
- * diff_objid(&extp->extnID, id_pe_autonomousSysNum); extp = (struct Extension 
+ * diff_objid(&extp->extnID, id_pe_autonomousSysNum); extp = (struct Extension
  * *)next_of(&extp->self)); if (!extp) return 0; struct ASNumberOrRangeA
  * *asNumOrRangeAp; if
  * (size_casn(&extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges.self))
@@ -1060,11 +1060,11 @@ int manifestValidate(
  * asNumOrRangeAp; asNumOrRangeAp = (struct ASNumberOrRangeA
  * *)next_of(&asNumOrRangeAp->self)) { if (size_casn(&asNumOrRangeAp->num)) {
  * if (!diff_casn_num(&asNumOrRangeAp->num, iAS_ID)) { isWithin++; break; } }
- * else // it's a range { if (diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID) 
+ * else // it's a range { if (diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID)
  * <= 0 && diff_casn_num(&asNumOrRangeAp->range.max, iAS_ID) >= 0 &&
  * diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID) != -2) //not error {
  * isWithin++; break; } } } if (!isWithin) return ERR_SCM_BADASNUM; } return
- * 1; } 
+ * 1; }
  */
 
 struct certrange {
@@ -1173,7 +1173,7 @@ static int checkIPAddrs(
                 (&certFamilyp->addressFamily, &roaFamilyp->addressFamily))
                 continue;
             matchedCertFamily = 1;
-            // for each ROA entry, see if it is in cert 
+            // for each ROA entry, see if it is in cert
             const int roaNumPrefixes = num_items(&roaFamilyp->addresses.self);
             struct certrange *roaRanges =
                 malloc(roaNumPrefixes * sizeof(struct certrange));
@@ -1269,7 +1269,7 @@ int roaValidate(
     if ((iRes = cmsValidate(rp)) < 0)
         return iRes;
 
-    // check that eContentType is routeOriginAttestation (= 
+    // check that eContentType is routeOriginAttestation (=
     // OID 1.2.240.113549.1.9.16.1.24)
     if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
                    id_routeOriginAttestation))
@@ -1344,7 +1344,7 @@ int roaValidate2(
         (struct Certificate *)member_casn(&rp->content.signedData.certificates.
                                           self, 0);
 
-    // 
+    //
     // if (certificate exists in roa)
     // - ignore it
     // - Or check the certificate against x (optional)
@@ -1374,7 +1374,7 @@ int roaValidate2(
         {
             all_extns |= HAS_EXTN_IPADDR;
             // start at first family in cert. NOTE order must be v4 then v6,
-            // per 
+            // per
             // RFC3779
             struct IPAddressFamilyA *rpAddrFamp =
                 &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
@@ -1385,7 +1385,7 @@ int roaValidate2(
                  &rp->content.signedData.encapContentInfo.eContent.roa.
                  ipAddrBlocks.rOAIPAddressFamily;
                  /*
-                  * iRes == cTRUE && 
+                  * iRes == cTRUE &&
                   */ ripAddrFamp;
                  ripAddrFamp =
                  (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
@@ -1443,7 +1443,7 @@ int roaValidate2(
                         if (rpAddrRangep && iRes == 0)
                         {       // now at cert values at or beyond roa
                             // if roa min is below cert min OR roa max beyond
-                            // cert max, 
+                            // cert max,
                             // bail out
                             if ((ii =
                                  memcmp(&rmin[2], &cmin[2],

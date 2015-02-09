@@ -12,7 +12,7 @@
 --
 -- Remarks:
 --
--- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/name.asn,v 1.3 1997/11/05 20:51:07 mcasagni Exp $ 
+-- $Header: /u4/PKI/cms3_3/Libraries/Dev/rcs/lib/asndefs/name.asn,v 1.3 1997/11/05 20:51:07 mcasagni Exp $
 --
 
 
@@ -32,16 +32,16 @@ DistinguishedName ::= RDNSequence
 RelativeDistinguishedName ::= SET OF AttributeValueAssertion
 
 AttributeValueAssertion ::= SEQUENCE {
-	objid               OBJECT IDENTIFIER TABLE SelectedAttributeTypes,
-	value               ANY DEFINED BY objid }
+        objid               OBJECT IDENTIFIER TABLE SelectedAttributeTypes,
+        value               ANY DEFINED BY objid }
 
 
 -- Temporary structure to store specific attribute value for use by
 -- ufn_to_obj
 
 AttributeValueChoice ::= SEQUENCE {
-	objid		OBJECT IDENTIFIER,
-	value		DirectoryString }
+        objid           OBJECT IDENTIFIER,
+        value           DirectoryString }
 
 -- This section is a partial list of SelectedAttributeTypes.
 -- Many will be left out or commented out in order to save
@@ -50,7 +50,7 @@ AttributeValueChoice ::= SEQUENCE {
 --
 -- NOTE: This table makes use of the "catch-all" ability introduced in asn_gen v1.4.
 -- This allows for correct decoding (and re-encoding) of any valid
--- ASN.1 syntax without requiring the application to understand the semantics.  
+-- ASN.1 syntax without requiring the application to understand the semantics.
 -- This means: Your application won't core-dump
 -- when you are presented with a Certificate containing attributes
 -- that you don't know how process.
@@ -135,17 +135,17 @@ AliasedObjectName ::=   DistinguishedName
 
 -- NOTE:  We invent a shorthand syntax that yields an identical
 --        encoding.  GenName takes care of the CaseIgnoreSyntax
---        structure.  Those who like typing can use the 
+--        structure.  Those who like typing can use the
 --        commented-out version below.
 
 GenName ::= DirectoryString
 
 DirectoryString ::= CHOICE {
-    printableString	PrintableString (SIZE(1..ub-name)),
+    printableString     PrintableString (SIZE(1..ub-name)),
     utf8String          UTF8String (SIZE(1..ub-name)),
-    teletexString	TeletexString (SIZE(1..ub-name))
---    universalString	UniversalString (SIZE(1..ub-name)),
---    bMPString 		BMPString
+    teletexString       TeletexString (SIZE(1..ub-name))
+--    universalString   UniversalString (SIZE(1..ub-name)),
+--    bMPString                 BMPString
       }
 
 -- CaseIgnoreSyntax ::= CHOICE {

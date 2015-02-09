@@ -1,5 +1,5 @@
 /**
-	Functions to access the database for chaser.
+   Functions to access the database for chaser.
  */
 
 #include <inttypes.h>
@@ -418,9 +418,9 @@ int64_t db_chaser_read_crldp(
 /**=============================================================================
 ------------------------------------------------------------------------------*/
 int64_t db_chaser_read_sia(
-    dbconn * conn,
+    dbconn *conn,
     char ***results,
-    int64_t * num_malloced,
+    int64_t *num_malloced,
     unsigned int chase_not_yet_validated)
 {
     MYSQL_STMT *stmt;
@@ -440,13 +440,13 @@ int64_t db_chaser_read_sia(
     // the flag
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
     bind_in[0].buffer = &flag;
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
     // the same flag
     bind_in[1].buffer_type = MYSQL_TYPE_LONG;
     bind_in[1].buffer = &flag;
-    bind_in[1].is_unsigned = (my_bool) 1;
-    bind_in[1].is_null = (my_bool *) 0;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {

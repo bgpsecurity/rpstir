@@ -25,7 +25,7 @@ import javax.swing.text.JTextComponent;
  */
 public class PropertiesEditor {
   /**
-   * 
+   *
    */
   private static final int NCOLS = 5;
   protected final JFileChooser fileChooser = new JFileChooser(new File("."));
@@ -34,7 +34,7 @@ public class PropertiesEditor {
 
   /**
    * @param testModel
-   * @param taskDescriptionsEditor 
+   * @param taskDescriptionsEditor
    */
   protected PropertiesEditor() {
     panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -52,7 +52,7 @@ public class PropertiesEditor {
   protected void addToTaskPanel(String label, Component... components) {
     addToTaskPanel(new JLabel(label), components);
   }
-  
+
   protected void addComponentsToTaskPanel(Component... components) {
     gbc.gridx = 0;
     gbc.weighty = 0f;
@@ -76,7 +76,7 @@ public class PropertiesEditor {
     }
     gbc.gridy++;
   }
-  
+
   protected void addToTaskPanel(JLabel label, Component... components) {
     gbc.gridx = 0;
     gbc.gridwidth = 1;
@@ -102,7 +102,7 @@ public class PropertiesEditor {
       gbc.gridx++;
       panel.add(component, gbc);
     }
-    gbc.gridy++;    
+    gbc.gridy++;
   }
 
 

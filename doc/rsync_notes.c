@@ -375,32 +375,33 @@ bool ready_for_next_attempt(URI_attempt *uri_attemptp)
 }
 
 /**
-  NOTE: This should be eventually replaced with a smarter function that looks
-  at URIs and picks the URI with the largest distance from currently_processing,
-  where "distance" somehow captures this notion:
+   NOTE: This should be eventually replaced with a smarter function that looks
+   at URIs and picks the URI with the largest distance from currently_processing,
+   where "distance" somehow captures this notion:
 
-  If curently_processing has:
-    rsync://a.foo.com/a/b/c
-    rsync://b.foo.com/
-    rsync://bar.com/
-    rsync://foo.org/
+   If curently_processing has:
 
- The prefered ordering of to_process, from best next choice to worst, is:
-    rsync://quux.net/        because there are no URIs in the .net TLD
-    rsync://quux.org/        because there are fewer second-level domains in .org (foo.org) than .com (foo.com and bar.com)
-    rsync://quux.com/        because there are no URIs in the .quuz.com domain
-    rsync://c.foo.com/       because there are no URIs in the .c.foo.com domain
-    rsync://a.foo.com/e      because there are no paths begining with /e (top-level path) on a.foo.com
-    rsync://a.foo.com/a/b/d  because there are no paths begining with /a/b/d (third-level path) on a.foo.com
+       rsync://a.foo.com/a/b/c
+       rsync://b.foo.com/
+       rsync://bar.com/
+       rsync://foo.org/
 
-  I.e. for each domain name label from most- to least- significant, the least common labels are prefered, then
-  for each path directory from top to bottom, the least common directories are prefered.
+   The prefered ordering of to_process, from best next choice to worst, is:
 
-  This is designed to minimize the chance of any one attacker blocking all rsync threads
-  at the same time.
+       rsync://quux.net/        because there are no URIs in the .net TLD
+       rsync://quux.org/        because there are fewer second-level domains in .org (foo.org) than .com (foo.com and bar.com)
+       rsync://quux.com/        because there are no URIs in the .quuz.com domain
+       rsync://c.foo.com/       because there are no URIs in the .c.foo.com domain
+       rsync://a.foo.com/e      because there are no paths begining with /e (top-level path) on a.foo.com
+       rsync://a.foo.com/a/b/d  because there are no paths begining with /a/b/d (third-level path) on a.foo.com
 
+   I.e. for each domain name label from most- to least- significant, the least common labels are prefered, then
+   for each path directory from top to bottom, the least common directories are prefered.
 
-  @return the next URI_attempt to try, or NULL if there's nothing to be tried at this time
+   This is designed to minimize the chance of any one attacker blocking all rsync threads
+   at the same time.
+
+   @return the next URI_attempt to try, or NULL if there's nothing to be tried at this time
 */
 URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_container<URI_attempt *> to_process)
 {
@@ -410,7 +411,7 @@ URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_containe
   for each URI_attempt * uri_attemptp in to_process
   {
     if (ready_for_next_attempt(uri_attemptp) &&
-      !conflicts_with_currently_processing(currently_processing, uri_attemptp->uri))
+        !conflicts_with_currently_processing(currently_processing, uri_attemptp->uri))
     {
       return uri_attemptp;
     }

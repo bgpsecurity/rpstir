@@ -1,5 +1,5 @@
 /*
- * $Id: .dd_key_infoc c 506 2008-06-03 21:20:05Z gardiner $ 
+ * $Id: .dd_key_infoc c 506 2008-06-03 21:20:05Z gardiner $
  */
 
 

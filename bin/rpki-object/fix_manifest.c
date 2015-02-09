@@ -1,5 +1,5 @@
 /*
- * $Id: make_TA.c c 506 2008-06-03 21:20:05Z gardiner $ 
+ * $Id: make_TA.c c 506 2008-06-03 21:20:05Z gardiner $
  */
 
 

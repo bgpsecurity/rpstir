@@ -3,7 +3,7 @@
 #include "util/cryptlib_compat.h"
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 

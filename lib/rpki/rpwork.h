@@ -1,9 +1,10 @@
 /*
- * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $ 
+ * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $
  */
 
 #ifndef _RPWORK_H
 #define _RPWORK_H
+
 #include "err.h"
 #include "scm.h"
 #include "scmf.h"
@@ -38,6 +39,7 @@
 #define WASPERFORATEDTHISBLK 0x400
 #define HASPARA_INDB         0x800
 #define SKIBUFSIZ    128
+
 struct cert_ansr {
     char dirname[PATH_MAX],
         filename[PATH_MAX],
@@ -105,10 +107,10 @@ void cvt_asn(
     struct ipranges *,
     struct Certificate *),
     decrement_iprange(
-    uchar * lim,
+    uchar *lim,
     int lth),
     increment_iprange(
-    uchar * lim,
+    uchar *lim,
     int lth),
     clear_ipranges(
     struct ipranges *);
@@ -147,7 +149,7 @@ int parse_SKI_blocks(
     check_date(
     char *datep,
     struct casn *casnp,
-    int64_t * datenump),
+    int64_t *datenump),
     check_dates(
     char *datesp),
     check_jetring(
@@ -170,4 +172,5 @@ extern int diff_ipaddr(
     int,
     char *,
     struct iprange *);
+
 #endif

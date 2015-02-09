@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     asn_gen.c
@@ -99,7 +99,7 @@ char fname[80],
     bmpstring_w[] = "BMPString",
     boolean_w[] = "BOOLEAN",
     /*
-     * see comment in asn_gen.h about BUILT_IN_IDS 
+     * see comment in asn_gen.h about BUILT_IN_IDS
      */
     built_ins[] = "TYPE-IDENTIFIER ::= CLASS {\n\
 &id OBJECT IDENTIFIER UNIQUE, &Type }\n\
@@ -513,7 +513,7 @@ int main(
         if (ntbp->parent.index < 0)
             continue;
         /*
-         * if parents are all imports, skip it 
+         * if parents are all imports, skip it
          */
         for (parentp = &ntbp->parent; parentp; parentp = parentp->next)
         {
@@ -573,7 +573,7 @@ int main(
                     *b = '_';
             }
             /*
-             * #endif comes later 
+             * #endif comes later
              */
             fprintf(outstr, "#ifndef _%s\n#define _%s\n\n", locbuf,
                     locbuf);
@@ -636,7 +636,7 @@ Procedure:
 1. Add name to table
    Set its tag and flags
    Go to its last filled in parent structure (note: items may have been
-	addeas children by find_definer without a known offset)
+        addeas children by find_definer without a known offset)
    IF need another parent structure, make one
    Fill in parent index
    IF offset is >= 0, put count of this subordinate into mymap
@@ -1162,7 +1162,7 @@ Procedure:
     int lth;
     struct fd_to_stream *fdstrp;
     /*
-     * step 0 
+     * step 0
      */
     if (fd < 0)
     {
@@ -1206,7 +1206,7 @@ Procedure:
         }
     }
     /*
-     * step 1 
+     * step 1
      */
     for (b = 0; 1; nch++)
     {
@@ -1238,7 +1238,7 @@ Procedure:
             break;
     }
     /*
-     * step 2 
+     * step 2
      */
     if (terminators[(int)*nch] == 'y')
         *c++ = *nch++;
@@ -1758,7 +1758,7 @@ Procedure:
     if (*objname == '_')
         ansr |= ASN_POINTER_FLAG;
     /*
-     * step 2 
+     * step 2
      */
     for (parentp = &ntbp->parent; parentp; parentp = parentp->next)
     {
@@ -1770,7 +1770,7 @@ Procedure:
             break;
     }
     /*
-     * step 3 
+     * step 3
      */
     if (parentp)
     {

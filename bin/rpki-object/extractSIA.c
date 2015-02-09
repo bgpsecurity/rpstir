@@ -36,7 +36,7 @@ int main(
     int ret;                    /* return value */
 
     /*
-     * Parse command line arguments. 
+     * Parse command line arguments.
      */
     opterr = 0;
     while ((c = getopt(argc, argv, "dm")) != -1)
@@ -62,7 +62,7 @@ int main(
         }
     }
     /*
-     * If no selection, default to directory. 
+     * If no selection, default to directory.
      */
     if (option_dir == 0 && option_mft == 0)
         option_dir = 1;
@@ -74,7 +74,7 @@ int main(
     file = argv[optind];
 
     /*
-     * Parse certificate. 
+     * Parse certificate.
      */
     Certificate(&cert, (unsigned short)0);      /* constructor */
     ret = get_casn_file(&cert.self, (char *)file, 0);
@@ -85,7 +85,7 @@ int main(
     }
 
     /*
-     * Find SIA extension. 
+     * Find SIA extension.
      */
     extp = find_extension(&cert.toBeSigned.extensions, id_pe_subjectInfoAccess, false);
     if (!extp)
@@ -98,7 +98,7 @@ int main(
     /*
      * For each AccessDescription, print the accessLocation URI if the
      * accessMethod matches the user requested SIA type: directory or
-     * manifest. 
+     * manifest.
      */
     for (adp = (struct AccessDescription *)member_casn(&siap->self, 0);
          adp != NULL; adp = (struct AccessDescription *)next_of(&adp->self))
@@ -111,7 +111,7 @@ int main(
             option_mft)
         {
             /*
-             * Manifest 
+             * Manifest
              */
             print_this_one = 1;
         }
@@ -119,14 +119,14 @@ int main(
                  option_dir)
         {
             /*
-             * Directory 
+             * Directory
              */
             print_this_one = 1;
         }
         else if (diff_objid(&adp->accessMethod, id_ad_signedObject) == 0)
         {
             /*
-             * Signed Object 
+             * Signed Object
              */
             print_this_one = 1;
         }
@@ -135,7 +135,7 @@ int main(
             continue;
 
         /*
-         * print manifest URI 
+         * print manifest URI
          */
         len = vsize_casn(&adp->accessLocation.self);
         rsync_uri = (char *)calloc(len + 2, 1);
@@ -159,7 +159,7 @@ int main(
     }
 
     /*
-     * Clean up. 
+     * Clean up.
      */
     delete_casn(&cert.self);
     return 0;

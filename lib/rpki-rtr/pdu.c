@@ -25,7 +25,7 @@ bool serial_number_greater(
 #undef SERIAL_BITS
 }
 
-// TODO: switch to uintmax_t instead of uint_fast32_t? 32 should be enough for 
+// TODO: switch to uintmax_t instead of uint_fast32_t? 32 should be enough for
 // this protocol version
 // NOTE: this handles converting from network to host byte order
 static uint_fast32_t extract_uint(
@@ -56,31 +56,31 @@ int parse_pdu(
     if (buffer == NULL || pdu == NULL)
         return PDU_INTERNAL_ERROR;
 
-#define EXTRACT_FIELD(field) \
-		do { \
-			if (buflen >= offset + sizeof(field)) \
-			{ \
-				field = extract_uint(buffer + offset, sizeof(field)); \
-				offset += sizeof(field); \
-			} \
-			else \
-			{ \
-				return PDU_TRUNCATED; \
-			} \
-		} while (false)
+#define EXTRACT_FIELD(field)                                            \
+    do {                                                                \
+        if (buflen >= offset + sizeof(field))                           \
+        {                                                               \
+            field = extract_uint(buffer + offset, sizeof(field));       \
+            offset += sizeof(field);                                    \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            return PDU_TRUNCATED;                                       \
+        }                                                               \
+    } while (false)
 
-#define EXTRACT_BIN_FIELD(field) \
-		do { \
-			if (buflen >= offset + sizeof(field)) \
-			{ \
-				memcpy(&field, buffer + offset, sizeof(field)); \
-				offset += sizeof(field); \
-			} \
-			else \
-			{ \
-				return PDU_TRUNCATED; \
-			} \
-		} while (false)
+#define EXTRACT_BIN_FIELD(field)                                        \
+    do {                                                                \
+        if (buflen >= offset + sizeof(field))                           \
+        {                                                               \
+            memcpy(&field, buffer + offset, sizeof(field));             \
+            offset += sizeof(field);                                    \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            return PDU_TRUNCATED;                                       \
+        }                                                               \
+    } while (false)
 
     EXTRACT_FIELD(pdu->protocolVersion);
     if (pdu->protocolVersion != RTR_PROTOCOL_VERSION)
@@ -286,14 +286,14 @@ ssize_t dump_pdu(
 
     size_t offset = 0;
 
-#define INCR_OFFSET(num_bytes) \
-		do { \
-			if (offset + (num_bytes) > buflen) \
-			{ \
-				return -1; \
-			} \
-			offset += (num_bytes); \
-		} while (false)
+#define INCR_OFFSET(num_bytes)                                          \
+    do {                                                                \
+        if (offset + (num_bytes) > buflen)                              \
+        {                                                               \
+            return -1;                                                  \
+        }                                                               \
+        offset += (num_bytes);                                          \
+    } while (false)
 
     INCR_OFFSET(2);             // protocolVersion and pduType
     memcpy(buffer, (void *)pdu, 2);
@@ -581,82 +581,82 @@ void pdu_sprint(
     int offset = 0;
     uint32_t i;
 
-#define SNPRINTF(format, ...) \
-		do { \
-			if (offset < PDU_SPRINT_BUFSZ) \
-			{ \
-				int SNPRINTF_ret = snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
-				if (SNPRINTF_ret < 0) \
-				{ \
-					abort(); \
-				} \
-				offset += SNPRINTF_ret; \
-			} \
-			\
-			if (offset >= PDU_SPRINT_BUFSZ) \
-			{ \
-				truncated = true; \
-				goto buffer_full; \
-			} \
-		} while (false)
+#define SNPRINTF(format, ...)                                           \
+    do {                                                                \
+        if (offset < PDU_SPRINT_BUFSZ)                                  \
+        {                                                               \
+            int SNPRINTF_ret = snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
+            if (SNPRINTF_ret < 0)                                       \
+            {                                                           \
+                abort();                                                \
+            }                                                           \
+            offset += SNPRINTF_ret;                                     \
+        }                                                               \
+                                                                        \
+        if (offset >= PDU_SPRINT_BUFSZ)                                 \
+        {                                                               \
+            truncated = true;                                           \
+            goto buffer_full;                                           \
+        }                                                               \
+    } while (false)
 
-#define SNPRINTF_FLAGS(flags) \
-		do { \
-			SNPRINTF("0x%" PRIx8 " [", (flags)); \
-			if ((flags) & FLAG_WITHDRAW_ANNOUNCE) \
-			{ \
-				SNPRINTF("ANNOUNCE"); \
-			} \
-			else \
-			{ \
-				SNPRINTF("WITHDRAW"); \
-			} \
-			if ((flags) & FLAGS_RESERVED) \
-			{ \
-				SNPRINTF(", <RESERVED>"); \
-			} \
-			SNPRINTF("]"); \
-		} while (false)
+#define SNPRINTF_FLAGS(flags)                                           \
+    do {                                                                \
+        SNPRINTF("0x%" PRIx8 " [", (flags));                            \
+        if ((flags) & FLAG_WITHDRAW_ANNOUNCE)                           \
+        {                                                               \
+            SNPRINTF("ANNOUNCE");                                       \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            SNPRINTF("WITHDRAW");                                       \
+        }                                                               \
+        if ((flags) & FLAGS_RESERVED)                                   \
+        {                                                               \
+            SNPRINTF(", <RESERVED>");                                   \
+        }                                                               \
+        SNPRINTF("]");                                                  \
+    } while (false)
 
-#define SNPRINTF_IP4(ip) \
-		do { \
-			if (offset + INET_ADDRSTRLEN < PDU_SPRINT_BUFSZ) \
-			{ \
-				if (inet_ntop(AF_INET, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
-				{ \
-					SNPRINTF("(ERROR)"); \
-				} \
-				else \
-				{ \
-					while (buffer[offset] != '\0') \
-						++offset; \
-				} \
-			} \
-			else \
-			{ \
-				SNPRINTF("..."); \
-			} \
-		} while (false)
+#define SNPRINTF_IP4(ip)                                                \
+    do {                                                                \
+        if (offset + INET_ADDRSTRLEN < PDU_SPRINT_BUFSZ)                \
+        {                                                               \
+            if (inet_ntop(AF_INET, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
+            {                                                           \
+                SNPRINTF("(ERROR)");                                    \
+            }                                                           \
+            else                                                        \
+            {                                                           \
+                while (buffer[offset] != '\0')                          \
+                    ++offset;                                           \
+            }                                                           \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            SNPRINTF("...");                                            \
+        }                                                               \
+    } while (false)
 
-#define SNPRINTF_IP6(ip) \
-		do { \
-			if (offset + INET6_ADDRSTRLEN < PDU_SPRINT_BUFSZ) \
-			{ \
-				if (inet_ntop(AF_INET6, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
-				{ \
-					SNPRINTF("(ERROR)"); \
-				} \
-				else \
-				{ \
-					while (buffer[offset] != '\0') \
-						++offset; \
-				} \
-			} \
-			else \
-			{ \
-				SNPRINTF("..."); \
-			} \
-		} while (false)
+#define SNPRINTF_IP6(ip)                                                \
+    do {                                                                \
+        if (offset + INET6_ADDRSTRLEN < PDU_SPRINT_BUFSZ)               \
+        {                                                               \
+            if (inet_ntop(AF_INET6, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
+            {                                                           \
+                SNPRINTF("(ERROR)");                                    \
+            }                                                           \
+            else                                                        \
+            {                                                           \
+                while (buffer[offset] != '\0')                          \
+                    ++offset;                                           \
+            }                                                           \
+        }                                                               \
+        else                                                            \
+        {                                                               \
+            SNPRINTF("...");                                            \
+        }                                                               \
+    } while (false)
 
     if (pdu == NULL)
     {

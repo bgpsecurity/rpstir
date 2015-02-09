@@ -60,8 +60,8 @@ static char *nextSKI,
  * callback to indicate that a parent was found
  */
 static int registerParent(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -86,8 +86,8 @@ static int registerParent(
 int checkValidity(
     char *ski,
     unsigned int localID,
-    scm * scmp,
-    scmcon * connect)
+    scm *scmp,
+    scmcon *connect)
 {
     int status;
 
@@ -149,7 +149,7 @@ int checkValidity(
     char prevSKI[128];
     // keep going until trust anchor, where either AKI = SKI or no AKI
     while (firstTime ||
-	   !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
+           !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
     {
         if (firstTime)
         {
@@ -205,12 +205,12 @@ int checkValidity(
 
 
 /*
- * combines dirname and filename into a pathname 
+ * combines dirname and filename into a pathname
  */
 static int pathnameDisplay(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -222,12 +222,12 @@ static int pathnameDisplay(
 }
 
 /*
- * create space-separated string of serial numbers 
+ * create space-separated string of serial numbers
  */
 static int displaySNList(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -269,9 +269,9 @@ static int displaySNList(
  */
 struct display_ip_addrs_context
 {
-    char const * separator;
+    char const *separator;
 
-    char * result;
+    char *result;
     size_t result_len;
     size_t result_idx;
 };
@@ -281,16 +281,16 @@ struct display_ip_addrs_context
  *     prefix in a ROA
  */
 static int display_ip_addrs_valuefunc(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     (void)conp;
     (void)idx;
 
-    struct display_ip_addrs_context * context = s->context;
+    struct display_ip_addrs_context *context = s->context;
 
-    unsigned char const * prefix = s->vec[0].valptr;
+    unsigned char const *prefix = s->vec[0].valptr;
     int_fast64_t const prefix_family_length = s->vec[0].avalsize;
     unsigned long const prefix_length =
         *(unsigned long const *)s->vec[1].valptr;
@@ -351,9 +351,9 @@ static int display_ip_addrs_valuefunc(
  *     string, @p returnStr
  */
 static int display_ip_addrs(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -475,7 +475,7 @@ static int display_ip_addrs(
 }
 
 /*
- * helper function for displayFlags 
+ * helper function for displayFlags
  */
 static void addFlagIfSet(
     char *returnStr,
@@ -514,12 +514,12 @@ void setIsManifest(
 }
 
 /*
- * create list of all flags set to true 
+ * create list of all flags set to true
  */
 static int displayFlags(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -551,208 +551,208 @@ static int displayFlags(
 }
 
 /*
- * the set of all query fields 
+ * the set of all query fields
  */
 static QueryField fields[] = {
     {
-     "filename",
-     "the filename where the data is stored in the repository",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
-     SQL_C_CHAR, FNAMESIZE,
-     NULL, NULL,
-     "Filename", NULL,
-     },
+        "filename",
+        "the filename where the data is stored in the repository",
+        Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
+        SQL_C_CHAR, FNAMESIZE,
+        NULL, NULL,
+        "Filename", NULL,
+    },
     {
-     "pathname",
-     "full pathname (directory plus filename) where the data is stored",
-     Q_JUST_DISPLAY | Q_FOR_ROA | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_MAN |
-     Q_FOR_GBR | Q_REQ_JOIN,
-     -1, 0,
-     "dirname", "filename",
-     "Pathname", pathnameDisplay,
-     },
+        "pathname",
+        "full pathname (directory plus filename) where the data is stored",
+        Q_JUST_DISPLAY | Q_FOR_ROA | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_MAN |
+        Q_FOR_GBR | Q_REQ_JOIN,
+        -1, 0,
+        "dirname", "filename",
+        "Pathname", pathnameDisplay,
+    },
     {
-     "dirname",
-     "the directory in the repository where the data is stored",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR | Q_REQ_JOIN,
-     SQL_C_CHAR, DNAMESIZE,
-     NULL, NULL,
-     "Directory", NULL,
-     },
+        "dirname",
+        "the directory in the repository where the data is stored",
+        Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR | Q_REQ_JOIN,
+        SQL_C_CHAR, DNAMESIZE,
+        NULL, NULL,
+        "Directory", NULL,
+    },
     {
-     "ski",
-     "subject key identifier",
-     Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
-     SQL_C_CHAR, SKISIZE,
-     NULL, NULL,
-     "SKI", NULL,
-     },
+        "ski",
+        "subject key identifier",
+        Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
+        SQL_C_CHAR, SKISIZE,
+        NULL, NULL,
+        "SKI", NULL,
+    },
     {
-     "aki",
-     "authority key identifier",
-     Q_FOR_CRL | Q_FOR_CERT,
-     SQL_C_CHAR, SKISIZE,
-     NULL, NULL,
-     "AKI", NULL,
-     },
+        "aki",
+        "authority key identifier",
+        Q_FOR_CRL | Q_FOR_CERT,
+        SQL_C_CHAR, SKISIZE,
+        NULL, NULL,
+        "AKI", NULL,
+    },
     {
-     "sia",
-     "Subject Information Access",
-     Q_FOR_CERT,
-     SQL_C_CHAR, SIASIZE,
-     NULL, NULL,
-     "SIA", NULL,
-     },
+        "sia",
+        "Subject Information Access",
+        Q_FOR_CERT,
+        SQL_C_CHAR, SIASIZE,
+        NULL, NULL,
+        "SIA", NULL,
+    },
     {
-     "aia",
-     "Authority Information Access",
-     Q_FOR_CERT,
-     SQL_C_CHAR, SIASIZE,
-     NULL, NULL,
-     "AIA", NULL,
-     },
+        "aia",
+        "Authority Information Access",
+        Q_FOR_CERT,
+        SQL_C_CHAR, SIASIZE,
+        NULL, NULL,
+        "AIA", NULL,
+    },
     {
-     "crldp",
-     "CRL Distribution Points",
-     Q_FOR_CERT,
-     SQL_C_CHAR, SIASIZE,
-     NULL, NULL,
-     "CRLDP", NULL,
-     },
+        "crldp",
+        "CRL Distribution Points",
+        Q_FOR_CERT,
+        SQL_C_CHAR, SIASIZE,
+        NULL, NULL,
+        "CRLDP", NULL,
+    },
     {
-     "local_id",
-     NULL,
-     Q_JUST_DISPLAY | Q_FOR_ROA,
-     SQL_C_ULONG, sizeof(unsigned long),
-     NULL, NULL,
-     NULL, NULL,
-     },
+        "local_id",
+        NULL,
+        Q_JUST_DISPLAY | Q_FOR_ROA,
+        SQL_C_ULONG, sizeof(unsigned long),
+        NULL, NULL,
+        NULL, NULL,
+    },
     {
-     "ip_addrs",
-     "the set of IP addresses assigned by the ROA",
-     Q_JUST_DISPLAY | Q_FOR_ROA,
-     -1, 0,
-     "local_id",
-     NULL,
-     "IP Addresses",
-     display_ip_addrs,
-     },
+        "ip_addrs",
+        "the set of IP addresses assigned by the ROA",
+        Q_JUST_DISPLAY | Q_FOR_ROA,
+        -1, 0,
+        "local_id",
+        NULL,
+        "IP Addresses",
+        display_ip_addrs,
+    },
     {
-     "asn",
-     "autonomous system number",
-     Q_FOR_ROA,
-     SQL_C_ULONG, 8,
-     NULL, NULL,
-     "AS#", NULL,
-     },
+        "asn",
+        "autonomous system number",
+        Q_FOR_ROA,
+        SQL_C_ULONG, 8,
+        NULL, NULL,
+        "AS#", NULL,
+    },
     {
-     "issuer",
-     "system that issued the cert/crl",
-     Q_FOR_CERT | Q_FOR_CRL,
-     SQL_C_CHAR, SUBJSIZE,
-     NULL, NULL,
-     "Issuer", NULL,
-     },
+        "issuer",
+        "system that issued the cert/crl",
+        Q_FOR_CERT | Q_FOR_CRL,
+        SQL_C_CHAR, SUBJSIZE,
+        NULL, NULL,
+        "Issuer", NULL,
+    },
     {
-     "valfrom",
-     "date/time from which the cert is valid",
-     Q_FOR_CERT,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Valid From", NULL,
-     },
+        "valfrom",
+        "date/time from which the cert is valid",
+        Q_FOR_CERT,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Valid From", NULL,
+    },
     {
-     "valto",
-     "date/time to which the cert is valid",
-     Q_FOR_CERT,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Valid To", NULL,
-     },
+        "valto",
+        "date/time to which the cert is valid",
+        Q_FOR_CERT,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Valid To", NULL,
+    },
     {
-     "last_upd",
-     "last update time of the object",
-     Q_FOR_CRL,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Last Update", NULL,
-     },
+        "last_upd",
+        "last update time of the object",
+        Q_FOR_CRL,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Last Update", NULL,
+    },
     {
-     "this_upd",
-     "last update time of the object",
-     Q_FOR_MAN,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "This Update", NULL,
-     },
+        "this_upd",
+        "last update time of the object",
+        Q_FOR_MAN,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "This Update", NULL,
+    },
     {
-     "next_upd",
-     "next update time of the object",
-     Q_FOR_CRL | Q_FOR_MAN,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Next Update", NULL,
-     },
+        "next_upd",
+        "next update time of the object",
+        Q_FOR_CRL | Q_FOR_MAN,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Next Update", NULL,
+    },
     {
-     "crlno",
-     "CRL number",
-     Q_JUST_DISPLAY | Q_FOR_CRL,
-     SQL_C_BINARY, 20,
-     NULL, NULL,
-     "CRL#", NULL,
-     },
+        "crlno",
+        "CRL number",
+        Q_JUST_DISPLAY | Q_FOR_CRL,
+        SQL_C_BINARY, 20,
+        NULL, NULL,
+        "CRL#", NULL,
+    },
     {
-     "sn",
-     "serial number",
-     Q_JUST_DISPLAY | Q_FOR_CERT,
-     SQL_C_BINARY, 20,
-     NULL, NULL,
-     "Serial#", NULL,
-     },
+        "sn",
+        "serial number",
+        Q_JUST_DISPLAY | Q_FOR_CERT,
+        SQL_C_BINARY, 20,
+        NULL, NULL,
+        "Serial#", NULL,
+    },
     {
-     "snlen",
-     "number of serial numbers in crl",
-     Q_FOR_CRL,
-     SQL_C_ULONG, 8,
-     NULL, NULL,
-     "SNLength", NULL,
-     },
+        "snlen",
+        "number of serial numbers in crl",
+        Q_FOR_CRL,
+        SQL_C_ULONG, 8,
+        NULL, NULL,
+        "SNLength", NULL,
+    },
     {
-     "snlist",
-     NULL,
-     Q_JUST_DISPLAY | Q_FOR_CRL,
-     SQL_C_BINARY, 16000000,
-     NULL, NULL,
-     NULL, NULL,
-     },
+        "snlist",
+        NULL,
+        Q_JUST_DISPLAY | Q_FOR_CRL,
+        SQL_C_BINARY, 16000000,
+        NULL, NULL,
+        NULL, NULL,
+    },
     {
-     "files",
-     "All the filenames in the manifest",
-     Q_JUST_DISPLAY | Q_FOR_MAN,
-     SQL_C_BINARY, 160000,
-     NULL, NULL,
-     "FilesInMan", NULL,
-     },
+        "files",
+        "All the filenames in the manifest",
+        Q_JUST_DISPLAY | Q_FOR_MAN,
+        SQL_C_BINARY, 160000,
+        NULL, NULL,
+        "FilesInMan", NULL,
+    },
     {
-     "serial_nums",
-     "list of serials numbers",
-     Q_JUST_DISPLAY | Q_FOR_CRL,
-     -1, 0,
-     "snlen", "snlist",
-     "Serial#s", displaySNList,
-     },
+        "serial_nums",
+        "list of serials numbers",
+        Q_JUST_DISPLAY | Q_FOR_CRL,
+        -1, 0,
+        "snlen", "snlist",
+        "Serial#s", displaySNList,
+    },
     {
-     "flags",
-     "which flags are set in the database",
-     Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
-     SQL_C_ULONG, 8,
-     NULL, NULL,
-     "Flags Set", displayFlags,
-     }
+        "flags",
+        "which flags are set in the database",
+        Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
+        SQL_C_ULONG, 8,
+        NULL, NULL,
+        "Flags Set", displayFlags,
+    }
 };
 
 /*
- * look up particular query field in the list of all possible fields 
+ * look up particular query field in the list of all possible fields
  */
 QueryField *findField(
     char *name)

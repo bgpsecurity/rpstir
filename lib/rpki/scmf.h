@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 
 
@@ -74,24 +74,24 @@ typedef struct _scmsrcha        /* used for a search (select) */
 // callback function signature for a count of search results
 
 typedef int (
-    *sqlcountfunc) (
-    scmcon * conp,
-    scmsrcha * s,
+    *sqlcountfunc)(
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t cnt);
 
 // callback function signature for a single search result
 
 typedef int (
-    *sqlvaluefunc) (
-    scmcon * conp,
-    scmsrcha * s,
+    *sqlvaluefunc)(
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx);
 
 // bitfields for how to do a search
 
 #define SCM_SRCH_DOCOUNT         0x1    /* call count func */
 #define SCM_SRCH_DOVALUE_ANN     0x2    /* call val func if all vals non-NULL */
-#define SCM_SRCH_DOVALUE_SNN     0x4    /* call val func if some vals non-NULL 
+#define SCM_SRCH_DOVALUE_SNN     0x4    /* call val func if some vals non-NULL
                                          */
 #define SCM_SRCH_DOVALUE_ALWAYS  0x8    /* always call value func */
 #define SCM_SRCH_DOVALUE         0xE    /* call value func */
@@ -126,99 +126,99 @@ extern void addFlagTest(
     int isSet,
     int needAnd);
 extern void disconnectscm(
-    scmcon * conp);
+    scmcon *conp);
 extern void freesrchscm(
-    scmsrcha * srch);
+    scmsrcha *srch);
 extern void *unhexify(
     int strnglen,
-    char const * strng);
+    char const *strng);
 extern char *geterrorscm(
-    scmcon * conp);
+    scmcon *conp);
 extern char *gettablescm(
-    scmcon * conp);
+    scmcon *conp);
 extern char *hexify(
     int bytelen,
-    void const * bytes,
+    void const *bytes,
     int useox);
 extern int getrowsscm(
-    scmcon * conp);
+    scmcon *conp);
 extern int statementscm(
-    scmcon * conp,
+    scmcon *conp,
     char *stm);
 extern int statementscm_no_data(
-    scmcon * conp,
+    scmcon *conp,
     char *stm);
 extern int createdbscm(
-    scmcon * conp,
+    scmcon *conp,
     char *dbname,
     char *dbuser);
 extern int deletedbscm(
-    scmcon * conp,
+    scmcon *conp,
     char *dbname);
 extern int createalltablesscm(
-    scmcon * conp,
-    scm * scmp);
+    scmcon *conp,
+    scm *scmp);
 extern int insertscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * arr);
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *arr);
 extern int getmaxidscm(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *field,
-    scmtab * mtab,
+    scmtab *mtab,
     unsigned int *ival);
 extern int getuintscm(
-    scmcon * conp,
+    scmcon *conp,
     unsigned int *ival);
 extern int searchscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmsrcha * srch,
+    scmcon *conp,
+    scmtab *tabp,
+    scmsrcha *srch,
     sqlcountfunc cnter,
     sqlvaluefunc valer,
     int what,
     char *orderp);
 extern int addcolsrchscm(
-    scmsrcha * srch,
+    scmsrcha *srch,
     char *colname,
     int sqltype,
     unsigned valsize);
 extern int searchorcreatescm(
-    scm * scmp,
-    scmcon * conp,
-    scmtab * tabp,
-    scmsrcha * srch,
-    scmkva * ins,
+    scm *scmp,
+    scmcon *conp,
+    scmtab *tabp,
+    scmsrcha *srch,
+    scmkva *ins,
     unsigned int *idp);
 extern int deletescm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * deld);
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *deld);
 extern int setflagsscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * where,
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *where,
     unsigned int flags);
 extern int updateblobscm(
-    scmcon * conp,
-    scmtab * tabp,
+    scmcon *conp,
+    scmtab *tabp,
     uint8_t *snlist,
     unsigned int sninuse,
     unsigned int snlen,
     unsigned int lid);
 extern int updateranlastscm(
-    scmcon * conp,
-    scmtab * mtab,
+    scmcon *conp,
+    scmtab *mtab,
     char what,
     char *now);
 extern SQLRETURN newhstmt(
-    scmcon * conp);
+    scmcon *conp);
 extern void pophstmt(
-    scmcon * conp);
+    scmcon *conp);
 
 /*
- * Directives for hexify() 
+ * Directives for hexify()
  */
 
 #define HEXIFY_NO         0     // no prefix
@@ -226,7 +226,7 @@ extern void pophstmt(
 #define HEXIFY_HAT        2     // ^x prefix
 
 /*
- * Macros 
+ * Macros
  */
 
 #ifndef UNREFERENCED_PARAMETER

@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 
 
@@ -7,7 +7,7 @@
 #define _DIRU_H_
 
 /*
- * Directory utility functions 
+ * Directory utility functions
  */
 
 extern int strwillfit(
@@ -15,8 +15,10 @@ extern int strwillfit(
     int totlen,
     int already,
     char *newbuf);
+
 extern int isadir(
     char *indir);
+
 extern int splitdf(
     char *dirprefix,
     char *dirname,
@@ -24,8 +26,10 @@ extern int splitdf(
     char **outdir,
     char **outfile,
     char **outfull);
+
 extern int isokfile(
     char *fname);
+
 extern char *r2adir(
     char *indir);
 

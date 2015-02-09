@@ -25,7 +25,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
   private enum AS {
     BLANK, EDIT, NEW
   }
-  
+
   static class ArgComponents {
     private final JTextField argName = new JTextField(20);
     private final JCheckBox isParameter = new JCheckBox();
@@ -114,11 +114,11 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
   }
   private final ArgComponents[] argComponentsArray = new ArgComponents[6];
   private TaskDescription taskDescription;
-  
+
   /**
    * Initialize fields
    */
-  public ArgDescriptionsEditor() { 
+  public ArgDescriptionsEditor() {
     addComponentsToTaskPanel(new JLabel("Arg Name"), new JLabel("Parameter"), new JLabel("Arg Value"), new JLabel("Action"));
     for (int i = 0; i < argComponentsArray.length; i++) {
       final int index = i;
@@ -135,7 +135,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
             ArgComponents argComponents = argComponentsArray[index];
             argComponents.setValues(argDescription);
             argComponents.setVisible(AS.EDIT);
-            if (index + 1 < argComponentsArray.length) 
+            if (index + 1 < argComponentsArray.length)
               argComponentsArray[index + 1].setVisible(AS.NEW);
           } else {
             // Remove

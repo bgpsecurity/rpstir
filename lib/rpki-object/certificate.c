@@ -138,7 +138,7 @@ bool check_signature(
                    &c);
     RSAPubKey(&rsapubkey, 0);
     rsapubkeyInitialized = true;
-    decode_casn(&rsapubkey.self, &c[1]);        // skip 1st byte (tag?) in BIT 
+    decode_casn(&rsapubkey.self, &c[1]);        // skip 1st byte (tag?) in BIT
                                                 // STRING
     free(c);
 
@@ -188,10 +188,10 @@ bool check_signature(
     SignerInfo(&sigInfo, (ushort) 0);   /* init sigInfo */
     sigInfoInitialized = true;
     write_casn_num(&sigInfo.version.self, 3);
-    // copy_casn(&sigInfo.version.self, &sigInfop->version.self); /* copy over 
+    // copy_casn(&sigInfo.version.self, &sigInfop->version.self); /* copy over
     // */
     // copy_casn(&sigInfo.sid.self, &sigInfop->sid.self); /* copy over */
-    write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize);        /* sid 
+    write_casn(&sigInfo.sid.subjectKeyIdentifier, sid, sidsize);        /* sid
                                                                          * hash */
 
     // copy over digest algorithm, signature algorithm, signature

@@ -38,7 +38,7 @@ int encode_ipAddr(
 /**
  *
  * This file is designed to provide functions to create a roa
- *  from a template. 
+ *  from a template.
  *
  **/
 
@@ -49,7 +49,7 @@ int write_asID(
     void *my_var,
     void *value)
 {
-    // first cast the generic parameters and then write in the value to the 
+    // first cast the generic parameters and then write in the value to the
     // correct location in the ROA CMS structure
     struct CMS *roa = my_var;
     if (value == NULL)
@@ -67,7 +67,7 @@ int write_asID(
 }
 
 /**
- * This parses the ptr and puts all the IP addresses into the roap. 
+ * This parses the ptr and puts all the IP addresses into the roap.
  * addrFam should be 1 for ipv4 and 2 for ipv6
  * numFam should be the count of current address families in your structure
  *
@@ -104,7 +104,7 @@ int parse_and_write_ips(
         (struct ROAIPAddressFamily *)inject_casn(&roap->ipAddrBlocks.self,
                                                  numFam);
 
-    // Write in the identifier for the IP version 
+    // Write in the identifier for the IP version
     if (write_casn(&roaipfp->addressFamily, (uchar *) family, 2) < 0)
         return -1;
 
@@ -319,7 +319,7 @@ struct object_field *get_roa_field_table(
  *  creating a roa file
  *
  * Params: roa - the filled in object_field that we should fill the new file with
- * Returns: 
+ * Returns:
  **/
 int create_roa(
     struct object_field *table)
@@ -337,7 +337,7 @@ int create_roa(
     }
 
     int i = 0;
-    // Populate the ROA information for everything that has a function pointer 
+    // Populate the ROA information for everything that has a function pointer
     // stored in it
     for (i = 0; table[i].name != NULL; i++)
     {

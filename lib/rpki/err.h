@@ -2,7 +2,7 @@
 #define _MYERR_H_
 
 /*
- * Error codes 
+ * Error codes
  */
 
 #define ERR_SCM_NOERR         0
@@ -142,7 +142,7 @@
 #define ERR_SCM_BADASNUM    -135        /* AS number outside range */
 #define ERR_SCM_NOIPADDR    -136        /* no IP addresses */
 #define ERR_SCM_NOASNUM     -137        /* no AS numbers */
-#define ERR_SCM_ROAIPMISMATCH -138      /* ROA IP addressess aren't covered by 
+#define ERR_SCM_ROAIPMISMATCH -138      /* ROA IP addressess aren't covered by
                                          * EE's IPs */
 #define ERR_SCM_IPTOUCH     -139        /* IP addresses overlap */
 #define ERR_SCM_BADMFTHASH  -140        /* bad manifest hash */
@@ -173,13 +173,13 @@
 #define ERR_SCM_MAXERR      -163
 
 /*
- * macro that prints an error string and call return if a condition is true 
+ * macro that prints an error string and call return if a condition is true
  */
-#define checkErr(test, printArgs...) \
-  if (test) { \
-     (void) fprintf (stderr, printArgs); \
-     return -1; \
-  }
+#define checkErr(test, printArgs...)                                    \
+    if (test) {                                                         \
+        (void)fprintf(stderr, printArgs);                               \
+        return -1;                                                      \
+    }
 
 extern char *err2string(
     int errr);

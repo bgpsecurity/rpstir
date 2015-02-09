@@ -29,7 +29,7 @@ global certpath
 global verbose
 
 def err(code, errstring):
-    print errstring    
+    print errstring
     sys.exit(code)
 
 def run_tests(cfgfile):
@@ -54,7 +54,7 @@ def run_tests(cfgfile):
 
     except IOError:
         err(1,("File %s does not exist") % (cfgfile))
-         
+
 
     return
 
@@ -107,7 +107,7 @@ def process_input(line):
         if fullpath_cert is not None:
             del_from_repository(fullpath_cert)
 
-    # echo the line directly from config file 
+    # echo the line directly from config file
     elif command == 'ECHO':
         text = line.strip(command)
         if len(text) > 0:
@@ -135,7 +135,7 @@ def process_input(line):
         except IOError:
 #            traceback.print_exc()
             err(1,("Path %s does not exist") % (cfgfile))
-            
+
     else:
         print ('Invalid command: ignoring line %s' % line)
         return
@@ -145,7 +145,7 @@ def process_input(line):
 def display_cert(cert, result):
     """
     Query the repository to see if the certificate is there
-    parse query results looking for cert - 
+    parse query results looking for cert -
      if there and expected result true then print PASS
      if there and expected result false then print FAIL
      if not there and expected result true then print FAIL
@@ -181,7 +181,7 @@ def display_cert(cert, result):
 
     if err is not None:
         print err
-    return    
+    return
 
 
 def add_to_repository(cert, trusted):
@@ -195,7 +195,7 @@ def add_to_repository(cert, trusted):
                  to be added but that is what we are testing)
     """
     global verbose
-    
+
     if cert is None:
         return
 
@@ -211,11 +211,11 @@ def add_to_repository(cert, trusted):
         print out
         if verbose and err:
             print err
-            
+
     return True
 
 def del_from_repository(cert):
-    """ 
+    """
     Delete certificate from the database
 
     BBN software case:
@@ -264,16 +264,16 @@ def exec_command(cmd):
 
 
 def main(argv=None):
-    
-    usage = """usage: %prog [options] <test.conf>    
-    Run all test cases specified by the test configuration file 
+
+    usage = """usage: %prog [options] <test.conf>
+    Run all test cases specified by the test configuration file
     """
 
     global verbose
     global certpath
 
     # default certificate path to current directory
-    certpath = '.'      
+    certpath = '.'
 
     if argv is None:
         argv = sys.argv
@@ -291,7 +291,7 @@ def main(argv=None):
             print ('ERROR: Missing Test Configuration File\n')
             parser.print_help()
             sys.exit(-1)
-            
+
         config_file = args[0]
         run_tests(config_file)
 

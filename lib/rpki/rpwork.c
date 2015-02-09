@@ -1,5 +1,5 @@
 /*
- * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $ 
+ * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $
  */
 
 #include "rpwork.h"
@@ -263,7 +263,7 @@ static struct Certificate *mk_paracert(
        *textp;
     if (!Xcrldp || (*Xcrldp == 'C' && !Xcrldp[1]))
     {
-    }                           // do nothing 
+    }                           // do nothing
     else if ((*Xcrldp == 'R' && !Xcrldp[1]))
     {
         fextp = find_extension(&myrootcert.toBeSigned.extensions, id_cRLDistributionPoints, 0);
@@ -460,7 +460,7 @@ int get_CAcert(
         }
         /*
          * free(cert_answersp->cert_ansrp); cert_answersp->num_ansrs = 0;
-         * cert_answersp->cert_ansrp = NULL; 
+         * cert_answersp->cert_ansrp = NULL;
          */
         if (ansr < 0)
             return ansr;
@@ -629,10 +629,10 @@ static int expand(
      * OR R-hi < C-lo Inject new C Set C-lo to R-lo Set C-hi to R-hi Get next
      * rule 3.  ELSE IF R-hi just touches C-lo Set C-lo to R-lo IF C-hi >=
      * R-hi, finished with this rule so get next rule 4.  ELSE ( R-hi > C-lo)
-     * IF C-hi doesn't touch R-lo Get next C Continue in WHILE IF C-lo > R-lo, 
+     * IF C-hi doesn't touch R-lo Get next C Continue in WHILE IF C-lo > R-lo,
      * set C-lo to R-lo IF R-hi > C-hi, Set C-hi to R-hi Get next rule IF no
-     * rule, break out of WHILE 5.  Do C-hi IF R-hi <= C-hi Get next rule ELSE 
-     * (R-hi > C-hi) IF C-hi touches R-lo, set C-hi to R-hi ELSE get next C 
+     * rule, break out of WHILE 5.  Do C-hi IF R-hi <= C-hi Get next rule ELSE
+     * (R-hi > C-hi) IF C-hi touches R-lo, set C-hi to R-hi ELSE get next C
      */
     int did = 0;
     struct iprange *certrangep = &certrangesp->iprangep[numcertrange],
@@ -728,17 +728,17 @@ static int perforate(
     int *changesp)
 {                               // result = certranges - ruleranges
     /*
-     * Procedure: Starting at first rule (one guaranteed) and first cert field 
+     * Procedure: Starting at first rule (one guaranteed) and first cert field
      * of this type (not guaranteed) Notation: C is certificate item, C-lo is
      * its low end, C-hi its high end R is rule item, R-lo is its low end,
      * R-hi its high end 1. WHILE have C AND have R of this type IF C-hi <
-     * R-lo Get next C Start WHILE again IF C-lo > R-hi Get next R Start WHILE 
+     * R-lo Get next C Start WHILE again IF C-lo > R-hi Get next R Start WHILE
      * again Now C-lo <= R-hi AND C-hi >= R-lo 2.  IF C-lo < R-lo IF C-hi <=
      * R-hi Set C-hi = R-lo - 1. Get next cert ELSE (C-hi > R-hi) Inject new
      * C with C-lo = old C-lo AND C-hi = R-lo - 1 Go to next C Set C-lo to
      * R-hi + 1 Get next R 3.  ELSE (C-lo >= R-lo) IF C-hi <= R-hi, delete C
      * ELSE (C-hi > R-hi) chop off low end of C Set C-lo = R-hi + 1 Get next
-     * R Return index of last rule 
+     * R Return index of last rule
      */
     struct iprange *certrangep = &certrangesp->iprangep[numcertrange],
         *rulerangep = &rulerangesp->iprangep[numrulerange];
@@ -891,7 +891,7 @@ static int conflict_test(
      * expanded and are nor perforating Make fromrange out of paracert Make
      * lessrange out of origcert 2. Perforate fromrange with lessrange 3.
      * Compare resulting fromrange with original rule list IF there is any
-     * overlap, error ELSE no error 
+     * overlap, error ELSE no error
      */
     int ansr;
     if (!perf)                  // step 1
@@ -913,7 +913,7 @@ static int conflict_test(
     print_range("From", &fromranges);
     clear_ipranges(&lessranges);
     struct iprange *iprangep;
-    int i;                      // copy rules to less 
+    int i;                      // copy rules to less
     for (i = 0; i < ruleranges.numranges; i++)
     {
         struct iprange *rulerangep = &ruleranges.iprangep[i];
@@ -1010,13 +1010,13 @@ static int run_through_typlist(
     int *changesp)
 {
     /*
-     * Function: Reads through list of addresses and cert extensions to expand 
+     * Function: Reads through list of addresses and cert extensions to expand
      * or perforate them. inputs: run: 0 = expand, 1 = perforate, index to
-     * first iprange of this typ.  At least one guaranteed index " " certrange 
+     * first iprange of this typ.  At least one guaranteed index " " certrange
      * " " " .  Not guaranteed Ptr to record changes Returns: Index to next
      * constraint beyond this type Procedure: 1. IF expanding, expand cert
-     * ELSE IF have certificate items of this type, perforate them Reconstruct 
-     * IP addresses in cert from ruleranges Note ending point in list 
+     * ELSE IF have certificate items of this type, perforate them Reconstruct
+     * IP addresses in cert from ruleranges Note ending point in list
      */
     int did;
     // step 1
@@ -1052,11 +1052,11 @@ static void remake_cert_ranges(
      * certranges Procedure: 1. IF have an extension for IP addresses, empty
      * it 2. IF have certranges for IPv4 IF no such extension, add one
      * Translate all IPv4 addresses in certrange to the cert's IPv4 space 3.
-     * IF have any ranges for IPv6 IF no such extension, add one Translate all 
+     * IF have any ranges for IPv6 IF no such extension, add one Translate all
      * IPv6 addresses in certrange to the cert's IPv6 space 4. IF cert has an
      * AS# extension, empty it IF have any ranges for AS# IF no such
      * extension, add one Translate all AS numbers in certrange to the cert's
-     * AS number space 
+     * AS number space
      */
     struct iprange *certrangep = certranges.iprangep;
     int num4 = 0,
@@ -1081,10 +1081,10 @@ static void remake_cert_ranges(
     {
         if (!extp)
         {
-            extp = (struct Extension *)inject_casn(&extsp->self, num_items(&extsp->self));      // at 
-                                                                                                // the 
-                                                                                                // end 
-                                                                                                // of 
+            extp = (struct Extension *)inject_casn(&extsp->self, num_items(&extsp->self));      // at
+                                                                                                // the
+                                                                                                // end
+                                                                                                // of
                                                                                                 // extensions
         }                       // rewrite objid because step 1 cleared it
         write_objid(&extp->extnID, id_pe_ipAddrBlock);
@@ -1111,10 +1111,10 @@ static void remake_cert_ranges(
     {
         if (!extp)
         {
-            extp = (struct Extension *)inject_casn(&extsp->self, num_items(&extsp->self));      // at 
-                                                                                                // the 
-                                                                                                // end 
-                                                                                                // of 
+            extp = (struct Extension *)inject_casn(&extsp->self, num_items(&extsp->self));      // at
+                                                                                                // the
+                                                                                                // end
+                                                                                                // of
                                                                                                 // extensions
         }
         ipAddrBlockp = &extp->extnValue.ipAddressBlock;
@@ -1150,10 +1150,10 @@ static void remake_cert_ranges(
     {
         if (!extp)
         {
-            extp = (struct Extension *)inject_casn(&extsp->self, num_items(&extsp->self));      // at 
-                                                                                                // the 
-                                                                                                // end 
-                                                                                                // of 
+            extp = (struct Extension *)inject_casn(&extsp->self, num_items(&extsp->self));      // at
+                                                                                                // the
+                                                                                                // end
+                                                                                                // of
                                                                                                 // extensions
         }                       // rewrite objid because step 1 cleared it
         write_objid(&extp->extnID, id_pe_autonomousSysNum);
@@ -1171,7 +1171,7 @@ static void remake_cert_ranges(
     }
     /*
      * locbufp = (char *)calloc(1, dump_size(&paracertp->self) + 2);
-     * dump_casn(&paracertp->self, locbufp); fprintf(stderr, locbufp); 
+     * dump_casn(&paracertp->self, locbufp); fprintf(stderr, locbufp);
      */
 }
 
@@ -1186,7 +1186,7 @@ static int modify_paracert(
      * paracert Returns: number of changes made Procedure: 1. Enlarge or
      * perforate paracertificate's IPv4 addresses 2. Enlarge or perforate
      * paracertificate's IPv6 addresses 3. Enlarge or perforate
-     * paracertificate's AS numbers Return count of changes made. if any 
+     * paracertificate's AS numbers Return count of changes made. if any
      */
     int numcertrange = 0,
         numrulerange = 0,
@@ -1246,10 +1246,10 @@ static int search_downward(
      * cert and perforates them Inputs: starting certificate Procedure: 1.
      * Get topcert's SKI FOR each of its children Get child's AKI IF haven't
      * done this cert already, make a temporary done_cert ELSE use the one we
-     * have Make a paracert just in case 2.  Punch out any listed resources 3. 
+     * have Make a paracert just in case 2.  Punch out any listed resources 3.
      * IF it's a temporary cert IF there was any error OR nothing was done,
      * free the cert ELSE add the cert & paracert to the done list 4.  IF
-     * something was done, call this function with this child 
+     * something was done, call this function with this child
      */
     struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, 0);
@@ -1269,7 +1269,7 @@ static int search_downward(
     if (numkids <= 0)
         return 0;
     childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
-    Certificate(childcertp, (ushort) 0);
+    Certificate(childcertp, (ushort)0);
     struct cert_answers mycert_answers;
     save_cert_answers(&mycert_answers, cert_answersp);
     // step 1
@@ -1393,7 +1393,7 @@ static int process_control_block(
      * accordance with run 2.  IF current cert is self-signed, break out of
      * FOR 3.  Get the current cert's AKI Get that parent cert (and make
      * paracert if necessaru) 4. FOR all other self-signed certificates,
-     * search downward perforating them Return 0 
+     * search downward perforating them Return 0
      */
     // step 1
     int run = 0;
@@ -1441,7 +1441,7 @@ static int process_control_block(
 
 static int process_control_blocks(
     struct keyring *keyring,
-    FILE * SKI)
+    FILE *SKI)
 {
     /*
      * Function processes successive "SKI blocks" until EOF Inputs: File
@@ -1449,7 +1449,7 @@ static int process_control_blocks(
      * certificate?? Procedure: 1. DO IF SKI entry not valid, return
      * BADSKIBLOCK IF can't locate certificate having SKI with a valid chain
      * to a trust anchor Return error Process the block Process the trust
-     * anchors with these constraints WHILE skibuf has anything 
+     * anchors with these constraints WHILE skibuf has anything
      */
     struct done_cert *done_certp;
     int ansr = 1;
@@ -1542,19 +1542,19 @@ static int process_control_blocks(
     dump_test_certs(1);
     a diagnostic tool
 #endif
-        return 0;
+    return 0;
 }
 
 int read_SKI_blocks(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *skiblockfile)
 {
     /*
      * Procedure: 1. Call parse_SKI_blocks 2. Process all the control blocks
      * IF no error, FOR each item in done_certs Flag the target cert in the
-     * database as having a para Sign the paracertificate Put it into database 
-     * with para flag Free all and return error 
+     * database as having a para Sign the paracertificate Put it into database
+     * with para flag Free all and return error
      */
     Certificate(&myrootcert, (ushort) 0);
     int numcert;

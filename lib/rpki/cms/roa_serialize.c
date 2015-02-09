@@ -1,5 +1,5 @@
 /*
- * $Id: roa_serialize.c 453 2007-07-25 15:30:40Z mreynolds $ 
+ * $Id: roa_serialize.c 453 2007-07-25 15:30:40Z mreynolds $
  */
 
 
@@ -78,9 +78,9 @@ static const char *ianaAfiStrings[] = {
 };
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // Testing of locally defined enumerations
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 static inline int isInstructionForcing(
@@ -93,9 +93,9 @@ static inline int isInstructionForcing(
 }
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // Encode/decode to Base64 functions
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 /*
@@ -237,9 +237,9 @@ static int encode_b64(
  * string of the form X i1 i2 Y Z, where X is one or more dashes, i1 and i2
  * and the input tokens, Y is one or more dashes, and Z is any combination of
  * CR and LF.
- * 
+ *
  * Returns an offset to indicate the location of the first character after the
- * armor on success, and a negative error code on failure. 
+ * armor on success, and a negative error code on failure.
  */
 
 static int findarmor(
@@ -432,9 +432,9 @@ int decode_b64(
 }
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // ASCII character string to character value translation
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 static int ctocval(
@@ -539,10 +539,10 @@ static int ip_strtoc(
 }
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // Functions to calculate trailing bits in octet strings that
 // represent bit strings
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 static int calculatePrefixVals(
@@ -651,13 +651,13 @@ static int calculateAndClearMM(
 #endif
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // IP Address octet strings from ASCII strings
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 // Translation of dotted decimal IPv4 addresses
-// 
+//
 // JFG - Note: Currently handled by this function are addresses of the format
 // 168.156/24, which may not be canonical, but which interprets out to
 // 168.156.0.0/24 for now.
@@ -777,7 +777,7 @@ static int translateIPv4Prefix(
 }
 
 // Translation of hexadecimal IPv6 addresses
-// 
+//
 static int translateIPv6Prefix(
     unsigned char *ipstring,
     unsigned char **ipbytearray,
@@ -952,9 +952,9 @@ static int translateIPv6Prefix(
 }
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // Per-configuration item translation functions
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 static int setVersion(
@@ -1040,22 +1040,22 @@ static int setSID(
 
 #endif
 /*
- * 
+ *
  * This has been replaced by signCMS
- * 
+ *
  * static int setSignature(struct ROA* roa, unsigned char* signstring, int
  * lth, char *filename) { CRYPT_CONTEXT hashContext; CRYPT_CONTEXT
- * sigKeyContext; CRYPT_KEYSET cryptKeyset; uchar hash[40]; uchar *signature = 
+ * sigKeyContext; CRYPT_KEYSET cryptKeyset; uchar hash[40]; uchar *signature =
  * NULL; int ansr = 0, signatureLength; char *msg;
- * 
+ *
  * memset(hash, 0, 40); cryptInit(); if ((ansr =
  * cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
  * (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA))
  * != 0) msg = "creating context"; else if ((ansr = cryptEncrypt(hashContext,
- * signstring, lth)) != 0 || (ansr = cryptEncrypt(hashContext, signstring, 0)) 
+ * signstring, lth)) != 0 || (ansr = cryptEncrypt(hashContext, signstring, 0))
  * != 0) msg = "hashing"; else if ((ansr =
  * cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash,
- * &signatureLength)) != 0) msg = "getting attribute string"; else if ((ansr = 
+ * &signatureLength)) != 0) msg = "getting attribute string"; else if ((ansr =
  * cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, filename,
  * CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set"; else if ((ansr =
  * cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label",
@@ -1066,13 +1066,13 @@ static int setSID(
  * &signatureLength, sigKeyContext, hashContext)) != 0) msg = "signing"; else
  * if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext,
  * hashContext)) != 0) msg = "verifying"; }
- * 
+ *
  * cryptDestroyContext(hashContext); cryptDestroyContext(sigKeyContext);
  * cryptEnd(); if (ansr == 0) {
  * decode_casn(&(roa->content.signedData.signerInfos.signerInfo.self),
- * signature); ansr = 0; } else { // printf("Signature failed in %s with error 
+ * signature); ansr = 0; } else { // printf("Signature failed in %s with error
  * %d\n", msg, ansr); ansr = ERR_SCM_INVALSIG; } g_lastInstruction = NONE; if
- * ( signature != NULL ) free(signature); return ansr; } 
+ * ( signature != NULL ) free(signature); return ansr; }
  */
 
 /*
@@ -1158,7 +1158,7 @@ static int setIPFamily(
                         (roa->content.signedData.encapContentInfo.eContent.roa.
                          ipAddrBlocks.self), iBlocks);
         // roaFamily = (struct ROAIPAddressFamily*)
-        // member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self), 
+        // member_casn(&(roa->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks.self),
         // iBlocks);
         write_casn(&(roaFamily->addressFamily), familytemp, 2);
         return 0;
@@ -1186,7 +1186,7 @@ static int setIPAddr(
 
     /*
      * #ifdef IP_RANGES_ALLOWED struct IPAddressOrRangeA *roaAddr = NULL;
-     * #else 
+     * #else
      */
     struct ROAIPAddress *roaAddr = NULL;
     // #endif
@@ -1253,7 +1253,7 @@ static int setIPAddr(
              * iAddrs) { roaAddr = (struct IPAddressOrRangeA*)
              * inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
              * write_casn(&(roaAddr->addressPrefix), ipv4array, iGoodBytes); }
-             * else sta = ERR_SCM_INVALIPB; #else 
+             * else sta = ERR_SCM_INVALIPB; #else
              */
             iAddrs = num_items(&(roaFamily->addresses.self));
             if (0 <= iAddrs)
@@ -1300,7 +1300,7 @@ static int setIPAddr(
              * iAddrs) { roaAddr = (struct IPAddressOrRangeA*)
              * inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
              * write_casn(&(roaAddr->addressPrefix), ipv6array, iGoodBytes); }
-             * else sta = ERR_SCM_INVALIPB; #else 
+             * else sta = ERR_SCM_INVALIPB; #else
              */
             iAddrs = num_items(&(roaFamily->addresses.self));
             if (0 <= iAddrs)
@@ -1600,9 +1600,9 @@ static int setCertName(
 }
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // General config file (.cnf) interpretation function
-// 
+//
 // ///////////////////////////////////////////////////////////
 
 static int confInterpret(
@@ -1704,7 +1704,7 @@ static int confInterpret(
                      * if ((isInstructionForcing(g_lastInstruction)) || (TRUE
                      * == iConfiguredKey[ck])) { iRet2 = ERR_SCM_INVALARG;
                      * break; } iRet2 = setSignature(roa, value);
-                     * iConfiguredKey[ck] = cTRUE; 
+                     * iConfiguredKey[ck] = cTRUE;
                      */
 
                     break;
@@ -1820,8 +1820,8 @@ static int confInterpret(
      * read_casn(&roa->content.signedData.encapContentInfo.eContent.self,
      * buf); if (iRet < 0) { // printf("Error reading hashable string\n");
      * iROAState = ERR_SCM_HSREAD; } if ((iRet2=setSignature(roa, buf, iRet,
-     * keyfileName)) < 0) { // printf("Error creating signature\n"); iROAState 
-     * = iRet2; } free(buf); 
+     * keyfileName)) < 0) { // printf("Error creating signature\n"); iROAState
+     * = iRet2; } free(buf);
      */
     const char *ap = signCMS(roa, keyfileName, 0);
     if (ap)
@@ -1830,9 +1830,9 @@ static int confInterpret(
 }
 
 // ///////////////////////////////////////////////////////////
-// 
+//
 // Exported functions from roa_utils.h
-// 
+//
 // ///////////////////////////////////////////////////////////
 int roaFromFile(
     char *fname,
@@ -1937,7 +1937,7 @@ int roaToFile(
         return ERR_SCM_INVALARG;
 
     // Encode CASN
-    (void)unlink(fname);        // security fix, needed to allow both EXCL and 
+    (void)unlink(fname);        // security fix, needed to allow both EXCL and
                                 // CREAT
     if ((fd = open(fname, (O_EXCL | O_WRONLY | O_CREAT | O_TRUNC), 0755)) < 0)
         return ERR_SCM_COFILE;

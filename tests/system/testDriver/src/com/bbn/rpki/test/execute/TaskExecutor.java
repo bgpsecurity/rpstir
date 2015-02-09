@@ -12,5 +12,5 @@ public interface TaskExecutor {
   /**
    * Starts the task
    */
-  void start(); 
+  void start();
 }

@@ -20,7 +20,7 @@
  **************************************************/
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 int tcpsocket(
@@ -28,7 +28,7 @@ int tcpsocket(
     int portno)
 {
     /*
-     * set the wport file descriptor to the socket we've created 
+     * set the wport file descriptor to the socket we've created
      */
     wport->out_desc = socket(AF_INET, SOCK_STREAM, 0);
     if ((wport->out_desc) < 0)
@@ -44,7 +44,7 @@ int tcpsocket(
 
     /*
      * set the protocol for this structure. This will be used in our generic
-     * write routine to determine if we need {write,send}, or sendto 
+     * write routine to determine if we need {write,send}, or sendto
      */
     wport->protocol = TCP;
 
@@ -84,7 +84,7 @@ int udpsocket(
 {
 
     /*
-     * set the file wport desc to the socket we created 
+     * set the file wport desc to the socket we created
      */
     wport->out_desc = socket(AF_INET, SOCK_DGRAM, 0);
     if ((wport->out_desc) < 0)
@@ -99,12 +99,12 @@ int udpsocket(
     wport->server_addr.sin_port = htons(portno);
 
     /*
-     * set the to_length that will be used in sendto() calls 
+     * set the to_length that will be used in sendto() calls
      */
     wport->to_length = sizeof(struct sockaddr_in);
 
     /*
-     * set the protocol so we know to do sendto rather than {write,send} 
+     * set the protocol so we know to do sendto rather than {write,send}
      */
     wport->protocol = UDP;
 
@@ -120,7 +120,7 @@ ssize_t outputMsg(
     char *str_copy = NULL;
 
     /*
-     * Log a copy of str without newline(s) 
+     * Log a copy of str without newline(s)
      */
     str_copy = strdup(str);
     if (str_copy)
@@ -143,7 +143,7 @@ ssize_t outputMsg(
     else if (wport->protocol == TCP)
     {
         /*
-         * send it 
+         * send it
          */
         ret = write(wport->out_desc, (const void *)str, len);
         if (ret < 0)
@@ -155,7 +155,7 @@ ssize_t outputMsg(
     else if (wport->protocol == UDP)
     {
         /*
-         * send it 
+         * send it
          */
         ret = sendto(wport->out_desc, (const void *)str, len, 0,
                      (struct sockaddr *)&(wport->server_addr),

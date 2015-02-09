@@ -91,203 +91,203 @@ static bool stringarray_validator(
 static const struct config_option CONFIG_OPTIONS[] = {
     // CONFIG_SOME_INT
     {
-     "SomeInt",
-     false,
-     config_type_sscanf_converter, &config_type_sscanf_arg_int,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "SomeInt",
+        false,
+        config_type_sscanf_converter, &config_type_sscanf_arg_int,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_EMPTY_ARRAY
     {
-     "EmptyArray",
-     true,
-     config_type_string_converter, &config_type_string_arg_mandatory,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "foo bar"},
+        "EmptyArray",
+        true,
+        config_type_string_converter, &config_type_string_arg_mandatory,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "foo bar"},
 
     // CONFIG_STRING_ARRAY
     {
-     "StringArray",
-     true,
-     config_type_string_converter, &config_type_string_arg_mandatory,
-     NULL, NULL,
-     free,
-     stringarray_validator, (void *)1,
-     "\"foo bar\" 1 3"},
+        "StringArray",
+        true,
+        config_type_string_converter, &config_type_string_arg_mandatory,
+        NULL, NULL,
+        free,
+        stringarray_validator, (void *)1,
+        "\"foo bar\" 1 3"},
 
     // CONFIG_INT_ARRAY
     {
-     "IntArray",
-     true,
-     config_type_sscanf_converter, &config_type_sscanf_arg_int,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "1 2 3"},
+        "IntArray",
+        true,
+        config_type_sscanf_converter, &config_type_sscanf_arg_int,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "1 2 3"},
 
     // CONFIG_LONG_ARRAY
     {
-     "LongArray",
-     true,
-     config_type_string_converter, &config_type_string_arg_mandatory,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "LongArray",
+        true,
+        config_type_string_converter, &config_type_string_arg_mandatory,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_INCLUDED_INT
     {
-     "IncludedInt",
-     false,
-     config_type_sscanf_converter, &config_type_sscanf_arg_int,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "7"},
+        "IncludedInt",
+        false,
+        config_type_sscanf_converter, &config_type_sscanf_arg_int,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "7"},
 
     // CONFIG_DEFAULT_STRING
     {
-     "DefaultString",
-     false,
-     config_type_string_converter, &config_type_string_arg_optional,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "this-is-the-default"},
+        "DefaultString",
+        false,
+        config_type_string_converter, &config_type_string_arg_optional,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "this-is-the-default"},
 
     // CONFIG_DEFAULT_INT_ARRAY
     {
-     "DefaultIntArray",
-     true,
-     config_type_sscanf_converter, &config_type_sscanf_arg_int,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "-1 0 1"},
+        "DefaultIntArray",
+        true,
+        config_type_sscanf_converter, &config_type_sscanf_arg_int,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "-1 0 1"},
 
     // CONFIG_DEFAULT_EMPTY_ARRAY
     {
-     "DefaultEmptyArray",
-     true,
-     config_type_sscanf_converter, &config_type_sscanf_arg_int,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     ""},
+        "DefaultEmptyArray",
+        true,
+        config_type_sscanf_converter, &config_type_sscanf_arg_int,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        ""},
 
     // CONFIG_STRING_ARRAY_CHARS
     {
-     "StringArrayChars",
-     true,
-     config_type_string_converter, &config_type_string_arg_mandatory,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "foo \"\\\"\" \"'\" \"\\\\\" \"\\$\" \"\t\" \" \" \"#\" \"\\n\" \"\\r\" \"\\t\""},
+        "StringArrayChars",
+        true,
+        config_type_string_converter, &config_type_string_arg_mandatory,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "foo \"\\\"\" \"'\" \"\\\\\" \"\\$\" \"\t\" \" \" \"#\" \"\\n\" \"\\r\" \"\\t\""},
 
     // CONFIG_SOME_BOOL_TRUE
     {
-     "SomeBoolTrue",
-     false,
-     config_type_bool_converter, NULL,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "SomeBoolTrue",
+        false,
+        config_type_bool_converter, NULL,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_SOME_BOOL_FALSE
     {
-     "SomeBoolFalse",
-     false,
-     config_type_bool_converter, NULL,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "True"},
+        "SomeBoolFalse",
+        false,
+        config_type_bool_converter, NULL,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "True"},
 
     // CONFIG_ENV_VAR_INT
     {
-     "EnvVarInt",
-     false,
-     config_type_sscanf_converter, &config_type_sscanf_arg_int,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "EnvVarInt",
+        false,
+        config_type_sscanf_converter, &config_type_sscanf_arg_int,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_ENV_VAR_STRING
     {
-     "EnvVarString",
-     false,
-     config_type_string_converter, &config_type_string_arg_optional,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "EnvVarString",
+        false,
+        config_type_string_converter, &config_type_string_arg_optional,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_ENV_VAR_EMPTY
     {
-     "EnvVarEmpty",
-     false,
-     config_type_string_converter, &config_type_string_arg_mandatory,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "EnvVarEmpty",
+        false,
+        config_type_string_converter, &config_type_string_arg_mandatory,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_FILE
     {
-     "File",
-     false,
-     config_type_path_converter, NULL,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "File",
+        false,
+        config_type_path_converter, NULL,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_DIR
     {
-     "Dir",
-     false,
-     config_type_path_converter, NULL,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     NULL},
+        "Dir",
+        false,
+        config_type_path_converter, NULL,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        NULL},
 
     // CONFIG_NULL_STRING
     {
-     "NullString",
-     false,
-     config_type_string_converter, &config_type_string_arg_optional,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     "\"non-null default\""},
+        "NullString",
+        false,
+        config_type_string_converter, &config_type_string_arg_optional,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "\"non-null default\""},
 
     // CONFIG_DEFAULT_NULL_STRING
     {
-     "DefaultNullString",
-     false,
-     config_type_string_converter, &config_type_string_arg_optional,
-     NULL, NULL,
-     free,
-     NULL, NULL,
-     ""},
+        "DefaultNullString",
+        false,
+        config_type_string_converter, &config_type_string_arg_optional,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        ""},
 
     // CONFIG_LOG_LEVEL
     {
-     "LogLevel",
-     false,
-     config_type_enum_converter, &config_type_enum_arg_log_level,
-     NULL, NULL,
-     config_type_enum_free,
-     NULL, NULL,
-     NULL},
+        "LogLevel",
+        false,
+        config_type_enum_converter, &config_type_enum_arg_log_level,
+        NULL, NULL,
+        config_type_enum_free,
+        NULL, NULL,
+        NULL},
 };
 
 
@@ -295,7 +295,7 @@ static bool test_config(
     const char *conf_file)
 {
     bool ret;
-    char * path;
+    char *path;
 
     if (setenv("ENV_VAR_INT", "0xfe0f", 1) != 0)
     {

@@ -33,9 +33,9 @@ static char const *const RSYNC_SCHEME = "rsync://";
 
 /**=============================================================================
  * @note This function only does a string comparison, not a file lookup.
- * @pre str1 <= str2, lexicographically.
+ *     @pre str1 <= str2, lexicographically.
  * @ret 1 if str2 is a file or directory under str1.
- *      0 otherwise.
+ *     0 otherwise.
 ------------------------------------------------------------------------------*/
 static int is_subsumed(
     const char *str1,
@@ -379,7 +379,7 @@ static int handle_uri_string(
         return ERR_CHASER_OOM;
     ptr = section;
 
-    // TODO: Using ';' as delimiter is planned to change when the db schema is 
+    // TODO: Using ';' as delimiter is planned to change when the db schema is
     // updated.
     // split by semicolons
     section[0] = '\0';
@@ -684,8 +684,8 @@ static int printUsage(
 }
 
 /**=============================================================================
- * @ ret 0 on success
- *      -1 on failure
+ * @ret 0 on success
+ *     -1 on failure
 ------------------------------------------------------------------------------*/
 int main(
     int argc,

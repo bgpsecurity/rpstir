@@ -1,6 +1,6 @@
 
 /*
- * $Id: set_cert_ski.c 453 2007-07-25 15:30:40Z gardiner $ 
+ * $Id: set_cert_ski.c 453 2007-07-25 15:30:40Z gardiner $
  */
 
 

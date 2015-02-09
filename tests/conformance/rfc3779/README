@@ -407,7 +407,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.10
 
-   - 4.4RRGG  
+   - 4.4RRGG
    Parent IPv4 IPAddressRange  10.0.4.1 - 10.0.4.10
    Child  IPv4 IPAddressRange  10.0.4.2 - 10.0.4.11
 
@@ -543,7 +543,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
    Child  IPv6 IPAddressRange  0A00:0401:: - 0A00:040B:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
-   + 4.6RRGL  
+   + 4.6RRGL
    Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
    Child  IPv6 IPAddressRange  0A00:0402:: - 0A00:0409:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
@@ -551,7 +551,7 @@ IPv4 / IPv6 Test Cases
    Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
    Child  IPv6 IPAddressRange  0A00:0402:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
-   - 4.6RRGG 
+   - 4.6RRGG
    Parent IPv6 IPAddressRange  0A00:0401:: - 0A00:040A:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
    Child  IPv6 IPAddressRange  0A00:0402:: - 0A00:040B:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF
 
@@ -980,5 +980,3 @@ A5. Tests for special cases (1 positive, 1 negative)
      Child       ASId       <inherit>
      GrChild     ASId       <inherit>
      GrGrChild   ASId       9
-
-

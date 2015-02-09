@@ -12,14 +12,14 @@
 
 
 #ifdef DEBUG
-#define BAG_INVARIANTS(bag) \
-		do { \
-			if (bag != NULL) { \
-				assert(bag->entries != NULL); \
-				assert(bag->used != NULL); \
-				assert(bag->size <= bag->allocated_size); \
-			} \
-		} while (false)
+#define BAG_INVARIANTS(bag)                                             \
+    do {                                                                \
+        if (bag != NULL) {                                              \
+            assert(bag->entries != NULL);                               \
+            assert(bag->used != NULL);                                  \
+            assert(bag->size <= bag->allocated_size);                   \
+        }                                                               \
+    } while (false)
 #else
 #define BAG_INVARIANTS(bag) do {} while (false)
 #endif
@@ -31,7 +31,7 @@
 typedef uint_fast8_t bitmap_entry_t;
 
 struct _Bag {
-    bool thread_safe;           // NOTE: this must not be changed once Bag_new 
+    bool thread_safe;           // NOTE: this must not be changed once Bag_new
                                 // returns
     void **entries;             // sparse array of pointers to entries
     bitmap_entry_t *used;       // bitmap of which pointers in entries are
@@ -148,7 +148,7 @@ void Bag_free(
 
     if (bag->thread_safe)
     {
-        // NOTE: return code is ignored, but there's not much that can be done 
+        // NOTE: return code is ignored, but there's not much that can be done
         // anyway
         pthread_rwlock_destroy(&bag->lock);
     }

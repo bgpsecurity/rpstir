@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*
  */
@@ -56,7 +56,7 @@ extern int _casn_obj_err(
     _clear_error(
     struct casn *),
     _encode_tag_lth(
-    uchar * to,
+    uchar *to,
     struct casn **casnpp),
     _fill_upward(
     struct casn *casnp,

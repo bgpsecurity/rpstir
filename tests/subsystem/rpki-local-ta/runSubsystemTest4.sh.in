@@ -40,7 +40,7 @@ if port_open `config_get RPKIPort`; then
     exit 3
 fi
 
-NUM_PASSED=0 
+NUM_PASSED=0
 N=1
 while [ $N -le "4" ]; do
 # clear database
@@ -53,18 +53,18 @@ while [ $N -le "4" ]; do
      ./step4 || failures="$failures step4"
      wait "$LOADER_PID" || failures="$failures rcli-w"
      run "rcli-c-$N" rcli -c testcases4_LTA/LTA/case${N} || failures="$failures rcli-c"
-     cd testcases4_LTA/LTA 
+     cd testcases4_LTA/LTA
      run "checkLTAtest-$N" ../../checkLTAtest case${N} C*.cer || failures="$failures checkLTAtest"
      cd ../../
     if [ -z "$failures" ]; then
-	NUM_PASSED=$(( $NUM_PASSED + 1 ))
+        NUM_PASSED=$(( $NUM_PASSED + 1 ))
     else
         echo "Failed: $failures"
     fi
     N=$(( $N + 1 ))
 done
 
- 
+
 # display results
 if [ "$NUM_PASSED" -eq "4" ]; then
     TEST_STATUS="PASS"

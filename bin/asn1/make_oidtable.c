@@ -1,5 +1,5 @@
 /*
- * $Id: make_oidtable.c 453 2008-07-25 15:30:40Z cgardiner $ 
+ * $Id: make_oidtable.c 453 2008-07-25 15:30:40Z cgardiner $
  */
 
 char make_oidtable_sfcsid[] = "@(#)make_oidtable.c 869P";

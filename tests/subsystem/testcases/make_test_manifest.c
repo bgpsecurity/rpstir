@@ -1,5 +1,5 @@
 /*
- * $Id: make_manifest.c 453 2007-07-25 15:30:40Z gardiner $ 
+ * $Id: make_manifest.c 453 2007-07-25 15:30:40Z gardiner $
  */
 
 
@@ -23,7 +23,7 @@
 #include "util/logging.h"
 
 /*
- * This file has a program to make manifests. 
+ * This file has a program to make manifests.
  */
 
 #define MSG_OK "Finished %s OK"
@@ -72,9 +72,9 @@ static void make_fulldir(
     const char *locpath)
 {
     // Manifest goes in issuer's directory, e.g.
-    // M1.man goes nowhere else, 
-    // M11.man goes into C1/, 
-    // M121.man goes into C1/2 
+    // M1.man goes nowhere else,
+    // M11.man goes into C1/,
+    // M121.man goes into C1/2
     // M1231.man goes into C1/2/3
     char *f = fulldir;
     const char *l = locpath;
@@ -184,7 +184,7 @@ int main(
     write_casn_time(&manp->nextUpdate, now);
     write_objid(&manp->fileHashAlg, id_sha256);
 
-    // now get the files 
+    // now get the files
     char curr_file[128];
     memset(curr_file, 0, 128);
     int num;

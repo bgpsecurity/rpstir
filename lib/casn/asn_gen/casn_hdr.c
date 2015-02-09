@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 /*****************************************************************************
 File:     asn_chdr.c
@@ -20,7 +20,7 @@ static void print_end(
     int,
     int),
     print_hdr(
-)  ,
+    ),
     print_item(
     char *,
     char *,
@@ -70,34 +70,34 @@ item
 Outputs: C header file written to 'outstr'
 Procedure:
 1. Find the latest generation in the object table
-	At the same time, print forward declarations
+        At the same time, print forward declarations
    Starting at that generation, FOR each generation down to -1
- 	FOR each item in the table
+        FOR each item in the table
             IF it's of another generation OR is ruled out by exports,
-		Continue in FOR
-	    IF the name begins with '_'
-		Get its parent as the current pointer
-	       IF its pointee is of an earlier generation
+                Continue in FOR
+            IF the name begins with '_'
+                Get its parent as the current pointer
+               IF its pointee is of an earlier generation
                    Print a forward declaration
-		IF it's not a passthrough
-		    Print other stuff for it
-    		    Continue in FOR
+                IF it's not a passthrough
+                    Print other stuff for it
+                    Continue in FOR
             ELSE IF it's an import OR is DEFINED OR is a DEFINER OR is an
-		'intermediate' table (i.e. not the real table)
-		Continue in FOR
-	    ELSE IF this pointer is not imported AND (it's a table or a
-		subdefined primitive) AND
+                'intermediate' table (i.e. not the real table)
+                Continue in FOR
+            ELSE IF this pointer is not imported AND (it's a table or a
+                subdefined primitive) AND
                 (it's a pass-through OR it's a primitive type))
-		IF the real type is primitive AND not further defined
+                IF the real type is primitive AND not further defined
                     Use its name for the typedef
-		IF it has no min/max AND is neither a constraint NOR a
+                IF it has no min/max AND is neither a constraint NOR a
                     defined-by, print a typedef
-		ELSE print a special statement
-		Continue in FOR
-	    ELSE use this pointer as the current pointer
-	    Seek to its place in the input file
-	    Print its header stuff
-	Decrement the generation
+                ELSE print a special statement
+                Continue in FOR
+            ELSE use this pointer as the current pointer
+            Seek to its place in the input file
+            Print its header stuff
+        Decrement the generation
 **/
     struct name_table *ntbp,
        *entbp,
@@ -178,14 +178,14 @@ static void print_hdr(
     /*
      * Function: Creates class definitions for the things defined an ASN.1
      * file.
-     * 
-     * Outputs: C header data written to 'outstr' Procedure: 1. WHILE there is 
-     * another token Switch on state 2.  Case IN_DEFINITION IF read_definition 
-     * returns -1 OR state is global, return IF (token is '{' OR line end) AND 
-     * making the definition returns 0 Return 3. Case IN_ITEM Case SUB_ITEM IF 
-     * reading item returns -1, return IF (token is '}' OR ',' (indicating the 
-     * end of an item)) AND making header item returns 0, return Default: Exit 
-     * with fatal message 
+     *
+     * Outputs: C header data written to 'outstr' Procedure: 1. WHILE there is
+     * another token Switch on state 2.  Case IN_DEFINITION IF read_definition
+     * returns -1 OR state is global, return IF (token is '{' OR line end) AND
+     * making the definition returns 0 Return 3. Case IN_ITEM Case SUB_ITEM IF
+     * reading item returns -1, return IF (token is '}' OR ',' (indicating the
+     * end of an item)) AND making header item returns 0, return Default: Exit
+     * with fatal message
      */
     int dup_ansr,
         numdefineds;
@@ -202,7 +202,7 @@ static void print_hdr(
             break;
 
             /*
-             * step 3 
+             * step 3
              */
         case IN_ITEM:
         case SUB_ITEM:
@@ -278,7 +278,7 @@ static int hdr_def(
             subtype = (short)ntbp->type;
     }
     /*
-     * step 2 
+     * step 2
      */
     if (*token == '{')
     {
@@ -300,7 +300,7 @@ static int hdr_def(
     else
     {
         /*
-         * step 3 
+         * step 3
          */
         if ((flags & ASN_DEFINED_FLAG))
             type = ASN_CHOICE;
@@ -312,7 +312,7 @@ static int hdr_def(
         if (type >= 0 && type < ASN_CONSTRUCTED && !(flags & ASN_ENUM_FLAG))
             /*
              * now clear it for a primitive named something else had to wait
-             * after get_derivation to force AsnArray 
+             * after get_derivation to force AsnArray
              */
             *dup_ansrp &= ~(ASN_DUPED_FLAG);
         if (type < 0 || (type >= ASN_CONSTRUCTED && !(*classname & 0x20)) ||
@@ -413,12 +413,12 @@ static int hdr_item(
     if (type == ASN_BOOLEAN)
         *subclass = 0;
     /*
-     * step 1 
+     * step 1
      */
     if (type == ASN_FUNCTION)
         fprintf(outstr, func_line, itemname);
     /*
-     * step 2 
+     * step 2
      */
     else if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) != ASN_TABLE_FLAG)
     {
@@ -444,7 +444,7 @@ static int hdr_item(
             *strcpy(itemname, c) |= 0x20;
         }
         /*
-         * step 3 
+         * step 3
          */
         if (*subclass && (ntbp = replace_name(subclass)) &&
             ntbp->type < ASN_CONSTRUCTED &&
@@ -477,7 +477,7 @@ static int hdr_item(
         print_item(itemname, subclass, type, option);
     }
     /*
-     * step 4 
+     * step 4
      */
     if (*token != '}')
         end_item();             /* not last */

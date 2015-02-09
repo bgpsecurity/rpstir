@@ -1,5 +1,5 @@
 /**
-	Functions used for accessing the RTR database.
+   Functions used for accessing the RTR database.
  */
 
 #include <sys/types.h>

@@ -10,7 +10,7 @@
 #include <time.h>
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 char *getMessageFromString(
@@ -76,7 +76,7 @@ int has_newline(
     unsigned int len);
 
 /*
- * Lower level parsing utilities. 
+ * Lower level parsing utilities.
  */
 long next_dirblock(
     FILE * fp);

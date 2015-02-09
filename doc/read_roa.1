@@ -1,18 +1,18 @@
-READ_ROA (1)             ROA-PKI                                   READ_ROA(1)                                     
+READ_ROA (1)             ROA-PKI                                   READ_ROA(1)
 
 NAME
 
-        read_roa - extracts the RouteOriginAttestation data from a ROA and 
-                   converts it to readable form 
+        read_roa - extracts the RouteOriginAttestation data from a ROA and
+                   converts it to readable form
 
 SYNOPSIS
-  
+
         read_roa  roafile [outfile]
 
 DESCRIPTION
 
-            This program (in the roa-utils directory) extracts the 
-        RouteOriginAttestation data from the file specified by roafile and 
+            This program (in the roa-utils directory) extracts the
+        RouteOriginAttestation data from the file specified by roafile and
         converts to the following format:
 
             AS# nn
@@ -28,14 +28,14 @@ DESCRIPTION
         The prefixes are in the form defined in RFC3779 with an optional
         '^xx' appended to indicate a maximum length.
 
-            If outfile is not specified, the output is written to stdout, 
+            If outfile is not specified, the output is written to stdout,
         otherwise it is written to the file specified by outfile.
 
         If there is any error, the program terminates with one of several messages:
 
-          Missing xxx 
+          Missing xxx
           Can't open filename
           Error reading filename
-  
-        where xxx is the name of a parameter, and filename is the name of a file 
+
+        where xxx is the name of a parameter, and filename is the name of a file
         in the parameter list.

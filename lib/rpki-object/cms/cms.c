@@ -1,5 +1,5 @@
 /*
- * $Id: signCMS.c 453 2008-07-25 15:30:40Z cgardiner $ 
+ * $Id: signCMS.c 453 2008-07-25 15:30:40Z cgardiner $
  */
 
 #include <stdio.h>
@@ -78,7 +78,7 @@ const char *signCMS(
     // write the signature version (3) to the signer info
     write_casn_num(&sigInfop->version.self, 3);
 
-    // find the SID 
+    // find the SID
     if ((sidp = findSID(cms)) == NULL)
         return "finding SID";
 
@@ -324,7 +324,7 @@ const char *signCMSBlob(
 
         // DER-encode signedAttrs
         tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
-        *tbsp = ASN_SET;        /* replace ASN.1 identifier octet with ASN_SET 
+        *tbsp = ASN_SET;        /* replace ASN.1 identifier octet with ASN_SET
                                  * (0x31) */
     }
 

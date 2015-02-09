@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -13,7 +11,7 @@
 /*
  * this program takes one or more filenames on the command line and
  * tries to read it in in as any of a number of different objects.
- * 
+ *
  * it's really meant to be run from test_casn_random_driver.sh that
  * generates files full of random garbage and throws them at this
  * program. The goal is to make sure that the casn code always
@@ -24,14 +22,14 @@
  * i.e. bad syntax) and #22 (invalid length field).
  */
 
-#define TEST(t) { \
-	struct t guy; \
-	int ret; \
-	t(&guy, (ushort)0); \
-        ret = get_casn_file(&guy.self, filename, 0) ; \
-	if (ret >= 0) { \
-	    printf("accepted %s as a " #t " (should have failed)\n", filename);	\
-	} \
+#define TEST(t) {                                                       \
+        struct t guy;                                                   \
+        int ret;                                                        \
+        t(&guy, (ushort)0);                                             \
+        ret = get_casn_file(&guy.self, filename, 0) ;                   \
+        if (ret >= 0) {                                                 \
+            printf("accepted %s as a " #t " (should have failed)\n", filename); \
+        }                                                               \
     }
 
 int main(

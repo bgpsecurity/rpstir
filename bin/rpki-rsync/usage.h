@@ -7,7 +7,7 @@
 #include <string.h>
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 void myusage(

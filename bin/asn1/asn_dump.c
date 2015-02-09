@@ -41,7 +41,7 @@ int oidtable_size;
 int asn1dump(
     unsigned char *buf,
     int buflen,
-    FILE * outf)
+    FILE *outf)
 {
     struct asn *asnbase,
        *asnp;
@@ -171,7 +171,7 @@ static int putform(
     int mode,
     int row)
   /*
-   * mode 1= ASCII (maybe), 2 = obj_id, 3=hex 
+   * mode 1= ASCII (maybe), 2 = obj_id, 3=hex
    */
 {
     int j,

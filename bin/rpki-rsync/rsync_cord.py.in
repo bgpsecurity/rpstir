@@ -69,10 +69,10 @@ class RSYNC_thread(Thread):
             if not stderror == "":
                 cli.error( 'rsync returned errors: %s' % stderror )
             cli.info( ' '.join(rsyncCom) )
-            
+
             if rcode == 0:
                 run_aur(cli, rsync_log, os.path.join(repoDir, nextURI))
-                
+
             else:
                 # sleep, then re-run
                 sleep_time = 5
@@ -102,7 +102,7 @@ class RSYNC_thread(Thread):
         cli.info('Thread %s: exiting with no more work to do' % self.getName())
 
 #
-# This function is the main thread controller. It spawns the 
+# This function is the main thread controller. It spawns the
 # maximum number of threads and waits for their completion
 #
 def thread_controller():
@@ -117,7 +117,7 @@ def thread_controller():
         thr.setName(x)
         thr.start()
         threadPool.append(thr)
- 
+
     main.debug('Number of threads spawned: %d' % len(threadPool))
 
     notAliveCount = 0
@@ -141,7 +141,7 @@ def rotate_logs(log_retention):
         os.system("mkdir " + logDir)
     if not os.path.exists(repoDir):
         os.system("mkdir " + repoDir)
-    
+
     #Rotate the main log for rsync_cord
     def log_file(number):
         if number == 0:
@@ -300,5 +300,5 @@ if URIPool.qsize() == 0:
     sys.exit(1)
 elif URIPool.qsize() == 1:
     main.warn('The URI list only has 1 URI.')
-    
+
 thread_controller()

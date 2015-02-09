@@ -33,7 +33,7 @@ int main(
     Extensions(&extensions, (ushort) 0);
     if ((lth = get_casn_file(&extensions.self, argv[2], 0)) < 0)
         FATAL(MSG_OPEN, argv[2]);
-    struct Extension *sbextp = (struct Extension *)member_casn(&extensions.self, 0);    // ip 
+    struct Extension *sbextp = (struct Extension *)member_casn(&extensions.self, 0);    // ip
                                                                                         // Addresses
     uchar *sb = (uchar *) calloc(1, size_casn(&sbextp->self));
     read_casn(&sbextp->self, sb);

@@ -18,7 +18,7 @@ public class TestModel extends XMLBase {
   private static final String TAG_TASK_DESCRIPTION = "task-description";
   private final Map<String, TaskDescription> taskDescriptions = new TreeMap<String, TaskDescription>();
   private boolean modified;
-  
+
   /**
    * @return the modified
    */
@@ -38,7 +38,7 @@ public class TestModel extends XMLBase {
    */
   public TestModel() {
   }
-  
+
   /**
    * @param element
    */
@@ -49,7 +49,7 @@ public class TestModel extends XMLBase {
     }
     setModified(false);
   }
-  
+
   /**
    * @param element
    */
@@ -60,7 +60,7 @@ public class TestModel extends XMLBase {
       element.addContent(taskDescriptionElement);
     }
   }
-                                                      
+
   /**
    * @return the TaskDescriptions
    */

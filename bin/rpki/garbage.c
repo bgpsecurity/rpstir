@@ -14,7 +14,7 @@
 #include "util/stringutils.h"
 
 /*
- * $Id$ 
+ * $Id$
  */
 
 
@@ -37,11 +37,11 @@ static scmtab *certTable,
    *manifestTable;
 
 /*
- * callback function for searchscm that records the timestamps 
+ * callback function for searchscm that records the timestamps
  */
 static int handleTimestamps(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -56,8 +56,8 @@ static int handleTimestamps(
  * if so then do the setting of certs' flags
  */
 static int handleIfStale(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t cnt)
 {
     UNREFERENCED_PARAMETER(s);
@@ -83,8 +83,8 @@ static int handleIfStale(
  * if so then remove unknown flag from cert
  */
 static int handleIfCurrent(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t cnt)
 {
     char msg[128];
@@ -104,8 +104,8 @@ static int handleIfCurrent(
 static scmsrcha *cntSrch = NULL;
 
 static int countCurrentCRLs(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(numLine);
@@ -140,8 +140,8 @@ static char *staleManFiles[10000];
 static int numStaleManFiles = 0;
 
 static int handleStaleMan2(
-    scmcon * conp,
-    scmtab * tab,
+    scmcon *conp,
+    scmtab *tab,
     char *files)
 {
     char escaped_files[2 * strlen(files) + 1];
@@ -154,8 +154,8 @@ static int handleStaleMan2(
 }
 
 static int handleStaleMan(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(numLine);
@@ -173,8 +173,8 @@ static int handleStaleMan(
  * all objects referenced by manifest that is non-stale
  */
 static int handleFreshMan2(
-    scmcon * conp,
-    scmtab * tab,
+    scmcon *conp,
+    scmtab *tab,
     char *files)
 {
     char escaped_files[2 * strlen(files) + 1];

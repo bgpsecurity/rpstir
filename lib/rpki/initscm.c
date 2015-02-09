@@ -1,5 +1,5 @@
 /*
- * $Id$ 
+ * $Id$
  */
 
 #include <stdio.h>
@@ -18,11 +18,11 @@
 
 
 /*
- * Free all the memory allocated in building an scm 
+ * Free all the memory allocated in building an scm
  */
 
 static void freescmtable(
-    scmtab * tabp)
+    scmtab *tabp)
 {
     int i;
 
@@ -58,7 +58,7 @@ static void freescmtable(
 }
 
 void freescm(
-    scm * scmp)
+    scm *scmp)
 {
     int i;
 
@@ -100,9 +100,9 @@ void freescm(
 }
 
 /*
- * Find a column name in a schema line. Column names that appear to begin with 
- * non-whitespace are considered to be values; other columns are considered to 
- * be modifiers (e.g. designation of a key). 
+ * Find a column name in a schema line. Column names that appear to begin with
+ * non-whitespace are considered to be values; other columns are considered to
+ * be modifiers (e.g. designation of a key).
  */
 
 static char *firsttok(
@@ -134,11 +134,11 @@ static char *firsttok(
 }
 
 /*
- * Parse the schema and build a list of columns. 
+ * Parse the schema and build a list of columns.
  */
 
 static int makecolumns(
-    scmtab * outtab)
+    scmtab *outtab)
 {
     char *ptr;
     char *dp;
@@ -189,12 +189,12 @@ static int makecolumns(
 }
 
 /*
- * Build the data structure associated with a single table. 
+ * Build the data structure associated with a single table.
  */
 
 static int prepareonetable(
-    scmtab * outtab,
-    scmtab * intab)
+    scmtab *outtab,
+    scmtab *intab)
 {
     int sta;
 
@@ -214,12 +214,12 @@ static int prepareonetable(
 }
 
 /*
- * Build the data structure associated with the entire set of tables. 
+ * Build the data structure associated with the entire set of tables.
  */
 
 static int preparetables(
-    scm * scmp,
-    scmtab * scmtabbuilderp,
+    scm *scmp,
+    scmtab *scmtabbuilderp,
     int sz)
 {
     int cnt = 0;
@@ -244,7 +244,7 @@ static int preparetables(
 
 /*
  * Make a complete DSN name based on a prefix, the name of a database, the
- * name of a user of that database, and an optional password. 
+ * name of a user of that database, and an optional password.
  */
 
 char *makedsnscm(
@@ -274,7 +274,7 @@ char *makedsnscm(
 }
 
 /*
- * Initialize the schema data structure. 
+ * Initialize the schema data structure.
  */
 
 scm *initscm(
@@ -334,11 +334,11 @@ scm *initscm(
 
 /*
  * Given the nice name for a table, return a pointer to the data structure
- * describing that table, or NULL if no match can be found. 
+ * describing that table, or NULL if no match can be found.
  */
 
 scmtab *findtablescm(
-    scm * scmp,
+    scm *scmp,
     char *hname)
 {
     char *ptr;

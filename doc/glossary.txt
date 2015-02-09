@@ -33,7 +33,7 @@ INR - Internet Number Resources.
      - IP Version 4 addresses
      - IP version 6 addresses
      - Autonomous System numbers
-        
+
 IIR - Internet Routing Registry
 
 LIR - Local Internet Registry
@@ -79,4 +79,3 @@ subscriber - In a PKI, refers to an individual or organization that is a Subject
     of a certificate issued by a CA.
 
 X.509 - A standard specifying formats for several PKI items.
-

@@ -7,4 +7,3 @@
     <arg-description name="Arg" value="Value" is-parameter="false" />
   </task-description>
 </test-model>
-
