@@ -159,7 +159,8 @@ void config_message(
             file_context != NULL;
             file_context = file_context->includes)
         {
-            if (file_context->includes != NULL && file_context->includes->line != 0)
+            if (file_context->includes != NULL
+                && file_context->includes->line != 0)
             {
                 LOG(priority, "In config file included from %s:%zu:",
                     file_context->file, file_context->line);
@@ -290,7 +291,8 @@ void config_unload(
         }
         else
         {
-            config_options[i].value_free(config_values[i].value.single_value.data);
+            config_options[i].value_free(
+                config_values[i].value.single_value.data);
         }
     }
 

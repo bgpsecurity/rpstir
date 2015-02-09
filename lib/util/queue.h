@@ -36,7 +36,9 @@ bool Queue_trypop(
 /**
    Push data onto the queue.
 
-   @return Whether or not the push was successful.  (It can fail if there isn't enough memory.)
+   @return
+       Whether or not the push was successful.  (It can fail if there
+       isn't enough memory.)
    @param data The data to put on the queue.  This must be a
        pointer to heap-allocated memory.  The user is
        responsible for freeing this memory; Queue

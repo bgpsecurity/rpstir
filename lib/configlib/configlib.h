@@ -176,7 +176,8 @@ char ** config_get_string_array(
     For an array of strings type CONFIG_FOO, this code:
 
         // in some function body
-        char const * const * foo = (char const * const *)config_get_array(CONFIG_FOO);
+        char const * const * foo =
+            (char const * const *)config_get_array(CONFIG_FOO);
         const char * foo_0 = foo[0];
 
     Is equivalent to this:
@@ -213,7 +214,8 @@ char ** config_get_string_array(
     For an array of ints type CONFIG_FOO, this code:
 
         // in some function body
-        int const * const * foo = (int const * const *)config_get_array(CONFIG_FOO);
+        int const * const * foo =
+            (int const * const *)config_get_array(CONFIG_FOO);
         int foo_0 = *foo[0];
 
     Is equivalent to this:

@@ -16,7 +16,8 @@ import org.jdom.Element;
  */
 public class TestModel extends XMLBase {
   private static final String TAG_TASK_DESCRIPTION = "task-description";
-  private final Map<String, TaskDescription> taskDescriptions = new TreeMap<String, TaskDescription>();
+  private final Map<String, TaskDescription> taskDescriptions =
+      new TreeMap<String, TaskDescription>();
   private boolean modified;
 
   /**
@@ -43,8 +44,10 @@ public class TestModel extends XMLBase {
    * @param element
    */
   public TestModel(Element element) {
-    for (Element taskDescriptionElement : getChildren(element, TAG_TASK_DESCRIPTION)) {
-      TaskDescription taskDescription = new TaskDescription(taskDescriptionElement);
+    for (Element taskDescriptionElement :
+             getChildren(element, TAG_TASK_DESCRIPTION)) {
+      TaskDescription taskDescription =
+          new TaskDescription(taskDescriptionElement);
       taskDescriptions.put(taskDescription.getName(), taskDescription);
     }
     setModified(false);
@@ -74,7 +77,8 @@ public class TestModel extends XMLBase {
   public String genNewTaskName() {
     int suffix = 0;
     while (true) {
-      String name = "New Task" + (suffix == 0 ? "" : String.format("(%d)", suffix));
+      String name =
+          "New Task" + (suffix == 0 ? "" : String.format("(%d)", suffix));
       if (!taskDescriptions.containsKey(name)) return name;
       suffix++;
     }
@@ -83,12 +87,16 @@ public class TestModel extends XMLBase {
   /**
    * @param newName
    * @param selectedTaskDescription
-   * @return null if successful else the reason the rename could not be performed
+   * @return null if successful else the reason the rename could not
+   * be performed
    */
-  public String renameTaskDescription(String newName, TaskDescription selectedTaskDescription) {
+  public String renameTaskDescription(
+        String newName, TaskDescription selectedTaskDescription) {
     TaskDescription namedTaskDescription = taskDescriptions.get(newName);
-    if (namedTaskDescription != null && namedTaskDescription != selectedTaskDescription) {
-      return String.format("Another task description named %s already exists", newName);
+    if (namedTaskDescription != null
+        && namedTaskDescription != selectedTaskDescription) {
+      return String.format(
+          "Another task description named %s already exists", newName);
     }
     taskDescriptions.remove(selectedTaskDescription.getName());
     selectedTaskDescription.setName(newName);

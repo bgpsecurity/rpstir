@@ -229,7 +229,9 @@ int decode_asn(
     int ansr,
         did,
         indef;                  /* step 1 */
-    for (did = 0, curr_asnp = *asnpp; !nbytes || nbytes > (ulong)did; curr_asnp++)
+    for (did = 0, curr_asnp = *asnpp;
+         !nbytes || nbytes > (ulong)did;
+         curr_asnp++)
     {
         if (curr_asnp >= easnp)
             return -1;

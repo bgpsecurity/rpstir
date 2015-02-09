@@ -90,23 +90,13 @@ int overlap(
     {
         int lth = lop->typ == IPv4 ? 4 : 16;
         if ((memcmp(lop->lolim, hip->lolim, lth) > 0 && // lolo within hi
-             memcmp(lop->lolim, hip->hilim, lth) < 0) || (memcmp(lop->hilim, hip->lolim, lth) > 0 &&    // lohi
-                                                                                                        // within
-                                                                                                        // hi
-                                                          memcmp(lop->hilim, hip->hilim, lth) < 0) || (memcmp(hip->lolim, lop->lolim, lth) > 0 &&       // hilo
-                                                                                                                                                        // within
-                                                                                                                                                        // lo
-                                                                                                       memcmp(hip->lolim, lop->hilim, lth) < 0) || (memcmp(hip->hilim, lop->lolim, lth) > 0 &&  // hihi
-                                                                                                                                                                                                // within
-                                                                                                                                                                                                // lo
-                                                                                                                                                    memcmp
-                                                                                                                                                    (hip->
-                                                                                                                                                     hilim,
-                                                                                                                                                     lop->
-                                                                                                                                                     hilim,
-                                                                                                                                                     lth)
-                                                                                                                                                    <
-                                                                                                                                                    0))
+             memcmp(lop->lolim, hip->hilim, lth) < 0) ||
+            (memcmp(lop->hilim, hip->lolim, lth) > 0 && // lohi within hi
+             memcmp(lop->hilim, hip->hilim, lth) < 0) ||
+            (memcmp(hip->lolim, lop->lolim, lth) > 0 && // hilo within lo
+             memcmp(hip->lolim, lop->hilim, lth) < 0) ||
+            (memcmp(hip->hilim, lop->lolim, lth) > 0 && // hihi within lo
+             memcmp(hip->hilim, lop->hilim, lth) < 0))
             return -1;
     }
     return 0;

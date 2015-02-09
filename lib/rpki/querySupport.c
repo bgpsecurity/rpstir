@@ -120,7 +120,11 @@ int checkValidity(
         {
             int len = strlen(validWhereStr);
             xsnprintf(&validWhereStr[len], WHERESTR_SIZE - len,
-                      " and (((flags%%%d)>=%d) or ((flags%%%d)<%d) or ((flags%%%d)>=%d))",
+                      " and ("
+                      "((flags%%%d)>=%d)"
+                      " or ((flags%%%d)<%d)"
+                      " or ((flags%%%d)>=%d)"
+                      ")",
                       2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
                       SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
         }
@@ -744,7 +748,8 @@ static QueryField fields[] = {
     {
         "flags",
         "which flags are set in the database",
-        Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
+        Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL
+        | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
         SQL_C_ULONG, 8,
         NULL, NULL,
         "Flags Set", displayFlags,

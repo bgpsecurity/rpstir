@@ -56,8 +56,12 @@ static void skip_comment(
 /**
    Get the option from the beginning of a line.
 
-   @param line_offset Input/output param for offset within line before/after the option name.
-   @param[out] option Return value of the parsed option, or CONFIG_OPTION_NONE if it's an empty line.
+   @param line_offset
+       Input/output param for offset within line before/after the
+       option name.
+   @param[out] option
+       Return value of the parsed option, or CONFIG_OPTION_NONE if
+       it's an empty line.
    @return True on success, false on error.
 */
 static bool get_option(
@@ -121,7 +125,9 @@ static bool get_option(
    Get the next value to an option.
 
    @param line The line itself.
-   @param line_offset Input/output param for offset within line before/after the option value.
+   @param line_offset
+       Input/output param for offset within line before/after the
+       option value.
    @param[out] value Return a malloc()-allocated buffer with the option value.
    @return True on success, false on error.
 */
@@ -272,9 +278,10 @@ static bool get_value(
         {
             if (line[*line_offset + 1] != '{')
             {
-                config_message(context, LOG_ERR,
-                               "currently, only variable substitution of the form ${FOO} "
-                               "is supported. The form $FOO is not supported.");
+                config_message(
+                    context, LOG_ERR,
+                    "currently, only variable substitution of the form ${FOO} "
+                    "is supported. The form $FOO is not supported.");
                 ret = false;
                 goto done;
             }
@@ -306,9 +313,10 @@ static bool get_value(
             if (variable_value == NULL)
             {
                 variable_value = "";
-                config_message(context, LOG_WARNING,
-                               "variable ${%s} not found, using the empty string instead",
-                               variable);
+                config_message(
+                    context, LOG_WARNING,
+                    "variable ${%s} not found, using the empty string instead",
+                    variable);
             }
 
             free(variable);
@@ -482,7 +490,8 @@ static bool convert_values(
         }
         free(config_value->value.array_value.data);
 
-        config_value->value.array_value.data = malloc(sizeof(void *) * num_values);
+        config_value->value.array_value.data =
+            malloc(sizeof(void *) * num_values);
         if (config_value->value.array_value.data == NULL)
         {
             LOG(LOG_ERR, "out of memory");
@@ -493,14 +502,12 @@ static bool convert_values(
              config_value->value.array_value.num_items < num_values;
              ++config_value->value.array_value.num_items)
         {
-            if (!config_option->value_convert(context,
-                                              config_option->
-                                              value_convert_usr_arg,
-                                              values[config_value->value.array_value.
-                                                     num_items],
-                                              &config_value->value.array_value.
-                                              data[config_value->value.array_value.
-                                                   num_items]))
+            if (!config_option->value_convert(
+                    context,
+                    config_option->value_convert_usr_arg,
+                    values[config_value->value.array_value.num_items],
+                    &config_value->value.array_value.data[
+                        config_value->value.array_value.num_items]))
             {
                 return false;
             }
@@ -508,13 +515,11 @@ static bool convert_values(
 
         if (config_option->array_validate != NULL)
         {
-            if (!config_option->array_validate(context,
-                                               config_option->
-                                               array_validate_usr_arg,
-                                               (void const *const *)
-                                               config_value->value.array_value.data,
-                                               config_value->value.array_value.
-                                               num_items))
+            if (!config_option->array_validate(
+                    context,
+                    config_option->array_validate_usr_arg,
+                    (void const *const *)config_value->value.array_value.data,
+                    config_value->value.array_value.num_items))
             {
                 return false;
             }
@@ -542,10 +547,11 @@ static bool convert_values(
         config_option->value_free(config_value->value.single_value.data);
         config_value->value.single_value.data = NULL;
 
-        if (!config_option->value_convert(context,
-                                          config_option->value_convert_usr_arg,
-                                          value,
-                                          &config_value->value.single_value.data))
+        if (!config_option->value_convert(
+                context,
+                config_option->value_convert_usr_arg,
+                value,
+                &config_value->value.single_value.data))
         {
             return false;
         }

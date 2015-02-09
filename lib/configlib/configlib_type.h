@@ -26,9 +26,12 @@ bool config_context_is_default(
 
 
 /**
-   Callback for config type functions to use to log messages about their config item.
+   Callback for config type functions to use to log messages about
+   their config item.
 
-   @param context Opaque data.  Might include things like line number in the config file.
+   @param context
+       Opaque data.  Might include things like line number in the
+       config file.
    @param priority See syslog(3).
 */
 void config_message(

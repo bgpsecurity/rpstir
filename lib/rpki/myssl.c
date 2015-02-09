@@ -1547,7 +1547,8 @@ crl_fields *crl2fields(
         }
         cf->fields[i] = res;
     }
-    // get flags, snlen and snlist; note that snlen is the count of serials, not bytes
+    // get flags, snlen and snlist; note that snlen is the count of
+    // serials, not bytes
     cf->flags = 0;
     if (X509_cmp_current_time(X509_CRL_get_nextUpdate(x)) < 0)
         cf->flags |= SCM_FLAG_STALECRL;

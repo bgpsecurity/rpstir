@@ -30,7 +30,8 @@ public class TaskDescription extends XMLBase {
   private String name;
   private final String description;
   private File scriptFile;
-  private final List<ArgDescription> argDescriptions = new ArrayList<ArgDescription>();
+  private final List<ArgDescription> argDescriptions =
+      new ArrayList<ArgDescription>();
   /**
    * @param name
    * @param description
@@ -48,7 +49,8 @@ public class TaskDescription extends XMLBase {
     this.name = element.getAttributeValue(ATTR_NAME);
     this.description = element.getChildText(TAG_DESCRIPTION);
     this.scriptFile = new File(element.getChildText(TAG_SCRIPT_FILE));
-    List<Element> argDescriptionElements = getChildren(element, TAG_ARG_DESCRIPTION);
+    List<Element> argDescriptionElements =
+        getChildren(element, TAG_ARG_DESCRIPTION);
     for (Element argDescriptionElement : argDescriptionElements) {
       ArgDescription argDescription = new ArgDescription(argDescriptionElement);
       argDescriptions.add(argDescription);

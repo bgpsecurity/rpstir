@@ -585,7 +585,9 @@ void pdu_sprint(
     do {                                                                \
         if (offset < PDU_SPRINT_BUFSZ)                                  \
         {                                                               \
-            int SNPRINTF_ret = snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
+            int SNPRINTF_ret = snprintf(buffer + offset,                \
+                                        PDU_SPRINT_BUFSZ - offset,      \
+                                        format, ## __VA_ARGS__);        \
             if (SNPRINTF_ret < 0)                                       \
             {                                                           \
                 abort();                                                \
@@ -622,7 +624,8 @@ void pdu_sprint(
     do {                                                                \
         if (offset + INET_ADDRSTRLEN < PDU_SPRINT_BUFSZ)                \
         {                                                               \
-            if (inet_ntop(AF_INET, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
+            if (inet_ntop(AF_INET, &(ip), buffer + offset,              \
+                          PDU_SPRINT_BUFSZ - offset) == NULL)           \
             {                                                           \
                 SNPRINTF("(ERROR)");                                    \
             }                                                           \
@@ -642,7 +645,8 @@ void pdu_sprint(
     do {                                                                \
         if (offset + INET6_ADDRSTRLEN < PDU_SPRINT_BUFSZ)               \
         {                                                               \
-            if (inet_ntop(AF_INET6, &(ip), buffer + offset, PDU_SPRINT_BUFSZ - offset) == NULL) \
+            if (inet_ntop(AF_INET6, &(ip), buffer + offset,             \
+                          PDU_SPRINT_BUFSZ - offset) == NULL)           \
             {                                                           \
                 SNPRINTF("(ERROR)");                                    \
             }                                                           \

@@ -222,14 +222,8 @@ static scmtab scmtabbuilder[] = {
     {                           /* RTR_UPDATE */
      "rtr_update",
      "RTR_UPDATE",
-     "serial_num      INT UNSIGNED NOT NULL," "prev_serial_num INT UNSIGNED,"   // NULL
-                                                                                // indicates
-                                                                                // no
-                                                                                // previous
-                                                                                // serial
-                                                                                // number
-                                                                                // currently
-                                                                                // exists
+     // NULL indicates no previous serial number currently exists
+     "serial_num      INT UNSIGNED NOT NULL," "prev_serial_num INT UNSIGNED,"
      "create_time     DATETIME NOT NULL,"
      "has_full        BOOLEAN NOT NULL,"
      "                PRIMARY KEY (serial_num),"

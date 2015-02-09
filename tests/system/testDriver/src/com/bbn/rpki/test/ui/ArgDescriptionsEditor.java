@@ -34,8 +34,10 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
     private ArgDescription argDescription;
 
     ArgComponents(ActionListener editAction) {
-      argName.setToolTipText("Enter the name by which this argument will be referenced");
-      isParameter.setToolTipText("Select if this argument should always have the specified value");
+      argName.setToolTipText(
+          "Enter the name by which this argument will be referenced");
+      isParameter.setToolTipText(
+          "Select if this argument should always have the specified value");
       editButton = new JButton("Add");
       editButton.addActionListener(editAction);
       argName.addFocusListener(new FocusAdapter() {
@@ -108,7 +110,8 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
      */
     private void updateToolTips() {
       boolean parameter = argDescription.isParameter();
-      argValue.setToolTipText(parameter ? "Specifies a constant value for this argument" :
+      argValue.setToolTipText(
+        parameter ? "Specifies a constant value for this argument" :
         "Specifies a default value for this argument");
     }
   }
@@ -119,7 +122,9 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
    * Initialize fields
    */
   public ArgDescriptionsEditor() {
-    addComponentsToTaskPanel(new JLabel("Arg Name"), new JLabel("Parameter"), new JLabel("Arg Value"), new JLabel("Action"));
+    addComponentsToTaskPanel(
+      new JLabel("Arg Name"), new JLabel("Parameter"),
+      new JLabel("Arg Value"), new JLabel("Action"));
     for (int i = 0; i < argComponentsArray.length; i++) {
       final int index = i;
       ActionListener editAction = new ActionListener() {

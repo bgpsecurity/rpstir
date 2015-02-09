@@ -1864,7 +1864,8 @@ static int updateManifestObjs(
                 // (void)fprintf(stderr, "Updating hash of %s to %s\n", file,
                 // h);
                 xsnprintf(flagStmt, sizeof(flagStmt),
-                          "update %s set flags=flags+%d, hash=\"%s\" where local_id=%d;",
+                          "update %s set flags=flags+%d, hash=\"%s\""
+                          " where local_id=%d;",
                           tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
                 free((void *)h);
             }
@@ -2420,7 +2421,8 @@ static int verifyOrNotChildren(
         if (doIt)
         {
             char escaped [strlen(currPropData->data[idx].subject)*2+1];
-            mysql_escape_string(escaped, currPropData->data[idx].subject, strlen(currPropData->data[idx].subject));
+            mysql_escape_string(escaped, currPropData->data[idx].subject,
+                                strlen(currPropData->data[idx].subject));
 
             xsnprintf(childrenSrch->wherestr, WHERESTR_SIZE,
                       "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
@@ -2590,7 +2592,8 @@ static int add_cert_2(
     int locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0)
         locerr = ERR_SCM_BADCERT;
-    else if (!(ski_extp = find_extension(&cert.toBeSigned.extensions, id_subjectKeyIdentifier, false)))
+    else if (!(ski_extp = find_extension(&cert.toBeSigned.extensions,
+                                         id_subjectKeyIdentifier, false)))
         locerr = ERR_SCM_NOSKI;
     if (locerr)
     {
@@ -2599,7 +2602,8 @@ static int add_cert_2(
     }
     if (utrust > 0)
     {
-        if (((aki_extp = find_extension(&cert.toBeSigned.extensions, id_authKeyId, false)) &&
+        if (((aki_extp = find_extension(&cert.toBeSigned.extensions,
+                                        id_authKeyId, false)) &&
              diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
                        &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
             strcmp(cf->fields[CF_FIELD_SUBJECT],
@@ -3563,7 +3567,8 @@ int add_ghostbusters(
     if (local_id <= local_id_old)
     {
         // there was an integer overflow
-        LOG(LOG_ERR, "There are too many ghostbusters records in the database.");
+        LOG(LOG_ERR,
+            "There are too many ghostbusters records in the database.");
         (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
         delete_casn(&cms.self);
         return ERR_SCM_INTERNAL;

@@ -28,7 +28,8 @@
         t(&guy, (ushort)0);                                             \
         ret = get_casn_file(&guy.self, filename, 0) ;                   \
         if (ret >= 0) {                                                 \
-            printf("accepted %s as a " #t " (should have failed)\n", filename); \
+            printf("accepted %s as a " #t " (should have failed)\n",    \
+                   filename);                                           \
         }                                                               \
     }
 

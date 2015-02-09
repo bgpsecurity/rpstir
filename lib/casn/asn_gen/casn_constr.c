@@ -1175,7 +1175,8 @@ static void print_components(
             c = next_word(c);
     }
     else
-        done(true, MSG_NOT_SUPPORTED, "simple constraint"); /* simple constraint */
+        /* simple constraint */
+        done(true, MSG_NOT_SUPPORTED, "simple constraint");
 }
 
 static void print_constraint(

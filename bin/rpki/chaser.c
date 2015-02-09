@@ -673,12 +673,15 @@ static int printUsage(
     fprintf(stderr,
             "  -a           chase AIAs  (default:  don't chase AIAs)\n");
     fprintf(stderr,
-            "  -d seconds   chase CRLs where 'next update < seconds'  (default:  chase all CRLs)\n");
+            "  -d seconds   chase CRLs where 'next update < seconds'"
+            "  (default:  chase all CRLs)\n");
     fprintf(stderr,
-            "  -s           delimit output with newlines  (default:  null byte)\n");
+            "  -s           delimit output with newlines"
+            "  (default:  null byte)\n");
     fprintf(stderr, "  -t           for testing, don't access the database\n");
     fprintf(stderr,
-            "  -y           chase not-yet-validated  (default:  only chase validated)\n");
+            "  -y           chase not-yet-validated"
+            "  (default:  only chase validated)\n");
     fprintf(stderr, "  -h           this listing\n");
     return -1;
 }
@@ -757,7 +760,9 @@ int main(
     }
 
     // get configured extra URIs
-    for (i = 0; i < config_get_length(CONFIG_RPKI_EXTRA_PUBLICATION_POINTS); ++i)
+    for (i = 0;
+         i < config_get_length(CONFIG_RPKI_EXTRA_PUBLICATION_POINTS);
+         ++i)
     {
         const char * uri = CONFIG_RPKI_EXTRA_PUBLICATION_POINTS_get(i);
 

@@ -1,8 +1,8 @@
 #!@PYTHON@
 #
-# This file is meant to switch all of these rfc3779 test cases into a more widely distributed
-# system of testcasese that will validate and chain when entered into the database through
-# rcli.
+# This file is meant to switch all of these rfc3779 test cases into a
+# more widely distributed system of testcasese that will validate and
+# chain when entered into the database through rcli.
 #
 #
 #
@@ -94,8 +94,14 @@ for file in fileList:
 
 
     # Handle the special 6.3.4* testcases and the A51RI*(section 5.1) testcases
-    if file[-10:] == '6.3.4a.cer' or file[-10:]=='6.3.4b.cer' or file[-10:]=='6.3.6a.cer' or \
-       file[-10:]=='6.3.6b.cer' or file[-10:]=='A51RIG.cer' or file[-10:]=='A51RIB.cer':
+    if file[-10:] in (
+            '6.3.4a.cer',
+            '6.3.4b.cer',
+            '6.3.6a.cer',
+            '6.3.6b.cer',
+            'A51RIG.cer',
+            'A51RIB.cer',
+    ):
         if file[0] == 'P':
             parentKeyFile = 'test/R.cer.p15'
             parent = 'R.cer'
@@ -134,8 +140,20 @@ for file in fileList:
     aia = uri + parent
     sia = "r:" + uri
 
-    # call ./create_object with all above as args and a generated this file.cer as the template.
-    cmd = "../../testbed/src/create_object CERTIFICATE type=ca serial=%s subject=%s issuer=%s aki=%s ski=%s template=%s subjKeyFile=%s outputfilename=./test/%s parentKeyFile=%s sia=%s aia=%s" \
-          % (serialNumber, subjectName, issuer, aki, ski, file, "test/" + file+".p15", file, parentKeyFile, sia, aia)
+    # call ./create_object with all above as args and a generated this
+    # file.cer as the template.
+    cmd = "../../testbed/src/create_object CERTIFICATE" \
+          + " type=ca" \
+          + " serial=" + serialNumber \
+          + " subject=" + subjectName \
+          + " issuer=" + issuer \
+          + " aki=" + aki \
+          + " ski=" + ski \
+          + " template=" + file \
+          + " subjKeyFile=test/" + file + ".p15" \
+          + " outputfilename=./test/" + file \
+          + " parentKeyFile=" + parentKeyFile \
+          + " sia=" + sia \
+          + " aia=" + aia
     print cmd
     os.system(cmd)
