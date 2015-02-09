@@ -8,7 +8,7 @@
         case (pred):              \
             break;                \
         }                         \
-    } while (false)
+    } while (0)
 
 /**
    @brief
