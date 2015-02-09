@@ -1,3 +1,6 @@
+#ifndef LIB_RPKI_CMS_ROA_UTILS_H
+#define LIB_RPKI_CMS_ROA_UTILS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -328,4 +331,6 @@ int decode_b64(
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(A) ((void)A)
+#endif
+
 #endif

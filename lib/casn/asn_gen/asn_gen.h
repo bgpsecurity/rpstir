@@ -1,3 +1,6 @@
+#ifndef LIB_CASN_ASN_GEN_ASN_GEN_H
+#define LIB_CASN_ASN_GEN_ASN_GEN_H
+
 /***
  *
  * FILE:        asn_gen.h
@@ -603,3 +606,5 @@ extern int vflag;
 #define MSG_INCOMPLETE_ITEM "Incomplete table item %s\n"
 #define MSG_FIND_CONSTRAINT "Couldn't find constraint for %s\n"
 #define MSG_RENAME_FILE "Can't rename file: %s\n"
+
+#endif

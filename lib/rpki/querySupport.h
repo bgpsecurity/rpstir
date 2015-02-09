@@ -1,3 +1,6 @@
+#ifndef LIB_RPKI_QUERYSUPPORT_H
+#define LIB_RPKI_QUERYSUPPORT_H
+
 /****************
  * Functions and flags shared by query and server code
  ****************/
@@ -76,3 +79,5 @@ void setIsManifest(
 #define Q_FOR_GBR       0x40
 
 #define MAX_RESULT_SZ (128 * 1024)
+
+#endif /* !LIB_RPKI_QUERYSUPPORT_H */
