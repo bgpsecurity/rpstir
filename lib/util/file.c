@@ -1,3 +1,5 @@
+#include "file.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -5,8 +7,6 @@
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "file.h"
 
 bool mkdir_recursive(
     const char *pathname,

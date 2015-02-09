@@ -1,5 +1,7 @@
 /** @file */
 
+#include "myssl.h"
+
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +18,6 @@
 
 #include "globals.h"
 #include "util/hashutils.h"
-#include "myssl.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"

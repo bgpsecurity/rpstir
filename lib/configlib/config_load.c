@@ -1,3 +1,5 @@
+#include "config_load.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -8,7 +10,6 @@
 #include "util/logging.h"
 
 #include "configlib.h"
-#include "config_load.h"
 
 
 // special values of options

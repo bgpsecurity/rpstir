@@ -1,3 +1,5 @@
+#include "connect.h"
+
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
@@ -10,7 +12,6 @@
 
 #include "config/config.h"
 
-#include "connect.h"
 #include "db-internal.h"
 #include "util/logging.h"
 #include "prep-stmt.h"

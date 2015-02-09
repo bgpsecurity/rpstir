@@ -1,3 +1,5 @@
+#include "connection_control.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
@@ -15,7 +17,6 @@
 
 #include "config.h"
 #include "signals.h"
-#include "connection_control.h"
 #include "connection.h"
 
 

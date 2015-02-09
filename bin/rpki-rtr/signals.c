@@ -1,9 +1,9 @@
+#include "signals.h"
+
 #include <pthread.h>
 #include <signal.h>
 
 #include "util/logging.h"
-
-#include "signals.h"
 
 static const int signals[] = { SIGHUP, SIGINT, SIGTERM };
 

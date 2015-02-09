@@ -14,6 +14,7 @@ Cambridge, Ma. 02138
 *****************************************************************************/
 
 #include "casn.h"
+
 #include <stdio.h>
 #include "util/logging.h"
 

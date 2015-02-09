@@ -1,3 +1,5 @@
+#include "pdu.h"
+
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
@@ -5,8 +7,6 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <ctype.h>
-
-#include "pdu.h"
 
 
 // based on RFC 1982, Section 3.2

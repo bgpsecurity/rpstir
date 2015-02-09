@@ -2,6 +2,8 @@
  * Functions and flags shared by query and server code
  ****************/
 
+#include "querySupport.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,7 +18,6 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "cms/roa_utils.h"
-#include "querySupport.h"
 #include "err.h"
 #include "myssl.h"
 #include "util/logging.h"

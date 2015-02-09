@@ -1,3 +1,5 @@
+#include "cms.h"
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -9,8 +11,6 @@
 #include <time.h>
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
-
-#include "cms.h"
 
 // find the SID for this CMS and return it
 static struct casn *findSID(

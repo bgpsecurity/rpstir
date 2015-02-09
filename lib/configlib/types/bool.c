@@ -1,6 +1,6 @@
-#include <string.h>
-
 #include "bool.h"
+
+#include <string.h>
 
 static char const *const true_names[] = {
     "true",

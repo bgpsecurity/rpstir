@@ -1,3 +1,5 @@
+#include "util.h"
+
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
@@ -15,7 +17,6 @@
 
 #include "db-internal.h"
 #include "util/logging.h"
-#include "util.h"
 
 
 /*==============================================================================

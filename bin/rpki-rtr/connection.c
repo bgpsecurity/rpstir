@@ -1,3 +1,5 @@
+#include "connection.h"
+
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -15,7 +17,6 @@
 #include "signals.h"
 #include "rpki-rtr/pdu.h"
 
-#include "connection.h"
 #include "db.h"
 
 

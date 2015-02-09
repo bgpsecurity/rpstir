@@ -1,3 +1,5 @@
+#include "configlib.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -8,7 +10,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-#include "configlib.h"
 #include "config_load.h"
 
 

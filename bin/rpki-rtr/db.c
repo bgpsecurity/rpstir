@@ -1,3 +1,5 @@
+#include "db.h"
+
 #include <pthread.h>
 #include <errno.h>
 
@@ -8,7 +10,6 @@
 
 #include "config.h"
 #include "signals.h"
-#include "db.h"
 
 
 struct db_request_state {

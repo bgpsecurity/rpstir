@@ -1,10 +1,11 @@
+#include "prep-stmt.h"
+
 #include <my_global.h>
 #include <mysql.h>
 
 #include "connect.h"
 #include "db-internal.h"
 #include "util/logging.h"
-#include "prep-stmt.h"
 #include "util.h"
 
 

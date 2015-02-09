@@ -1,6 +1,6 @@
-#include <stdio.h>
-
 #include "err.h"
+
+#include <stdio.h>
 
 static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "No error",                 /* ERR_SCM_NOERR */

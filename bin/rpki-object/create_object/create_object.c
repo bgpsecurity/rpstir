@@ -1,3 +1,4 @@
+#include "create_object.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,6 @@
 #include "casn/casn.h"
 #include "casn/asn.h"
 #include <time.h>
-#include "create_object.h"
 #include "create_cert.h"
 #include "create_crl.h"
 #include "create_manifest.h"

@@ -1,8 +1,8 @@
+#include "signature.h"
+
 #include "util/cryptlib_compat.h"
 #include "util/logging.h"
 #include "rpki-asn1/cms.h"
-
-#include "signature.h"
 
 bool set_signature(
     struct casn *content,

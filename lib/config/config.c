@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,8 +11,6 @@
 #include "configlib/types/string_cvt.h"
 #include "util/logging.h"
 #include "util/stringutils.h"
-
-#include "config.h"
 
 
 /** All available config options */

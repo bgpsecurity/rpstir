@@ -13,6 +13,8 @@
  * want to introduce more elaborate handling of       *
  * signals.                                           *
  *****************************************************/
+#include "sig_handler.h"
+
 #include "main.h"
 #include "util/stringutils.h"
 

@@ -1,9 +1,9 @@
+#include "bag.h"
+
 #include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "bag.h"
 
 #ifndef DEBUG
 #define NDEBUG

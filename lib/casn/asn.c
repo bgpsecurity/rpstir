@@ -8,11 +8,12 @@
  *
  *************************************************************************/
 
+#include "asn.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
-#include "asn.h"
 
 uchar asn_typ(
     uchar **),

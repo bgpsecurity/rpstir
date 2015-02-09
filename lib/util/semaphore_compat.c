@@ -1,3 +1,5 @@
+#include "semaphore_compat.h"
+
 #include <errno.h>
 #include <sys/time.h>
 #include <time.h>
@@ -7,8 +9,6 @@
 #include <fcntl.h>
 
 #include "util/logging.h"
-
-#include "semaphore_compat.h"
 
 #define SEM_OPEN_MAX_TRIES 256
 

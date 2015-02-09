@@ -1,3 +1,5 @@
+#include "sqhl.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,7 +15,6 @@
 #include "globals.h"
 #include "scm.h"
 #include "scmf.h"
-#include "sqhl.h"
 #include "diru.h"
 #include "myssl.h"
 #include "err.h"

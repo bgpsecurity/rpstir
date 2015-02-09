@@ -1,10 +1,10 @@
+#include "hashutils.h"
+
 #include <stdio.h>
 #include <util/cryptlib_compat.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
-#include "hashutils.h"
 
 int gen_hash(
     unsigned char *inbufp,
