@@ -755,12 +755,11 @@ static void cf_get_flags(
         cf->flags |= SCM_FLAG_CA;
 }
 
-/*
+/**
  * This is the raw processing function that extracts the data/length of the
  * IPAddressBlock in the ASN.1 of the certificate and places them into the
  * corresponding cf fields.
  */
-
 static void cf_get_ipb(
     const X509V3_EXT_METHOD *meth,
     void *ex,

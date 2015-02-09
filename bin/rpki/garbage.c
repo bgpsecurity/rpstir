@@ -32,8 +32,9 @@ static scmtab *certTable,
    *roaTable,
    *manifestTable;
 
-/*
- * callback function for searchscm that records the timestamps
+/**
+ * @brief
+ *     callback function for searchscm() that records the timestamps
  */
 static int handleTimestamps(
     scmcon *conp,
@@ -47,9 +48,11 @@ static int handleTimestamps(
     return 0;
 }
 
-/*
- * callback for countCurrentCRLs search; check if count == 0, and
- * if so then do the setting of certs' flags
+/**
+ * @brief
+ *     callback for countCurrentCRLs() search
+ *
+ * check if count == 0, and if so then do the setting of certs' flags
  */
 static int handleIfStale(
     scmcon *conp,
@@ -74,9 +77,11 @@ static int handleIfStale(
     return statementscm_no_data(conp, msg);
 }
 
-/*
- * callback for countCurrentCRLs search; check if count > 0, and
- * if so then remove unknown flag from cert
+/**
+ * @brief
+ *     callback for countCurrentCRLs() search
+ *
+ * check if count > 0, and if so then remove unknown flag from cert
  */
 static int handleIfCurrent(
     scmcon *conp,
@@ -92,10 +97,13 @@ static int handleIfCurrent(
     return statementscm_no_data(conp, msg);
 }
 
-/*
- * callback function for stale crl search that checks stale crls to see if
- * another crl exists that is more recent; if not, it sets all certs
- * covered by this crl to have status stale_crl
+/**
+ * @brief
+ *     callback function for stale crl search
+ *
+ * checks stale crls to see if another crl exists that is more recent;
+ * if not, it sets all certs covered by this crl to have status
+ * stale_crl
  */
 static scmsrcha *cntSrch = NULL;
 
@@ -127,9 +135,11 @@ static int countCurrentCRLs(
                      SCM_SRCH_DOCOUNT, NULL);
 }
 
-/*
- * callback function for stale manifest search that marks accordingly
- * all objects referenced by manifest that is stale
+/**
+ * @brief
+ *     callback function for stale manifest search
+ *
+ * marks accordingly all objects referenced by manifest that is stale
  */
 static char staleManStmt[MANFILES_SIZE];
 static char *staleManFiles[10000];

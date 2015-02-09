@@ -66,16 +66,20 @@ typedef struct _scmsrcha        /* used for a search (select) */
     void *context;              /* context to be passed from callback */
 } scmsrcha;
 
-// callback function signature for a count of search results
-
+/**
+ * @brief
+ *     callback function signature for a count of search results
+ */
 typedef int (
     *sqlcountfunc)(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt);
 
-// callback function signature for a single search result
-
+/**
+ * @brief
+ *     callback function signature for a single search result
+ */
 typedef int (
     *sqlvaluefunc)(
     scmcon *conp,
@@ -192,8 +196,9 @@ extern int statementscm(
     scmcon *conp,
     char *stm);
 
-/*
- * Execute a SQL statement, ignoring any returned rows.
+/**
+ * @brief
+ *     Execute a SQL statement, ignoring any returned rows.
  */
 extern int statementscm_no_data(
     scmcon *conp,
@@ -223,8 +228,9 @@ extern int createalltablesscm(
     scmcon *conp,
     scm *scmp);
 
-/*
- * Insert an entry into a database table.
+/**
+ * @brief
+ *     Insert an entry into a database table.
  */
 extern int insertscm(
     scmcon *conp,
@@ -246,13 +252,15 @@ extern int getuintscm(
     scmcon *conp,
     unsigned int *ival);
 
-/*
- * This function searches in a database table for entries that match the
- * stated search criteria.
+/**
+ * @brief
+ *     searches in a database table for entries that match the stated
+ *     search criteria
  *
- * Note that searchscm can be call recursively, so that there can be more than
- * one cursor open at a time. For this reason, searchscm() must create its own
- * STMT and then destroy it when it is done.
+ * Note that searchscm() can be call recursively, so that there can
+ * be more than one cursor open at a time.  For this reason,
+ * searchscm() must create its own STMT and then destroy it when it is
+ * done.
  */
 extern int searchscm(
     scmcon *conp,
@@ -312,9 +320,9 @@ extern int searchorcreatescm(
     scmkva *ins,
     unsigned int *idp);
 
-/*
- * This function deletes entries in a database table that match the stated
- * search criteria.
+/**
+ * @brief
+ *     deletes entries in a database table that match the stated search criteria
  */
 extern int deletescm(
     scmcon *conp,

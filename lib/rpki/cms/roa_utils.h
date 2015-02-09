@@ -223,14 +223,18 @@ unsigned char *roaSignature(
 uint32_t roaAS_ID(
     struct CMS *r);
 
-/*
- * This function performs all validations steps on a ROA that do not require
- * database access.  On success it returns 0; on failure, it returns a
- * negative error code.
+/**
+ * @brief
+ *     Performs all validations steps on a ROA that do not require
+ *     database access.
  *
  * Make sure that the ROA meets the provisions outlined in RFC 6482.
  * Checks are limited to those that can be done using the standalone
  * ROA.
+ *
+ * @return
+ *     On success it returns 0; on failure, it returns a negative
+ *     error code.
  */
 int roaValidate(
     struct CMS *r);
@@ -318,12 +322,14 @@ int manifestValidate(
 int ghostbustersValidate(
     struct CMS *cms);
 
-/*
- * This function performs all validations steps on a ROA that require an X509
- * certificate to have been fetched from the database. It returns 0 on success
- * and a negative error code on failure. It is assumed that this function is
- * called as follows:
+/**
+ * @brief
+ *     perform all validation steps on a ROA that require an X509
+ *     certificate to have been fetched from the database
  *
+ * It is assumed that this function is called as follows:
+ *
+ * @code
  *     scm *scmp; // previously opened DB schema
  *     scmcon *conp; // previously opened DB connection
  *     X509 *cert;
@@ -344,20 +350,30 @@ int ghostbustersValidate(
  *             }
  *         }
  *     }
+ * @endcode
+ *
+ * @return
+ *     0 on success and a negative error code on failure.
  */
 extern int roaValidate2(
     struct CMS *r);
 
-/*
- * If the hash is given as "inhash", check to see that the hash inside the
- * FileAndHash struct is the same. If the hash is not given in "inhash" then
- * compute the hash, check it against the hash in FileAndHash, and then store
- * the hash (if the comparison succeeded) in "inhash". "inhashlen" is the
- * number of bytes actually used in "inhash" (which is a binary array, not a
- * string), and "inhashtotlen" is the total space available in that array.
- *
- * On success this function returns the length, in bytes, of the hash. On
- * failure it returns a negative error code.
+/**
+ * @param[in,out] inhash
+ *     Buffer for the file's hash.  If @p inhashlen is positive, check
+ *     to see that the hash inside the FileAndHash struct is the same
+ *     as the hash in this buffer.  If @p inhashlen is not positive,
+ *     then compute the hash, check it against the hash in
+ *     FileAndHash, and then write the hash (if the comparison
+ *     succeeded) to this buffer.  This may be NULL.
+ * @param[in] inhashlen
+ *     If positive, this is the length of the hash in @p inhash.
+ *     Otherwise, no hash is provided in @p inhash.
+ * @param[in] inhashtotlen
+ *     The size of the buffer at @p inhash.
+ * @return
+ *     On success this function returns the length, in bytes, of the
+ *     hash.  On failure it returns a negative error code.
  */
 int check_fileAndHash(
     struct FileAndHash *fahp,
@@ -381,27 +397,42 @@ int manifestValidate2(
 void free_badfiles(
     struct badfile **badfilespp);
 
-/*
- * This function frees all memory allocated when "r" was created. It is
- * permissible for "r" to be NULL, in which case nothing happens. If "r" is
- * non-NULL, however, it must point to a syntatically valid ROA structure
- * (which need not have been semantically validated, however).
+/**
+ * @brief
+ *     This function frees all memory allocated when "r" was created.
+ *
+ * @param[in] r
+ *     It is permissible for @p r to be NULL, in which case nothing
+ *     happens.  If @p r is non-NULL, however, it must point to a
+ *     syntatically valid ROA structure (which need not have been
+ *     semantically validated, however).
  */
 void roaFree(
     struct CMS *r);
 
-/*
- * This function checks the signature on a ROA.
+/**
+ * @brief
+ *     This function checks the signature on a ROA.
  */
 int check_sig(
     struct CMS *rp,
     struct Certificate *certp);
 
-/*
- * This function decodes a PEM encoded file whose contents are stored in
- * "bufIn" of length "inSize" and produces the corresponding DER (raw ASN.1)
- * data in "bufOut" of length "outSize". Note that it allocates memory to do
- * this, which the caller must free.
+/**
+ * @brief
+ *     This function decodes a PEM encoded file.
+ *
+ * @param[in] bufIn
+ *     Contents of the file.
+ * @param[in] inSize
+ *     Size of the buffer at @p bufIn.
+ * @param[out] bufOut
+ *     The value at this location will be set to the location of the
+ *     buffer where the corresponding DER (raw ASN.1) data is
+ *     produced.  Note that it allocates memory to do this, which the
+ *     caller must free.
+ * @param[out] outSize
+ *     Size of the buffer at @p bufOut.
  */
 int decode_b64(
     unsigned char *bufIn,

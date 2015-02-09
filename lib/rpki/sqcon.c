@@ -438,11 +438,14 @@ static int findcol(
     return (-3);
 }
 
-/*
- * Validate that each of the columns mentioned actually occurs in the
- * indicated table. Return 0 on success and a negative error code on failure.
+/**
+ * @brief
+ *     Validate that each of the columns mentioned actually occurs in the
+ *     indicated table.
+ *
+ * @return
+ *     0 on success and a negative error code on failure.
  */
-
 static int valcols(
     scmcon *conp,
     scmtab *tabp,
@@ -688,10 +691,10 @@ int getmaxidscm(
     return 0;
 }
 
-/*
- * Validate a search array struct
+/**
+ * @brief
+ *     Validate a search array struct
  */
-
 static int validsrchscm(
     scmcon *conp,
     scmtab *tabp,
@@ -1119,10 +1122,10 @@ int addcolsrchscm(
     return (0);
 }
 
-/*
- * This is the value function callback for the next function.
+/**
+ * @brief
+ *     value function callback for searchorcreatescm()
  */
-
 static int socvaluefunc(
     scmcon *conp,
     scmsrcha *s,

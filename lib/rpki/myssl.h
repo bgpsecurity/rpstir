@@ -105,36 +105,45 @@ typedef struct _cfx_validator {
 extern void freecf(
     cert_fields *);
 
-/*
- * Convert between a time string in a certificate and a time string that will
- * be acceptable to the DB. The return value is allocated memory.
+/**
+ * @brief
+ *     Convert between a time string in a certificate and a time
+ *     string that will be acceptable to the DB.
  *
- * The time string can be either UTC or GENERALIZED. If only_gentime is false,
- * UTC is used for dates <= 2049 and GENERALIZED is used for dates after >=
- * 2050. Otherwise, GENERALIZED is use for all dates.
+ * @param[in] in
+ *     Time to convert.  The time string can be either UTC or
+ *     GENERALIZED.  If @p only_gentime is false, UTC is used for
+ *     dates <= 2049 and GENERALIZED is used for dates after >= 2050.
+ *     Otherwise, GENERALIZED is use for all dates.
  *
- * The UTC format takes the form YYMMDDHHMMSST, where each of the fields is as
- * follows: if YY <= 49 the year is 2000+YY otherwise it is 1900+YY 1 <= MM <=
- * 12 1 <= DD <= 31 0 <= HH <= 24 0 <= MM <= 60 0 <= SS <= 60 (seconds field
- * is optional) T, is present and == Z indicates GMT
+ *     The UTC format takes the form YYMMDDHHMMSST, where each of the
+ *     fields is as follows: if YY <= 49 the year is 2000+YY otherwise
+ *     it is 1900+YY 1 <= MM <= 12 1 <= DD <= 31 0 <= HH <= 24 0 <= MM
+ *     <= 60 0 <= SS <= 60 (seconds field is optional) T, is present
+ *     and == Z indicates GMT
  *
- * The GENERALIZED format takes the form YYYYMMDDHHMMSST, where the year is
- * given in the full four digit form, and all other fields are the same. Note
- * that seconds can be given as either SS or SS.S.
+ *     The GENERALIZED format takes the form YYYYMMDDHHMMSST, where
+ *     the year is given in the full four digit form, and all other
+ *     fields are the same.  Note that seconds can be given as either
+ *     SS or SS.S.
  *
- * Both fields can have an optional suffix of the form +HHMM or -HHMM.
- *
- * On success, *stap ("status pointer") is set to 0.  On failure, it is set to
- * the appropriate error code (e.g. ERR_SCM_INVALDT).
+ *     Both fields can have an optional suffix of the form +HHMM or
+ *     -HHMM.
+ * @param[out] stap
+ *     On success, the value at this "status pointer" is set to 0.  On
+ *     failure, it is set to the appropriate error code
+ *     (e.g. ERR_SCM_INVALDT).
+ * @return
+ *     The return value is allocated memory.
  */
 extern char *ASNTimeToDBTime(
     char *in,
     int *stap,
     int only_gentime);
 
-/*
- * This function converts the local time into GMT in a form recognized by the
- * DB.
+/**
+ * @brief
+ *     converts the local time into GMT in a form recognized by the DB
  */
 extern char *LocalTimeToDBTime(
     int *stap);
@@ -277,23 +286,31 @@ typedef struct _crfx_validator {
 extern void freecrf(
     crl_fields *);
 
-/*
- * This function can operate in two ways.  If "fname" and "fullname" are both
- * given, then it opens a CRL from a file and extracts all the fields from it.
- * If "xp" points to an already available CRL, then it just manipulates that.
- * This function does not touch the DB at all, it just manipulates the CRL.
+/**
+ * This function can operate in two ways.  If @p fname and @p fullname
+ * are both given, then it opens a CRL from a file and extracts all
+ * the fields from it.  If @p xp points to an already available CRL,
+ * then it just manipulates that.  This function does not touch the DB
+ * at all, it just manipulates the CRL.
  *
- * On success this function returns a pointer to allocated memory containing
- * all the indicated fields (except the "dirid" field) and sets stap to 0, and
- * crlstap to 1.
+ * @note
+ *     This function does NOT set all the fields in the ::crl_fields.
+ *     In particular, it is the responsibility of the caller to set
+ *     the crl_fields::dirid field.  This field requires DB access and
+ *     are therefore is not part of this function.
  *
- * Note carefully that this function does NOT set all the fields in the crf.
- * In particular, it is the responsibility of the caller to set the dirid
- * field.  This field requires DB access and are therefore is not part of this
- * function.
- *
- * On failure this function returns NULL and sets stap to a negative error
- * code. If an X509 error occurred, crlstap is set to that error.
+ * @param[out] stap
+ *     On success the value at this location will be set to 0.  On
+ *     failure the value at this location is set to a negative error
+ *     code.
+ * @param[out] crlstap
+ *     On success the value at this location is set to 1.  If an X509
+ *     error occured, the value at this location is set to that error.
+ * @return
+ *     On success this function returns a pointer to allocated memory
+ *     containing all the indicated fields (except the
+ *     crl_fields::dirid field).  On failure this function returns
+ *     NULL.
  */
 extern crl_fields *crl2fields(
     char *fname,

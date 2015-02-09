@@ -1,8 +1,11 @@
 #ifndef LIB_UTIL_STRINGUTILS_H
 #define LIB_UTIL_STRINGUTILS_H
 
-/*
- * Low-level string parsing utilities
+/**
+ * @file
+ *
+ * @brief
+ *     Low-level string parsing utilities
  */
 
 #include "macros.h"

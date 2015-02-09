@@ -1,21 +1,28 @@
 #ifndef LIB_RPKI_QUERYSUPPORT_H
 #define LIB_RPKI_QUERYSUPPORT_H
 
-/****************
- * Functions and flags shared by query and server code
- ****************/
+/**
+ * @file
+ *
+ * @brief
+ *     Functions and flags shared by query and server code
+ */
 
 #include "scmf.h"
 
-/******
- * put the appropriate tests for SCM_FLAG_XXX flags in the where
- *   string of a query
- ******/
+/**
+ * @brief
+ *     put the appropriate tests for @c SCM_FLAG_XXX flags in the
+ *     where string of a query
+ */
 extern void addQueryFlagTests(
     char *whereStr,
     int needAnd);
 
-/****** prototype for a function for displaying a field *****/
+/**
+ * @brief
+ *     prototype for a function for displaying a field
+ */
 typedef int (
     *displayfunc)(
     scm *scmp,
@@ -24,51 +31,67 @@ typedef int (
     int idx1,
     char *returnStr);
 
-/******
- * attributes of a field to display or filter on
- ******/
+/**
+ * @brief
+ *     attributes of a field to display or filter on
+ */
 typedef struct _QueryField {
-    char *name;                 /* name of the field */
-    char *description;          /* one-line description for user help */
-    int flags;                  /* flags (see Q_xyz above) */
-    int sqlType;                /* what type of data to expect from query */
-    int maxSize;                /* how much space to allocate for response */
-    char *dbColumn;             /* if not NULL, use this for query, not name */
-    char *otherDBColumn;        /* if not NULL, second field for query */
-    char *heading;              /* name of column heading to use in printout */
-    displayfunc displayer;      /* function for display string, NULL if std */
+    /** @brief name of the field */
+    char *name;
+    /** @brief one-line description for user help */
+    char *description;
+    /** @brief flags (see @c Q_xyz above) */
+    int flags;
+    /** @brief what type of data to expect from query */
+    int sqlType;
+    /** @brief how much space to allocate for response */
+    int maxSize;
+    /** @brief if not NULL, use this for query, not name */
+    char *dbColumn;
+    /** @brief if not NULL, second field for query */
+    char *otherDBColumn;
+    /** @brief name of column heading to use in printout */
+    char *heading;
+    /** @brief function for display string, NULL if std */
+    displayfunc displayer;
 } QueryField;
 
-/******
- * Find the attributes of a particular field to query on
- ******/
+/**
+ * @brief
+ *     Find the attributes of a particular field to query on
+ */
 extern QueryField *findField(
     char *name);
 
-/******
- * The set of all the fields
- ******/
+/**
+ * @brief
+ *     The set of all the fields
+ */
 extern QueryField *getFields(
     void);
 
-/******
- * The total number of fields
- ******/
+/**
+ * @brief
+ *     The total number of fields
+ */
 extern int getNumFields(
     void);
 
-/*****
- * check the valdity via the db of the cert whose ski or localID is given
- *****/
+/**
+ * @brief
+ *     check the valdity via the db of the cert whose ski or localID
+ *     is given
+ */
 extern int checkValidity(
     char *ski,
     unsigned int localID,
     scm *scmp,
     scmcon *connect);
 
-/*****
- * displayFlags function needs to know if object is a manifes
- *****/
+/**
+ * @brief
+ *     displayFlags() function needs to know if object is a manifes
+ */
 void setIsManifest(
     int val);
 

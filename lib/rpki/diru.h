@@ -5,15 +5,21 @@
  * Directory utility functions
  */
 
-/*
- * This function is a safe version of strcat. Based on the amount of data
- * already in a string (already) and the length of a new string, it will
- * append the new string if it will fit in the allocated size (totlen)
- * allowing also for one character left over for the trailing NUL. Returns the
- * new length of the string on success and a negative error code on failure.
+/**
+ * @brief
+ *     safe version of strcat
  *
- * Note that if already is given as a negative number the length in the input
- * buffer is calculated.
+ * Based on the amount of data already in a string (@p already) and
+ * the length of a new string, it will append the new string if it
+ * will fit in the allocated size (@p totlen) allowing also for one
+ * character left over for the trailing NUL.
+ *
+ * @param[in] already
+ *     if given as a negative number the length in the input buffer is
+ *     calculated.
+ * @return
+ *     the new length of the string on success and a negative error
+ *     code on failure
  */
 extern int strwillfit(
     char *inbuf,

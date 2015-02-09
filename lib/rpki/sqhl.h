@@ -8,24 +8,33 @@
 
 #include "rpki-object/certificate.h"
 
-/*
- * Object types
+/**
+ * @brief
+ *     Object types
  */
 
 #define OT_UNKNOWN      0
-#define OT_CER          1       /* DER encoded certificate */
-#define OT_CRL          2       /* DER encoded CRL */
-#define OT_ROA          3       /* DER encoded ROA */
-#define OT_MAN          4       /* manifests are only DER for now */
+/** @brief DER encoded certificate */
+#define OT_CER          1
+/** @brief DER encoded CRL */
+#define OT_CRL          2
+/** @brief DER encoded ROA */
+#define OT_ROA          3
+/** @brief manifests are only DER for now */
+#define OT_MAN          4
 #define OT_GBR          5
 #define OT_MAXBASIC     5
 
 #define OT_PEM_OFFSET   128
 
-#define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET)  /* PEM encoded certificate */
-#define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET)  /* PEM encoded CRL */
-#define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET)  /* PEM encoded ROA */
-#define OT_MAN_PEM      (OT_MAN+OT_PEM_OFFSET)  /* PEM encoded manifest */
+/** @brief PEM encoded certificate */
+#define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET)
+/** @brief PEM encoded CRL */
+#define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET)
+/** @brief PEM encoded ROA */
+#define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET)
+/** @brief PEM encoded manifest */
+#define OT_MAN_PEM      (OT_MAN+OT_PEM_OFFSET)
 
 /*
  * Certificate types
@@ -103,10 +112,14 @@ extern int add_object(
     char *outfull,
     int utrust);
 
-/*
- * Delete an object. First find the object's directory. If it is not found
- * then we are done. If it is found, then find the corresponding (filename,
- * dir_id) combination in the appropriate table and issue the delete SQL call.
+/**
+ * @brief
+ *     Delete an object.
+ *
+ * First find the object's directory.  If it is not found then we are
+ * done.  If it is found, then find the corresponding (filename,
+ * dir_id) combination in the appropriate table and issue the delete
+ * SQL call.
  */
 extern int delete_object(
     scm *scmp,
@@ -215,29 +228,36 @@ extern int add_rta(
     int utrust,
     int typ);
 
-/*
- * Iterate through all CRLs in the DB, recursively processing each CRL to
- * obtain its (issuer, snlist) information. For each SN in the list, call a
- * specified function (persumably a certificate revocation function) on that
- * (issuer, sn) combination.
+/**
+ * @brief
+ *     Iterate through all CRLs in the DB, recursively processing each
+ *     CRL to obtain its (issuer, snlist) information.
  *
- * On success this function returns 0.  On failure it returns a negative error
- * code.
+ * For each SN in the list, call a specified function (persumably a
+ * certificate revocation function) on that (issuer, sn) combination.
+ *
+ * @return
+ *     On success this function returns 0.  On failure it returns a
+ *     negative error code.
  */
 extern int iterate_crl(
     scm *scmp,
     scmcon *conp,
     crlfunc cfunc);
 
-/*
- * This is the model callback function for iterate_crl. For each (issuer, sn)
- * pair with sn != 0 it attempts to find a certificate with those values in
- * the DB. If found, it then attempts to delete the certificate and all its
- * children. Note that in deleting an EE certificate, some of its children may
- * be ROAs, so this table has to be searched as well.
+/**
+ * @brief
+ *     model callback function for iterate_crl()
  *
- * This function returns 1 if it deleted something, 0 if it deleted nothing
- * and a negative error code on failure.
+ * For each (issuer, sn) pair with sn != 0 it attempts to find a
+ * certificate with those values in the DB.  If found, it then
+ * attempts to delete the certificate and all its children.  Note that
+ * in deleting an EE certificate, some of its children may be ROAs, so
+ * this table has to be searched as well.
+ *
+ * @return
+ *     1 if it deleted something, 0 if it deleted nothing and a
+ *     negative error code on failure.
  */
 extern int revoke_cert_by_serial(
     scm *scmp,
@@ -246,19 +266,23 @@ extern int revoke_cert_by_serial(
     char *aki,
     uint8_t *sn);
 
-/*
- * Delete a particular local_id from a table.
+/**
+ * @brief
+ *     Delete a particular local_id from a table.
  */
 extern int deletebylid(
     scmcon *conp,
     scmtab *tabp,
     unsigned int lid);
 
-/*
- * This function sweeps through all certificates. If it finds any that are
- * valid but marked as NOTYET, it clears the NOTYET bit and sets the VALID
- * bit. If it finds any where the start validity date (valfrom) is in the
- * future, it marks them as NOTYET. If it finds any where the end validity
+/**
+ * @brief
+ *     sweep through certificates, checking validity
+ *
+ * If this function finds any certificates that are valid but marked
+ * as NOTYET, it clears the NOTYET bit and sets the VALID bit.  If it
+ * finds any where the start validity date (valfrom) is in the future,
+ * it marks them as NOTYET.  If it finds any where the end validity
  * date (valto) is in the past, it deletes them.
  */
 extern int certificate_validity(
@@ -292,12 +316,15 @@ extern struct cert_answers *find_cert_by_aKI(
     scm *sscmp,
     scmcon *conp);
 
-/*
- * Get the parent certificate by using the issuer and the aki of "x" to look
- * it up in the db. If "x" has already been broken down in "cf" just use the
- * issuer/aki from there, otherwise look it up from "x". The db lookup will
- * return the filename and directory name of the parent cert, as well as its
- * flags. Set those flags into "pflags"
+/**
+ * @brief
+ *     Get the parent certificate by using the issuer and the aki of
+ *     "x" to look it up in the db.
+ *
+ * If "x" has already been broken down in "cf" just use the issuer/aki
+ * from there, otherwise look it up from "x". The db lookup will
+ * return the filename and directory name of the parent cert, as well
+ * as its flags. Set those flags into "pflags"
  */
 extern struct cert_answers *find_parent_cert(
     char *,
@@ -323,11 +350,16 @@ extern char *retrieve_tdir(
     scmcon *conp,
     int *stap);
 
-/*
- * Given the SKI of a ROA, this function returns the X509 * structure for the
- * corresponding EE certificate (or NULL on error).
+/**
+ * @brief
+ *     returns the X509 * structure for a ROA's corresponding EE
+ *     certificate
+ *
+ * @param[in] ski
+ *     SKI of the ROA
+ * @return
+ *     an X509 * on success, NULL on error
  */
-// return code is really an X509 *
 extern void *roa_parent(
     scm *scmp,
     scmcon *conp,

@@ -168,11 +168,13 @@ static int ok(
     return (0);
 }
 
-/*
- * Ask the DB about the top level repos directory. If found return a copy of
- * the dirname. On error return NULL and set stap.
+/**
+ * @brief
+ *     Ask the DB about the top level repos directory.
+ *
+ * If found return a copy of the dirname. On error return NULL and set
+ * stap.
  */
-
 char *retrieve_tdir(
     scm *scmp,
     scmcon *conp,
@@ -543,9 +545,13 @@ static int verify_callback(
     return (ok2);
 }
 
-/*
- * This function gets the sigval parameter from a table based on the type. It
- * returns one of the SIGVAL_ constants indicating what happened.
+/**
+ * @brief
+ *     This function gets the sigval parameter from a table based on
+ *     the type.
+ *
+ * @return
+ *     One of the SIGVAL_ constants indicating what happened.
  */
 
 static int get_cert_sigval(
@@ -637,12 +643,14 @@ static int get_sigval(
     return SIGVAL_UNKNOWN;
 }
 
-/*
- * This function attempts to set the sigval parameter in a table based on the
- * type. It has no return value, since the only negative effect it can have is
- * on performance.
+/**
+ * @brief
+ *     This function attempts to set the sigval parameter in a table
+ *     based on the type.
+ *
+ * It has no return value, since the only negative effect it can have
+ * is on performance.
  */
-
 static int set_cert_sigval(
     scmcon *conp,
     char *subj,
@@ -879,29 +887,28 @@ static int our_verify(
     return mok;
 }
 
-/******************************************************
- * static int checkit(conp, cert_ctx, x, sk_untrusted,      *
- *                     sk_trusted, purpose, NULL)     *
- *   This is the routine that actually calls          *
- *     X509_verify_cert(). Prior to calling the final *
- *     verify function it performs the following      *
- *     steps(+):                                      *
- *                                                    *
- *     creates an X509_STORE_CTX                      *
- *     sets the flags to 0                            *
- *     initializes the CTX with the X509_STORE,       *
- *         X509 cert being checked, and the stack     *
- *         of untrusted X509 certs                    *
- *     sets the trusted stack of X509 certs in the CTX*
- *     sets the purpose in the CTX (which we had      *
- *       set outside of this function to the OpenSSL  *
- *       definition of "any")                         *
- *     calls X509_verify_cert                         *
- *                                                    *
- *  This function is modified from check() in         *
- *  apps/verify.c of the OpenSSL source               *
- ******************************************************/
-
+/**
+ * @brief
+ *     This is the routine that actually calls X509_verify_cert().
+ *
+ * Prior to calling the final verify function it performs the
+ * following steps(+):
+ *
+ *   1. creates an X509_STORE_CTX
+ *   2. sets the flags to 0
+ *   3. initializes the CTX with the X509_STORE, X509 cert being
+ *      checked, and the stack of untrusted X509 certs
+ *   4. sets the trusted stack of X509 certs in the CTX
+ *   5. sets the purpose in the CTX (which we had set outside of this
+ *      function to the OpenSSL definition of "any")
+ *   6. calls X509_verify_cert
+ *
+ * This function is modified from check() in apps/verify.c of the
+ * OpenSSL source
+ *
+ * @param[in] e
+ *     unused
+ */
 static int checkit(
     scmcon *conp,
     X509_STORE *ctx,
@@ -943,12 +950,13 @@ static int checkit(
         return (ERR_SCM_NOTVALID);
 }
 
-/*
- * Read cert data from a file
- * Unlike cert2fields, this just fills in the X509 structure,
- *  not the certfields
+/**
+ * @brief
+ *     Read cert data from a file
+ *
+ * Unlike cert2fields(), this just fills in the X509 structure, not
+ * the certfields
  */
-
 static X509 *readCertFromFile(
     char *ofullname,
     int *stap)
@@ -1023,8 +1031,11 @@ static int addCert2List(
     return 0;
 }
 
-// static variables for efficiency, so only need to set up query once
-
+/**
+ * @brief
+ *     static variables for efficiency, so only need to set up query
+ *     once
+ */
 static scmsrcha *parentSrch = NULL;
 static char *parentDir;
 static char *parentFile;
@@ -1206,10 +1217,10 @@ static unsigned int *revokedSNLen;
 static int isRevoked;
 static uint8_t *revokedSN = NULL;
 
-/*
- * callback function for cert_revoked
+/**
+ * @brief
+ *     callback function for cert_revoked()
  */
-
 static int revokedHandler(
     scmcon *conp,
     scmsrcha *s,
@@ -1231,13 +1242,14 @@ static int revokedHandler(
     return 0;
 }
 
-/*
- * Check whether a cert is revoked by a crl
+/**
+ * @brief
+ *     Check whether a cert is revoked by a crl
  *
- * @return 0 if the cert isn't revoked, ERR_SCM_REVOKED if the cert is revoked,
- *         or other error code
+ * @return
+ *     0 if the cert isn't revoked, ERR_SCM_REVOKED if the cert is
+ *     revoked, or other error code
  */
-
 static int cert_revoked(
     scm *scmp,
     scmcon *conp,
@@ -1284,10 +1296,10 @@ static int cert_revoked(
     return isRevoked ? ERR_SCM_REVOKED : 0;
 }
 
-/*
- * Certificate verification code by mudge
+/**
+ * @brief
+ *     Certificate verification code by mudge
  */
-
 static int verify_cert(
     scmcon *conp,
     X509 *x,
@@ -1385,10 +1397,10 @@ static int verify_cert(
     return (sta);
 }
 
-/*
- * crl verification code
+/**
+ * @brief
+ *     crl verification code
  */
-
 static int verify_crl(
     scmcon *conp,
     X509_CRL *x,
@@ -1415,10 +1427,10 @@ static int verify_crl(
     return (sta <= 0) ? ERR_SCM_NOTVALID : 0;
 }
 
-/*
- * roa utility
+/**
+ * @brief
+ *     roa utility
  */
-
 static unsigned char *readfile(
     char *fn,
     int *stap)
@@ -1484,10 +1496,10 @@ static unsigned char *readfile(
     return ((unsigned char *)outptr);
 }
 
-/*
- * roa verification code
+/**
+ * @brief
+ *     roa verification code
  */
-
 static int verify_roa(
     scmcon *conp,
     struct CMS *r,
@@ -1541,11 +1553,11 @@ static int verify_roa(
     return (sta < 0) ? sta : 0;
 }
 
-/*
- * utility function for setting and zeroing the flags dealing with validation
- * and validation staleness
+/**
+ * @brief
+ *     utility function for setting and zeroing the flags dealing with
+ *     validation and validation staleness
  */
-
 static int updateValidFlags(
     scmcon *conp,
     scmtab *tabp,
@@ -1600,10 +1612,10 @@ static int make_goodoids(
     return lth;
 }
 
-/*
- * callback function for verify_children
+/**
+ * @brief
+ *     callback function for verify_children()
  */
-
 static int verifyChildCRL(
     scmcon *conp,
     scmsrcha *s,
@@ -1655,10 +1667,10 @@ static int verifyChildCRL(
     return 0;
 }
 
-/*
- * callback function for verify_children
+/**
+ * @brief
+ *     callback function for verify_children()
  */
-
 static int verifyChildROA(
     scmcon *conp,
     scmsrcha *s,
@@ -1712,15 +1724,18 @@ static unsigned int updateManLid;
 static char updateManPath[PATH_MAX];
 static char updateManHash[HASHSIZE];
 
-/*
- * This is the model revocation function for certificates. It handles the case
- * where a certificate is expired or revoked. Given that this function can be
- * called recursively it must be careful in what it does. If the top level
- * certificate it is handed has either the EXPIRED or REVOKED bit set in its
- * flags field, or the toplevel flag in the search context, then it is
- * deleted. If none of these bits it set then it checks to see if it has been
- * reparented. If it has not been reparented, it is deleted, otherwise the
- * function just returns.
+/**
+ * @brief
+ *     the model revocation function for certificates
+ *
+ * This function handles the case where a certificate is expired or
+ * revoked.  Given that this function can be called recursively it
+ * must be careful in what it does.  If the top level certificate it
+ * is handed has either the EXPIRED or REVOKED bit set in its flags
+ * field, or the toplevel flag in the search context, then it is
+ * deleted.  If none of these bits it set then it checks to see if it
+ * has been reparented.  If it has not been reparented, it is deleted,
+ * otherwise the function just returns.
  *
  * If a certificate is deleted, then this function is invoked recursively to
  * check to see if any of its children (certificate children or ROA children)
@@ -1889,10 +1904,10 @@ static int updateManifestObjs(
     return 0;
 }
 
-/*
- * callback function for verify_children
+/**
+ * @brief
+ *     callback function for verify_children()
  */
-
 static int verifyChildManifest(
     scmcon *conp,
     scmsrcha *s,
@@ -1922,8 +1937,13 @@ static int verifyChildManifest(
     return 0;
 }
 
-/** callback function for verifyChildCert.  This is used, for example,
-    to mark GBRs as valid when their EE certs become valid.  */
+/**
+ * @brief
+ *     callback function for verifyChildCert()
+ *
+ * This is used, for example, to mark GBRs as valid when their EE
+ * certs become valid.
+ */
 static int verifyChildGhostbusters(
     scmcon *conp,
     scmsrcha *s,
@@ -1938,8 +1958,10 @@ static int verifyChildGhostbusters(
     return 0;
 }
 
-// structure containing data of children to propagate
-
+/**
+ * @brief
+ *     structure containing data of children to propagate
+ */
 typedef struct _PropData {
     char *ski;
     char *subject;
@@ -1951,19 +1973,25 @@ typedef struct _PropData {
     char *issuer;
 } PropData;
 
-// static variables for efficiency, so only need to set up query once
-
+/**
+ * @brief
+ *     static variables for efficiency, so only need to set up query
+ *     once
+ */
 static scmsrcha *crlSrch = NULL;
 static scmsrcha *manSrch = NULL;
 
-// single place to allocate large amount of space for manifest files lists
-
+/**
+ * @brief
+ *     single place to allocate large amount of space for manifest
+ *     files lists
+ */
 static char manFiles[MANFILES_SIZE];
 
-/*
- * utility function for verifyChildren
+/**
+ * @brief
+ *     utility function for verifyChildren()
  */
-
 static int verifyChildCert(
     scmcon *conp,
     PropData *data,
@@ -2042,11 +2070,11 @@ typedef struct _mcf {
 } mcf;
 
 
-/*
- * This function returns the number of valid certificates that have subject=IS
- * and ski=AK, or a negative error code on failure.
+/**
+ * @brief
+ *     returns the number of valid certificates that have subject=IS
+ *     and ski=AK, or a negative error code on failure.
  */
-
 static int cparents(
     scmcon *conp,
     scmsrcha *s,
@@ -2123,10 +2151,10 @@ static int countvalidparents(
 static scmsrcha *roaSrch = NULL;
 static scmsrcha *invalidateCRLSrch = NULL;
 
-/*
- * callback function for invalidateChildCert
+/**
+ * @brief
+ *     callback function for invalidateChildCert()
  */
-
 static int invalidate_roa(
     scmcon *conp,
     scmsrcha *s,
@@ -2146,10 +2174,10 @@ static int invalidate_roa(
     return 0;
 }
 
-/*
- * callback function for invalidateChildCert
+/**
+ * @brief
+ *     callback function for invalidateChildCert()
  */
-
 static int invalidate_gbr(
     scmcon *conp,
     scmsrcha *s,
@@ -2234,8 +2262,9 @@ static int invalidate_crl(
     return 0;
 }
 
-/*
- * utility function for verify_children
+/**
+ * @brief
+ *     utility function for verify_children()
  */
 static int invalidateChildCert(
     scmcon *conp,
@@ -2316,10 +2345,10 @@ PropDataList iPropData = { 0, 200, NULL };
 PropDataList *currPropData = NULL;
 PropDataList *prevPropData = NULL;
 
-/*
- * callback function for verify_children
+/**
+ * @brief
+ *     callback function for verify_children()
  */
-
 static int registerChild(
     scmcon *conp,
     scmsrcha *s,
@@ -2357,8 +2386,9 @@ static int registerChild(
     return 0;
 }
 
-/*
- * verify the children certs of the current cert
+/**
+ * @brief
+ *     verify the children certs of the current cert
  */
 static int verifyOrNotChildren(
     scmcon *conp,
@@ -3662,13 +3692,15 @@ int add_object(
     return (sta);
 }
 
-/*
- * This is the internal iteration function used by iterate_crl below. It
- * processes CRLs one at a time.
+/**
+ * @brief
+ *     internal iteration function used by iterate_crl() below
  *
- * On failure it returns a negative error code. On success it returns 0.
+ * This function processes CRLs one at a time.
+ *
+ * @return
+ *     On failure it returns a negative error code.  On success it returns 0.
  */
-
 static int crliterator(
     scmcon *conp,
     scmsrcha *s,
@@ -3839,10 +3871,11 @@ int iterate_crl(
     return (sta);
 }
 
-/*
- * Fill in the columns for a search with revoke_cert_and_children as callback
+/**
+ * @brief
+ *     Fill in the columns for a search with revoke_cert_and_children()
+ *     as callback
  */
-
 static void fillInColumns(
     scmsrch *srch1,
     unsigned int *lid,
@@ -4157,11 +4190,11 @@ int deletebylid(
     return (sta);
 }
 
-/*
- * This is the callback for certificates that are may have been NOTYET but are
- * now actually valid. Mark them as such.
+/**
+ * @brief
+ *     callback for certificates that are may have been NOTYET but are
+ *     now actually valid.  Mark them as such.
  */
-
 static int certmaybeok(
     scmcon *conp,
     scmsrcha *s,
@@ -4191,11 +4224,12 @@ static int certmaybeok(
     return (sta);
 }
 
-/*
- * This is the callback for certificates that are too new, e.g. not yet valid.
+/**
+ * @brief
+ *     callback for certificates that are too new, e.g. not yet valid.
+ *
  * Mark them as NOTYET in the flags field.
  */
-
 static int certtoonew(
     scmcon *conp,
     scmsrcha *s,
@@ -4222,11 +4256,13 @@ static int certtoonew(
     return (sta);
 }
 
-/*
- * This is the callback for certificates that are too old, e.g. no longer
- * valid. Delete them (and their children) unless they have been reparented.
+/**
+ * @brief
+ *     This is the callback for certificates that are too old, e.g. no
+ *     longer valid.
+ *
+ * Delete them (and their children) unless they have been reparented.
  */
-
 static int certtooold(
     scmcon *conp,
     scmsrcha *s,

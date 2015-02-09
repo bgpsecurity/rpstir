@@ -1,6 +1,9 @@
-/****************
- * Functions and flags shared by query and server code
- ****************/
+/**
+ * @file
+ *
+ * @brief
+ *     Functions and flags shared by query and server code
+ */
 
 #include "querySupport.h"
 
@@ -57,8 +60,9 @@ static int parentsFound;
 static char *nextSKI,
    *nextSubject;
 
-/*
- * callback to indicate that a parent was found
+/**
+ * @brief
+ *     callback to indicate that a parent was found
  */
 static int registerParent(
     scmcon *conp,
@@ -207,8 +211,9 @@ int checkValidity(
 }
 
 
-/*
- * combines dirname and filename into a pathname
+/**
+ * @brief
+ *     combines dirname and filename into a pathname
  */
 static int pathnameDisplay(
     scm *scmp,
@@ -224,8 +229,9 @@ static int pathnameDisplay(
     return 2;
 }
 
-/*
- * create space-separated string of serial numbers
+/**
+ * @brief
+ *     create space-separated string of serial numbers
  */
 static int displaySNList(
     scm *scmp,
@@ -480,8 +486,9 @@ static int display_ip_addrs(
     return 1;
 }
 
-/*
- * helper function for displayFlags
+/**
+ * @brief
+ *     helper function for displayFlags
  */
 static void addFlagIfSet(
     char *returnStr,
@@ -519,8 +526,9 @@ void setIsManifest(
     isManifest = val;
 }
 
-/*
- * create list of all flags set to true
+/**
+ * @brief
+ *     create list of all flags set to true
  */
 static int displayFlags(
     scm *scmp,
@@ -556,8 +564,9 @@ static int displayFlags(
     return 1;
 }
 
-/*
- * the set of all query fields
+/**
+ * @brief
+ *     the set of all query fields
  */
 static QueryField fields[] = {
     {

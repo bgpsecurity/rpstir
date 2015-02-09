@@ -68,8 +68,9 @@ struct {
 };
 
 
-/*
- * callback function for searchscm that prints the output
+/**
+ * @brief
+ *     callback function for searchscm() that prints the output
  */
 static int handleResults(
     scmcon *conp,
