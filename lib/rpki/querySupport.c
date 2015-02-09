@@ -20,6 +20,7 @@
 #include "err.h"
 #include "myssl.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 void addQueryFlagTests(
     char *whereStr,
@@ -103,7 +104,7 @@ int checkValidity(
         validWhereStr = validSrch->wherestr;
         validWhereStr[0] = 0;
         if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-            snprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
+            xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
         free(now);
         addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
                     !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
@@ -118,10 +119,10 @@ int checkValidity(
         if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
         {
             int len = strlen(validWhereStr);
-            snprintf(&validWhereStr[len], WHERESTR_SIZE - len,
-                     " and (((flags%%%d)>=%d) or ((flags%%%d)<%d) or ((flags%%%d)>=%d))",
-                     2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
-                     SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
+            xsnprintf(&validWhereStr[len], WHERESTR_SIZE - len,
+                      " and (((flags%%%d)>=%d) or ((flags%%%d)<%d) or ((flags%%%d)>=%d))",
+                      2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
+                      SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
         }
         whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
         nextSKI = (char *)validSrch->vec[0].valptr;
@@ -155,14 +156,14 @@ int checkValidity(
             firstTime = 0;
             if (ski)
             {
-                snprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
-                         " and ski=\"%s\"", ski);
+                xsnprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
+                          " and ski=\"%s\"", ski);
                 strncpy(prevSKI, ski, 128);
             }
             else
             {
-                snprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
-                         " and local_id=\"%d\"", localID);
+                xsnprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
+                          " and local_id=\"%d\"", localID);
                 prevSKI[0] = 0;
             }
         }
@@ -171,9 +172,9 @@ int checkValidity(
             char escaped_subject[2 * strlen(nextSubject) + 1];
             mysql_escape_string(escaped_subject, nextSubject,
                                 strlen(nextSubject));
-            snprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
-                     " and ski=\"%s\" and subject=\"%s\"", nextSKI,
-                     escaped_subject);
+            xsnprintf(whereInsertPtr, WHERESTR_SIZE - strlen(validWhereStr),
+                      " and ski=\"%s\" and subject=\"%s\"", nextSKI,
+                      escaped_subject);
             strncpy(prevSKI, nextSKI, 128);
         }
         parentsFound = 0;
@@ -188,8 +189,8 @@ int checkValidity(
         {                       // no parent cert
             if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
                 return 0;
-            snprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
-                     whereInsertPtr + 5);
+            xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
+                      whereInsertPtr + 5);
             status =
                 searchscm(connect, validTable, anySrch, NULL, registerParent,
                           SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -215,8 +216,8 @@ static int pathnameDisplay(
 {
     (void)scmp;
     (void)connection;
-    snprintf(returnStr, MAX_RESULT_SZ, "%s/%s",
-             (char *)s->vec[idx1].valptr, (char *)s->vec[idx1 + 1].valptr);
+    xsnprintf(returnStr, MAX_RESULT_SZ, "%s/%s",
+              (char *)s->vec[idx1].valptr, (char *)s->vec[idx1 + 1].valptr);
     return 2;
 }
 
@@ -250,9 +251,9 @@ static int displaySNList(
             // XXX: there should be a better way to signal an error
             hexs = nomem;
         }
-        snprintf(&returnStr[strlen(returnStr)],
-                 MAX_RESULT_SZ - strlen(returnStr), "%s%s",
-                 (i == 0) ? "" : " ", hexs);
+        xsnprintf(&returnStr[strlen(returnStr)],
+                  MAX_RESULT_SZ - strlen(returnStr), "%s%s",
+                  (i == 0) ? "" : " ", hexs);
         if (hexs == nomem)
         {
             break;
@@ -371,7 +372,7 @@ static int display_ip_addrs(
     unsigned long roa_local_id =
         *((unsigned long *)(s->vec[idx1].valptr));
     char roa_local_id_str[24];
-    snprintf(roa_local_id_str, sizeof(roa_local_id_str), "%lu",
+    xsnprintf(roa_local_id_str, sizeof(roa_local_id_str), "%lu",
         roa_local_id);
 
     struct display_ip_addrs_context context;
@@ -443,7 +444,7 @@ static int display_ip_addrs(
         order);
     if (sta == ERR_SCM_TRUNCATED)
     {
-        snprintf(
+        xsnprintf(
             context.result + context.result_idx,
             MAX_RESULT_SZ - context.result_idx,
             "%s",
@@ -452,7 +453,7 @@ static int display_ip_addrs(
     else if (sta < 0)
     {
         // XXX: there should be a better way to signal an error
-        snprintf(
+        xsnprintf(
             context.result,
             MAX_RESULT_SZ,
             "error: %s (%d)",
@@ -467,7 +468,7 @@ static int display_ip_addrs(
     else if (context.result[0] == '\0')
     {
         // Indicate that there were no results
-        snprintf(context.result, MAX_RESULT_SZ, "%s", none_str);
+        xsnprintf(context.result, MAX_RESULT_SZ, "%s", none_str);
     }
 
     return 1;
@@ -484,9 +485,9 @@ static void addFlagIfSet(
 {
     if (flags & flag)
     {
-        snprintf(&returnStr[strlen(returnStr)],
-                 MAX_RESULT_SZ - strlen(returnStr), "%s%s",
-                 (returnStr[0] == 0) ? "" : " | ", str);
+        xsnprintf(&returnStr[strlen(returnStr)],
+                  MAX_RESULT_SZ - strlen(returnStr), "%s%s",
+                  (returnStr[0] == 0) ? "" : " | ", str);
     }
 }
 
@@ -498,9 +499,9 @@ static void addFlagIfUnset(
 {
     if (!(flags & flag))
     {
-        snprintf(&returnStr[strlen(returnStr)],
-                 MAX_RESULT_SZ - strlen(returnStr), "%s%s",
-                 (returnStr[0] == 0) ? "" : " | ", str);
+        xsnprintf(&returnStr[strlen(returnStr)],
+                  MAX_RESULT_SZ - strlen(returnStr), "%s%s",
+                  (returnStr[0] == 0) ? "" : " | ", str);
     }
 }
 

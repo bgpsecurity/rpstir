@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 #include "configlib.h"
 #include "config_load.h"
@@ -141,7 +142,7 @@ void config_message(
     char message[512];
 
     va_start(ap, format);
-    vsnprintf(message, sizeof(message), format, ap);
+    xvsnprintf(message, sizeof(message), format, ap);
     va_end(ap);
 
     if (context->is_default)

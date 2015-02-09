@@ -15,6 +15,7 @@
 #include "db/prep-stmt.h"
 #include "rpki/db_constants.h"
 #include "db/util.h"
+#include "util/stringutils.h"
 
 /**=============================================================================
 ------------------------------------------------------------------------------*/
@@ -75,10 +76,10 @@ int db_chaser_read_time(
         return -1;
     }
 
-    snprintf(curr, curr_len, "%04d-%02d-%02d %02d:%02d:%02d",
-             curr_ts.year,
-             curr_ts.month,
-             curr_ts.day, curr_ts.hour, curr_ts.minute, curr_ts.second);
+    xsnprintf(curr, curr_len, "%04d-%02d-%02d %02d:%02d:%02d",
+              curr_ts.year,
+              curr_ts.month,
+              curr_ts.day, curr_ts.hour, curr_ts.minute, curr_ts.second);
 
     mysql_stmt_free_result(stmt);
 

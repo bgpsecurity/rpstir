@@ -27,6 +27,7 @@
 
 #include "cms/roa_utils.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 
 #define ADDCOL(a, b, c, d, e, f)  \
@@ -389,20 +390,19 @@ static int add_cert_internal(
             cols[idx++].value = escaped_strings[i];
         }
     }
-    (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
+    xsnprintf(flagn, sizeof(flagn), "%u", cf->flags);
     cols[idx].column = "flags";
     cols[idx++].value = flagn;
-    (void)snprintf(lid, sizeof(lid), "%u", *cert_id);
+    xsnprintf(lid, sizeof(lid), "%u", *cert_id);
     cols[idx].column = "local_id";
     cols[idx++].value = lid;
-    (void)snprintf(did, sizeof(did), "%u", cf->dirid);
+    xsnprintf(did, sizeof(did), "%u", cf->dirid);
     cols[idx].column = "dir_id";
     cols[idx++].value = did;
     if (cf->ipblen > 0)
     {
         cols[idx].column = "ipblen";
-        (void)snprintf(blen, sizeof(blen), "%u", cf->ipblen);   /* byte length 
-                                                                 */
+        xsnprintf(blen, sizeof(blen), "%u", cf->ipblen);   /* byte length */
         cols[idx++].value = blen;
         cols[idx].column = "ipb";
         wptr = hexify(cf->ipblen, cf->ipb, HEXIFY_HAT);
@@ -487,16 +487,16 @@ static int add_crl_internal(
         }
     }
     memset(lid, 0, sizeof(lid));
-    (void)snprintf(flagn, sizeof(flagn), "%u", cf->flags);
+    xsnprintf(flagn, sizeof(flagn), "%u", cf->flags);
     cols[idx].column = "flags";
     cols[idx++].value = flagn;
-    (void)snprintf(lid, sizeof(lid), "%u", crl_id);
+    xsnprintf(lid, sizeof(lid), "%u", crl_id);
     cols[idx].column = "local_id";
     cols[idx++].value = lid;
-    (void)snprintf(did, sizeof(did), "%u", cf->dirid);
+    xsnprintf(did, sizeof(did), "%u", cf->dirid);
     cols[idx].column = "dir_id";
     cols[idx++].value = did;
-    (void)snprintf(csnlen, sizeof(csnlen), "%d", cf->snlen);
+    xsnprintf(csnlen, sizeof(csnlen), "%d", cf->snlen);
     cols[idx].column = "snlen";
     cols[idx++].value = csnlen;
     cols[idx].column = "sninuse";
@@ -562,8 +562,8 @@ static int get_cert_sigval(
         ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
                SIGVAL_UNKNOWN);
     }
-    (void)snprintf(sigsrch->wherestr, WHERESTR_SIZE,
-                   "ski=\"%s\" and subject=\"%s\"", ski, subj);
+    xsnprintf(sigsrch->wherestr, WHERESTR_SIZE,
+              "ski=\"%s\" and subject=\"%s\"", ski, subj);
     // (void)printf("Wherestr = %s\n", sigsrch->wherestr);
     sta = searchscm(conp, theCertTable, sigsrch, NULL, ok,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -597,7 +597,7 @@ static int get_roa_sigval(
         ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
                SIGVAL_UNKNOWN);
     }
-    (void)snprintf(sigsrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
+    xsnprintf(sigsrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
     // (void)printf("Wherestr = %s\n", sigsrch->wherestr);
     sta = searchscm(conp, theROATable, sigsrch, NULL, ok,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -654,9 +654,9 @@ static int set_cert_sigval(
         return ERR_SCM_NOSUCHTAB;
     char escaped_subj[2 * strlen(subj) + 1];
     mysql_escape_string(escaped_subj, subj, strlen(subj));
-    (void)snprintf(stmt, sizeof(stmt),
-                   "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
-                   theCertTable->tabname, valu, ski, escaped_subj);
+    xsnprintf(stmt, sizeof(stmt),
+              "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
+              theCertTable->tabname, valu, ski, escaped_subj);
     // (void)printf("SET: %s\n", stmt);
     sta = statementscm_no_data(conp, stmt);
     // (void)printf("Statementscn returns %d\n", sta);
@@ -675,9 +675,9 @@ static int set_roa_sigval(
         initTables(theSCMP);
     if (theROATable == NULL)
         return ERR_SCM_NOSUCHTAB;
-    (void)snprintf(stmt, sizeof(stmt),
-                   "update %s set sigval=%d where ski=\"%s\";",
-                   theROATable->tabname, valu, ski);
+    xsnprintf(stmt, sizeof(stmt),
+              "update %s set sigval=%d where ski=\"%s\";",
+              theROATable->tabname, valu, ski);
     // (void)printf("SET: %s\n", stmt);
     sta = statementscm_no_data(conp, stmt);
     // (void)printf("Statementscn returns %d\n", sta);
@@ -1009,8 +1009,8 @@ static int addCert2List(
     memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
     strcpy(this_ansrp->filename, (char *)certSrch->vec[0].valptr);
     memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
-    snprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
-             (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
+    xsnprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
+              (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
     memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
     strcpy(this_ansrp->issuer, (char *)certSrch->vec[4].valptr);
     memset(this_ansrp->aki, 0, sizeof(this_ansrp->aki));
@@ -1066,11 +1066,11 @@ struct cert_answers *find_parent_cert(
     if (subject != NULL){
         char escaped [strlen(subject)*2+1];
         mysql_escape_string(escaped, subject, strlen(subject));
-        snprintf(certSrch->wherestr, WHERESTR_SIZE,
-                 "ski=\'%s\' and subject=\'%s\'", ski, escaped);
+        xsnprintf(certSrch->wherestr, WHERESTR_SIZE,
+                  "ski=\'%s\' and subject=\'%s\'", ski, escaped);
     }
     else
-        snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
+        xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     cert_answers.num_ansrs = 0;
@@ -1125,7 +1125,7 @@ static X509 *parent_cert(
     }
     else
         return NULL;
-    (void)snprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
+    xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(*pathname, ofullname, PATH_MAX);
     if (flagsp)
@@ -1158,9 +1158,9 @@ struct cert_answers *find_cert_by_aKI(
     }
     sta = 0;
     if (ski)
-        snprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
+        xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
-        snprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\'%s\'", aki);
+        xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\'%s\'", aki);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     cert_answers.num_ansrs = 0;
@@ -1268,7 +1268,7 @@ static int cert_revoked(
     // and set isRevoked = 1 in the callback if sn is in snlist
     char escaped [strlen(issuer)*2+1];
     mysql_escape_string(escaped, issuer, strlen(issuer));
-    snprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
+    xsnprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
     isRevoked = 0;
@@ -1562,8 +1562,8 @@ static int updateValidFlags(
     int flags = isValid ?
         ((prevFlags | SCM_FLAG_VALIDATED) & (~SCM_FLAG_NOCHAIN)) :
         (prevFlags | SCM_FLAG_NOCHAIN);
-    snprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
-             tabp->tabname, flags, id);
+    xsnprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
+              tabp->tabname, flags, id);
     return statementscm_no_data(conp, stmt);
 }
 
@@ -1574,8 +1574,8 @@ int set_cert_flag(
     unsigned int flags)
 {
     char stmt[150];
-    snprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
-             theCertTable->tabname, flags, id);
+    xsnprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
+              theCertTable->tabname, flags, id);
     return statementscm_no_data(conp, stmt);
 }
 
@@ -1632,8 +1632,8 @@ static int verifyChildCRL(
     if (!goodoids[0].lth)
         make_goodoids();
     // try verifying crl
-    snprintf(pathname, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
-             (char *)s->vec[1].valptr);
+    xsnprintf(pathname, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
+              (char *)s->vec[1].valptr);
     typ = infer_filetype(pathname);
     cf = crl2fields((char *)s->vec[1].valptr, pathname, typ,
                     &x, &sta, &crlsta, goodoids);
@@ -1680,8 +1680,8 @@ static int verifyChildROA(
     UNREFERENCED_PARAMETER(idx);
     CMS(&roa, (ushort) 0);
     // try verifying crl
-    snprintf(pathname, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
-             (char *)s->vec[1].valptr);
+    xsnprintf(pathname, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
+              (char *)s->vec[1].valptr);
     typ = infer_filetype(pathname);
     sta =
         roaFromFile(pathname, typ >= OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1,
@@ -1731,10 +1731,10 @@ static int handleUpdateMan(
     (void)s;
     (void)idx;
     updateManLid = *((unsigned int *)updateManSrch->vec[1].valptr);
-    snprintf(updateManPath, PATH_MAX, "%s/",
-             (char *)updateManSrch->vec[0].valptr);
-    snprintf(updateManHash, HASHSIZE, "%s",
-             (char *)updateManSrch->vec[2].valptr);
+    xsnprintf(updateManPath, PATH_MAX, "%s/",
+              (char *)updateManSrch->vec[0].valptr);
+    xsnprintf(updateManHash, HASHSIZE, "%s",
+              (char *)updateManSrch->vec[2].valptr);
     return 0;
 }
 
@@ -1795,8 +1795,8 @@ static int updateManifestObjs(
         else
             continue;
         mysql_escape_string(escaped_file, (char *)file, strlen((char *)file));
-        snprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"",
-                 escaped_file);
+        xsnprintf(updateManSrch->wherestr, WHERESTR_SIZE, "filename=\"%s\"",
+                  escaped_file);
         addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
         updateManLid = 0;
         memset(updateManHash, 0, sizeof(updateManHash));
@@ -1805,7 +1805,7 @@ static int updateManifestObjs(
         if (!updateManLid)
             continue;
         len = strlen(updateManPath);
-        snprintf(updateManPath + len, PATH_MAX - len, "%s", file);
+        xsnprintf(updateManPath + len, PATH_MAX - len, "%s", file);
         fd = open(updateManPath, O_RDONLY);
         if (fd < 0)
             continue;
@@ -1842,17 +1842,17 @@ static int updateManifestObjs(
             // if hash okay, set ONMAN flag and optionally the hash if we just 
             // computed it
             if (gothash == 1)
-                snprintf(flagStmt, sizeof(flagStmt),
-                         "update %s set flags=flags+%d where local_id=%d;",
-                         tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
+                xsnprintf(flagStmt, sizeof(flagStmt),
+                          "update %s set flags=flags+%d where local_id=%d;",
+                          tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
             else
             {
                 char *h = hexify(sta, bytehash, HEXIFY_NO);
                 // (void)fprintf(stderr, "Updating hash of %s to %s\n", file,
                 // h);
-                snprintf(flagStmt, sizeof(flagStmt),
-                         "update %s set flags=flags+%d, hash=\"%s\" where local_id=%d;",
-                         tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
+                xsnprintf(flagStmt, sizeof(flagStmt),
+                          "update %s set flags=flags+%d, hash=\"%s\" where local_id=%d;",
+                          tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
                 free((void *)h);
             }
             statementscm_no_data(conp, flagStmt);
@@ -1864,8 +1864,8 @@ static int updateManifestObjs(
             // children
             if (tabp == theCertTable)
             {
-                snprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
-                         "local_id=\"%d\"", updateManLid);
+                xsnprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
+                          "local_id=\"%d\"", updateManLid);
                 searchscm(conp, tabp, updateManSrch2, NULL,
                           revoke_cert_and_children, SCM_SRCH_DOVALUE_ALWAYS,
                           NULL);
@@ -1896,8 +1896,8 @@ static int verifyChildManifest(
                            *((unsigned int *)(s->vec[0].valptr)),
                            *((unsigned int *)(s->vec[1].valptr)), 1);
     CMS(&cms, 0);
-    snprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
-             (char *)(s->vec[3].valptr));
+    xsnprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
+              (char *)(s->vec[3].valptr));
     sta = get_casn_file(&cms.self, outfull, 0);
     if (sta < 0)
     {
@@ -1967,7 +1967,7 @@ static int verifyChildCert(
 
     if (doVerify)
     {
-        snprintf(pathname, PATH_MAX, "%s/%s", data->dirname, data->filename);
+        xsnprintf(pathname, PATH_MAX, "%s/%s", data->dirname, data->filename);
         x = readCertFromFile(pathname, &sta);
         if (x == NULL)
             return ERR_SCM_X509;
@@ -1993,19 +1993,19 @@ static int verifyChildCert(
                sta, sta);
         ADDCOL(crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
     }
-    snprintf(crlSrch->wherestr, WHERESTR_SIZE,
-             "aki=\"%s\" and issuer=\"%s\"", data->ski, data->subject);
+    xsnprintf(crlSrch->wherestr, WHERESTR_SIZE,
+              "aki=\"%s\" and issuer=\"%s\"", data->ski, data->subject);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated GBRs */
-    snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     searchscm(conp, theGBRTable, crlSrch, NULL, verifyChildGhostbusters,
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated ROA */
-    snprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     sta = searchscm(conp, theROATable, crlSrch, NULL, verifyChildROA,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
@@ -2020,7 +2020,7 @@ static int verifyChildCert(
         ADDCOL(manSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
         ADDCOL(manSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
     }
-    snprintf(manSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    xsnprintf(manSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     sta = searchscm(conp, theManifestTable, manSrch, NULL, verifyChildManifest,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     return 0;
@@ -2094,7 +2094,7 @@ static int countvalidparents(
     now = LocalTimeToDBTime(&sta);
     if (now == NULL)
         return (sta);
-    snprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
+    xsnprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
     free((void *)now);
     addFlagTest(ws, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(ws, SCM_FLAG_NOCHAIN, 0, 1);
@@ -2251,7 +2251,7 @@ static int invalidateChildCert(
         ADDCOL(roaSrch, "ski", SQL_C_CHAR, SKISIZE, sta, sta);
         ADDCOL(roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
     }
-    snprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    xsnprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
 
     if (invalidateCRLSrch == NULL)
@@ -2266,8 +2266,8 @@ static int invalidateChildCert(
     }
     char escaped [strlen(data->subject)*2+1];
     mysql_escape_string(escaped, data->subject, strlen(data->subject));
-    snprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
-             "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
+    xsnprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
+              "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
     addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
 
 
@@ -2409,10 +2409,10 @@ static int verifyOrNotChildren(
             char escaped [strlen(currPropData->data[idx].subject)*2+1];
             mysql_escape_string(escaped, currPropData->data[idx].subject, strlen(currPropData->data[idx].subject));
 
-            snprintf(childrenSrch->wherestr, WHERESTR_SIZE,
-                     "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
-                     currPropData->data[idx].ski, currPropData->data[idx].ski,
-                     escaped);
+            xsnprintf(childrenSrch->wherestr, WHERESTR_SIZE,
+                      "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
+                      currPropData->data[idx].ski, currPropData->data[idx].ski,
+                      escaped);
             addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOCHAIN, doVerify, 1);
         }
         if (!isRoot)
@@ -2448,8 +2448,8 @@ static int handleValidMan(
 {
     (void)conp;
     (void)idx;
-    snprintf(validManPath, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
-             (char *)s->vec[1].valptr);
+    xsnprintf(validManPath, PATH_MAX, "%s/%s", (char *)s->vec[0].valptr,
+              (char *)s->vec[1].valptr);
     return 0;
 }
 
@@ -2476,8 +2476,8 @@ int addStateToFlags(
         ADDCOL(validManSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
         ADDCOL(validManSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
     }
-    snprintf(validManSrch->wherestr, WHERESTR_SIZE,
-             "files regexp binary \"%s\"", filename);
+    xsnprintf(validManSrch->wherestr, WHERESTR_SIZE,
+              "files regexp binary \"%s\"", filename);
     addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     initTables(scmp);
     validManPath[0] = 0;
@@ -2813,8 +2813,8 @@ static int hexify_ski(
     for (i = 0; i < size; i++)
     {
         if (i)
-            snprintf(str++, 2, ":");
-        snprintf(str, 3, "%02X", tmp[i]);
+            xsnprintf(str++, 2, ":");
+        xsnprintf(str, 3, "%02X", tmp[i]);
         str += 2;
     }
     *str = 0;
@@ -3016,20 +3016,20 @@ static int add_roa_internal(
     // fill in insertion structure
     cols[idx].column = "filename";
     cols[idx++].value = outfile;
-    (void)snprintf(did, sizeof(did), "%u", dirid);
+    xsnprintf(did, sizeof(did), "%u", dirid);
     cols[idx].column = "dir_id";
     cols[idx++].value = did;
     cols[idx].column = "ski";
     cols[idx++].value = ski;
     cols[idx].column = "sig";
     cols[idx++].value = sig;
-    (void)snprintf(asn, sizeof(asn), "%" PRIu32, asid);
+    xsnprintf(asn, sizeof(asn), "%" PRIu32, asid);
     cols[idx].column = "asn";
     cols[idx++].value = asn;
-    (void)snprintf(flagn, sizeof(flagn), "%u", flags);
+    xsnprintf(flagn, sizeof(flagn), "%u", flags);
     cols[idx].column = "flags";
     cols[idx++].value = flagn;
-    (void)snprintf(lid, sizeof(lid), "%u", roa_id);
+    xsnprintf(lid, sizeof(lid), "%u", roa_id);
     cols[idx].column = "local_id";
     cols[idx++].value = lid;
     aone.vec = &cols[0];
@@ -3346,8 +3346,8 @@ int add_manifest(
     {
         int flth = read_casn(&fahp->file, file);
         file[flth] = 0;
-        snprintf(manFiles + manFilesLen, MANFILES_SIZE - manFilesLen,
-                 "%s%s", manFilesLen ? " " : "", file);
+        xsnprintf(manFiles + manFilesLen, MANFILES_SIZE - manFilesLen,
+                  "%s%s", manFilesLen ? " " : "", file);
         if (manFilesLen)
             manFilesLen++;
         manFilesLen += strlen((char *)file);
@@ -3438,7 +3438,7 @@ int add_manifest(
         lenbuf[20];
     cols[idx].column = "filename";
     cols[idx++].value = outfile;
-    (void)snprintf(did, sizeof(did), "%u", id);
+    xsnprintf(did, sizeof(did), "%u", id);
     cols[idx].column = "dir_id";
     cols[idx++].value = did;
     cols[idx].column = "ski";
@@ -3448,16 +3448,16 @@ int add_manifest(
     cols[idx].column = "next_upd";
     cols[idx++].value = nextUpdate;
     char flagn[24];
-    (void)snprintf(flagn, sizeof(flagn), "%u", flags);
+    xsnprintf(flagn, sizeof(flagn), "%u", flags);
     cols[idx].column = "flags";
     cols[idx++].value = flagn;
-    (void)snprintf(mid, sizeof(mid), "%u", man_id);
+    xsnprintf(mid, sizeof(mid), "%u", man_id);
     cols[idx].column = "local_id";
     cols[idx++].value = mid;
     cols[idx].column = "files";
     cols[idx++].value = manFiles;
     cols[idx].column = "fileslen";
-    (void)snprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
+    xsnprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
     cols[idx++].value = lenbuf;
     aone.vec = &cols[0];
     aone.ntot = 12;
@@ -3557,11 +3557,11 @@ int add_ghostbusters(
     }
 
     char dir_id_str[24];
-    snprintf(dir_id_str, sizeof(dir_id_str), "%u", id);
+    xsnprintf(dir_id_str, sizeof(dir_id_str), "%u", id);
     char local_id_str[24];
-    snprintf(local_id_str, sizeof(local_id_str), "%u", local_id);
+    xsnprintf(local_id_str, sizeof(local_id_str), "%u", local_id);
     char flags_str[24];
-    snprintf(flags_str, sizeof(flags_str), "%u", flags);
+    xsnprintf(flags_str, sizeof(flags_str), "%u", flags);
 
     scmkv cols[] = {
      {
@@ -4043,7 +4043,7 @@ int delete_object(
     dtwo[0].column = "filename";
     dtwo[0].value = outfile;
     dtwo[1].column = "dir_id";
-    (void)snprintf(did, sizeof(did), "%u", id);
+    xsnprintf(did, sizeof(did), "%u", id);
     dtwo[1].value = did;
     dwhere.vec = &dtwo[0];
     dwhere.ntot = 2;
@@ -4212,7 +4212,7 @@ int deletebylid(
     if (conp == NULL || conp->connected == 0 || tabp == NULL)
         return (ERR_SCM_INVALARG);
     where.column = "local_id";
-    (void)snprintf(mylid, sizeof(mylid), "%u", lid);
+    xsnprintf(mylid, sizeof(mylid), "%u", lid);
     where.value = mylid;
     lids.vec = &where;
     lids.ntot = 1;
@@ -4243,8 +4243,8 @@ static int certmaybeok(
     // ????????? instead test for this in select statement ????????
     if ((pflags & SCM_FLAG_NOTYET) == 0)
         return (0);
-    (void)snprintf(lid, sizeof(lid), "%u",
-                   *(unsigned int *)(s->vec[0].valptr));
+    xsnprintf(lid, sizeof(lid), "%u",
+              *(unsigned int *)(s->vec[0].valptr));
     one.column = "local_id";
     one.value = &lid[0];
     where.vec = &one;
@@ -4273,8 +4273,8 @@ static int certtoonew(
     int sta;
 
     UNREFERENCED_PARAMETER(idx);
-    (void)snprintf(lid, sizeof(lid), "%u",
-                   *(unsigned int *)(s->vec[0].valptr));
+    xsnprintf(lid, sizeof(lid), "%u",
+              *(unsigned int *)(s->vec[0].valptr));
     one.column = "local_id";
     one.value = &lid[0];
     where.vec = &one;
@@ -4349,16 +4349,16 @@ int certificate_validity(
     vok = (char *)calloc(48 + 2 * strlen(now), sizeof(char));
     if (vok == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(vok, 48 + 2 * strlen(now),
-                   "valfrom <= \"%s\" AND \"%s\" <= valto", now, now);
+    xsnprintf(vok, 48 + 2 * strlen(now),
+              "valfrom <= \"%s\" AND \"%s\" <= valto", now, now);
     vf = (char *)calloc(24 + strlen(now), sizeof(char));
     if (vf == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(vf, 24 + strlen(now), "\"%s\" < valfrom", now);
+    xsnprintf(vf, 24 + strlen(now), "\"%s\" < valfrom", now);
     vt = (char *)calloc(24 + strlen(now), sizeof(char));
     if (vt == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(vt, 24 + strlen(now), "valto < \"%s\"", now);
+    xsnprintf(vt, 24 + strlen(now), "valto < \"%s\"", now);
     free((void *)now);
     // search for certificates that might now be valid
     // in order to use revoke_cert_and_children the first five
@@ -4454,7 +4454,7 @@ void startSyslog(
         logName = NULL;
     }                           /* previous logName */
     logName = (char *)calloc(6 + strlen(appName), sizeof(char));
-    snprintf(logName, 6 + strlen(appName), "RPKI %s", appName);
+    xsnprintf(logName, 6 + strlen(appName), "RPKI %s", appName);
     openlog(logName, LOG_PID, 0);
     syslog(LOG_NOTICE, "Application Started");
 }

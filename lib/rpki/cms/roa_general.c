@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "roa_utils.h"
+#include "util/stringutils.h"
 
 #define SKI_SIZE 20
 
@@ -630,8 +631,8 @@ int roaGenerateFilter(
         {
             if (str != NULL)
             {
-                iRes = snprintf(str, strLen, "%s %s %s\n",
-                                cSID, cAS_ID, pcAddresses[j]);
+                xsnprintf(str, strLen, "%s %s %s\n",
+                          cSID, cAS_ID, pcAddresses[j]);
                 strLen -= strlen(str);
                 str += strlen(str);
             }

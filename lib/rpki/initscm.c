@@ -9,6 +9,7 @@
 #include <ctype.h>
 
 #include "config/config.h"
+#include "util/stringutils.h"
 
 #include "scm.h"
 #define  SCM_DEFINED_HERE
@@ -265,10 +266,10 @@ char *makedsnscm(
     if (ptr == NULL)
         return (NULL);
     if (pass == NULL || pass[0] == 0)
-        (void)snprintf(ptr, len, "DSN=%s;DATABASE=%s;UID=%s", pref, db, usr);
+        xsnprintf(ptr, len, "DSN=%s;DATABASE=%s;UID=%s", pref, db, usr);
     else
-        (void)snprintf(ptr, len, "DSN=%s;DATABASE=%s;UID=%s;PASSWORD=%s",
-                       pref, db, usr, pass);
+        xsnprintf(ptr, len, "DSN=%s;DATABASE=%s;UID=%s;PASSWORD=%s",
+                  pref, db, usr, pass);
     return (ptr);
 }
 

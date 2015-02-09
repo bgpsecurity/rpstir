@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "util/path_compat.h"
+#include "util/stringutils.h"
 
 #include "path.h"
 
@@ -179,7 +180,7 @@ static char * realpath_noent(
                 free(copy_for_basename);
                 return NULL;
             }
-            snprintf(base, length, "%s/%s", dir_basename, tmp);
+            xsnprintf(base, length, "%s/%s", dir_basename, tmp);
             free(tmp);
             free(copy_for_basename);
         }

@@ -24,6 +24,7 @@
 #include "util/logging.h"
 #include "rpwork.h"
 #include "rpki-asn1/crlv2.h"
+#include "util/stringutils.h"
 
 int strict_profile_checks = 0;
 
@@ -201,8 +202,8 @@ char *ASNTimeToDBTime(
         *stap = ERR_SCM_NOMEM;
         return (NULL);
     }
-    (void)snprintf(out, 48, "%4d-%02d-%02d %02d:%02d:%02d",
-                   year, mon, day, hour, min, sec);
+    xsnprintf(out, 48, "%4d-%02d-%02d %02d:%02d:%02d",
+              year, mon, day, hour, min, sec);
     return (out);
 }
 
@@ -236,9 +237,9 @@ char *UnixTimeToDBTime(
         return (NULL);
     }
     tmp = gmtime(&clck);
-    (void)snprintf(out, 48, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
-                   1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday,
-                   tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+    xsnprintf(out, 48, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+              1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday,
+              tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
     return (out);
 }
 
@@ -304,7 +305,7 @@ static char *strappend(
     outstr = (char *)calloc(leen, sizeof(char));
     if (outstr == NULL)
         return (instr);
-    (void)snprintf(outstr, leen, "%s;%s", instr, nstr);
+    xsnprintf(outstr, leen, "%s;%s", instr, nstr);
     free((void *)instr);
     return (outstr);
 }
@@ -1334,7 +1335,7 @@ static void crf_get_crlno(
         return;
     }
 
-    snprintf(dptr, 2 + strlen(ptr) + 1, "^x%s", ptr);
+    xsnprintf(dptr, 2 + strlen(ptr) + 1, "^x%s", ptr);
 
     OPENSSL_free(ptr);
 
@@ -3919,8 +3920,8 @@ static int rescert_extensions_chk(
 
             if (oid_size > max_oid_print_length)
             {
-                snprintf(oid_print, sizeof(oid_print),
-                         "<oid too large to print>");
+                xsnprintf(oid_print, sizeof(oid_print),
+                          "<oid too large to print>");
             }
             else
             {

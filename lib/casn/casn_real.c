@@ -15,6 +15,7 @@ char casn_real_sfcsid[] = "@(#)casn_real.c 860P";
 
 #include <stdio.h>
 #include "casn.h"
+#include "util/stringutils.h"
 
 extern int _casn_obj_err(
     struct casn *,
@@ -314,7 +315,7 @@ int write_casn_double(
         else
         {                       // append nulls since sprintf will not
             for (ptp = Ep; ptp < &Ep[6]; *ptp++ = 0);
-            snprintf(Ep, 6, "E%ld", exponent);
+            xsnprintf(Ep, 6, "E%ld", exponent);
         }
         i = strlen((char *)locbuf);
     }

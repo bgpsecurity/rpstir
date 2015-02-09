@@ -14,6 +14,7 @@
  * signals.                                           *
  *****************************************************/
 #include "main.h"
+#include "util/stringutils.h"
 
 /*
  * $Id$ 
@@ -34,7 +35,7 @@ void sig_handler(
 
     if (sig == SIGINT)
     {
-        snprintf(errorStr, sizeof(errorStr), "SIGINT caught\r\n");
+        xsnprintf(errorStr, sizeof(errorStr), "SIGINT caught\r\n");
         outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
         if (outStr)
         {
@@ -53,7 +54,7 @@ void sig_handler(
     }
     else if (sig == SIGQUIT)
     {
-        snprintf(errorStr, sizeof(errorStr), "SIGQUIT caught\r\n");
+        xsnprintf(errorStr, sizeof(errorStr), "SIGQUIT caught\r\n");
         outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
         if (outStr)
         {
@@ -72,7 +73,7 @@ void sig_handler(
     }
     else if (sig == SIGTERM)
     {
-        snprintf(errorStr, sizeof(errorStr), "SIGTERM caught\r\n");
+        xsnprintf(errorStr, sizeof(errorStr), "SIGTERM caught\r\n");
         outStr = makeFatalStr(errorStr, strlen(errorStr), &retlen);
         if (outStr)
         {

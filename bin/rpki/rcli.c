@@ -34,6 +34,7 @@
 #include "rpki/err.h"
 #include "config/config.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 
 static char *tdir = NULL;       // top level dir of the repository
@@ -59,8 +60,8 @@ static int saveState(
         stmt = (char *)calloc(leen, sizeof(char));
         if (stmt == NULL)
             return (ERR_SCM_NOMEM);
-        snprintf(stmt, leen, "select * from %s into outfile 'backup_%s';",
-                 name, name);
+        xsnprintf(stmt, leen, "select * from %s into outfile 'backup_%s';",
+                  name, name);
         sta = statementscm_no_data(conp, stmt);
         free((void *)stmt);
         stmt = NULL;
@@ -91,10 +92,10 @@ static int restoreState(
         stmt = (char *)calloc(leen, sizeof(char));
         if (stmt == NULL)
             return (ERR_SCM_NOMEM);
-        snprintf(stmt, leen, "delete from %s;", name);
+        xsnprintf(stmt, leen, "delete from %s;", name);
         sta = statementscm_no_data(conp, stmt);
-        snprintf(stmt, leen, "load data infile 'backup_%s' into table %s;",
-                 name, name);
+        xsnprintf(stmt, leen, "load data infile 'backup_%s' into table %s;",
+                  name, name);
         free((void *)stmt);
         stmt = NULL;
         sta = statementscm_no_data(conp, stmt);

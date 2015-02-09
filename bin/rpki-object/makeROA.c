@@ -1,5 +1,6 @@
 #include "rpki/cms/roa_utils.h"
 #include "rpki/err.h"
+#include "util/stringutils.h"
 
 
 /*
@@ -18,8 +19,8 @@ int main(
     checkErr(!roaFromConfig(argv[1], 0, &roa),
              "Could not read config from %s\n", argv[1]);
     isPEM = tolower((int)(argv[3][0])) != 'd';
-    snprintf(filename, sizeof(filename), "%s.roa.%s", argv[2],
-             isPEM ? "pem" : "der");
+    xsnprintf(filename, sizeof(filename), "%s.roa.%s", argv[2],
+              isPEM ? "pem" : "der");
     checkErr(!roaToFile(&roa, filename, isPEM ? FMT_PEM : FMT_DER),
              "Could not write file: %s\n", filename);
     return 0;
