@@ -98,52 +98,52 @@ static void
 initSearch(
     scm *scmp)
 {
-    if (validTable == NULL)
-    {
-        validTable = findtablescm(scmp, "certificate");
-        validSrch = newsrchscm(NULL, 3, 0, 1);
-        QueryField *field = findField("aki");
-        addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
-        char *now = LocalTimeToDBTime(NULL);
-        field = findField("issuer");
-        addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
-        validWhereStr = validSrch->wherestr;
-        validWhereStr[0] = 0;
-        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-            xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
-        free(now);
-        addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
-                    !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
-        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-            addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
-            addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
-            addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
-            addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
-        {
-            int len = strlen(validWhereStr);
-            xsnprintf(&validWhereStr[len], WHERESTR_SIZE - len,
-                      " and ("
-                      "((flags%%%d)>=%d)"
-                      " or ((flags%%%d)<%d)"
-                      " or ((flags%%%d)>=%d)"
-                      ")",
-                      2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
-                      SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
-        }
-        whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
-        nextSKI = (char *)validSrch->vec[0].valptr;
-        nextSubject = (char *)validSrch->vec[1].valptr;
+    if (validTable)
+        return;
 
-        if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-        {
-            anySrch = newsrchscm(NULL, 1, 0, 1);
-            field = findField("flags");
-            addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
-        }
+    validTable = findtablescm(scmp, "certificate");
+    validSrch = newsrchscm(NULL, 3, 0, 1);
+    QueryField *field = findField("aki");
+    addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
+    char *now = LocalTimeToDBTime(NULL);
+    field = findField("issuer");
+    addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
+    validWhereStr = validSrch->wherestr;
+    validWhereStr[0] = 0;
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+        xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
+    free(now);
+    addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
+                !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+        addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
+        addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
+        addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
+        addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
+    {
+        int len = strlen(validWhereStr);
+        xsnprintf(&validWhereStr[len], WHERESTR_SIZE - len,
+                  " and ("
+                  "((flags%%%d)>=%d)"
+                  " or ((flags%%%d)<%d)"
+                  " or ((flags%%%d)>=%d)"
+                  ")",
+                  2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
+                  SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
+    }
+    whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
+    nextSKI = (char *)validSrch->vec[0].valptr;
+    nextSubject = (char *)validSrch->vec[1].valptr;
+
+    if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+    {
+        anySrch = newsrchscm(NULL, 1, 0, 1);
+        field = findField("flags");
+        addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
     }
 }
 
