@@ -79,7 +79,22 @@ extern int getNumFields(
 
 /**
  * @brief
- *     check the validity of a cert in the db given its ski or localID
+ *     check the validity of a cert in the db
+ *
+ * @param[in] ski
+ *     If non-NULL, the subject key identifier identifying the
+ *     certificate to check.  If NULL, the certificate to check is
+ *     identified by @p localID.
+ * @param[in] localID
+ *     Identifies the certificate if @p ski is NULL.  This parameter
+ *     is ignored if @p ski is not NULL.
+ * @param[in] scmp
+ *     Database schema pointer.
+ * @param[in] connect
+ *     Database connection pointer.
+ * @return
+ *     True (non-zero) if the certificate is valid, false (0)
+ *     otherwise.
  */
 extern int checkValidity(
     char *ski,
