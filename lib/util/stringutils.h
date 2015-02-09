@@ -5,6 +5,8 @@
  * Low-level string parsing utilities
  */
 
+#include "macros.h"
+#include <stdarg.h>
 #include <stddef.h>
 
 /*
@@ -170,5 +172,27 @@ char *scrub_for_print(
     size_t const dst_sz,
     size_t * dst_len_out,
     char const *other_chars_to_escape);
+
+/**
+ * @brief same as snprintf(), but calls abort() if snprintf() returns
+ * less than 0 or >= n.
+ */
+int
+xsnprintf(
+    char * restrict s,
+    size_t n,
+    const char * restrict format,
+    ...) WARN_PRINTF(3, 4);
+
+/**
+ * @brief same as vsnprintf(), but calls abort() if vsnprintf()
+ * returns less than 0 or >= n.
+ */
+int
+xvsnprintf(
+    char * restrict s,
+    size_t n,
+    const char * restrict format,
+    va_list arg) WARN_PRINTF(3, 0);
 
 #endif /* !LIB_UTIL_STRINGUTILS_H */

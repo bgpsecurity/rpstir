@@ -348,3 +348,32 @@ char *scrub_for_print(
 
     return dst;
 }
+
+int
+xsnprintf(
+    char * restrict s,
+    size_t n,
+    const char * restrict format,
+    ...)
+{
+    va_list arg;
+    va_start(arg, format);
+    int ret = xvsnprintf(s, n, format, arg);
+    va_end(arg);
+    return ret;
+}
+
+int
+xvsnprintf(
+    char * restrict s,
+    size_t n,
+    const char * restrict format,
+    va_list arg)
+{
+    int ret = vsnprintf(s, n, format, arg);
+    if ((ret < 0) || ((size_t)ret >= n))
+    {
+        abort();
+    }
+    return ret;
+}
