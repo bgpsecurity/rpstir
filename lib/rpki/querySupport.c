@@ -85,13 +85,19 @@ static int registerParent(
     return 0;
 }
 
-int checkValidity(
-    char *ski,
-    unsigned int localID,
-    scm *scmp,
-    scmcon *connect)
+/**
+ * @brief set up main part of query
+ *
+ * Global variables are initialized only once, instead of once per
+ * object.
+ *
+ * @param[in] scmp
+ *     Database schema pointer.
+ */
+static void
+initSearch(
+    scm *scmp)
 {
-    // set up main part of query only once, instead of once per object
     if (validTable == NULL)
     {
         validTable = findtablescm(scmp, "certificate");
@@ -139,6 +145,15 @@ int checkValidity(
             addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
         }
     }
+}
+
+int checkValidity(
+    char *ski,
+    unsigned int localID,
+    scm *scmp,
+    scmcon *connect)
+{
+    initSearch(scmp);
 
     /* FIXME: This code assumes that is suffices to trace a single
      * parent until one arrives at a trust anchor.  This will not
