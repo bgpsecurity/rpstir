@@ -647,9 +647,6 @@ static int get_sigval(
  * @brief
  *     This function attempts to set the sigval parameter in a table
  *     based on the type.
- *
- * It has no return value, since the only negative effect it can have
- * is on performance.
  */
 static int set_cert_sigval(
     scmcon *conp,
@@ -1614,7 +1611,7 @@ static int make_goodoids(
 
 /**
  * @brief
- *     callback function for verify_children()
+ *     callback function for verifyChildCert()
  */
 static int verifyChildCRL(
     scmcon *conp,
@@ -1669,7 +1666,7 @@ static int verifyChildCRL(
 
 /**
  * @brief
- *     callback function for verify_children()
+ *     callback function for verifyChildCert()
  */
 static int verifyChildROA(
     scmcon *conp,
@@ -1906,7 +1903,7 @@ static int updateManifestObjs(
 
 /**
  * @brief
- *     callback function for verify_children()
+ *     callback function for verifyChildCert()
  */
 static int verifyChildManifest(
     scmcon *conp,
@@ -1990,7 +1987,7 @@ static char manFiles[MANFILES_SIZE];
 
 /**
  * @brief
- *     utility function for verifyChildren()
+ *     utility function for verifyOrNotChildren()
  */
 static int verifyChildCert(
     scmcon *conp,
@@ -2199,7 +2196,10 @@ static int invalidate_gbr(
     return 0;
 }
 
-/** callback function for invalidateChildCert */
+/**
+ * @brief
+ *     callback function for invalidateChildCert()
+ */
 static int invalidate_mft(
     scmcon *conp,
     scmsrcha *s,
@@ -2235,7 +2235,10 @@ static int invalidate_mft(
     return 0;
 }
 
-/** callback function for invalidateChildCert */
+/**
+ * @brief
+ *     callback function for invalidateChildCert()
+ */
 static int invalidate_crl(
     scmcon *conp,
     scmsrcha *s,
@@ -2264,7 +2267,7 @@ static int invalidate_crl(
 
 /**
  * @brief
- *     utility function for verify_children()
+ *     utility function for verifyOrNotChildren()
  */
 static int invalidateChildCert(
     scmcon *conp,
@@ -2347,7 +2350,7 @@ PropDataList *prevPropData = NULL;
 
 /**
  * @brief
- *     callback function for verify_children()
+ *     callback function for verifyOrNotChildren()
  */
 static int registerChild(
     scmcon *conp,

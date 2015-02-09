@@ -318,13 +318,9 @@ extern struct cert_answers *find_cert_by_aKI(
 
 /**
  * @brief
- *     Get the parent certificate by using the issuer and the aki of
- *     "x" to look it up in the db.
+ *     Get parent certificates by looking up the cert's issuer and AKI
+ *     in the db.
  *
- * If "x" has already been broken down in "cf" just use the issuer/aki
- * from there, otherwise look it up from "x". The db lookup will
- * return the filename and directory name of the parent cert, as well
- * as its flags. Set those flags into "pflags"
  */
 extern struct cert_answers *find_parent_cert(
     char *,

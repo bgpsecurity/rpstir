@@ -399,7 +399,7 @@ static void fill_done_cert(
 int get_CAcert(
     char *ski,
     struct done_cert **done_certpp)
-{                               // use INTERSECTION_ALWAYS
+{
     struct Certificate *certp = (struct Certificate *)0;
     int i,
         j;

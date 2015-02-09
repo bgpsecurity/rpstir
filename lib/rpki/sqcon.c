@@ -474,7 +474,8 @@ static int valcols(
 
 
 /**
- * Quote the input as needed for use in a SQL statement.
+ * @brief
+ *     Quote the input as needed for use in a SQL statement.
  *
  * Note the special convention that if the value (as a string) begins with
  * ^x it is NOT quoted. The ^x is turned into 0x and then inserted. This

@@ -18,8 +18,8 @@
  *     if given as a negative number the length in the input buffer is
  *     calculated.
  * @return
- *     the new length of the string on success and a negative error
- *     code on failure
+ *     the new length of the string on success (non-negative) and an
+ *     ERR_SCM_* error code on failure (negative).
  */
 extern int strwillfit(
     char *inbuf,

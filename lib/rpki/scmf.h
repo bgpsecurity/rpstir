@@ -257,7 +257,7 @@ extern int getuintscm(
  *     searches in a database table for entries that match the stated
  *     search criteria
  *
- * Note that searchscm() can be call recursively, so that there can
+ * Note that searchscm() can be called recursively, so that there can
  * be more than one cursor open at a time.  For this reason,
  * searchscm() must create its own STMT and then destroy it when it is
  * done.

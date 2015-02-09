@@ -79,8 +79,7 @@ extern int getNumFields(
 
 /**
  * @brief
- *     check the valdity via the db of the cert whose ski or localID
- *     is given
+ *     check the validity of a cert in the db given its ski or localID
  */
 extern int checkValidity(
     char *ski,
@@ -90,7 +89,7 @@ extern int checkValidity(
 
 /**
  * @brief
- *     displayFlags() function needs to know if object is a manifes
+ *     displayFlags() needs to know if object is a manifest
  */
 void setIsManifest(
     int val);

@@ -294,10 +294,11 @@ extern void freecrf(
  * at all, it just manipulates the CRL.
  *
  * @note
- *     This function does NOT set all the fields in the ::crl_fields.
- *     In particular, it is the responsibility of the caller to set
- *     the crl_fields::dirid field.  This field requires DB access and
- *     are therefore is not part of this function.
+ *     This function does NOT set all the fields in the returned
+ *     ::crl_fields structure.  In particular, it is the
+ *     responsibility of the caller to set the crl_fields::dirid
+ *     field.  This field requires DB access and is therefore not set
+ *     by this function.
  *
  * @param[out] stap
  *     On success the value at this location will be set to 0.  On
@@ -305,7 +306,8 @@ extern void freecrf(
  *     code.
  * @param[out] crlstap
  *     On success the value at this location is set to 1.  If an X509
- *     error occured, the value at this location is set to that error.
+ *     error occured, the value at this location is set to indicate
+ *     the particular error.
  * @return
  *     On success this function returns a pointer to allocated memory
  *     containing all the indicated fields (except the

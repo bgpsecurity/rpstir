@@ -4076,9 +4076,10 @@ static int crl_issuer_chk(
 }
 
 /**
-  Check whether the ChoiceOfTime is convertible to a database-style
-  date and time.
-*/
+ * @brief
+ *     Check whether the ::ChoiceOfTime is convertible to a
+ *     database-style date and time.
+ */
 static int cvt_crldate2DB(
     struct ChoiceOfTime *cotp)
 {

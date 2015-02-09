@@ -404,7 +404,7 @@ void free_badfiles(
  * @param[in] r
  *     It is permissible for @p r to be NULL, in which case nothing
  *     happens.  If @p r is non-NULL, however, it must point to a
- *     syntatically valid ROA structure (which need not have been
+ *     syntactically valid ROA structure (which need not have been
  *     semantically validated, however).
  */
 void roaFree(
