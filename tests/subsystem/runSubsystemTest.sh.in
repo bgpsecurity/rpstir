@@ -39,6 +39,20 @@ if port_open `config_get RPKIPort`; then
     exit 3
 fi
 
+unset LOADER_PID
+kill_loader() {
+    [ -n "${LOADER_PID+set}" ] || return 0
+    kill "${LOADER_PID}"
+    # TODO: make rcli close cleanly so its return value can be checked
+    # reliably
+    wait "${LOADER_PID}" || true
+    ret=$?
+    unset LOADER_PID
+    return "${ret}"
+}
+trap 'exit 1' HUP INT TERM
+trap 'kill_loader' EXIT
+
 # start loader
 run_bg "rcli-w" rcli -w -p
 LOADER_PID=$!
@@ -59,10 +73,8 @@ while [ $N -le $NUM_TOTAL ]; do
     N=$(( $N + 1 ))
 done
 
-# cleanup
-# TODO: make rcli close cleanly so its return value can be checked reliably
-kill $LOADER_PID
-wait $LOADER_PID || true
+kill_loader || fatal "rcli exited with non-0 status"
+
 # echo Socket state from netstat
 # netstat -ant | grep `config_get RPKIPort`
 
