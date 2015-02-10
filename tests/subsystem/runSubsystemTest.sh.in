@@ -56,8 +56,11 @@ trap 'kill_loader' EXIT
 # start loader
 run_bg "rcli-w" rcli -w -p
 LOADER_PID=$!
+timeout=15
 while ! port_open `config_get RPKIPort`; do
+    [ "${timeout}" -gt 0 ] || fatal "timed out waiting for rcli to start"
     sleep 1
+    timeout=$((timeout-1))
 done
 echo "Loader started (pid = $LOADER_PID)..."
 
