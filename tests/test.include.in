@@ -94,3 +94,9 @@ use_config_file () {
 
     export @CONFIG_ENV_VAR@="$1"
 }
+
+port_open() {
+    command -v nc >/dev/null 2>/dev/null || fatal "nc utility not found"
+    [ "$1" -ge 0 ] || fatal "must specify a port number"
+    nc localhost "$1" </dev/null >/dev/null 2>&1
+}
