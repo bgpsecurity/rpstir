@@ -39,6 +39,7 @@
 
 static scmtab *theCertTable = NULL;
 static scmtab *theROATable = NULL;
+static scmtab *theROAPrefixTable = NULL;
 static scmtab *theCRLTable = NULL;
 static scmtab *theManifestTable = NULL;
 static scmtab *theGBRTable = NULL;
@@ -87,6 +88,12 @@ static void initTables(
         if (theROATable == NULL)
         {
             LOG(LOG_ERR, "Error finding roa table");
+            exit(-1);
+        }
+        theROAPrefixTable = findtablescm(scmp, "ROA_PREFIX");
+        if (theROAPrefixTable == NULL)
+        {
+            LOG(LOG_ERR, "Error finding roa_prefix table");
             exit(-1);
         }
         theManifestTable = findtablescm(scmp, "MANIFEST");
@@ -2965,13 +2972,14 @@ static int add_roa_internal(
     unsigned int dirid,
     char *ski,
     uint32_t asid,
-    char *ip_addrs,
+    size_t prefixes_length,
+    struct roa_prefix const * prefixes,
     char *sig,
     unsigned int flags)
 {
     unsigned int roa_id = 0;
     scmkva aone;
-    scmkv cols[8];
+    scmkv cols[7];
     char flagn[24];
     char asn[24];
     char lid[24];
@@ -2979,15 +2987,31 @@ static int add_roa_internal(
     int idx = 0;
     int sta;
 
+    // Buffer to hold a potentially large INSERT statement. This is
+    // used to insert multiple rows per statement into
+    // rpki_roa_prefix.
+    size_t const multiinsert_len = 32 * 1024;
+    char * multiinsert = malloc(multiinsert_len);
+    if (multiinsert == NULL)
+    {
+        return ERR_SCM_NOMEM;
+    }
+
     initTables(scmp);
     conp->mystat.tabname = "ROA";
     // first check for a duplicate signature
     sta = dupsigscm(scmp, conp, theROATable, sig);
     if (sta < 0)
+    {
+        free(multiinsert);
         return (sta);
+    }
     sta = getmaxidscm(scmp, conp, "local_id", theROATable, &roa_id);
     if (sta < 0)
+    {
+        free(multiinsert);
         return (sta);
+    }
     roa_id++;
     // fill in insertion structure
     cols[idx].column = "filename";
@@ -2999,8 +3023,6 @@ static int add_roa_internal(
     cols[idx++].value = ski;
     cols[idx].column = "sig";
     cols[idx++].value = sig;
-    cols[idx].column = "ip_addrs";
-    cols[idx++].value = ip_addrs;
     (void)snprintf(asn, sizeof(asn), "%" PRIu32, asid);
     cols[idx].column = "asn";
     cols[idx++].value = asn;
@@ -3011,11 +3033,164 @@ static int add_roa_internal(
     cols[idx].column = "local_id";
     cols[idx++].value = lid;
     aone.vec = &cols[0];
-    aone.ntot = 8;
+    aone.ntot = sizeof(cols)/sizeof(cols[0]);
     aone.nused = idx;
     aone.vald = 0;
     // add the ROA
     sta = insertscm(conp, theROATable, &aone);
+    if (sta < 0)
+    {
+        free(multiinsert);
+        return sta;
+    }
+
+    // Prefix for the insert statement that inserts multiple rows
+    // into rpki_roa_prefix.
+    static char const multiinsert_pre[] =
+        "INSERT INTO rpki_roa_prefix "
+        "(roa_local_id, prefix, prefix_length, prefix_max_length) "
+        "VALUES ";
+    static size_t const multiinsert_pre_len =
+        sizeof(multiinsert_pre) - 1;
+
+    // Index into multiinsert where the next character should be
+    // written.
+    size_t multiinsert_idx = 0;
+
+    // String to represent a prefix as VARBINARY in SQL.
+    char * prefix;
+
+    int snprintf_ret;
+
+    size_t i;
+    for (i = 0; i < prefixes_length; ++i)
+    {
+        if (multiinsert_idx == 0)
+        {
+            memcpy(multiinsert, multiinsert_pre, multiinsert_pre_len);
+            multiinsert_idx += multiinsert_pre_len;
+        }
+
+        prefix = hexify(
+            prefixes[i].prefix_family_length, prefixes[i].prefix,
+            HEXIFY_X);
+        if (prefix == NULL)
+        {
+            sta = ERR_SCM_NOMEM;
+            goto done;
+        }
+
+        snprintf_ret = snprintf(
+            multiinsert + multiinsert_idx,
+            multiinsert_len - multiinsert_idx,
+            "(%u, %s, %" PRIu8 ", %" PRIu8 "),",
+            roa_id,
+            prefix,
+            prefixes[i].prefix_length,
+            prefixes[i].prefix_max_length);
+
+        free(prefix);
+        prefix = NULL;
+
+        if (snprintf_ret < 0)
+        {
+            sta = ERR_SCM_INTERNAL;
+            goto done;
+        }
+        else if ((size_t)snprintf_ret >=
+            multiinsert_len - multiinsert_idx)
+        {
+            // The above write was truncated.
+
+            if (multiinsert_idx == multiinsert_pre_len)
+            {
+                // The write was truncated even though it's the first
+                // prefix in this statement. That's an internal error
+                // because multiinsert_len is too small.
+                sta = ERR_SCM_INTERNAL;
+                goto done;
+            }
+
+            // Decrement i to ensure this prefix gets inserted
+            // eventually.
+            --i;
+
+            // Overwrite the ',' from the previous prefix and
+            // terminate the statement.
+            --multiinsert_idx;
+            multiinsert[multiinsert_idx] = '\0';
+        }
+        else if (i >= prefixes_length - 1)
+        {
+            // The write was not truncated, but this is the last
+            // prefix, so overwrite the ',' from this prefix and
+            // terminate the statement.
+            multiinsert_idx += snprintf_ret - 1;
+            multiinsert[multiinsert_idx] = '\0';
+        }
+        else
+        {
+            // The above write was not truncated and this is not the
+            // last prefix, so attempt to add more prefixes before
+            // executing the statement.
+            multiinsert_idx += snprintf_ret;
+            continue;
+        }
+
+        // Perform the insert.
+        sta = statementscm_no_data(conp, multiinsert);
+        if (sta < 0)
+        {
+            LOG(LOG_ERR,
+                "Error inserting ROA prefixes. SQL query: %s",
+                multiinsert);
+            goto done;
+        }
+
+        // Start the statement at the beginning again with the next
+        // prefix.
+        multiinsert_idx = 0;
+    }
+
+done:
+
+    if (sta < 0)
+    {
+        // There was an error, so delete the ROA we just inserted.
+        int delete_status;
+
+        delete_status = deletescm(conp, theROATable, &aone);
+        if (delete_status < 0)
+        {
+            LOG(LOG_ERR,
+                "Error deleting row from rpki_roa: %s (%d)",
+                err2string(delete_status), delete_status);
+        }
+
+        // Then delete the prefixes, if they weren't already deleted
+        // by the foreign key constraints.
+        scmkva roa_prefixes_aone;
+        scmkv roa_prefixes_cols[1];
+        roa_prefixes_cols[0].column = "roa_local_id";
+        roa_prefixes_cols[0].value = lid;
+        roa_prefixes_aone.vec = &cols[0];
+        roa_prefixes_aone.ntot =
+            sizeof(roa_prefixes_cols)/sizeof(roa_prefixes_cols[0]);
+        roa_prefixes_aone.nused = roa_prefixes_aone.ntot;
+        roa_prefixes_aone.vald = 0;
+        delete_status =
+            deletescm(conp, theROAPrefixTable, &roa_prefixes_aone);
+        if (delete_status < 0)
+        {
+            LOG(LOG_ERR,
+                "Error deleting from rpki_roa_prefix with "
+                "roa_local_id %s: %s (%d)",
+                lid, err2string(delete_status), delete_status);
+        }
+    }
+
+    free(multiinsert);
+
     return (sta);
 }
 
@@ -3037,8 +3212,9 @@ int add_roa(
     struct CMS roa;             // note: roaFromFile constructs this
     char ski[60],
        *sig = NULL,
-        certfilename[PATH_MAX],
-        *ip_addrs = NULL;
+        certfilename[PATH_MAX];
+    size_t prefixes_length = 0;
+    struct roa_prefix * prefixes = NULL;
     unsigned char *bsig = NULL;
     int sta,
         chainOK,
@@ -3086,24 +3262,28 @@ int add_roa(
         if ((sta = verify_roa(conp, &roa, ski, &chainOK)) != 0)
             break;
 
-        // ip_addrs
-        sta = roaGetIPAddresses(&roa, &ip_addrs);
-        if (sta != 0)
+        // prefixes
+        ssize_t prefixes_ret = roaGetPrefixes(&roa, &prefixes);
+        if (prefixes_ret < 0)
+        {
             break;
+        }
+        prefixes_length = prefixes_ret;
+
         sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
         if (sta != 0)
             break;
 
         // add to database
-        sta = add_roa_internal(scmp, conp, outfile, id, ski, asid, ip_addrs,
-                               sig, flags);
+        sta = add_roa_internal(scmp, conp, outfile, id, ski, asid,
+            prefixes_length, prefixes, sig, flags);
         if (sta < 0)
             break;
 
     } while (0);
 
     // clean up
-    free(ip_addrs);
+    free(prefixes);
     if (sta != 0 && cert_added)
         (void)delete_object(scmp, conp, certfilename, outdir, outfull,
                             (unsigned int)0);

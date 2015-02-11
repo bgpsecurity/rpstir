@@ -1496,7 +1496,7 @@ int setflagsscm(
 
 char *hexify(
     int bytelen,
-    void *ptr,
+    void const * ptr,
     int useox)
 {
     unsigned char *inptr;
@@ -1551,7 +1551,7 @@ char *hexify(
 
 void *unhexify(
     int strnglen,
-    char *strng)
+    char const * strng)
 {
     unsigned char *oot;
     unsigned int x;

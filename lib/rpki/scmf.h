@@ -131,14 +131,14 @@ extern void freesrchscm(
     scmsrcha * srch);
 extern void *unhexify(
     int strnglen,
-    char *strng);
+    char const * strng);
 extern char *geterrorscm(
     scmcon * conp);
 extern char *gettablescm(
     scmcon * conp);
 extern char *hexify(
     int bytelen,
-    void *bytes,
+    void const * bytes,
     int useox);
 extern int getrowsscm(
     scmcon * conp);
