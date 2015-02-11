@@ -91,7 +91,6 @@ static int handleResults(
     char resultStr[MAX_RESULT_SZ];
     int i;
 
-    UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(numLine);
     if (validate)
     {
@@ -108,7 +107,8 @@ static int handleResults(
         QueryField *field = globalFields[display];
         if (field->displayer != NULL)
         {
-            result += field->displayer(s, result, resultStr);
+            result += field->displayer(
+                scmp, conp, s, result, resultStr);
         }
         else if (s->vec[result].avalsize != SQL_NULL_DATA)
         {

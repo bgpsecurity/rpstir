@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <mysql.h>
+#include <arpa/inet.h>
 
 #include "config/config.h"
 
@@ -42,6 +43,7 @@ void addQueryFlagTests(
  * all these static variables are used for efficiency, so that
  * there is no need to initialize them with each call to checkValidity
  */
+static scmtab *roaPrefixTable = NULL;
 static scmtab *validTable = NULL;
 static scmsrcha *validSrch = NULL,
     *anySrch = NULL;
@@ -203,10 +205,14 @@ int checkValidity(
  * combines dirname and filename into a pathname 
  */
 static int pathnameDisplay(
+    scm * scmp,
+    scmcon * connection,
     scmsrcha * s,
     int idx1,
     char *returnStr)
 {
+    (void)scmp;
+    (void)connection;
     snprintf(returnStr, MAX_RESULT_SZ, "%s/%s",
              (char *)s->vec[idx1].valptr, (char *)s->vec[idx1 + 1].valptr);
     return 2;
@@ -216,10 +222,15 @@ static int pathnameDisplay(
  * create space-separated string of serial numbers 
  */
 static int displaySNList(
+    scm * scmp,
+    scmcon * connection,
     scmsrcha * s,
     int idx1,
     char *returnStr)
 {
+    (void)scmp;
+    (void)connection;
+
     uint8_t *snlist;
     unsigned int i,
         snlen;
@@ -247,6 +258,217 @@ static int displaySNList(
         free(hexs);
     }
     return 2;
+}
+
+/**
+ * @brief callback state for the display_ip_addrs_valuefunc()
+ *     callback function
+ */
+struct display_ip_addrs_context
+{
+    char const * separator;
+
+    char * result;
+    size_t result_len;
+    size_t result_idx;
+};
+
+/**
+ * @brief searchscm() callback for display_ip_addrs(), called for each
+ *     prefix in a ROA
+ */
+static int display_ip_addrs_valuefunc(
+    scmcon * conp,
+    scmsrcha * s,
+    ssize_t idx)
+{
+    (void)conp;
+    (void)idx;
+
+    struct display_ip_addrs_context * context = s->context;
+
+    unsigned char const * prefix = s->vec[0].valptr;
+    int_fast64_t const prefix_family_length = s->vec[0].avalsize;
+    unsigned long const prefix_length =
+        *(unsigned long const *)s->vec[1].valptr;
+    unsigned long const prefix_max_length =
+        *(unsigned long const *)s->vec[2].valptr;
+
+    int af;
+    switch (prefix_family_length)
+    {
+        case 4:
+            af = AF_INET;
+            break;
+
+        case 16:
+            af = AF_INET6;
+            break;
+
+        default:
+            LOG(LOG_ERR, "invalid prefix_family_length %" PRIuFAST64,
+                prefix_family_length);
+            return ERR_SCM_INTERNAL;
+    }
+
+    char prefix_str[INET6_ADDRSTRLEN];
+    if (inet_ntop(af, prefix, prefix_str, sizeof(prefix_str)) == NULL)
+    {
+        LOG(LOG_ERR, "error converting prefix to a string");
+        return ERR_SCM_INTERNAL;
+    }
+
+    int snprintf_ret = snprintf(
+        context->result + context->result_idx,
+        context->result_len - context->result_idx,
+        "%s/%lu(%lu)%s",
+        prefix_str,
+        prefix_length,
+        prefix_max_length,
+        context->separator);
+    if (snprintf_ret < 0)
+    {
+        return ERR_SCM_INTERNAL;
+    }
+    else if ((size_t)snprintf_ret >=
+        context->result_len - context->result_idx)
+    {
+        return ERR_SCM_TRUNCATED;
+    }
+    else
+    {
+        context->result_idx += snprintf_ret;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief displayfunc to convert the list of prefixes in a ROA into a
+ *     string, @p returnStr
+ */
+static int display_ip_addrs(
+    scm * scmp,
+    scmcon * connection,
+    scmsrcha * s,
+    int idx1,
+    char *returnStr)
+{
+    static char const none_str[] = "(none)";
+    static char const truncated_str[] = "...";
+    static char const separator[] = ", ";
+    static size_t const separator_len = sizeof(separator) - 1;
+
+    if (roaPrefixTable == NULL)
+    {
+        roaPrefixTable = findtablescm(scmp, "ROA_PREFIX");
+    }
+
+    int sta;
+
+    unsigned long roa_local_id =
+        *((unsigned long *)(s->vec[idx1].valptr));
+    char roa_local_id_str[24];
+    snprintf(roa_local_id_str, sizeof(roa_local_id_str), "%lu",
+        roa_local_id);
+
+    struct display_ip_addrs_context context;
+    context.separator = separator;
+    context.result = returnStr;
+    context.result[0] = '\0';
+    context.result_len = MAX_RESULT_SZ - sizeof(truncated_str);
+    context.result_idx = 0;
+
+    unsigned char prefix[16];
+    unsigned long prefix_length;
+    unsigned long prefix_max_length;
+
+    scmsrch select[3];
+    scmkv where_cols[1];
+    scmkva where;
+    char * order;
+    scmsrcha srch;
+
+    select[0].colno = 1;
+    select[0].sqltype = SQL_C_BINARY;
+    select[0].colname = "prefix";
+    select[0].valptr = prefix;
+    select[0].valsize = sizeof(prefix);
+    select[0].avalsize = 0;
+    select[1].colno = 2;
+    select[1].sqltype = SQL_C_ULONG;
+    select[1].colname = "prefix_length";
+    select[1].valptr = &prefix_length;
+    select[1].valsize = sizeof(prefix_length);
+    select[1].avalsize = 0;
+    select[2].colno = 3;
+    select[2].sqltype = SQL_C_ULONG;
+    select[2].colname = "prefix_max_length";
+    select[2].valptr = &prefix_max_length;
+    select[2].valsize = sizeof(prefix_max_length);
+    select[2].avalsize = 0;
+
+    where_cols[0].column = "roa_local_id";
+    where_cols[0].value = roa_local_id_str;
+
+    where.vec = where_cols;
+    where.ntot = sizeof(where_cols)/sizeof(where_cols[0]);
+    where.nused = where.ntot;
+    where.vald = 0;
+
+    order =
+        "length(prefix) asc, "
+        "prefix asc, "
+        "prefix_length asc, "
+        "prefix_max_length asc";
+
+    srch.vec = select;
+    srch.sname = NULL;
+    srch.ntot = sizeof(select)/sizeof(select[0]);
+    srch.nused = srch.ntot;
+    srch.vald = 0;
+    srch.where = &where;
+    srch.wherestr = NULL;
+    srch.context = &context;
+
+    sta = searchscm(
+        connection,
+        roaPrefixTable,
+        &srch,
+        NULL,
+        display_ip_addrs_valuefunc,
+        SCM_SRCH_DOVALUE_ANN | SCM_SRCH_BREAK_VERR,
+        order);
+    if (sta == ERR_SCM_TRUNCATED)
+    {
+        snprintf(
+            context.result + context.result_idx,
+            MAX_RESULT_SZ - context.result_idx,
+            "%s",
+            truncated_str);
+    }
+    else if (sta < 0)
+    {
+        // XXX: there should be a better way to signal an error
+        snprintf(
+            context.result,
+            MAX_RESULT_SZ,
+            "error: %s (%d)",
+            err2string(sta),
+            sta);
+    }
+    else if (context.result_idx >= separator_len)
+    {
+        // Remove the final separator
+        context.result[context.result_idx - separator_len] = '\0';
+    }
+    else if (context.result[0] == '\0')
+    {
+        // Indicate that there were no results
+        snprintf(context.result, MAX_RESULT_SZ, "%s", none_str);
+    }
+
+    return 1;
 }
 
 /*
@@ -292,10 +514,14 @@ void setIsManifest(
  * create list of all flags set to true 
  */
 static int displayFlags(
+    scm * scmp,
+    scmcon * connection,
     scmsrcha * s,
     int idx1,
     char *returnStr)
 {
+    (void)scmp;
+    (void)connection;
     unsigned int flags = *((unsigned int *)(s->vec[idx1].valptr));
     returnStr[0] = 0;
     addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
@@ -391,14 +617,22 @@ static QueryField fields[] = {
      "CRLDP", NULL,
      },
     {
-     "ip_addrs",                /* name of the field */
+     "local_id",
+     NULL,
+     Q_JUST_DISPLAY | Q_FOR_ROA,
+     SQL_C_ULONG, sizeof(unsigned long),
+     NULL, NULL,
+     NULL, NULL,
+     },
+    {
+     "ip_addrs",
      "the set of IP addresses assigned by the ROA",
-     Q_JUST_DISPLAY | Q_FOR_ROA,        /* flags */
-     SQL_C_CHAR, 32768,         /* sql return type, size */
-     NULL,                      /* use this for query, not name */
-     NULL,                      /* second field for query */
-     "IP Addresses",            /* name of column for printout */
-     NULL,                      /* function for display string */
+     Q_JUST_DISPLAY | Q_FOR_ROA,
+     -1, 0,
+     "local_id",
+     NULL,
+     "IP Addresses",
+     display_ip_addrs,
      },
     {
      "asn",
