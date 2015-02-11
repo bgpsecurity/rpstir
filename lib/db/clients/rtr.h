@@ -93,5 +93,139 @@ void db_rtr_reset_query_close(
     dbconn * conn,
     void *query_state);
 
+/**
+    @brief Determine if there's a valid rpki-rtr session.
+*/
+bool db_rtr_has_valid_session(
+    dbconn * conn);
+
+/**
+    @brief Delete incomplete updates.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_delete_incomplete_updates(
+    dbconn * conn);
+
+/**
+    @brief Detect if using the given serial numbers would put the
+        database into a weird or inconsistent state.
+
+    @return True if the serial numbers are ok to use, false if they're
+        not or there was an error.
+*/
+bool db_rtr_good_serials(
+    dbconn * conn,
+    serial_number_t previous,
+    serial_number_t current);
+
+/**
+    @brief Copy the current state of the RPKI cache to the rtr_full
+        table, using the given serial number.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_insert_full(
+    dbconn * conn,
+    serial_number_t serial);
+
+/**
+    @brief Compute the incremental changes from previous_serial to
+        current_serial.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_insert_incremental(
+    dbconn * conn,
+    serial_number_t previous_serial,
+    serial_number_t current_serial);
+
+/**
+    @brief Determine if the serial number has any changes from the
+        serial before it.
+
+    @return If there are any changes, 1. If there are no changes, 0.
+        If there's an error, -1.
+*/
+int db_rtr_has_incremental_changes(
+    dbconn * conn,
+    serial_number_t serial);
+
+/**
+    @brief Mark an update as available.
+
+    @param[in] conn DB connection.
+    @param[in] current_serial Current serial number for the update.
+    @param[in] previous_serial Serial number for the previous update.
+        This is ignored if @p previous_serial_is_null.
+    @param[in] previous_serial_is_null Whether or not there was a
+        previous update.
+    @return True on success, false on failure.
+*/
+bool db_rtr_insert_update(
+    dbconn * conn,
+    serial_number_t current_serial,
+    serial_number_t previous_serial,
+    bool previous_serial_is_null);
+
+/**
+    @brief Delete the rtr_full data for a single serial number.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_delete_full(
+    dbconn * conn,
+    serial_number_t serial);
+
+/**
+    @brief Mark full data for serials other than serial1 or serial2
+        as unavailable.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_ignore_old_full(
+    dbconn * conn,
+    serial_number_t serial1,
+    serial_number_t serial2);
+
+/**
+    @brief Delete full data for serials other than serial1 or serial2.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_delete_old_full(
+    dbconn * conn,
+    serial_number_t serial1,
+    serial_number_t serial2);
+
+/**
+    @brief Mark updates older than the configured interval as
+        unavailable, with the exception that serial1 and serial2
+        are not marked unavailable regardless of age.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_delete_old_update(
+    dbconn * conn,
+    serial_number_t serial1,
+    serial_number_t serial2);
+
+/**
+    @brief Mark incremental data unavailable if the previous serial
+        is already unavailable.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_ignore_old_incremental(
+    dbconn * conn);
+
+/**
+    @brief Delete any incremental data that's no longer available.
+
+    @return True on success, false on failure.
+*/
+bool db_rtr_delete_old_incremental(
+    dbconn * conn);
+
 
 #endif

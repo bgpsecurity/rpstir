@@ -36,6 +36,98 @@ static const char *_queries_rtr[] = {
         " from rtr_full "
         " where serial_num=? " " order by asn, ip_addr " " limit ?, ?",
 
+    // DB_PSTMT_RTR_COUNT_SESSION
+    "select count(*) from rtr_session",
+
+    // DB_PSTMT_RTR_DELETE_INCOMPLETE_INCREMENTAL
+    "delete rtr_incremental "
+    "from rtr_incremental "
+    "left join rtr_update on "
+    "    rtr_incremental.serial_num = rtr_update.serial_num "
+    "where rtr_update.serial_num is null",
+
+    // DB_PSTMT_RTR_DELETE_INCOMPLETE_FULL
+    "delete rtr_full "
+    "from rtr_full "
+    "left join rtr_update on "
+    "    rtr_full.serial_num = rtr_update.serial_num "
+    "where rtr_update.serial_num is null",
+
+    // DB_PSTMT_RTR_DETECT_INCONSISTENT_STATE
+    "select count(*) > 0 "
+    "from rtr_update "
+    "where "
+    "    serial_num = ? or "
+    "    prev_serial_num = ? or "
+    "    prev_serial_num = ?",
+
+    // DB_PSTMT_RTR_INSERT_FULL
+    "insert ignore into rtr_full "
+    "(serial_num, asn, prefix, prefix_length, prefix_max_length) "
+    "select "
+    "    ?, "
+    "    rpki_roa.asn, "
+    "    rpki_roa_prefix.prefix, "
+    "    rpki_roa_prefix.prefix_length, "
+    "    rpki_roa_prefix.prefix_max_length "
+    "from rpki_roa "
+    "join rpki_roa_prefix on "
+    "    rpki_roa_prefix.roa_local_id = rpki_roa.local_id "
+    "where " FLAG_TESTS_EXPRESSION("rpki_roa.flags"),
+
+    // DB_PSTMT_RTR_INSERT_INCREMENTAL
+    "insert into rtr_incremental "
+    "(serial_num, is_announce, asn, prefix, prefix_length, prefix_max_length) "
+    "select ?, ?, t1.asn, t1.prefix, t1.prefix_length, t1.prefix_max_length "
+    "from rtr_full as t1 "
+    "left join rtr_full as t2 on "
+    "    t2.serial_num = ? and "
+    "    t2.asn = t1.asn and "
+    "    t2.prefix = t1.prefix and "
+    "    t2.prefix_length = t1.prefix_length and "
+    "    t2.prefix_max_length = t1.prefix_max_length "
+    "where t1.serial_num = ? and t2.serial_num is null",
+
+    // DB_PSTMT_RTR_HAS_CHANGES
+    "select count(*) > 0 from rtr_incremental where serial_num = ?",
+
+    // DB_PSTMT_RTR_INSERT_UPDATE
+    "insert into rtr_update "
+    "(serial_num, prev_serial_num, create_time, has_full) "
+    "values (?, ?, now(), true)",
+
+    // DB_PSTMT_RTR_DELETE_USELESS_FULL
+    "delete from rtr_full where serial_num = ?",
+
+    // DB_PSTMT_RTR_IGNORE_OLD_FULL
+    "update rtr_update "
+    "set has_full = false "
+    "where serial_num <> ? and serial_num <> ?",
+
+    // DB_PSTMT_RTR_DELETE_OLD_FULL
+    "delete from rtr_full "
+    "where serial_num <> ? and serial_num <> ?",
+
+    // DB_PSTMT_RTR_DELETE_OLD_UPDATE
+    "delete from rtr_update "
+    "where "
+    "    create_time < adddate(now(), interval (-1 * ?) hour) and "
+    "    serial_num <> ? and serial_num <> ?",
+
+    // DB_PSTMT_RTR_IGNORE_OLD_INCREMENTAL
+    "update rtr_update as r1 "
+    "left join rtr_update as r2 on "
+    "    r2.serial_num = r1.prev_serial_num "
+    "set r1.prev_serial_num = null "
+    "where r2.serial_num is null",
+
+    // DB_PSTMT_RTR_DELETE_OLD_INCREMENTAL
+    "delete rtr_incremental "
+    "from rtr_incremental "
+    "left join rtr_update on "
+    "    rtr_incremental.serial_num = rtr_update.serial_num "
+    "where rtr_update.prev_serial_num is null",
+
     NULL
 };
 

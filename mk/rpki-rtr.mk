@@ -40,7 +40,7 @@ bin_rpki_rtr_rpki_rtr_update_SOURCES = \
 	bin/rpki-rtr/rtr-update.c
 
 bin_rpki_rtr_rpki_rtr_update_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBDB)
 
 
 pkglibexec_SCRIPTS += bin/rpki-rtr/rpki-rtr-clear

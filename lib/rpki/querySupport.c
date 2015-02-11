@@ -25,6 +25,8 @@ void addQueryFlagTests(
     char *whereStr,
     int needAnd)
 {
+    // NOTE: This must be kept in sync with flag_tests_default.
+
     addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, needAnd);
     if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
         addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);

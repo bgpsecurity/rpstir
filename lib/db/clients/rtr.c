@@ -8,13 +8,17 @@
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
+#include <limits.h>
 
 #include <my_global.h>
 #include <mysql.h>
 
+#include "config/config.h"
 #include "db/connect.h"
 #include "db/db-internal.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "db/prep-stmt.h"
 #include "rtr.h"
 #include "db/util.h"
@@ -1292,4 +1296,588 @@ void db_rtr_reset_query_close(
 {
     (void)conn;                 // to silence -Wunused-parameter
     free(query_state);
+}
+
+bool db_rtr_has_valid_session(
+    dbconn * conn)
+{
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_COUNT_SESSION];
+    int ret;
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    MYSQL_BIND bind_out[1];
+    memset(bind_out, 0, sizeof(bind_out));
+    unsigned long long session_count;
+    bind_out[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind_out[0].is_unsigned = (my_bool)1;
+    bind_out[0].buffer = &session_count;
+
+    if (mysql_stmt_bind_result(stmt, bind_out))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return false;
+    }
+
+    if (mysql_stmt_store_result(stmt))
+    {
+        LOG(LOG_ERR, "mysql_stmt_store_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return false;
+    }
+
+    ret = mysql_stmt_fetch(stmt);
+    if (ret != 0)
+    {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+                mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return false;
+    }
+
+    mysql_stmt_free_result(stmt);
+
+    if (session_count == 0)
+    {
+        LOG(LOG_ERR, "The rpki-rtr database isn't initialized.");
+        LOG(LOG_ERR, "See %s-rpki-rtr-initialize.", PACKAGE_NAME);
+        return false;
+    }
+    else if (session_count != 1)
+    {
+        LOG(LOG_ERR,
+            "The rtr_session table has %llu "
+            "entries, which should never happen.",
+            session_count);
+        LOG(LOG_ERR,
+            "Consider running %s-rpki-rtr-clear and %s-rpki-rtr-initialize.",
+            PACKAGE_NAME, PACKAGE_NAME);
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+bool db_rtr_delete_incomplete_updates(
+    dbconn * conn)
+{
+    return
+        !wrap_mysql_stmt_execute(
+            conn,
+            conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_INCOMPLETE_INCREMENTAL],
+            NULL)
+            &&
+        !wrap_mysql_stmt_execute(
+            conn,
+            conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_INCOMPLETE_FULL],
+            NULL)
+            ;
+}
+
+bool db_rtr_good_serials(
+    dbconn * conn,
+    serial_number_t previous,
+    serial_number_t current)
+{
+    int ret;
+
+    // Convert previous and current to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned previous_uint = previous;
+    unsigned current_uint = current;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DETECT_INCONSISTENT_STATE];
+    MYSQL_BIND bind_in[3];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &current_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer = &current_uint;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[2].buffer = &previous_uint;
+    bind_in[2].is_unsigned = (my_bool)1;
+    bind_in[2].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    MYSQL_BIND bind_out[1];
+    unsigned char is_inconsistent;
+    memset(bind_out, 0, sizeof(bind_out));
+    bind_out[0].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[0].is_unsigned = 1;
+    bind_out[0].buffer = &is_inconsistent;
+
+    if (mysql_stmt_bind_result(stmt, bind_out))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return false;
+    }
+
+    ret = mysql_stmt_fetch(stmt);
+    if (ret != 0)
+    {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+                mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return false;
+    }
+
+    mysql_stmt_free_result(stmt);
+
+    return !is_inconsistent;
+}
+
+bool db_rtr_insert_full(
+    dbconn * conn,
+    serial_number_t serial)
+{
+    struct flag_tests flag_tests;
+    flag_tests_default(&flag_tests);
+
+    // Convert serial to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned serial_uint = serial;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_INSERT_FULL];
+    MYSQL_BIND bind_in[1 + FLAG_TESTS_PARAMETERS];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &serial_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    flag_tests_bind(bind_in + 1, &flag_tests);
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool db_rtr_insert_incremental(
+    dbconn * conn,
+    serial_number_t previous_serial,
+    serial_number_t current_serial)
+{
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_INSERT_INCREMENTAL];
+    MYSQL_BIND bind_in[4];
+
+    // Convert previous_serial and current_serial to a type that MySQL
+    // can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned previous_serial_uint = previous_serial;
+    unsigned current_serial_uint = current_serial;
+
+    unsigned char is_announce;
+
+    // announcements
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &current_serial_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    is_announce = 1;
+    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[1].buffer = &is_announce;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[2].buffer = &previous_serial_uint;
+    bind_in[2].is_unsigned = (my_bool)1;
+    bind_in[2].is_null = (my_bool *)0;
+    bind_in[3].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[3].buffer = &current_serial_uint;
+    bind_in[3].is_unsigned = (my_bool)1;
+    bind_in[3].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    // withdrawals
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &current_serial_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    is_announce = 0;
+    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[1].buffer = &is_announce;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[2].buffer = &current_serial_uint;
+    bind_in[2].is_unsigned = (my_bool)1;
+    bind_in[2].is_null = (my_bool *)0;
+    bind_in[3].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[3].buffer = &previous_serial_uint;
+    bind_in[3].is_unsigned = (my_bool)1;
+    bind_in[3].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+int db_rtr_has_incremental_changes(
+    dbconn * conn,
+    serial_number_t serial)
+{
+    int ret;
+
+    // Convert serial to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned serial_uint = serial;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_HAS_CHANGES];
+    MYSQL_BIND bind_in[1];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &serial_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return -1;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
+    {
+        return -1;
+    }
+
+    MYSQL_BIND bind_out[1];
+    memset(bind_out, 0, sizeof(bind_out));
+    unsigned char has_changes = 0;
+    bind_out[0].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[0].buffer = &has_changes;
+    bind_out[0].is_unsigned = (my_bool)1;
+
+    if (mysql_stmt_bind_result(stmt, bind_out))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_result() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    ret = mysql_stmt_fetch(stmt);
+    if (ret != 0)
+    {
+        LOG(LOG_ERR, "mysql_stmt_fetch() failed");
+        if (ret == 1)
+            LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+                mysql_stmt_error(stmt));
+        mysql_stmt_free_result(stmt);
+        return -1;
+    }
+
+    mysql_stmt_free_result(stmt);
+
+    if (has_changes)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+bool db_rtr_insert_update(
+    dbconn * conn,
+    serial_number_t current_serial,
+    serial_number_t previous_serial,
+    bool previous_serial_is_null)
+{
+    // Convert previous_serial and current_serial to a type that MySQL
+    // can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned previous_serial_uint = previous_serial;
+    unsigned current_serial_uint = current_serial;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_INSERT_UPDATE];
+    MYSQL_BIND bind_in[2];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &current_serial_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    my_bool my_previous_serial_is_null =
+        (my_bool)previous_serial_is_null;
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer = &previous_serial_uint;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = &my_previous_serial_is_null;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool db_rtr_delete_full(
+    dbconn * conn,
+    serial_number_t serial)
+{
+    // Convert serial to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned serial_uint = serial;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_USELESS_FULL];
+    MYSQL_BIND bind_in[1];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &serial_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool db_rtr_ignore_old_full(
+    dbconn * conn,
+    serial_number_t serial1,
+    serial_number_t serial2)
+{
+    // Convert serial1 and serial2 to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned serial1_uint = serial1;
+    unsigned serial2_uint = serial2;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_IGNORE_OLD_FULL];
+    MYSQL_BIND bind_in[2];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &serial1_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer = &serial2_uint;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool db_rtr_delete_old_full(
+    dbconn * conn,
+    serial_number_t serial1,
+    serial_number_t serial2)
+{
+    // Convert serial1 and serial2 to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned serial1_uint = serial1;
+    unsigned serial2_uint = serial2;
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_OLD_FULL];
+    MYSQL_BIND bind_in[2];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[0].buffer = &serial1_uint;
+    bind_in[0].is_unsigned = (my_bool)1;
+    bind_in[0].is_null = (my_bool *)0;
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer = &serial2_uint;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool db_rtr_delete_old_update(
+    dbconn * conn,
+    serial_number_t serial1,
+    serial_number_t serial2)
+{
+    // Convert serial1 and serial2 to a type that MySQL can take.
+    COMPILE_TIME_ASSERT(
+        TYPE_CAN_HOLD_UINT(unsigned, serial_number_t));
+    unsigned serial1_uint = serial1;
+    unsigned serial2_uint = serial2;
+
+    long long retention_hours =
+        (long long)CONFIG_RPKI_RTR_RETENTION_HOURS_get();
+
+    MYSQL_STMT *stmt =
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_OLD_UPDATE];
+    MYSQL_BIND bind_in[3];
+    memset(bind_in, 0, sizeof(bind_in));
+    bind_in[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    bind_in[0].buffer = &retention_hours;
+    bind_in[0].is_unsigned = (my_bool)0;
+    bind_in[0].is_null = (my_bool *)0;
+    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[1].buffer = &serial1_uint;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
+    bind_in[2].buffer = &serial2_uint;
+    bind_in[2].is_unsigned = (my_bool)1;
+    bind_in[2].is_null = (my_bool *)0;
+
+    if (mysql_stmt_bind_param(stmt, bind_in))
+    {
+        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
+        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
+            mysql_stmt_error(stmt));
+        return false;
+    }
+
+    if (wrap_mysql_stmt_execute(conn, stmt, NULL))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool db_rtr_ignore_old_incremental(
+    dbconn * conn)
+{
+    return !wrap_mysql_stmt_execute(
+        conn,
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_IGNORE_OLD_INCREMENTAL],
+        NULL);
+}
+
+bool db_rtr_delete_old_incremental(
+    dbconn * conn)
+{
+    return !wrap_mysql_stmt_execute(
+        conn,
+        conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_OLD_INCREMENTAL],
+        NULL);
 }
