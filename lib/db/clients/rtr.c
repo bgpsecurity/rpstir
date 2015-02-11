@@ -112,7 +112,9 @@ int db_rtr_get_session_id(
         return -1;
     }
 
-    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
+    if (wrap_mysql_stmt_execute(
+        conn, stmt,
+        "mysql_stmt_execute(DB_PSTMT_RTR_GET_SESSION) failed"))
     {
         return -1;
     }
@@ -185,7 +187,9 @@ int db_rtr_get_latest_sernum(
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_LATEST_SERNUM];
     int ret;
 
-    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
+    if (wrap_mysql_stmt_execute(
+        conn, stmt,
+        "mysql_stmt_execute(DB_PSTMT_RTR_GET_LATEST_SERNUM) failed"))
     {
         return GET_SERNUM_ERR;
     }
@@ -250,7 +254,9 @@ static int hasRowsRtrUpdate(
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_HAS_ROWS_RTR_UPDATE];
     int ret;
 
-    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
+    if (wrap_mysql_stmt_execute(
+        conn, stmt,
+        "mysql_stmt_execute(DB_PSTMT_RTR_HAS_ROWS_RTR_UPDATE) failed"))
     {
         return -1;
     }
@@ -334,7 +340,9 @@ static int readSerNumAsPrev(
         return GET_SERNUM_ERR;
     }
 
-    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
+    if (wrap_mysql_stmt_execute(
+        conn, stmt,
+        "mysql_stmt_execute(DB_PSTMT_RTR_READ_SER_NUM_AS_PREV) failed"))
     {
         return GET_SERNUM_ERR;
     }
@@ -433,7 +441,9 @@ static int readSerNumAsCurrent(
         return GET_SERNUM_ERR;
     }
 
-    if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
+    if (wrap_mysql_stmt_execute(
+        conn, stmt,
+        "mysql_stmt_execute(DB_PSTMT_RTR_READ_SER_NUM_AS_CURRENT) failed"))
     {
         return GET_SERNUM_ERR;
     }
