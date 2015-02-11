@@ -27,14 +27,20 @@ static const char *_queries_rtr[] = {
         " from rtr_update " " where serial_num=?",
 
     // DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT
-    "select asn, ip_addr, is_announce "
-        " from rtr_incremental "
-        " where serial_num=? " " order by asn, ip_addr " " limit ?, ?",
+    "select asn, prefix, prefix_length, prefix_max_length, is_announce "
+    " from rtr_incremental "
+    " where serial_num=? "
+    "  and (? or (asn, prefix, prefix_length, prefix_max_length) > (?, ?, ?, ?)) "
+    " order by asn, prefix, prefix_length, prefix_max_length "
+    " limit ?",
 
     // DB_PSTMT_RTR_RESET_QRY_GET_NEXT
-    "select asn, ip_addr "
-        " from rtr_full "
-        " where serial_num=? " " order by asn, ip_addr " " limit ?, ?",
+    "select asn, prefix, prefix_length, prefix_max_length "
+    " from rtr_full "
+    " where serial_num=? "
+    "  and (? or (asn, prefix, prefix_length, prefix_max_length) > (?, ?, ?, ?)) "
+    " order by asn, prefix, prefix_length, prefix_max_length "
+    " limit ?",
 
     // DB_PSTMT_RTR_COUNT_SESSION
     "select count(*) from rtr_session",

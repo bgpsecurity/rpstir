@@ -25,24 +25,63 @@
 
 
 struct query_state {
-    uint32_t ser_num;           // ser_num to search for first row to send
-    uint64_t first_row;         // first row to send.  zero-based
-    int bad_ser_num;            // neither the given ser_num, nor its
-                                // successor, exist
-    int data_sent;              // true if a pdu has been created for this
-                                // serial/reset query
-    int no_new_data;            // the given ser_num exists, but its successor 
-                                // does not
-    int not_ready;              // no valid ser_nums exist, yet
-    uint16_t session;           // the session_id number
+    /**
+        @brief Serial number to search for first row to send.
+    */
+    uint32_t ser_num;
+
+    /**
+        @brief The last row that we sent.
+    */
+    struct last_row {
+        /**
+            @brief False if there was a previous row, true if this is
+                the first time.
+
+            If this is true, the values in the remaining fields are
+            unspecified.
+        */
+        unsigned char first_time;
+
+        unsigned asn;
+
+        /**
+            @brief Length of #prefix, either 4 for IPv4 or 16 for IPv6.
+        */
+        uint8_t prefix_family_length;
+
+        unsigned char prefix[16];
+
+        unsigned char prefix_length;
+
+        unsigned char prefix_max_length;
+    } first_row;
+
+    /**
+        @brief Neither the given ser_num, nor its successor, exist.
+    */
+    int bad_ser_num;
+
+    /**
+        @brief True if a pdu has been created for this serial/reset query.
+    */
+    int data_sent;
+
+    /**
+        @brief The given ser_num exists, but its successor does not.
+    */
+    int no_new_data;
+
+    /**
+        @brief No valid ser_nums exist, yet.
+    */
+    int not_ready;
+
+    /**
+        @brief The session_id number.
+    */
+    uint16_t session;
 };
-
-
-static const size_t IPADDR_STR_LEN = ((INET6_ADDRSTRLEN > INET_ADDRSTRLEN) ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN) + 1 +  // '/'
-    3 +                         // prefix length
-    1 +                         // '('
-    3 +                         // max length
-    1;                          // ')'
 
 
 /**=============================================================================
@@ -478,164 +517,46 @@ static int readSerNumAsCurrent(
 
 
 /**=============================================================================
- * @param field_str has the format:  <address>/<length>[(<max_length>)]
- * It originates from a database field `ip_addr' and gets null terminated
- *     before being passed to this function.
- * @return 0 on success or an error code on failure.
-------------------------------------------------------------------------------*/
-static int parseIpaddr(
-    sa_family_t * family,
-    struct in_addr *addr4,
-    struct in6_addr *addr6,
-    uint8_t * prefix_len,
-    uint8_t * max_len,
-    const char field_str[])
-{
-    char ip_txt[INET_ADDRSTRLEN >
-                INET6_ADDRSTRLEN ? INET_ADDRSTRLEN : INET6_ADDRSTRLEN];
-    size_t i;
-    int chars_consumed;
-
-    if (field_str[0] == '\0')
-    {
-        LOG(LOG_ERR, "empty field string");
-        return -1;
-    }
-
-    // copy IP field
-    for (i = 0;
-         field_str[i] != '\0' && field_str[i] != '/' && i < sizeof(ip_txt);
-         ++i)
-    {
-        ip_txt[i] = field_str[i];
-    }
-    if (field_str[i] == '\0')
-    {
-        LOG(LOG_ERR, "no prefix length present");
-        return -1;
-    }
-    else if (field_str[i] == '/')
-    {
-        ip_txt[i] = '\0';
-        ++i;
-    }
-    else
-    {
-        LOG(LOG_ERR, "IP address string too long");
-        return -1;
-    }
-
-    // parse IP field
-    if (inet_pton(AF_INET, ip_txt, addr4) == 1)
-    {
-        *family = AF_INET;
-    }
-    else if (inet_pton(AF_INET6, ip_txt, addr6) == 1)
-    {
-        *family = AF_INET6;
-    }
-    else
-    {
-        LOG(LOG_ERR, "malformed IP address");
-        return -1;
-    }
-
-    // parse prefix length field
-    if (sscanf(field_str + i, "%" SCNu8 "%n", prefix_len, &chars_consumed) < 1)
-    {
-        LOG(LOG_ERR, "error parsing prefix length");
-        return -1;
-    }
-    else
-    {
-        i += chars_consumed;
-    }
-
-    // return early if there's no max length field
-    if (field_str[i] == '\0')
-    {
-        *max_len = *prefix_len;
-        return 0;
-    }
-
-    // parse max length field
-    if (field_str[i] == '(')
-    {
-        ++i;
-    }
-    else
-    {
-        LOG(LOG_ERR, "expecting `(' after the prefix length");
-        return -1;
-    }
-
-    if (sscanf(field_str + i, "%" SCNu8 "%n", max_len, &chars_consumed) < 1)
-    {
-        LOG(LOG_ERR, "error parsing max length");
-        return -1;
-    }
-    else
-    {
-        i += chars_consumed;
-    }
-
-    if (field_str[i] == '\0')
-    {
-        LOG(LOG_ERR, "truncated max length");
-        return -1;
-    }
-    else if (field_str[i] != ')')
-    {
-        LOG(LOG_ERR, "garbage at end of max length field");
-        return -1;
-    }
-    else
-    {
-        ++i;
-    }
-
-    // done all parsing
-
-    if (field_str[i] != '\0')
-    {
-        LOG(LOG_ERR, "garbage at end");
-        return -1;
-    }
-
-    return 0;
-}
-
-
-/**=============================================================================
+ * @param[out] pdu PDU to fill in.
+ * @param[in] asn AS number.
+ * @param[in] prefix_data Raw prefix.
+ * @param[in] prefix_data_length Length of @p prefix_data. This must be either
+ *    4 (IPv4) or 16 (IPv6).
+ * @param[in] prefix_length Length in bits of the prefix. This must be >= 0, and
+ *    <= 32 for IPv4 or <= 128 for IPv6.
+ * @param[in] prefix_max_length Maximum prefix length, as from a ROA.
+ * @param[in] is_announce True for announcement, false for withdrawal.
 ------------------------------------------------------------------------------*/
 static int fillPduIpPrefix(
     PDU * pdu,
     uint32_t asn,
-    char *ip_addr,
+    uint8_t const * prefix_data,
+    size_t prefix_data_length,
+    uint8_t prefix_length,
+    uint8_t prefix_max_length,
     bool is_announce)
 {
-    sa_family_t family = 0;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    uint8_t prefix_len;
-    uint8_t max_prefix_len;
+    struct in_addr in_addr;
+    struct in6_addr in6_addr;
     uint8_t flags = is_announce ? FLAG_WITHDRAW_ANNOUNCE : 0;
 
-    if (parseIpaddr(&family, &addr4, &addr6, &prefix_len, &max_prefix_len,
-                    ip_addr))
+    switch (prefix_data_length)
     {
-        LOG(LOG_ERR, "could not parse ip_addr");
-        return -1;
-    }
+        case 4:
+            memcpy(&in_addr.s_addr, prefix_data, prefix_data_length);
+            fill_pdu_ipv4_prefix(pdu, flags, prefix_length,
+                prefix_max_length, &in_addr, asn);
+            break;
 
-    if (family == AF_INET)
-        fill_pdu_ipv4_prefix(pdu,
-                             flags, prefix_len, max_prefix_len, &addr4, asn);
-    else if (family == AF_INET6)
-        fill_pdu_ipv6_prefix(pdu,
-                             flags, prefix_len, max_prefix_len, &addr6, asn);
-    else
-        return -1;
+        case 16:
+            memcpy(&in6_addr.s6_addr, prefix_data, prefix_data_length);
+            fill_pdu_ipv6_prefix(pdu, flags, prefix_length,
+                prefix_max_length, &in6_addr, asn);
+            break;
+
+        default:
+            return -1;
+    }
 
     return 0;
 }
@@ -660,9 +581,9 @@ int db_rtr_serial_query_init(
         return -1;
     }
     state->ser_num = 0;
-    state->first_row = 0;
-    state->data_sent = 0;
+    state->first_row.first_time = 1;
     state->bad_ser_num = 0;
+    state->data_sent = 0;
     state->no_new_data = 0;
     state->not_ready = 0;
     *query_state = (void *)state;
@@ -809,24 +730,55 @@ static int serial_query_do_query(
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT];
 
-    MYSQL_BIND bind_in[3];
+    MYSQL_BIND bind_in[7];
     memset(bind_in, 0, sizeof(bind_in));
     // serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
     bind_in[0].buffer = &(state->ser_num);
     bind_in[0].is_unsigned = (my_bool) 1;
     bind_in[0].is_null = (my_bool *) 0;
-    // offset parameter
-    bind_in[1].buffer_type = MYSQL_TYPE_LONGLONG;
-    bind_in[1].buffer = &(state->first_row);
-    bind_in[1].is_unsigned = (my_bool) 1;
-    bind_in[1].is_null = (my_bool *) 0;
-    // limit parameter
+    // start-at-beginning parameter
+    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[1].buffer = &state->first_row.first_time;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+    // asn parameter
     bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    size_t limit = max_rows - *num_pdus;
-    bind_in[2].buffer = &limit;
-    bind_in[2].is_unsigned = (my_bool) 1;
-    bind_in[2].is_null = (my_bool *) 0;
+    bind_in[2].buffer = &state->first_row.asn;
+    bind_in[2].is_unsigned = (my_bool)1;
+    bind_in[2].is_null = (my_bool *)0;
+    // prefix parameter
+    bind_in[3].buffer_type = MYSQL_TYPE_BLOB;
+    bind_in[3].buffer = &state->first_row.prefix;
+    bind_in[3].buffer_length = sizeof(state->first_row.prefix);
+    unsigned long prefix_family_length;
+    if (state->first_row.first_time)
+    {
+        prefix_family_length = 0;
+    }
+    else
+    {
+        prefix_family_length = state->first_row.prefix_family_length;
+    }
+    bind_in[3].length = &prefix_family_length;
+    bind_in[3].is_null = (my_bool *)0;
+    // prefix_length parameter
+    bind_in[4].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[4].buffer = &state->first_row.prefix_length;
+    bind_in[4].is_unsigned = (my_bool)1;
+    bind_in[4].is_null = (my_bool *)0;
+    // prefix_max_length parameter
+    bind_in[5].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[5].buffer = &state->first_row.prefix_max_length;
+    bind_in[5].is_unsigned = (my_bool)1;
+    bind_in[5].is_null = (my_bool *)0;
+    // limit parameter
+    bind_in[6].buffer_type = MYSQL_TYPE_LONGLONG;
+    unsigned long long limit = max_rows - *num_pdus;
+    bind_in[6].buffer = &limit;
+    bind_in[6].is_unsigned = (my_bool) 1;
+    bind_in[6].is_null = (my_bool *) 0;
+
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -842,23 +794,35 @@ static int serial_query_do_query(
         return -1;
     }
 
-    MYSQL_BIND bind_out[3];
-    uint32_t db_asn;
-    char db_ip_addr[IPADDR_STR_LEN + 1];
-    int8_t db_is_announce;
+    MYSQL_BIND bind_out[5];
+    unsigned db_asn;
+    unsigned long db_prefix_family_length;
+    unsigned char db_prefix[16];
+    unsigned char db_prefix_length;
+    unsigned char db_prefix_max_length;
+    signed char db_is_announce;
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
     bind_out[0].is_unsigned = (my_bool) 1;
     bind_out[0].buffer = &db_asn;
-    // ip_addr output
-    bind_out[1].buffer_type = MYSQL_TYPE_STRING;
-    bind_out[1].buffer_length = IPADDR_STR_LEN;
-    bind_out[1].buffer = (char *)&db_ip_addr;
-    // is_announce output
+    // prefix output
+    bind_out[1].buffer_type = MYSQL_TYPE_BLOB;
+    bind_out[1].buffer_length = sizeof(db_prefix);
+    bind_out[1].length = &db_prefix_family_length;
+    bind_out[1].buffer = &db_prefix;
+    // prefix_length output
     bind_out[2].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[2].is_unsigned = (my_bool) 0;
-    bind_out[2].buffer = &db_is_announce;
+    bind_out[2].is_unsigned = (my_bool)1;
+    bind_out[2].buffer = &db_prefix_length;
+    // prefix_max_length output
+    bind_out[3].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[3].is_unsigned = (my_bool)1;
+    bind_out[3].buffer = &db_prefix_max_length;
+    // is_announce output
+    bind_out[4].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[4].is_unsigned = (my_bool) 0;
+    bind_out[4].buffer = &db_is_announce;
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -883,15 +847,25 @@ static int serial_query_do_query(
 
     while ((ret = mysql_stmt_fetch(stmt)) == 0)
     {
-        if (fillPduIpPrefix(&((*_pdus)[*num_pdus]), db_asn, db_ip_addr, db_is_announce  /* , 
-                                                                                         * state->session */ ))
+        if (fillPduIpPrefix(
+            &((*_pdus)[*num_pdus]),
+            db_asn,
+            db_prefix, db_prefix_family_length,
+            db_prefix_length, db_prefix_max_length,
+            db_is_announce))
         {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
             return -1;
         }
         ++*num_pdus;
-        ++state->first_row;
+
+        state->first_row.first_time = 0;
+        state->first_row.asn = db_asn;
+        state->first_row.prefix_family_length = db_prefix_family_length;
+        memcpy(state->first_row.prefix, db_prefix, db_prefix_family_length);
+        state->first_row.prefix_length = db_prefix_length;
+        state->first_row.prefix_max_length = db_prefix_max_length;
     }
     if (ret != 0 && ret != MYSQL_NO_DATA)
     {
@@ -949,7 +923,7 @@ static int serial_query_post_query(
     {                           // db has sn for this sn_prev
         *is_done = 0;
         state->ser_num = next_ser_num;
-        state->first_row = 0;
+        state->first_row.first_time = 1;
         return 0;
     }
     else if (ret == GET_SERNUM_NONE)
@@ -1066,7 +1040,7 @@ int db_rtr_reset_query_init(
         return -1;
     }
     state->ser_num = 0;
-    state->first_row = 0;
+    state->first_row.first_time = 1;
     state->bad_ser_num = 0;
     state->data_sent = 0;
     state->no_new_data = 0;
@@ -1165,24 +1139,54 @@ ssize_t db_rtr_reset_query_get_next(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_RESET_QRY_GET_NEXT];
-    MYSQL_BIND bind_in[3];
+    MYSQL_BIND bind_in[7];
     memset(bind_in, 0, sizeof(bind_in));
     // serial_num parameter
     bind_in[0].buffer_type = MYSQL_TYPE_LONG;
     bind_in[0].buffer = &(state->ser_num);
     bind_in[0].is_unsigned = (my_bool) 1;
     bind_in[0].is_null = (my_bool *) 0;
-    // offset parameter
-    bind_in[1].buffer_type = MYSQL_TYPE_LONGLONG;
-    bind_in[1].buffer = &(state->first_row);
-    bind_in[1].is_unsigned = (my_bool) 1;
-    bind_in[1].is_null = (my_bool *) 0;
-    // limit parameter
+    // start-at-beginning parameter
+    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[1].buffer = &state->first_row.first_time;
+    bind_in[1].is_unsigned = (my_bool)1;
+    bind_in[1].is_null = (my_bool *)0;
+    // asn parameter
     bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    size_t limit = max_rows - num_pdus;
-    bind_in[2].buffer = &limit;
-    bind_in[2].is_unsigned = (my_bool) 1;
-    bind_in[2].is_null = (my_bool *) 0;
+    bind_in[2].buffer = &state->first_row.asn;
+    bind_in[2].is_unsigned = (my_bool)1;
+    bind_in[2].is_null = (my_bool *)0;
+    // prefix parameter
+    bind_in[3].buffer_type = MYSQL_TYPE_BLOB;
+    bind_in[3].buffer = &state->first_row.prefix;
+    bind_in[3].buffer_length = sizeof(state->first_row.prefix);
+    unsigned long prefix_family_length;
+    if (state->first_row.first_time)
+    {
+        prefix_family_length = 0;
+    }
+    else
+    {
+        prefix_family_length = state->first_row.prefix_family_length;
+    }
+    bind_in[3].length = &prefix_family_length;
+    bind_in[3].is_null = (my_bool *)0;
+    // prefix_length parameter
+    bind_in[4].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[4].buffer = &state->first_row.prefix_length;
+    bind_in[4].is_unsigned = (my_bool)1;
+    bind_in[4].is_null = (my_bool *)0;
+    // prefix_max_length parameter
+    bind_in[5].buffer_type = MYSQL_TYPE_TINY;
+    bind_in[5].buffer = &state->first_row.prefix_max_length;
+    bind_in[5].is_unsigned = (my_bool)1;
+    bind_in[5].is_null = (my_bool *)0;
+    // limit parameter
+    bind_in[6].buffer_type = MYSQL_TYPE_LONGLONG;
+    unsigned long long limit = max_rows - num_pdus;
+    bind_in[6].buffer = &limit;
+    bind_in[6].is_unsigned = (my_bool) 1;
+    bind_in[6].is_null = (my_bool *) 0;
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1202,18 +1206,30 @@ ssize_t db_rtr_reset_query_get_next(
         return -1;
     }
 
-    MYSQL_BIND bind_out[2];
-    uint32_t db_asn;
-    char db_ip_addr[IPADDR_STR_LEN + 1];
+    MYSQL_BIND bind_out[4];
+    unsigned db_asn;
+    unsigned long db_prefix_family_length;
+    unsigned char db_prefix[16];
+    unsigned char db_prefix_length;
+    unsigned char db_prefix_max_length;
     memset(bind_out, 0, sizeof(bind_out));
     // asn output
     bind_out[0].buffer_type = MYSQL_TYPE_LONG;
     bind_out[0].is_unsigned = 1;
     bind_out[0].buffer = &db_asn;
-    // ip_addr output
-    bind_out[1].buffer_type = MYSQL_TYPE_STRING;
-    bind_out[1].buffer_length = IPADDR_STR_LEN;
-    bind_out[1].buffer = (char *)&db_ip_addr;
+    // prefix output
+    bind_out[1].buffer_type = MYSQL_TYPE_BLOB;
+    bind_out[1].buffer_length = sizeof(db_prefix);
+    bind_out[1].length = &db_prefix_family_length;
+    bind_out[1].buffer = &db_prefix;
+    // prefix_length output
+    bind_out[2].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[2].is_unsigned = (my_bool)1;
+    bind_out[2].buffer = &db_prefix_length;
+    // prefix_max_length output
+    bind_out[3].buffer_type = MYSQL_TYPE_TINY;
+    bind_out[3].is_unsigned = (my_bool)1;
+    bind_out[3].buffer = &db_prefix_max_length;
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -1243,8 +1259,12 @@ ssize_t db_rtr_reset_query_get_next(
     int ret;
     while ((ret = mysql_stmt_fetch(stmt)) == 0)
     {
-        if (fillPduIpPrefix(&((*_pdus)[num_pdus]), db_asn, db_ip_addr, 1        /* , 
-                                                                                 * state->session */ ))
+        if (fillPduIpPrefix(
+            &((*_pdus)[num_pdus]),
+            db_asn,
+            db_prefix, db_prefix_family_length,
+            db_prefix_length, db_prefix_max_length,
+            1))
         {
             LOG(LOG_ERR, "could not create PDU_IPVx_PREFIX");
             mysql_stmt_free_result(stmt);
@@ -1253,7 +1273,13 @@ ssize_t db_rtr_reset_query_get_next(
             return -1;
         }
         ++num_pdus;
-        ++state->first_row;
+
+        state->first_row.first_time = 0;
+        state->first_row.asn = db_asn;
+        state->first_row.prefix_family_length = db_prefix_family_length;
+        memcpy(state->first_row.prefix, db_prefix, db_prefix_family_length);
+        state->first_row.prefix_length = db_prefix_length;
+        state->first_row.prefix_max_length = db_prefix_max_length;
     }
     if (ret != 0 && ret != MYSQL_NO_DATA)
     {
