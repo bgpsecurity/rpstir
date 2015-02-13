@@ -209,7 +209,7 @@ start_rtrd () {
 
 	for _discard in `seq 1 $SERVER_START_TIMEOUT`; do
 		sleep 1
-		if nc -z localhost "$PORT"; then
+		if port_open "$PORT"; then
 			SERVER_STARTED=1
 			break
 		fi
