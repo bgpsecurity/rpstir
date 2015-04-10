@@ -6,7 +6,7 @@ seq seq ctx+0x20
         seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
         seq utc "000207115900Z"
-            utc "150313120100Z"
+            utc "490313120100Z"
         seq set seq oid 2.5.4.3 /* id_commonName */
                     prt "C"
         seq seq oid 1.2.840.113549.1.1.1 /* id_rsadsi_rsaEncryption */
