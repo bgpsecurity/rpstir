@@ -1,0 +1,34 @@
+#!@PYTHON@
+
+import argparse
+import socket
+import sys
+
+
+if __name__ == '__main__':
+    # Parse arguments.
+    arg_parser = argparse.ArgumentParser(
+        description='Test if a TCP port is open on localhost.')
+
+    arg_parser.add_argument(
+        'port',
+        type=int,
+        help='port to test')
+
+    args = arg_parser.parse_args()
+
+
+    # Try to connect.
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        s.connect(('localhost', args.port))
+    except socket.error, e:
+        port_is_open = False
+    else:
+        port_is_open = True
+
+    s.close()
+
+    # Return the result.
+    sys.exit(0 if port_is_open else 1)

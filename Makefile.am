@@ -97,6 +97,7 @@ include mk/rpki-rtr.mk
 include mk/rpki-statistics.mk
 include mk/rpki.mk
 include mk/testbed.mk
+include mk/tests-support.mk
 include mk/top.mk
 
 ## "Processor" makefiles come at the end because they sometimes need to

@@ -18,6 +18,8 @@ while read path_dir; do
             ;;
     esac
 done < "$BIN_DIRS"
+PATH="$TESTS_TOP_SRCDIR/tests/bin:$PATH"
+PATH="$TESTS_TOP_BUILDDIR/tests/bin:$PATH"
 export PATH
 rm -f "$BIN_DIRS"
 unset BIN_DIRS
@@ -93,10 +95,4 @@ use_config_file () {
     test $# -eq 1 || fatal "Usage: $0 path/to/file.conf"
 
     export @CONFIG_ENV_VAR@="$1"
-}
-
-port_open() {
-    command -v nc >/dev/null 2>/dev/null || fatal "nc utility not found"
-    [ "$1" -ge 0 ] || fatal "must specify a port number"
-    nc localhost "$1" </dev/null >/dev/null 2>&1
 }
