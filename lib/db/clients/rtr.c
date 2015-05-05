@@ -702,9 +702,10 @@ int db_rtr_serial_query_init(
     }
 
     // If rtr_update is not empty, then send cache reset.
-    // If rtr_update is empty, then send cache-reset.
-    // By spec, this could send not-ready, but rtr-client's session_id and
-    // serial_num will never become valid.
+    // If rtr_update is empty, then send no-data-available.
+    // The session_id and serial_num will never become valid in the
+    // second case, but RFC6810 section 6.4 says to send
+    // no-data-available.
     ret = hasRowsRtrUpdate(conn);
     if (ret == -1)
     {
@@ -715,7 +716,7 @@ int db_rtr_serial_query_init(
     }
     else if (ret == 0)
     {                           // rtr_update is empty
-        state->bad_ser_num = 1;
+        state->not_ready = 1;
     }
     else if (ret > 0)
     {                           // rtr_update is not empty,
