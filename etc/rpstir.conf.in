@@ -33,7 +33,7 @@ DatabaseDSN myodbc
 # obtain TAL files through a trusted out-of-band channel of their choice.
 # For testing purposes, you can use the examples in @sampletadir@
 # or Rob Austein's collection of sample trust anchors found at
-# http://subvert-rpki.hactrn.net/trunk/rcynic/sample-trust-anchors .
+# http://subvert-rpki.hactrn.net/trunk/rp/rcynic/sample-trust-anchors/ .
 # Additionally, to get a copy of ARIN's TAL, go to
 # https://www.arin.net/public/rpki/tal/index.xhtml and follow the
 # directions there.
