@@ -48,15 +48,15 @@ class RSYNC_thread(Thread):
             #build and run the rsync command. This may block for awhile but that
             #is the beauty of the multiple threads.
             rsyncCom = [rsyncDir,
-                        "-Lirzt",
+                        "-Lirzts",
                         "--del",
                         #"--max-size=10K",
                         "--timeout=10",
                         "--contimeout=10",
                         "--no-motd",
                         "--",
-                        "rsync://%s/" % nextURI.replace("\\", "\\\\").replace(" ", "\\ "),
-                        "%s/%s" % (repoDir, nextURI.replace("\\", "\\\\").replace(" ", "\\ "))]
+                        "rsync://%s/" % nextURI,
+                        "%s/%s" % (repoDir, nextURI)]
 
             cli.info( "starting %s" % nextURI )
 
