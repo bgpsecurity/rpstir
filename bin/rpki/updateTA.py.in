@@ -223,21 +223,44 @@ def delete_other_TAs(keep_paths):
 
 def parse_TAL_file(tal_file):
     """Return [rsyncURI, subjectPublicKeyInfo] as a pair of strings."""
-    f = open(tal_file, "r")
+    with open(tal_file, "r") as f:
+        lines = f.readlines()
 
-    # First non-blank line is the TA rsync URI
-    rsync_uri = None
-    while not rsync_uri:
-        rsync_uri = f.readline().strip()
+    rsync_uris = []
+    pubkey_b64_words = []
 
-    # Base64-encoded SubjectPublicKeyInfo is the rest of the file,
-    # with all whitespace removed.
-    words = []
-    for line in f:
-        for w in line.strip().split():
-            words.append(w)
-    pubkey_b64 = "".join(words)
-    return [rsync_uri, pubkey_b64]
+    if '\r\n' in lines or '\n' in lines:
+        # Parse as in draft-ietf-sidr-rfc6490-bis-03
+        in_uri_section = True
+        for line in lines:
+            if in_uri_section:
+                if line in ('\r\n', '\n'):
+                    in_uri_section = False
+                    continue
+
+                # For forward compatibility with a hypothetical
+                # specification that allows non-rsync URIs, we ignore
+                # lines in the URI section that do not begin with
+                # 'rsync://'.
+                elif line.lower().startswith('rsync://'):
+                    rsync_uris.append(line.strip())
+
+            else:
+                pubkey_b64_words.extend(line.split())
+
+    else:
+        # Parse as in RFC6490
+        if lines[0].lower().startswith('rsync://'):
+            rsync_uris.append(lines[0].strip())
+        for line in lines[1:]:
+            pubkey_b64_words.extend(line.split())
+
+    if not rsync_uris:
+        raise RuntimeError('TAL file has no rsync URIs: ' + tal_file)
+    elif not pubkey_b64_words:
+        raise RuntimeError('TAL file has no public key: ' + tal_file)
+
+    return [rsync_uris[0], ''.join(pubkey_b64_words)]
 
 def compute_local_path(rsync_uri, local_repo_path):
     if rsync_uri.startswith("rsync://"):
