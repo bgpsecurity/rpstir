@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <pwd.h>
 
 #include "util/bag.h"
 #include "util/queue.h"
@@ -488,6 +489,33 @@ static void startup(
         block_signals();
         exit_code = EXIT_FAILURE;
         pthread_exit(NULL);
+    }
+
+    // Drop privileges (if run as root)
+    const char *user = CONFIG_RPSTIR_USER_get();
+    struct passwd *pwd;
+    pwd = getpwnam(user);
+    if (pwd == NULL)
+    {
+        LOG(LOG_ERR, "can't find rpstir user: %s", user);
+        exit_code = EXIT_FAILURE;
+        pthread_exit(NULL);
+    }
+
+    if (getuid() == 0 || getgid() == 0)
+    {
+        if (setgid(pwd->pw_gid) == -1)
+        {
+            LOG(LOG_ERR, "can't drop privileges");
+            exit_code = EXIT_FAILURE;
+            pthread_exit(NULL);
+        }
+        if (setuid(pwd->pw_uid) == -1)
+        {
+            LOG(LOG_ERR, "can't drop privileges");
+            exit_code = EXIT_FAILURE;
+            pthread_exit(NULL);
+        }
     }
 
     block_signals();

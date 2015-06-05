@@ -14,6 +14,16 @@
 
 /** All available config options */
 static const struct config_option config_options[] = {
+    //CONFIG_RPSTIR_USER
+    {
+     "rpstirUser",
+     false,
+     config_type_string_converter, &config_type_string_arg_mandatory,
+     config_type_string_converter_inverse, NULL,
+     free,
+     NULL, NULL,
+     NULL},
+
     // CONFIG_RPKI_PORT
     {
      "RPKIPort",

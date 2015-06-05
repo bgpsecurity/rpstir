@@ -9,6 +9,9 @@
 # RPKICacheDir) can take either absolute paths or paths relative to this
 # configuration file.
 
+# rpstir user account
+rpstirUser rpstir
+
 # Database to use.
 Database some_database
 
