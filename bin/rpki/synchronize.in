@@ -46,7 +46,7 @@ if test "$CONFIG_NEW_VERSION_CHECK" != none; then
 	if curl \
 		--cacert "`config_get NewVersionCheckCACert`" \
 		--location \
-		--max-time 5 \
+		--max-time 10 \
 		--output "$VERSION_FILE" \
 		"$CONFIG_NEW_VERSION_CHECK"
 	then
