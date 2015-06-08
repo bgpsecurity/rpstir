@@ -1,0 +1,13 @@
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+u=${TESTS_TOP_SRCDIR}/tests/util.sh
+. "${u}" || t4s_bailout "unable to load ${u}"
+
+cd "${TESTS_BUILDDIR}" || t4s_bailout "unable to cd to ${TESTS_BUILDDIR}"
+
+run_tests() {
+    test_perms "${0##*/}".cache "$@"
+    t4s_done
+}
