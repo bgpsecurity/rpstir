@@ -199,20 +199,23 @@ char *UnixTimeToDBTime(
 {
     struct tm *tmp;
     char *out;
+    int sta = 0;
 
-    if (stap == NULL)
-        return (NULL);
-    *stap = 0;
     out = (char *)calloc(48, sizeof(char));
     if (out == NULL)
     {
-        *stap = ERR_SCM_NOMEM;
-        return (NULL);
+        sta = ERR_SCM_NOMEM;
+        goto done;
     }
     tmp = gmtime(&clck);
     xsnprintf(out, 48, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
               1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday,
               tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+done:
+    if (stap)
+    {
+        *stap = sta;
+    }
     return (out);
 }
 
