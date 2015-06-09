@@ -91,8 +91,6 @@ int checkValidity(
     scm *scmp,
     scmcon *connect)
 {
-    int status;
-
     // set up main part of query only once, instead of once per object
     if (validTable == NULL)
     {
@@ -100,7 +98,7 @@ int checkValidity(
         validSrch = newsrchscm(NULL, 3, 0, 1);
         QueryField *field = findField("aki");
         addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
-        char *now = LocalTimeToDBTime(&status);
+        char *now = LocalTimeToDBTime(NULL);
         field = findField("issuer");
         addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
         validWhereStr = validSrch->wherestr;
@@ -184,8 +182,8 @@ int checkValidity(
             strncpy(prevSKI, nextSKI, 128);
         }
         parentsFound = 0;
-        status = searchscm(connect, validTable, validSrch, NULL,
-                           registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+        searchscm(connect, validTable, validSrch, NULL,
+                  registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (parentsFound > 1)
         {
             LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
@@ -198,9 +196,8 @@ int checkValidity(
                 return 0;
             xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                       whereInsertPtr + 5);
-            status =
-                searchscm(connect, validTable, anySrch, NULL, registerParent,
-                          SCM_SRCH_DOVALUE_ALWAYS, NULL);
+            searchscm(connect, validTable, anySrch, NULL, registerParent,
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
             if (parentsFound > 1)
                 LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
                     parentsFound);
