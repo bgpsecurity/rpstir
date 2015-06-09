@@ -53,6 +53,9 @@ AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CC_C99
+AS_IF([test "x${ac_cv_prog_cc_c99}" = xno],
+      [AC_MSG_ERROR([C99 compiler is required])])
 AC_PROG_RANLIB
 AC_PROG_SED
 AM_PATH_PYTHON([$MIN_PYTHON_VERSION])
