@@ -3,7 +3,7 @@
 @SETUP_ENVIRONMENT@
 
 usage () {
-    echo >&2 "Usage: $0 <old version number>"
+    echo >&2 "Usage: $0  or  $0 <old version number>"
     echo >&2
     echo >&2 "This script upgrades @PACKAGE_NAME@'s data in place. Consider"
     echo >&2 "backing up your data and configuration before running this."
@@ -106,19 +106,42 @@ upgrade_from_0_7 () {
 }
 
 
-if test $# -ne 1; then
-    usage_fatal "This script takes exactly one argument."
+CACHE_DIR="`config_get RPKICacheDir`"
+UPGRADE_MARKER="$CACHE_DIR"/package_version_upgrade
+
+if test -e $UPGRADE_MARKER; then
+    fatal "Found prior upgrade attempt that failed to complete." \
+          "Please contact @PACKAGE_BUGREPORT@ for assistance with a" \
+          "manual upgrade."
 fi
 
-OLD_VERSION="$1"
+if test $# -eq 0; then
+    if test -r ${CACHE_DIR}/package_version; then
+	OLD_VERSION="`cat ${CACHE_DIR}/package_version`"
+    else
+	fatal "Cannot find version of currently installation." \
+	      "Please rerun and provide version like this:" \
+              "$0 <old version number>"
+    fi
+else 
+    if test $# -eq 1; then
+	OLD_VERSION="$1"
+    else
+	usage_fatal "This script takes at most one argument."
+    fi
+fi
+
+echo @PACKAGE_VERSION@ > $UPGRADE_MARKER
 
 case "$OLD_VERSION" in
     -h | --help)
+	rm $UPGRADE_MARKER
         usage
         exit 0
         ;;
 
     0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6)
+	rm $UPGRADE_MARKER
         fatal "Automatic upgrades from releases before 0.7 are not supported." \
               "Please contact @PACKAGE_BUGREPORT@ for assistance with a" \
               "manual upgrade."
@@ -137,16 +160,20 @@ case "$OLD_VERSION" in
         ;;
 
     "@PACKAGE_VERSION@")
+	rm $UPGRADE_MARKER
         usage_fatal "Please specify the version you're upgrading from, not" \
                     "the version you're upgrading to."
         ;;
 
     *)
+	rm $UPGRADE_MARKER
         fatal "Unrecognized version number: $OLD_VERSION"
         ;;
 esac
 
 show_msgs || exit $?
+
+mv $UPGRADE_MARKER "$CACHE_DIR"/package_version
 
 echo
 echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."
