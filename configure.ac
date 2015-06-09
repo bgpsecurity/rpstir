@@ -52,13 +52,8 @@ AC_SUBST([MIN_PYTHON_VERSION])
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.
-#AC_PROG_CXX
 AC_PROG_CC
-AM_PROG_CC_C_O
-#AC_PROG_AWK
-AC_PROG_MAKE_SET
 AC_PROG_RANLIB
-#AC_PROG_LIBTOOL
 AC_PROG_SED
 AM_PATH_PYTHON([$MIN_PYTHON_VERSION])
 AC_PROG_LN_S
@@ -244,7 +239,6 @@ AC_SEARCH_LIBS([v3_addr_validate_path], [crypto],[],[
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h my_global.h mysql.h netdb.h netinet/in.h semaphore.h stdbool.h stdlib.h string.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -258,19 +252,7 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_FORK
-AC_FUNC_GETPGRP
-AC_PROG_GCC_TRADITIONAL
-#AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_FUNC_MMAP
-#AC_FUNC_REALLOC
-AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
-AC_FUNC_STAT
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([alarm bzero clock_gettime dup2 getcwd gethostbyaddr gethostbyname gethostname getline getpass memmove memset mkdir munmap mysql_real_connect select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([clock_gettime getline sem_timedwait])
 if test "$ac_cv_func_getline" != yes; then
     AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
 fi
