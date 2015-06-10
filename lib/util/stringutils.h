@@ -1,3 +1,6 @@
+#ifndef LIB_UTIL_STRINGUTILS_H
+#define LIB_UTIL_STRINGUTILS_H
+
 /*
  * Low-level string parsing utilities
  */
@@ -48,3 +51,5 @@ char *scrub_for_print(
     size_t const dst_sz,
     size_t * dst_len_out,
     char const *other_chars_to_escape);
+
+#endif /* !LIB_UTIL_STRINGUTILS_H */
