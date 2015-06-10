@@ -1,5 +1,5 @@
 /*
- * Low-level string parsing utilities 
+ * Low-level string parsing utilities
  */
 
 

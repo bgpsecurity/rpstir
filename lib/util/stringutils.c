@@ -1,5 +1,5 @@
 /*
- * Low-level string parsing utilities 
+ * Low-level string parsing utilities
  */
 
 
@@ -13,7 +13,7 @@
 
 
 /*
- * Does string s end with suffix? 
+ * Does string s end with suffix?
  */
 int endswith(
     const char *s,
@@ -38,7 +38,7 @@ int endswith(
 
 
 /*
- * Does string s start with prefix? 
+ * Does string s start with prefix?
  */
 int startswith(
     const char *s,
@@ -64,7 +64,7 @@ int startswith(
 
 
 /*
- * Return true if the string contains at least one non-delimiter character.  
+ * Return true if the string contains at least one non-delimiter character.
  */
 int exists_non_delimiter(
     const char *s,
@@ -83,7 +83,7 @@ int exists_non_delimiter(
 
 
 /*
- * Strip all leftmost delimiter characters from input string (in place). 
+ * Strip all leftmost delimiter characters from input string (in place).
  */
 void lstrip(
     char *s,
@@ -104,7 +104,7 @@ void lstrip(
 
 
 /*
- * Strip all rightmost delimiter characters from input string (in place). 
+ * Strip all rightmost delimiter characters from input string (in place).
  */
 void rstrip(
     char *s,
@@ -121,7 +121,7 @@ void rstrip(
 
 
 /*
- * Strip all leftmost and rightmost delimiter characters (in place). 
+ * Strip all leftmost and rightmost delimiter characters (in place).
  */
 void strip(
     char *s,
@@ -133,10 +133,10 @@ void strip(
 
 
 /*
- * Return the next field, i.e. pointer to the beginning of the next contiguous 
+ * Return the next field, i.e. pointer to the beginning of the next contiguous
  * string of non-delimiter characters.  Note that this skips the current
- * contiguous string of non-delimiter characters. Returns NULL if there are no 
- * more non-delimiter characters in the string. 
+ * contiguous string of non-delimiter characters. Returns NULL if there are no
+ * more non-delimiter characters in the string.
  */
 char *start_of_next_field(
     const char *s,
@@ -148,12 +148,12 @@ char *start_of_next_field(
         return NULL;
 
     /*
-     * Skip current set of non-delimiters 
+     * Skip current set of non-delimiters
      */
     for (pc = s; *pc != '\0' && !strchr(delimiters, *pc); ++pc);
 
     /*
-     * Skip delimiters 
+     * Skip delimiters
      */
     for (; *pc != '\0' && strchr(delimiters, *pc); ++pc);
 
@@ -165,10 +165,10 @@ char *start_of_next_field(
 
 
 /*
- * Copy the current field (contiguous string of non-delimiter characters) into 
- * the destination buffer, up to dest_length-1 bytes. Append '\0' to terminate 
+ * Copy the current field (contiguous string of non-delimiter characters) into
+ * the destination buffer, up to dest_length-1 bytes. Append '\0' to terminate
  * the C string.  If the buffer size is insufficient, safely null-terminate
- * the destination buffer and return NULL. 
+ * the destination buffer and return NULL.
  */
 char *this_field(
     char *dest,
@@ -205,7 +205,7 @@ char *this_field(
 
 /*
  * Return the length of the current field (contiguous string of non-delimiter
- * characters).  Returns -1 on error cases. 
+ * characters).  Returns -1 on error cases.
  */
 int field_length(
     const char *s,
@@ -225,26 +225,26 @@ int field_length(
 
 /*
  * Split a string on given delimiters.
- * 
+ *
  * This modifies the original string by terminating each field with a NULL
  * character.  The function also allocates an array of char* and populates it
  * with pointers back into the original string, each pointer indicating the
  * start of a field.  The caller is responsible for freeing the memory
  * allocated at address *pfields.
- * 
+ *
  * Intuitively, if the delimiters are whitespace, this function parses a
  * command line string into char *argv[] and sets argc.  Strictly speaking,
  * this is not a complete replica of command line parsing because quoting is
  * not supported.
- * 
+ *
  * Inputs: s - string to be split delimiters - list of characters to split on
  * (field delimiters)
- * 
+ *
  * Outputs: s - string is modified in place pfields - address of char** that
  * will store the array of fields pnumfields - address of int that will store
  * the number of fields
- * 
- * Returns: 0 on success, -1 on failure and sets errno accordingly. 
+ *
+ * Returns: 0 on success, -1 on failure and sets errno accordingly.
  */
 int split_string(
     char *s,
@@ -265,7 +265,7 @@ int split_string(
     }
 
     /*
-     * Find first field. 
+     * Find first field.
      */
     current_field = strtok_r(s, delimiters, &strtok_state);
     if (current_field)
@@ -282,7 +282,7 @@ int split_string(
     }
 
     /*
-     * Find subsequent fields. 
+     * Find subsequent fields.
      */
     while (current_field)
     {
@@ -311,15 +311,15 @@ int split_string(
 /*
  * Expand an array by doubling the amount of elements allocated. Behaves much
  * like realloc(), and so the following two paragraphs are copied from the
- * realloc() man page for reference: realloc() changes the size of the memory 
+ * realloc() man page for reference: realloc() changes the size of the memory
  * block pointed to by ptr to size bytes.  The contents will be unchanged to
  * the minimum of the old and new sizes; newly allocated memory will be
  * uninitialized.  If ptr is NULL, the call is equivalent to malloc(size); if
  * size is equal to zero, the call is equivalent to free(ptr).  Unless ptr is
  * NULL, it must have been returned by an earlier call to malloc(), calloc()
  * or realloc().  Returns a pointer to the newly allocated memory, which is
- * suitably aligned for any kind of variable and may be different from ptr, or 
- * NULL if the request fails. If size was equal to 0, either NULL or a pointer 
+ * suitably aligned for any kind of variable and may be different from ptr, or
+ * NULL if the request fails. If size was equal to 0, either NULL or a pointer
  * suitable to be passed to free() is returned.  If realloc() fails the
  * original block is left untouched - it is not freed or moved. Inputs: ptr
  * - address of pointer to array of members (*ptr may be NULL). current_nmemb
@@ -329,7 +329,7 @@ int split_string(
  * and *current_nmemb is updated to the new number of members.  Note that you
  * won't get the expected exponential reallocation if you call this more than
  * about 30 times, since size_t is often 32 bits. Returns: 0 on success; -1
- * and sets errno on failure. 
+ * and sets errno on failure.
  */
 
 int expand_by_doubling(
@@ -351,9 +351,9 @@ int expand_by_doubling(
         return 0;
 
     /*
-     * Double current_nmemb, yet be graceful about integer overflow. Note that 
+     * Double current_nmemb, yet be graceful about integer overflow. Note that
      * signed integer overflow is undefined, so it's important that we're
-     * using size_t which is guaranteed to be unsigned.  
+     * using size_t which is guaranteed to be unsigned.
      */
     new_nmemb = (new_nmemb * size > min_nmemb * size) ? new_nmemb : min_nmemb;
     new_nmemb = (new_nmemb * size > 2 * (*current_nmemb) * size) ?
