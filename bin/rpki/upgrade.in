@@ -52,8 +52,90 @@ show_msgs () {
 }
 
 
-upgrade_from_0_9 () {
+upgrade_from_0_10 () {
+    log "Clearing rpki-rtr data before altering schema."
+    rpki-rtr-clear -f || fatal "Could not clear rpki-rtr data."
+
+    log "Removing all ROAs from the database before altering schema."
+    RPKICacheDir=$(try config_get RPKICacheDir) || exit 1
+    find "${RPKICacheDir}" -type f -name \*.roa -exec sh -c '
+             ret=0
+             for f in "$@"; do
+                 rcli -d "${f}" || ret=1
+             done
+             exit "${ret}"
+         ' - '{}' + \
+         || add_msg "\
+Potentially failed to remove all ROA files before upgrading the
+database schema. This is probably not a problem."
+
+    log "Updating the database schema."
+    mysql_cmd <<\EOF || fatal "Could not update the database schema."
+ALTER TABLE rpki_roa DROP COLUMN ip_addrs;
+
+CREATE TABLE rpki_roa_prefix (
+    roa_local_id INT UNSIGNED NOT NULL,
+    prefix VARBINARY(16) NOT NULL,
+    prefix_length TINYINT UNSIGNED NOT NULL,
+    prefix_max_length TINYINT UNSIGNED NOT NULL,
+    KEY (roa_local_id, prefix),
+    FOREIGN KEY (roa_local_id) REFERENCES rpki_roa (local_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CHECK (length(prefix) = 4 OR length(prefix) = 16),
+    CHECK (prefix_length <= prefix_max_length),
+    CHECK (prefix_max_length <= length(prefix) * 8));
+
+ALTER TABLE rtr_full
+    DROP PRIMARY KEY,
+    DROP COLUMN ip_addr,
+    ADD COLUMN (
+        prefix VARBINARY(16) NOT NULL,
+        prefix_length TINYINT UNSIGNED NOT NULL,
+        prefix_max_length TINYINT UNSIGNED NOT NULL),
+    ADD CHECK (length(prefix) = 4 OR length(prefix) = 16),
+    ADD CHECK (prefix_length <= prefix_max_length),
+    ADD CHECK (prefix_max_length <= length(prefix) * 8),
+    ADD PRIMARY KEY (serial_num, asn, prefix, prefix_length, prefix_max_length);
+
+ALTER TABLE rtr_incremental
+    DROP PRIMARY KEY,
+    DROP COLUMN ip_addr,
+    ADD COLUMN (
+        prefix VARBINARY(16) NOT NULL,
+        prefix_length TINYINT UNSIGNED NOT NULL,
+        prefix_max_length TINYINT UNSIGNED NOT NULL),
+    ADD CHECK (length(prefix) = 4 OR length(prefix) = 16),
+    ADD CHECK (prefix_length <= prefix_max_length),
+    ADD CHECK (prefix_max_length <= length(prefix) * 8),
+    ADD PRIMARY KEY (serial_num, asn, prefix, prefix_length, prefix_max_length);
+EOF
+
+    log "Re-adding ROAs with new schema."
+    find "`config_get RPKICacheDir`" -type f -name \*.roa -print \
+        | rcli -l || fatal "Failed to re-add ROAs."
+
+    log "Re-initializing rpki-rtr data."
+    rpki-rtr-initialize || fatal "Could not re-initialize rpki-rtr."
+
+    # Don't run rpki-rtr-update here, because it's possible that the
+    # user has tweaked their local cache in some way that they're not
+    # ready to push out to routers yet. In the nominal case, our not
+    # running rpki-rtr-update here isn't a big deal because it will
+    # be run reasonably soon by cron, and the routers should be
+    # configured with multiple cache servers anyway.
+    add_msg "\
+The rpki-rtr data was cleared and re-initialized, but no updates were
+created. If you want to start sending data to routers again, run
+%s-rpki-rtr-update." \
+        "@PACKAGE_NAME@"
+
     return 0
+}
+
+upgrade_from_0_9 () {
+    upgrade_from_0_10
+    return $?
 }
 
 upgrade_from_0_8 () {
@@ -134,6 +216,10 @@ case "$OLD_VERSION" in
 
     0.9)
         upgrade_from_0_9 || exit $?
+        ;;
+
+    0.10)
+        upgrade_from_0_10 || exit $?
         ;;
 
     "@PACKAGE_VERSION@")

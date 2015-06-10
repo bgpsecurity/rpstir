@@ -169,7 +169,8 @@
 #define ERR_SCM_AIATA       -160        /* AIA found in TA cert */
 #define ERR_SCM_INVALSATTR  -161        /* Invalid signed attribute */
 #define ERR_SCM_TAINHERIT   -162        /* TA cert has inherit resources */
-#define ERR_SCM_MAXERR      -162
+#define ERR_SCM_TRUNCATED   -163        /* Truncated data */
+#define ERR_SCM_MAXERR      -163
 
 /*
  * macro that prints an error string and call return if a condition is true 

@@ -165,13 +165,36 @@ int roaGenerateFilter2(
     struct CMS *r,
     char **str);
 
-/*
- * Fills the IP addresses assigned by a ROA into a multiline string, where
- * each line has the form address/prefix_length[/max_prefix_len] 
+/**
+ * @brief Represent a prefix from a ROA.
  */
-int roaGetIPAddresses(
+struct roa_prefix
+{
+    /**
+     * @brief Length of #prefix, either 4 for IPv4 or 16 for IPv6.
+     */
+    uint8_t prefix_family_length;
+
+    uint8_t prefix[16];
+
+    uint8_t prefix_length;
+
+    uint8_t prefix_max_length;
+};
+
+/**
+ * @brief Extract the prefixes from a ROA.
+ *
+ * @param[in] r The ROA.
+ * @param[out] prefixes On success, *prefixes will be set to point to
+ *     an array of roa prefixes. This value must be free()ed by the
+ *     caller. On failure, *prefixes will be set to NULL.
+ * @return On success, the number of prefixes. On failure, a negative
+ *     number.
+ */
+ssize_t roaGetPrefixes(
     struct CMS *r,
-    char **str);
+    struct roa_prefix * * prefixes);
 
 /*
  * This utility function extracts the SKI from a ROA and formats it in the
