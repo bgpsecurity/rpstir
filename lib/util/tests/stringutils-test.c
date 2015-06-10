@@ -39,10 +39,12 @@ static bool test_scrub_for_print__length_if_truncated(
     char dst[DST_LEN + 50];
     char ref[sizeof(dst) - DST_LEN];
     init_dst(dst + DST_LEN, ref, sizeof(ref));
+    size_t len_out;
 
-    scrub_for_print(dst, src, DST_LEN, NULL, "");
+    scrub_for_print(dst, src, DST_LEN, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, DST_LEN - 1);
     TEST_BOOL(memcmp(dst + DST_LEN, ref, sizeof(ref)), false);
+    TEST(size_t, "%zu", len_out, ==, strlen(src));
 
     return true;
 }
@@ -54,11 +56,13 @@ static bool test_scrub_for_print__length_if_expansion_truncated(
     char dst[dst_sz + 50];
     char ref[sizeof(dst) - dst_sz];
     init_dst(dst + dst_sz, ref, sizeof(ref));
+    size_t len_out;
 
     sprintf(src, "%c%c%s", 'a', '\n', "12345");
-    scrub_for_print(dst, src, dst_sz, NULL, "");
+    scrub_for_print(dst, src, dst_sz, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, dst_sz - 1);
     TEST_BOOL(memcmp(dst + dst_sz, ref, sizeof(ref)), false);
+    TEST(size_t, "%zu", len_out, ==, strlen(src) + 3);
 
     return true;
 }
@@ -69,9 +73,11 @@ static bool test_scrub_for_print__null_input(
     size_t const DST_LEN = 5;
     char src[] = "";
     char dst[DST_LEN];
+    size_t len_out;
 
-    scrub_for_print(dst, src, DST_LEN, NULL, "");
+    scrub_for_print(dst, src, DST_LEN, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, 0);
+    TEST(size_t, "%zu", len_out, ==, strlen(src));
 
     return true;
 }
@@ -82,9 +88,11 @@ static bool test_scrub_for_print__copy_all(
     size_t const DST_LEN = 10;
     char src[] = "abcdefg";
     char dst[DST_LEN];
+    size_t len_out;
 
-    scrub_for_print(dst, src, DST_LEN, NULL, "");
+    scrub_for_print(dst, src, DST_LEN, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, strlen(src));
+    TEST(size_t, "%zu", len_out, ==, strlen(src));
 
     return true;
 }
@@ -95,9 +103,11 @@ static bool test_scrub_for_print__backslash(
     size_t const DST_LEN = 50;
     char src[] = "ab\\cde\\";
     char dst[DST_LEN];
+    size_t len_out;
 
-    scrub_for_print(dst, src, DST_LEN, NULL, "");
+    scrub_for_print(dst, src, DST_LEN, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, strlen(src) + 2);
+    TEST(size_t, "%zu", len_out, ==, strlen(src) + 2);
 
     return true;
 }
@@ -108,9 +118,11 @@ static bool test_scrub_for_print__escape_chars(
     size_t const DST_LEN = 50;
     char src[] = "abcde";
     char dst[DST_LEN];
+    size_t len_out;
 
-    scrub_for_print(dst, src, DST_LEN, NULL, "bd");
+    scrub_for_print(dst, src, DST_LEN, &len_out, "bd");
     TEST_BOOL(strcmp(dst, "a\\bc\\de"), false);
+    TEST(size_t, "%zu", len_out, ==, strlen(src) + 2);
 
     return true;
 }
