@@ -46,8 +46,10 @@ make_clean_dir () {
     done
 }
 
-CACHE_DIR="`config_get RPKICacheDir`"
-LOG_DIR="`config_get LogDir`"
+CACHE_DIR=$(try config_get RPKICacheDir) || \
+          fatal "Couldn't get RPKICacheDir from config data"
+LOG_DIR=$(try config_get LogDir) || \
+        fatal "Couldn't get LogDir from config data"
 
 make_clean_dir "$CACHE_DIR" "$LOG_DIR"
 
@@ -57,4 +59,4 @@ rpki-rtr-clear -f || fatal "Couldn't clear rpki-rtr data"
 
 rpki-rtr-initialize || fatal "Couldn't initialize rpki-rtr data"
 
-echo @PACKAGE_VERSION@ > "$CACHE_DIR"/package_version
+echo @PACKAGE_VERSION@ > "$LOG_DIR"/package_version

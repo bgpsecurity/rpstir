@@ -106,8 +106,10 @@ upgrade_from_0_7 () {
 }
 
 
-CACHE_DIR="`config_get RPKICacheDir`"
-UPGRADE_MARKER="$CACHE_DIR"/package_version_upgrade
+LOG_DIR=$(try config_get LogDir) || \
+        fatal "Couldn't get LogDir from config data"
+
+UPGRADE_MARKER="$LOG_DIR"/package_version_upgrade
 
 if test -e $UPGRADE_MARKER; then
     fatal "Found prior upgrade attempt that failed to complete." \
@@ -116,64 +118,59 @@ if test -e $UPGRADE_MARKER; then
 fi
 
 if test $# -eq 0; then
-    if test -r ${CACHE_DIR}/package_version; then
-	OLD_VERSION="`cat ${CACHE_DIR}/package_version`"
-    else
-	fatal "Cannot find version of currently installation." \
-	      "Please rerun and provide version like this:" \
-              "$0 <old version number>"
-    fi
-else 
-    if test $# -eq 1; then
-	OLD_VERSION="$1"
-    else
-	usage_fatal "This script takes at most one argument."
-    fi
+    OLD_VERSION=$(try cat "${LOG_DIR}"/package_version) || \
+                fatal "Cannot find version of currently installation." \
+                      "Please rerun and provide version like this:" \
+                      "$0 <old version number>"
+elif test $# -eq 1; then
+    OLD_VERSION="$1"
+else
+    usage_fatal "This script takes at most one argument."
 fi
 
-echo @PACKAGE_VERSION@ > $UPGRADE_MARKER
 
 case "$OLD_VERSION" in
     -h | --help)
-	rm $UPGRADE_MARKER
         usage
         exit 0
         ;;
 
     0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6)
-	rm $UPGRADE_MARKER
         fatal "Automatic upgrades from releases before 0.7 are not supported." \
               "Please contact @PACKAGE_BUGREPORT@ for assistance with a" \
               "manual upgrade."
         ;;
 
     0.7)
+        echo "@PACKAGE_VERSION@" > "$UPGRADE_MARKER"
         upgrade_from_0_7 || exit $?
         ;;
 
     0.8)
+        echo "@PACKAGE_VERSION@" > "$UPGRADE_MARKER"
         upgrade_from_0_8 || exit $?
         ;;
 
     0.9)
+        echo "@PACKAGE_VERSION@" > "$UPGRADE_MARKER"
         upgrade_from_0_9 || exit $?
         ;;
 
     "@PACKAGE_VERSION@")
-	rm $UPGRADE_MARKER
         usage_fatal "Please specify the version you're upgrading from, not" \
                     "the version you're upgrading to."
         ;;
 
     *)
-	rm $UPGRADE_MARKER
         fatal "Unrecognized version number: $OLD_VERSION"
         ;;
 esac
 
 show_msgs || exit $?
 
-mv $UPGRADE_MARKER "$CACHE_DIR"/package_version
+mv "$UPGRADE_MARKER" "$LOG_DIR"/package_version || \
+fatal "Could not rename ${UPGRADE_MARKER} to ${LOG_DIR}/package_version" \
+      "Please do so manually. Upgrade will then be complete."
 
 echo
 echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."
