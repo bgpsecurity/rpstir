@@ -19,7 +19,9 @@ lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/types/sscanf.c \
 	lib/configlib/types/sscanf.h \
 	lib/configlib/types/string_cvt.c \
-	lib/configlib/types/string_cvt.h
+	lib/configlib/types/string_cvt.h \
+	lib/configlib/types/passwd.c \
+	lib/configlib/types/passwd.h
 
 
 check_PROGRAMS += lib/configlib/tests/good

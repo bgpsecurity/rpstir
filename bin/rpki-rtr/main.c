@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include "util/bag.h"
 #include "util/queue.h"
@@ -43,6 +44,80 @@ static void signal_handler(
     pthread_exit(NULL);
 }
 
+static void drop_privileges()
+{
+    //const char *user = CONFIG_RPKI_RTR_USER_get();
+    const char *group = CONFIG_RPKI_RTR_GROUP_get();
+
+    //if(user == NULL) return;
+
+    struct passwd *pwd;
+    pwd = CONFIG_RPKI_RTR_USER_get();
+
+    struct group *grp;
+    grp = getgrnam(group);
+
+    /*uid_t uid = getuid();
+    struct passwd *orig_user;
+    orig_user = getpwuid(uid);
+
+    gid_t gid = getgid();
+    struct group *orig_group;
+    orig_group = getgrgid(gid);
+
+    printf("[+] TEST [+]\n");
+    printf("run as: %s:%s\n", orig_user->pw_name, orig_group->gr_name);
+
+    printf("switching to %s:%s\n", pwd->pw_name, grp->gr_name); */
+    block_signals();
+
+    if (pwd == NULL)
+    {
+        LOG(LOG_ERR, "can't find rpki-rtr user");
+        exit_code = EXIT_FAILURE;
+        pthread_exit(NULL); 
+    }
+
+    if (grp == NULL)
+    {
+        LOG(LOG_ERR, "can't find rpki-rtr group: %s", group);
+        exit_code = EXIT_FAILURE;
+        pthread_exit(NULL);
+    }
+
+    if (getgid() != grp->gr_gid)
+    {
+        if (setgid(grp->gr_gid) != 0)
+        {
+            LOG(LOG_ERR, "can't change group ID to %" PRIuMAX ": %s (%d)", 
+                (uintmax_t)(grp->gr_gid), strerror(errno), errno);
+            exit_code = EXIT_FAILURE;
+            pthread_exit(NULL);
+        }
+    }
+
+    if (getuid() != pwd->pw_uid)
+    {
+        if (setuid(pwd->pw_uid) != 0)
+        {
+            LOG(LOG_ERR, "can't change user ID to %" PRIuMAX ": %s (%d)",
+                (uintmax_t)(pwd->pw_gid), strerror(errno), errno);
+            exit_code = EXIT_FAILURE;
+            pthread_exit(NULL);
+        }
+    }
+
+    unblock_signals();
+
+    /*uid_t curr_user = getuid();
+    struct passwd *new_user;
+    new_user = getpwuid(curr_user);
+    gid_t curr_group = getgid();
+    struct group *new_group;
+    new_group = getgrgid(curr_group);
+    printf("[+] TEST [+]\n");
+    printf("dropped privs to: %s:%s\n", new_user->pw_name, new_group->gr_name);*/
+}
 
 struct run_state {
     bool log_opened;
@@ -491,32 +566,7 @@ static void startup(
         pthread_exit(NULL);
     }
 
-    // Drop privileges (if run as root)
-    const char *user = CONFIG_RPSTIR_USER_get();
-    struct passwd *pwd;
-    pwd = getpwnam(user);
-    if (pwd == NULL)
-    {
-        LOG(LOG_ERR, "can't find rpstir user: %s", user);
-        exit_code = EXIT_FAILURE;
-        pthread_exit(NULL);
-    }
-
-    if (getuid() == 0 || getgid() == 0)
-    {
-        if (setgid(pwd->pw_gid) == -1)
-        {
-            LOG(LOG_ERR, "can't drop privileges");
-            exit_code = EXIT_FAILURE;
-            pthread_exit(NULL);
-        }
-        if (setuid(pwd->pw_uid) == -1)
-        {
-            LOG(LOG_ERR, "can't drop privileges");
-            exit_code = EXIT_FAILURE;
-            pthread_exit(NULL);
-        }
-    }
+    drop_privileges();
 
     block_signals();
     run_state->db_request_queue = Queue_new(true);
@@ -634,7 +684,6 @@ static void startup(
     run_state->connection_control_thread_initialized = true;
     unblock_signals();
 }
-
 
 int main(
     int argc,

@@ -9,9 +9,6 @@
 # RPKICacheDir) can take either absolute paths or paths relative to this
 # configuration file.
 
-# rpstir user account
-rpstirUser rpstir
-
 # Database to use.
 Database some_database
 
@@ -74,6 +71,12 @@ TrustAnchorLocators \
 
 # Port that rcli listens on. Pick any available port above 1024.
 #RPKIPort 7344
+
+# rpki-rtr user account
+RpkiRtrUser nobody
+
+# rpki-rtr user group
+RpkiRtrGroup nogroup
 
 # How long to keep data for rpki-rtr.
 #RpkiRtrRetentionHours 96

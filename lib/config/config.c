@@ -7,6 +7,7 @@
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string_cvt.h"
+#include "configlib/types/passwd.h"
 #include "util/logging.h"
 
 #include "config.h"
@@ -14,16 +15,6 @@
 
 /** All available config options */
 static const struct config_option config_options[] = {
-    //CONFIG_RPSTIR_USER
-    {
-     "rpstirUser",
-     false,
-     config_type_string_converter, &config_type_string_arg_mandatory,
-     config_type_string_converter_inverse, NULL,
-     free,
-     NULL, NULL,
-     NULL},
-
     // CONFIG_RPKI_PORT
     {
      "RPKIPort",
@@ -283,6 +274,27 @@ static const struct config_option config_options[] = {
      free,
      NULL, NULL,
      "\"" PKGVARLIBDIR "/statistics\""},
+
+    //CONFIG_RPKI_RTR_USER
+    {
+     "RpkiRtrUser",
+     false,
+     config_type_passwd_converter, NULL,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     ""},
+
+    //CONFIG_RPKI_RTR_GROUP
+    {
+     "RpkiRtrGroup",
+     false,
+     config_type_string_converter, &config_type_string_arg_optional,
+     NULL, NULL,
+     free,
+     NULL, NULL,
+     ""},
+
 };
 
 
