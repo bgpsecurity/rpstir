@@ -106,3 +106,5 @@ use_config_file () {
 
     export @CONFIG_ENV_VAR@="$1"
 }
+
+. "${TESTS_TOP_SRCDIR}"/tests/tap4sh.sh || fatal "unable to load tap4sh.sh"
