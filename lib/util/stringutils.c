@@ -304,6 +304,9 @@ char *scrub_for_print(
     char const *other_chars_to_escape)
 {
     size_t i;
+    size_t len_out = 0;
+    // 'used' equals 'len_out' until the output becomes truncated, at
+    // which point it is set to 'dst_sz'
     size_t used = 0;
 
     dst[0] = '\0';
@@ -326,11 +329,15 @@ char *scrub_for_print(
             fmt = "\\%c";
         }
 
-        used += snprintf(&dst[used], dst_sz - used, fmt, src[i]);
+        int ret = snprintf(&dst[used], dst_sz - used, fmt, src[i]);
+        len_out += ret;
+        used += ((size_t)ret > (dst_sz - used)) ? (dst_sz - used) : (size_t)ret;
     }
 
     if (dst_len_out)
-        *dst_len_out = used;
+    {
+        *dst_len_out = len_out;
+    }
 
     return dst;
 }

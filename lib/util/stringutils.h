@@ -141,6 +141,7 @@ int expand_by_doubling(
  * @brief Replace questionable chars from string for printing.
  *
  * @note Caller handles memory for dst.
+ * @note Output might be truncated, compared to input.
  * @note dst will be null terminated, at or before index dst_sz-1.
  *
  * @param[out] dst
@@ -149,12 +150,13 @@ int expand_by_doubling(
  * @param[in] src
  *     The input string to escape.  This must not be NULL.
  * @param[in] dst_sz
- *     Size of the buffer at @p dst.  The buffer must be big enough to
- *     hold the entire escaped string, including the nul terminator.
+ *     Size of the buffer at @p dst.  This must not be 0.
  * @param[out] dst_len_out
  *     On return, the value at this location will be set to the length
- *     of the escaped string (excluding the nul terminator).  This
- *     parameter may be NULL.
+ *     of the escaped string (excluding the nul terminator), had @p
+ *     dst_sz been big enough.  If this value is greater than or equal
+ *     to @p dst_sz, then the output was truncated.  This parameter
+ *     may be NULL.
  * @param[in] other_chars_to_escape
  *     nul-terminated array of additional characters to escape with a
  *     backslash.  This may be NULL.
