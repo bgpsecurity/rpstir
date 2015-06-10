@@ -2,6 +2,7 @@
  * Low-level string parsing utilities
  */
 
+#include "stringutils.h"
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -9,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "stringutils.h"
 
 
 /*
