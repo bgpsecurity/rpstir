@@ -304,20 +304,16 @@ char *scrub_for_print(
     char const *other_chars_to_escape)
 {
     size_t i;
-    size_t used;
+    size_t used = 0;
 
     dst[0] = '\0';
 
-    for (i = 0, used = 0; i < dst_sz - 1; i++)
+    for (i = 0; src[i]; i++)
     {
         char const *fmt = "%c";
 
-        if ('\0' == src[i])
-        {
-            break;
-        }
-        else if (!isprint((int)(unsigned char)src[i])
-                 || (isspace((int)(unsigned char)src[i]) && ' ' != src[i]))
+        if (!isprint((int)(unsigned char)src[i])
+            || (isspace((int)(unsigned char)src[i]) && ' ' != src[i]))
         {
             fmt = "\\x%02" PRIx8;
         }
