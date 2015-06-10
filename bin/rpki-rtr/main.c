@@ -75,7 +75,7 @@ static void drop_privileges()
     {
         LOG(LOG_ERR, "can't find rpki-rtr user");
         exit_code = EXIT_FAILURE;
-        pthread_exit(NULL); 
+        pthread_exit(NULL);
     }
 
     if (grp == NULL)
@@ -89,7 +89,7 @@ static void drop_privileges()
     {
         if (setgid(grp->gr_gid) != 0)
         {
-            LOG(LOG_ERR, "can't change group ID to %" PRIuMAX ": %s (%d)", 
+            LOG(LOG_ERR, "can't change group ID to %" PRIuMAX ": %s (%d)",
                 (uintmax_t)(grp->gr_gid), strerror(errno), errno);
             exit_code = EXIT_FAILURE;
             pthread_exit(NULL);

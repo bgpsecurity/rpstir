@@ -13,7 +13,4 @@ struct config_type_passwd_usr_arg {
     bool allow_null;
 };
 
-struct config_type_passwd_usr_arg config_type_passwd_arg_optional;
-struct config_type_passwd_usr_arg config_type_passwd_arg_mandatory;
-
 #endif
