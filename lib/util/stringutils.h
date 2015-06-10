@@ -5,6 +5,7 @@
  * Low-level string parsing utilities
  */
 
+#include <stddef.h>
 
 int endswith(
     const char *s,
