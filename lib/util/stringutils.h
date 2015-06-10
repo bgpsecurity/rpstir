@@ -145,12 +145,13 @@ int expand_by_doubling(
  * @note dst will be null terminated, at or before index dst_sz-1.
  *
  * @param[out] dst
- *     Location of the buffer to hold the output string.  This must
- *     not be NULL.
+ *     Location of the buffer to hold the output string.  This may be
+ *     NULL, but only if @p dst_sz is 0.
  * @param[in] src
  *     The input string to escape.  This must not be NULL.
  * @param[in] dst_sz
- *     Size of the buffer at @p dst.  This must not be 0.
+ *     Size of the buffer at @p dst.  This may be 0, in which case @p
+ *     dst is ignored.
  * @param[out] dst_len_out
  *     On successful return, the value at this location will be set to
  *     the length of the escaped string (excluding the nul terminator)

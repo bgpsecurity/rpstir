@@ -309,7 +309,10 @@ char *scrub_for_print(
     // which point it is set to 'dst_sz'
     size_t used = 0;
 
-    dst[0] = '\0';
+    if (dst_sz)
+    {
+        dst[0] = '\0';
+    }
 
     for (i = 0; src[i]; i++)
     {
