@@ -310,6 +310,8 @@ char *scrub_for_print(
 
     for (i = 0, used = 0; i < dst_sz - 1; i++)
     {
+        char const *fmt = "%c";
+
         if ('\0' == src[i])
         {
             break;
@@ -317,21 +319,18 @@ char *scrub_for_print(
         else if (!isprint((int)(unsigned char)src[i])
                  || (isspace((int)(unsigned char)src[i]) && ' ' != src[i]))
         {
-            used +=
-                snprintf(&dst[used], dst_sz - used, "\\x%02" PRIx8, src[i]);
+            fmt = "\\x%02" PRIx8;
         }
         else if (strchr(other_chars_to_escape, src[i]))
         {
-            used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
+            fmt = "\\%c";
         }
         else if ('\\' == src[i])
         {
-            used += snprintf(&dst[used], dst_sz - used, "\\%c", src[i]);
+            fmt = "\\%c";
         }
-        else
-        {
-            used += snprintf(&dst[used], dst_sz - used, "%c", src[i]);
-        }
+
+        used += snprintf(&dst[used], dst_sz - used, fmt, src[i]);
     }
 
     if (dst_len_out)
