@@ -330,6 +330,10 @@ char *scrub_for_print(
         }
 
         int ret = snprintf(&dst[used], dst_sz - used, fmt, src[i]);
+        if (ret < 0)
+        {
+            return NULL;
+        }
         len_out += ret;
         used += ((size_t)ret > (dst_sz - used)) ? (dst_sz - used) : (size_t)ret;
     }

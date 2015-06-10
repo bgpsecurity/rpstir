@@ -152,16 +152,16 @@ int expand_by_doubling(
  * @param[in] dst_sz
  *     Size of the buffer at @p dst.  This must not be 0.
  * @param[out] dst_len_out
- *     On return, the value at this location will be set to the length
- *     of the escaped string (excluding the nul terminator), had @p
- *     dst_sz been big enough.  If this value is greater than or equal
- *     to @p dst_sz, then the output was truncated.  This parameter
- *     may be NULL.
+ *     On successful return, the value at this location will be set to
+ *     the length of the escaped string (excluding the nul terminator)
+ *     had @p dst_sz been big enough.  If this value is greater than
+ *     or equal to @p dst_sz, then the output was truncated.  This
+ *     parameter may be NULL.
  * @param[in] other_chars_to_escape
  *     nul-terminated array of additional characters to escape with a
  *     backslash.  This may be NULL.
  *
- * @return dst
+ * @return dst on success, NULL on error
 ------------------------------------------------------------------------------*/
 char *scrub_for_print(
     char *dst,
