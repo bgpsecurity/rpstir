@@ -157,7 +157,7 @@ int expand_by_doubling(
  *     parameter may be NULL.
  * @param[in] other_chars_to_escape
  *     nul-terminated array of additional characters to escape with a
- *     backslash.  This must not be NULL.
+ *     backslash.  This may be NULL.
  *
  * @return dst
 ------------------------------------------------------------------------------*/

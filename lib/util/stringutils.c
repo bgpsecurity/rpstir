@@ -321,7 +321,7 @@ char *scrub_for_print(
         {
             fmt = "\\x%02" PRIx8;
         }
-        else if (strchr(other_chars_to_escape, src[i]))
+        else if (other_chars_to_escape && strchr(other_chars_to_escape, src[i]))
         {
             fmt = "\\%c";
         }
