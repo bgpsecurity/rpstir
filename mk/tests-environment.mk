@@ -6,6 +6,7 @@ LOG_COMPILER_DEPS = \
 
 LOG_COMPILER = $(abs_top_builddir)/tests/setup_test_environment.sh
 
+EXTRA_DIST += tests/tap4sh.sh
 
 EXTRA_DIST += etc/test.conf
 
