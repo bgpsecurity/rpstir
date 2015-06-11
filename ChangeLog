@@ -1,3 +1,24 @@
+(unreleased)
+
+	* Fix a bug where ROAs with hundreds of ROAIPAddresses or more would be
+	  truncated.
+	* Add support for new-style Trust Anchor Locators (TALs)
+	  [draft-ietf-sidr-rfc6490-bis-03].
+	* Fix a potential buffer overflow in code that handles untrusted input.
+	* Fix performance scaling of rpki-rtr-daemon. The rpki-rtr-daemon
+	  previously had poor performance with very large rtr_incremental or
+	  rtr_full tables.
+	* Decrease the likelihood of a malformed rsync URI resulting in a
+	  successful attack, by passing the --protect-args option to rsync.
+	* Improve conformance to [RFC6810] by sending a No Data Available PDU
+	  instead of a Cache Reset PDU in response to a serial query for which
+	  we don't have data yet.
+	* Fix expired certificates in the test suite.
+	* Fix a potential infinite loop in one of the self tests.
+	* Fix a compatibility bug in the test suite, where the tests were
+	  failing on several popular systems that use a particular version of
+	  netcat.
+
 0.10, released 2014-02-25
 
 	* Add beta support for running rpstir in 64-bit mode.
