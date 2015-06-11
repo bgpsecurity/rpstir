@@ -105,23 +105,31 @@ upgrade_from_0_7 () {
     return $?
 }
 
+mark_upgrade() {
+    echo \
+     "insert into rpki_version (version_num) values("@PACKAGE_VERSION@");" \
+     | mysql_cmd || fatal ${FUNCNAME}
+}
 
-LOG_DIR=$(try config_get LogDir) || \
-        fatal "Couldn't get LogDir from config data"
 
-UPGRADE_MARKER="$LOG_DIR"/package_version_upgrade
+VERSIONS=$(echo "select count(*) from rpki_version;" \
+           | mysql_cmd --skip-column-names || \
+             fatal "Cannot get installation version info from database.")
 
-if test -e $UPGRADE_MARKER; then
-    fatal "Found prior upgrade attempt that failed to complete." \
+if test $VERSIONS -eq 0; then
+    fatal "No previous installation version detected. Cannot upgrade."
+elif test $VERSIONS -gt 1; then
+    fatal "Found prior upgrade attempt(s) that failed to complete." \
           "Please contact @PACKAGE_BUGREPORT@ for assistance with a" \
           "manual upgrade."
 fi
 
 if test $# -eq 0; then
-    OLD_VERSION=$(try cat "${LOG_DIR}"/package_version) || \
-                fatal "Cannot find version of currently installation." \
-                      "Please rerun and provide version like this:" \
-                      "$0 <old version number>"
+    OLD_VERSION=$(echo "select version_num from rpki_version;" \
+                  | mysql_cmd --skip-column-names || \
+                  fatal "Cannot get currently installed version from database." \
+                        "Please rerun and provide version like this:" \
+                        "$0 <old version number>")
 elif test $# -eq 1; then
     OLD_VERSION="$1"
 else
@@ -142,23 +150,23 @@ case "$OLD_VERSION" in
         ;;
 
     0.7)
-        echo "@PACKAGE_VERSION@" > "$UPGRADE_MARKER"
+        mark_upgrade
         upgrade_from_0_7 || exit $?
         ;;
 
     0.8)
-        echo "@PACKAGE_VERSION@" > "$UPGRADE_MARKER"
+        mark_upgrade
         upgrade_from_0_8 || exit $?
         ;;
 
     0.9)
-        echo "@PACKAGE_VERSION@" > "$UPGRADE_MARKER"
+        mark_upgrade
         upgrade_from_0_9 || exit $?
         ;;
 
     "@PACKAGE_VERSION@")
-        usage_fatal "Please specify the version you're upgrading from, not" \
-                    "the version you're upgrading to."
+        fatal "Version @PACKAGE_VERSION@ is already installed." \
+              "Currently no upgrade is necessary."
         ;;
 
     *)
@@ -168,9 +176,9 @@ esac
 
 show_msgs || exit $?
 
-mv "$UPGRADE_MARKER" "$LOG_DIR"/package_version || \
-fatal "Could not rename ${UPGRADE_MARKER} to ${LOG_DIR}/package_version" \
-      "Please do so manually. Upgrade will then be complete."
+echo "delete from rpki_version where version_num="$OLD_VERSION";" \
+     | mysql_cmd || \
+     fatal "Cannot delete prior version marker from database."
 
 echo
 echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."

@@ -59,4 +59,5 @@ rpki-rtr-clear -f || fatal "Couldn't clear rpki-rtr data"
 
 rpki-rtr-initialize || fatal "Couldn't initialize rpki-rtr data"
 
-echo @PACKAGE_VERSION@ > "$LOG_DIR"/package_version
+echo "insert into rpki_version (version_num) values("@PACKAGE_VERSION@");" \
+     | mysql_cmd || fatal "Could not record version number in database."

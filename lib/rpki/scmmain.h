@@ -227,6 +227,13 @@ static scmtab scmtabbuilder[] = {
      "            PRIMARY KEY (serial_num, asn, ip_addr)",
      NULL,
      0},
+    {                           /* RPKI_VERSION */
+     "rpki_version",
+     "PACKAGE_VERSION",
+     "version_num  VARCHAR(8) NOT NULL,"
+     "           PRIMARY KEY (version_num)",
+     NULL,
+     0},
 };
 
 #endif
