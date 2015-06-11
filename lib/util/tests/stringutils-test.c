@@ -1,10 +1,16 @@
+#include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "util/stringutils.h"
 #include "test/unittest.h"
 
+
+static unsigned seed;
 
 /**
  * @brief store a sequence of @len characters in both @p dst and @p
@@ -16,8 +22,13 @@ init_dst(
     char *ref,
     size_t len)
 {
-    memset(dst, 0, len);
-    memset(ref, 0, len);
+    size_t i;
+    for (i=0; i < len; ++i)
+    {
+        unsigned char x = rand();
+        ((unsigned char *)dst)[i] = x;
+        ((unsigned char *)ref)[i] = x;
+    }
 }
 
 static bool test_scrub_for_print__length_if_truncated(
@@ -121,8 +132,24 @@ static bool test_scrub_for_print__sz(
 
 
 int main(
-    void)
+    int argc,
+    char *argv[])
 {
+    seed = time(NULL);
+    if (argc > 1)
+    {
+        char *end;
+        errno = 0;
+        unsigned long tmp = strtoul(argv[1], &end, 0);
+        if (errno || (end == argv[1]) || (tmp > UINT_MAX)) {
+            fprintf(stderr, "invalid seed: %s\n", argv[1]);
+            return 1;
+        }
+        seed = tmp;
+    }
+    printf("random seed = %u\n", seed);
+    srand(seed);
+
     if (!test_scrub_for_print__length_if_truncated())
         return EXIT_FAILURE;
 
