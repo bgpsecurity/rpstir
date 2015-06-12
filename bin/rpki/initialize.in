@@ -46,10 +46,10 @@ make_clean_dir () {
     done
 }
 
-CACHE_DIR=$(try config_get RPKICacheDir) || \
-          fatal "Couldn't get RPKICacheDir from config data"
-LOG_DIR=$(try config_get LogDir) || \
-        fatal "Couldn't get LogDir from config data"
+CACHE_DIR=$(config_get RPKICacheDir || \
+          fatal "Couldn't get RPKICacheDir from config data")
+LOG_DIR=$(config_get LogDir || \
+        fatal "Couldn't get LogDir from config data")
 
 make_clean_dir "$CACHE_DIR" "$LOG_DIR"
 
