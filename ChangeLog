@@ -1,4 +1,25 @@
-0.10
+0.11, released 2015-06-12
+
+	* Fix a bug where ROAs with hundreds of ROAIPAddresses or more would be
+	  truncated.
+	* Add support for new-style Trust Anchor Locators (TALs)
+	  [draft-ietf-sidr-rfc6490-bis-03].
+	* Fix a potential buffer overflow in code that handles untrusted input.
+	* Fix performance scaling of rpki-rtr-daemon. The rpki-rtr-daemon
+	  previously had poor performance with very large rtr_incremental or
+	  rtr_full tables.
+	* Decrease the likelihood of a malformed rsync URI resulting in a
+	  successful attack, by passing the --protect-args option to rsync.
+	* Improve conformance to [RFC6810] by sending a No Data Available PDU
+	  instead of a Cache Reset PDU in response to a serial query for which
+	  we don't have data yet.
+	* Fix expired certificates in the test suite.
+	* Fix a potential infinite loop in one of the self tests.
+	* Fix a compatibility bug in the test suite, where the tests were
+	  failing on several popular systems that use a particular version of
+	  netcat.
+
+0.10, released 2014-02-25
 
 	* Add beta support for running rpstir in 64-bit mode.
 	* Add beta support for running rpstir on Mac OS X.
@@ -21,7 +42,7 @@
 	  numbers. These CRLs are now accepted, but the certificates with
 	  syntactically invalid serial numbers are still not accepted.
 
-0.9
+0.9, released 2013-10-31
 
 	* Add many more conformance test cases. (See doc/conformance-cases for
 	  the full list.) These test cases can be used by relying party
@@ -35,7 +56,7 @@
 	* Implement basic support for collecting statistics of the RPKI over
 	  time.
 
-0.8
+0.8, released 2013-07-25
 
 	* Support Ghostbusters Records [RFC 6493].
 	* Fix a SQL injection bug when a filename in a manifest contains certain
@@ -52,7 +73,7 @@
 	* On installation, create ${bindir} if it does not already exist.
 	* Improve README based on user feedback.
 
-0.7
+0.7, released 2013-04-10
 
 	* Add preliminary support for adding files from the local cache. In the
 	  future, this could be used to quickly deploy additional relying party
@@ -69,7 +90,7 @@
 	* Fix bugs in the ROA validation code where AS numbers equal to zero
 	  or larger than 2^31 - 1 were rejected.
 
-0.6
+0.6, released 2013-02-15
 
 	* Simplify the commands used during normal operation. The commands
 	  are now named after what the user intends to do, instead of after the
@@ -112,7 +133,7 @@
 	  rpstir's database user has full permissions on a database, there's
 	  no reason to require access to the root database user.
 
-0.5
+0.5, released 2012-11-02
 
 	* Fix compatibility with older rsync servers.
 	* Be more careful about runaway processes in a few places.
@@ -121,7 +142,7 @@
 	* Support 20-octet serial numbers, manifest numbers, and CRL numbers.
 	* Check for new versions and log when a newer version is available.
 
-0.4
+0.4, released 2012-06-18
 
 	* Add conformance cases for various specifications and fix problems revealed by those conformance cases.
 	* Performance tuning for rsync.
@@ -131,7 +152,7 @@
 	* More tests can be run under valgrind.
 	* Various bug and compiler warning fixes.
 
-0.3
+0.3, released 2012-03-05
 
 	* Fix security bugs in rsync_cord and rsync_listener.
 	* First-pass at preventing SQL injection attacks.
@@ -141,11 +162,11 @@
 	* Performance tuning for rpki-rtr.
 	* Various bug fixes.
 
-0.2
+0.2, released 2012-01-05
 
 	* Support current version of rpki-rtr protocol.
 	* Various bug fixes.
 
-0.1
+0.1, released 2011-12-17
 
 	* Initial public release.
