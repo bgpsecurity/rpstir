@@ -9,7 +9,6 @@
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string_cvt.h"
-#include "configlib/types/passwd.h"
 #include "util/logging.h"
 
 #include "config.h"

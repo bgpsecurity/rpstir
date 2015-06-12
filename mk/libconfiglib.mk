@@ -25,6 +25,7 @@ lib_configlib_libconfiglib_a_SOURCES = \
 	lib/configlib/types/string_cvt.c \
 	lib/configlib/types/string_cvt.h
 
+
 check_PROGRAMS += lib/configlib/tests/good
 
 lib_configlib_tests_good_LDADD = \

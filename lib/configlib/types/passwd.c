@@ -9,6 +9,7 @@ bool config_type_passwd_converter(
     const char *input,
     void **data)
 {
+
 	struct config_type_passwd_usr_arg * args =
         (struct config_type_passwd_usr_arg *)usr_arg;
 
@@ -33,7 +34,7 @@ bool config_type_passwd_converter(
             return false;
         }
     }
-
+	
 	struct passwd *pwd;
 	pwd = getpwnam(input);
 
