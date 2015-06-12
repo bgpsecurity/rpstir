@@ -121,7 +121,7 @@ static bool test_scrub_for_print__escape_chars(
     size_t len_out;
 
     scrub_for_print(dst, src, DST_LEN, &len_out, "bd");
-    TEST_BOOL(strcmp(dst, "a\\bc\\de"), false);
+    TEST_STR(dst, ==, "a\\bc\\de");
     TEST(size_t, "%zu", len_out, ==, strlen(src) + 2);
 
     return true;
