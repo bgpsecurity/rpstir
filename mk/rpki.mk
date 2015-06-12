@@ -82,6 +82,12 @@ bin/rpki/upgrade: $(srcdir)/bin/rpki/upgrade.in
 PACKAGE_NAME_BINS += upgrade
 
 
+pkglibexec_SCRIPTS += bin/rpki/db_init
+MK_SUBST_FILES_EXEC += bin/rpki/db_init
+bin/rpki/db_init: $(srcdir)/bin/rpki/db_init.in
+PACKAGE_NAME_BINS += db_init
+
+
 dist_sampleta_DATA = \
 	etc/sample-ta/README \
 	etc/sample-ta/afrinic.tal \

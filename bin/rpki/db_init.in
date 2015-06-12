@@ -1,0 +1,101 @@
+#!/bin/sh
+# set up an initial database
+
+@SETUP_ENVIRONMENT@
+
+
+usage () {
+    echo >&2 "Usage: $0 <option>"
+    echo >&2 "    -h | --help     Print this help message."
+    echo >&2
+    echo >&2 "    -f | --force    Initialize @PACKAGE_NAME@'s database and"
+    echo >&2 "                    directories. Note that this will delete any"
+    echo >&2 "                    existing data and logs."
+}
+
+if test $# -eq 1; then
+   case "$1" in
+       -h | --help)
+           usage
+           exit 0
+           ;;
+
+       -f | --force)
+	   FORCED="$1";
+           ;;
+
+       *)
+           usage_fatal "Unrecognized option: $1"
+   esac
+elif test $# -gt 1; then
+   usage_fatal "Please specify no more than one argument."
+fi
+
+DBNAME=$(config_get Database || \
+         fatal "Couldn't get Database from config data")
+DBUSER=$(config_get DatabaseUser || \
+         fatal "Couldn't get DatabaseUser from config data")
+DBPASS=$(config_get DatabasePassword || \
+         fatal "Couldn't get DatabasePassword from config data")
+
+if !(echo "quit" | mysql --user="$DBUSER" --password="$DBPASS"); then
+   test $FORCED || fatal "Cannot login to database as user '$DBUSER'"
+   if !(echo \
+        "create user '${DBUSER}'@'localhost' identified by '${DBPASS}'" \
+        | mysql --user=root); then
+      tty >/dev/null || \
+       fatal "Please run rpstir-initialize from a terminal"
+      echo \
+        "Please provide database password for root user at prompt below"
+      echo \
+        "create user '${DBUSER}'@'localhost' identified by '${DBPASS}'" \
+        | mysql --user=root -p || \
+        fatal "Cannot create database user '$DBUSER'"
+      echo "quit" | mysql --user="$DBUSER" --password="$DBPASS" || \
+        fatal "Cannot login to database as user '$DBUSER'"
+   fi
+fi
+
+if !(echo "quit" \
+     | mysql --user="$DBUSER" --password="$DBPASS" "$DBNAME"); then
+   test $FORCED || fatal "Cannot select database'$DBNAME'"
+   if !(echo "create database ${DBNAME}" \
+        | mysql --user="$DBUSER" --password="$DBPASS"); then
+      if !(echo -e "create database ${DBNAME};\n \
+                    grant all privileges on \
+                          ${DBNAME}.* to '${DBUSER}'@'localhost'" \
+           | mysql --user=root); then
+         tty >/dev/null || \
+          fatal "Please run rpstir-initialize from a terminal"
+         echo \
+           "Please provide database password for root user at prompt below"
+         echo "create database ${DBNAME};\n \
+                    grant all privileges on \
+                          ${DBNAME}.* to '${DBUSER}'@'localhost'" \
+           | mysql --user=root -p || \
+          fatal "Cannot create database '${DBNAME}'"
+      fi
+   fi
+fi
+
+DBTABLES=$(echo "show tables" \
+           | mysql --user="$DBUSER" --password="$DBPASS" "$DBNAME" \
+             --skip-column-names | head -1) \
+           || fatal "Cannot get access database tables"
+
+CACHE_DIR=$(config_get RPKICacheDir) || \
+          fatal "Couldn't get RPKICacheDir from config data"
+
+LOG_DIR=$(config_get LogDir) || \
+        fatal "Couldn't get LogDir from config data"
+
+! test -d $CACHE_DIR || CACHE=$(ls $CACHE_DIR | head -1)
+! test -d $LOG_DIR || LOG=$(ls $LOG_DIR | head -1)
+
+if test -z $DBTABLES && test -z $CACHE && test -z $LOG; then
+   rpstir-initialize $FORCED
+elif test $DBTABLES && test $CACHE && test $LOG; then
+     rpstir-upgrade
+else 
+     fatal "Inconsistent state of database or cache/logs"
+fi
