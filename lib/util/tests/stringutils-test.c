@@ -43,7 +43,7 @@ static bool test_scrub_for_print__length_if_truncated(
 
     scrub_for_print(dst, src, DST_LEN, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, DST_LEN - 1);
-    TEST_BOOL(memcmp(dst + DST_LEN, ref, sizeof(ref)), false);
+    TEST_MEMCMP(dst + DST_LEN, ==, ref, sizeof(ref));
     TEST(size_t, "%zu", len_out, ==, strlen(src));
 
     return true;
@@ -61,7 +61,7 @@ static bool test_scrub_for_print__length_if_expansion_truncated(
     sprintf(src, "%c%c%s", 'a', '\n', "12345");
     scrub_for_print(dst, src, dst_sz, &len_out, "");
     TEST(size_t, "%zu", strlen(dst), ==, dst_sz - 1);
-    TEST_BOOL(memcmp(dst + dst_sz, ref, sizeof(ref)), false);
+    TEST_MEMCMP(dst + dst_sz, ==, ref, sizeof(ref));
     TEST(size_t, "%zu", len_out, ==, strlen(src) + 3);
 
     return true;
