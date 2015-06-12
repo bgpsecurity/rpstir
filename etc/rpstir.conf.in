@@ -72,10 +72,12 @@ TrustAnchorLocators \
 # Port that rcli listens on. Pick any available port above 1024.
 #RPKIPort 7344
 
-# rpki-rtr user account
+# rpki-rtr user account. Commenting out or leaving blank means
+# rpki-rtr daemon will not attempt to drop privileges
 RpkiRtrUser nobody
 
-# rpki-rtr user group
+# rpki-rtr user group. Commenting out or leaving blank means
+# rpki-rtr daemon will not attempt to drop privileges
 RpkiRtrGroup nogroup
 
 # How long to keep data for rpki-rtr.

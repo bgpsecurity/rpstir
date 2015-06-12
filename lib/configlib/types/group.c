@@ -1,16 +1,17 @@
 #include <stdio.h>
-#include <pwd.h>
+#include <grp.h>
 
-#include "passwd.h"
+#include "group.h"
 
-bool config_type_passwd_converter(
+bool config_type_group_converter(
 	const struct config_context *context,
     void *usr_arg,
     const char *input,
     void **data)
 {
-	struct config_type_passwd_usr_arg * args =
-        (struct config_type_passwd_usr_arg *)usr_arg;
+
+	struct config_type_group_usr_arg * args =
+        (struct config_type_group_usr_arg *)usr_arg;
 
     if (input == NULL)
     {
@@ -34,27 +35,27 @@ bool config_type_passwd_converter(
         }
     }
 
-	struct passwd *pwd;
-	pwd = getpwnam(input);
+	struct group *grp;
+	grp = getgrnam(input);
 
-	if (pwd == NULL)
+	if (grp == NULL)
 	{
-		int uid;
-		if (sscanf(input, "%d", &uid) == 0)
-		{
-			LOG(LOG_ERR, "can't find user: %s", input);
-			return false;
-		}
+        int gid;
+        if (sscanf(input, "%d", &gid) == 0)
+        {
+		  LOG(LOG_ERR, "can't find user: %s", input);
+		  return false;
+        }
 
-		pwd = getpwuid(uid);
-		if (pwd == NULL)
-		{
-			LOG(LOG_ERR, "can't find user: %d", uid);
-			return false;
-		}
+        grp = getgrgid(gid);
+        if (grp == NULL)
+        {
+            LOG(LOG_ERR, "can't find user: %d", gid);
+            return false;
+        }
 	}
 
-	*data = pwd;
+	*data = grp;
 	if (*data == NULL)
     {
         LOG(LOG_ERR, "out of memory");
@@ -64,11 +65,11 @@ bool config_type_passwd_converter(
 	return true;
 }
 
-struct config_type_passwd_usr_arg config_type_passwd_arg_optional = {true};
+struct config_type_group_usr_arg config_type_group_arg_optional = {true};
 
-struct config_type_passwd_usr_arg config_type_passwd_arg_mandatory = {false};
+struct config_type_group_usr_arg config_type_group_arg_mandatory = {false};
 
-void config_type_passwd_free(void *data)
+void config_type_group_free(void *data)
 {
-	(void)data;
+    (void)data;
 }

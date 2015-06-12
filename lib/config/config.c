@@ -4,6 +4,8 @@
 
 #include "configlib/types/bool.h"
 #include "configlib/types/enum.h"
+#include "configlib/types/group.h"
+#include "configlib/types/passwd.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string_cvt.h"
@@ -279,9 +281,9 @@ static const struct config_option config_options[] = {
     {
      "RpkiRtrUser",
      false,
-     config_type_passwd_converter, NULL,
+     config_type_passwd_converter, &config_type_passwd_arg_optional,
      NULL, NULL,
-     free,
+     config_type_passwd_free,
      NULL, NULL,
      ""},
 
@@ -289,9 +291,9 @@ static const struct config_option config_options[] = {
     {
      "RpkiRtrGroup",
      false,
-     config_type_string_converter, &config_type_string_arg_optional,
+     config_type_group_converter, &config_type_group_arg_optional,
      NULL, NULL,
-     free,
+     config_type_group_free,
      NULL, NULL,
      ""},
 
