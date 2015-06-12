@@ -52,6 +52,11 @@ show_msgs () {
 }
 
 
+upgrade_from_0_11 () {
+    # nothing to do
+    :
+}
+
 upgrade_from_0_10 () {
     log "Clearing rpki-rtr data before altering schema."
     rpki-rtr-clear -f || fatal "Could not clear rpki-rtr data."
@@ -130,7 +135,7 @@ created. If you want to start sending data to routers again, run
 %s-rpki-rtr-update." \
         "@PACKAGE_NAME@"
 
-    return 0
+    upgrade_from_0_11
 }
 
 upgrade_from_0_9 () {
@@ -220,6 +225,10 @@ case "$OLD_VERSION" in
 
     0.10)
         upgrade_from_0_10 || exit $?
+        ;;
+
+    0.11)
+        upgrade_from_0_11 || exit $?
         ;;
 
     "@PACKAGE_VERSION@")
