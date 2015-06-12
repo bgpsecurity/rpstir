@@ -58,8 +58,10 @@ check_num_output_lines()
 run_bg () {
     LOG="$1"
     shift || exit 1
-    PROG="$1"
-    shift || exit 1
+    [ "$#" -gt 0 ] || {
+        printf %s\\n "ERROR: run_bg(): must specify command to run" >&2
+        exit 1
+    }
 
     log_dir="."
     if test -n "$TEST_LOG_DIR"; then
@@ -74,16 +76,16 @@ run_bg () {
                     --track-fds=yes \
                     --leak-check=full \
                     --error-exitcode=1 \
-                    "$PROG" "$@" <&0 &
+                    "$@" <&0 &
             else
                 valgrind \
                     --log-file="$log_dir/valgrind.$TEST_LOG_NAME.$LOG.log" \
                     --error-exitcode=1 \
-                    "$PROG" "$@" <&0 &
+                    "$@" <&0 &
             fi
             ;;
         "" | "none")
-            "$PROG" "$@" <&0 &
+            "$@" <&0 &
             ;;
         *)
             echo >&2 "Error: invalid value for \$CHECKTOOL: $CHECKTOOL"
