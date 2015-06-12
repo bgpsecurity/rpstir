@@ -59,4 +59,58 @@
 		} \
 	} while (false)
 
+/**
+ * @brief print (in hex) the contents of a region of memory to stderr
+ *
+ * @param[in] buf The location of the memory region to print.
+ * @param[in] len The size of the memory region at @p buf.
+ */
+static inline void
+test_dumpmem(
+    const void *buf,
+    size_t len)
+{
+    const unsigned char *ucbuf = buf;
+    size_t i;
+    for (i = 0; i < len; ++i)
+    {
+	if ((i % 16) == 0)
+	{
+	    fprintf(stderr, "\n       ");
+	}
+	else if ((i % 8) == 0)
+	{
+	    fprintf(stderr, "  ");
+	}
+	fprintf(stderr, " %02x", ucbuf[i]);
+    }
+}
+
+/**
+ * @brief compare two regions of memory
+ *
+ * Call like TEST_MEMCMP(ptr_a, ==, ptr_b, len);
+ */
+#define TEST_MEMCMP(value, condition, cmp_value, len)			\
+    do {								\
+	const void *TEST_value = (value);				\
+	const void *TEST_cmp_value = (cmp_value);			\
+	const size_t TEST_len = (len);					\
+	if (!(memcmp(TEST_value, TEST_cmp_value, TEST_len)		\
+	      condition 0))						\
+	{								\
+	    fprintf(stderr, "Failed test in %s:%d.\n",			\
+		    __FILE__, __LINE__);				\
+	    fprintf(stderr, "    Expected: %s %s %s (%s)\n",		\
+		    #value, #condition, #cmp_value, #len);		\
+	    fprintf(stderr, "    Got LHS: %s =", #value);		\
+	    test_dumpmem(TEST_value, TEST_len);				\
+	    fprintf(stderr, "\n");					\
+	    fprintf(stderr, "    Got RHS: %s =", #cmp_value);		\
+	    test_dumpmem(TEST_cmp_value, TEST_len);			\
+	    fprintf(stderr, "\n");					\
+	    return false;						\
+	}								\
+    } while (false)
+
 #endif
