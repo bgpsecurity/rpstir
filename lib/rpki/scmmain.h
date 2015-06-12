@@ -230,7 +230,7 @@ static scmtab scmtabbuilder[] = {
     {                           /* RPKI_VERSION */
      "rpki_version",
      "PACKAGE_VERSION",
-     "version_num  VARCHAR(8) NOT NULL,"
+     "version_num  VARCHAR(255) NOT NULL,"
      "           PRIMARY KEY (version_num)",
      NULL,
      0},

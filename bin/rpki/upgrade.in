@@ -107,14 +107,16 @@ upgrade_from_0_7 () {
 
 mark_upgrade() {
     echo \
-     "insert into rpki_version (version_num) values("@PACKAGE_VERSION@");" \
-     | mysql_cmd || fatal ${FUNCNAME}
+     "insert into rpki_version (version_num) values(@PACKAGE_VERSION@);" \
+     | mysql_cmd || fatal "Cannot record upgrade version in database"
 }
 
 
 VERSIONS=$(echo "select count(*) from rpki_version;" \
-           | mysql_cmd --skip-column-names || \
-             fatal "Cannot get installation version info from database.")
+           | mysql_cmd --skip-column-names) || \
+           fatal "Cannot get installed version info from database." \
+                 "Please rerun and provide version info like this:" \
+                 "$0 <old version number>"
 
 if test $VERSIONS -eq 0; then
     fatal "No previous installation version detected. Cannot upgrade."
@@ -126,10 +128,10 @@ fi
 
 if test $# -eq 0; then
     OLD_VERSION=$(echo "select version_num from rpki_version;" \
-                  | mysql_cmd --skip-column-names || \
+                  | mysql_cmd --skip-column-names) || \
                   fatal "Cannot get currently installed version from database." \
                         "Please rerun and provide version like this:" \
-                        "$0 <old version number>")
+                        "$0 <old version number>"
 elif test $# -eq 1; then
     OLD_VERSION="$1"
 else
@@ -176,7 +178,7 @@ esac
 
 show_msgs || exit $?
 
-echo "delete from rpki_version where version_num="$OLD_VERSION";" \
+echo "delete from rpki_version where version_num=$OLD_VERSION;" \
      | mysql_cmd || \
      fatal "Cannot delete prior version marker from database."
 
