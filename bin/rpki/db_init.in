@@ -69,9 +69,9 @@ if !(echo "quit" \
           fatal "Please run rpstir-initialize from a terminal"
          echo \
            "Please provide database password for root user at prompt below"
-         echo "create database ${DBNAME};\n \
-                    grant all privileges on \
-                          ${DBNAME}.* to '${DBUSER}'@'localhost'" \
+         echo -e "create database ${DBNAME};\n \
+                  grant all privileges on \
+                        ${DBNAME}.* to '${DBUSER}'@'localhost'" \
            | mysql --user=root -p || \
           fatal "Cannot create database '${DBNAME}'"
       fi
@@ -96,6 +96,6 @@ if test -z $DBTABLES && test -z $CACHE && test -z $LOG; then
    rpstir-initialize $FORCED
 elif test $DBTABLES && test $CACHE && test $LOG; then
      rpstir-upgrade
-else 
+else
      fatal "Inconsistent state of database or cache/logs"
 fi
