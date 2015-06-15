@@ -57,6 +57,8 @@ typedef uint32_t as_number_t;
 #define PRISESSION PRIu16
 #define PRISERIAL PRIu32
 
+#define SCNSERIAL SCNu32
+
 
 /**
 	@return true iff s1 is greater than s2 using serial number arithmetic

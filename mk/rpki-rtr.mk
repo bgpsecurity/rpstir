@@ -40,7 +40,7 @@ bin_rpki_rtr_rpki_rtr_update_SOURCES = \
 	bin/rpki-rtr/rtr-update.c
 
 bin_rpki_rtr_rpki_rtr_update_LDADD = \
-	$(LDADD_LIBRPKI)
+	$(LDADD_LIBDB)
 
 
 pkglibexec_SCRIPTS += bin/rpki-rtr/rpki-rtr-clear
@@ -78,6 +78,7 @@ check_DATA += \
 	tests/subsystem/rtr/as-4.roa \
 	tests/subsystem/rtr/as-5.roa \
 	tests/subsystem/rtr/as-6.roa \
+	tests/subsystem/rtr/as-1000.roa \
 	tests/subsystem/rtr/as-2147483647.roa \
 	tests/subsystem/rtr/root.cer
 
@@ -86,6 +87,7 @@ EXTRA_DIST += \
 	tests/subsystem/rtr/response.bad_pdu_sequence.log.correct \
 	tests/subsystem/rtr/response.bad_pdu_usage.log.correct \
 	tests/subsystem/rtr/response.bad_pdus.log.correct \
+	tests/subsystem/rtr/response.many_prefixes.log.correct \
 	tests/subsystem/rtr/response.no_data.log.correct \
 	tests/subsystem/rtr/response.reset_query_first.log.correct \
 	tests/subsystem/rtr/response.reset_query_last.log.correct \
@@ -101,6 +103,7 @@ RPKI_RTR_TEST_KEYS = \
 	tests/subsystem/rtr/ee-4.key \
 	tests/subsystem/rtr/ee-5.key \
 	tests/subsystem/rtr/ee-6.key \
+	tests/subsystem/rtr/ee-1000.key \
 	tests/subsystem/rtr/ee-2147483647.key \
 	tests/subsystem/rtr/root.key
 
@@ -163,6 +166,34 @@ $(RPKI_RTR_TEST_EE_CERTS): tests/subsystem/rtr/root.key tests/subsystem/rtr/root
 		ipv4="$$IP4" \
 		ipv6="$$IP6" \
 		as="$$number"
+
+RPKI_RTR_TEST_MANY_PREFIXES_EE_CERT = \
+	tests/subsystem/rtr/as-1000.ee.cer
+
+CLEANFILES += $(RPKI_RTR_TEST_MANY_PREFIXES_EE_CERT)
+
+tests/subsystem/rtr/as-1000.ee.cer: tests/subsystem/rtr/ee-1000.key
+$(RPKI_RTR_TEST_MANY_PREFIXES_EE_CERT): tests/subsystem/rtr/root.key tests/subsystem/rtr/root.cer $(top_srcdir)/tests/subsystem/rtr/ee.options
+	mkdir -p "$(@D)"
+	ASnumber=1000; \
+	key="$(@D)/ee-$$ASnumber.key"; \
+	IP4="10.0.0.0/8"; \
+	IP6="10::/16"; \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
+		-f $(top_srcdir)/tests/subsystem/rtr/ee.options \
+		CERT \
+		outputfilename="$@" \
+		parentcertfile=tests/subsystem/rtr/root.cer \
+		parentkeyfile=tests/subsystem/rtr/root.key \
+		subjkeyfile="$$key" \
+		serial="$$ASnumber" \
+		subject="as$$ASnumber" \
+		ipv4="$$IP4" \
+		ipv6="$$IP6" \
+		as=inherit
 
 RPKI_RTR_TEST_MAX_AS_EE_CERT = \
 	tests/subsystem/rtr/as-2147483647.ee.cer
@@ -234,6 +265,38 @@ $(RPKI_RTR_TEST_ROAS):
 		eecertlocation="$$ee_cer" \
 		eekeylocation="$$key" \
 		asid="$$number" \
+		roaipv4="$$IP4" \
+		roaipv6="$$IP6"
+
+RPKI_RTR_TEST_MANY_PREFIXES_ROA = \
+	tests/subsystem/rtr/as-1000.roa
+
+CLEANFILES += $(RPKI_RTR_TEST_MANY_PREFIXES_ROA)
+
+tests/subsystem/rtr/as-1000.roa: tests/subsystem/rtr/as-1000.ee.cer tests/subsystem/rtr/ee-1000.key
+$(RPKI_RTR_TEST_MANY_PREFIXES_ROA):
+	mkdir -p "$(@D)"
+	ASnumber=1000; \
+	ee_cer="$(@D)/as-$$ASnumber.ee.cer"; \
+	key="$(@D)/ee-$$ASnumber.key"; \
+	IP4=""; IP6=""; \
+	for IP_OCTET_A in `seq 0 15`; do \
+		for IP_OCTET_B in `seq 0 2 255`; do \
+			IP4="$$IP4,`printf '10.%u.%u.0/23%%24' $$IP_OCTET_A $$IP_OCTET_B`"; \
+			IP6="$$IP6,`printf '10:%x%02x::/32%%48' $$IP_OCTET_A $$IP_OCTET_B`"; \
+		done; \
+	done; \
+	IP4=`echo "$$IP4" | cut -c 2-`; \
+	IP6=`echo "$$IP6" | cut -c 2-`; \
+	TEST_LOG_NAME=`basename "$@"` \
+		TEST_LOG_DIR=`dirname "$@"` \
+		STRICT_CHECKS=0 \
+		$(LOG_COMPILER) bin/rpki-object/create_object/create_object \
+		ROA \
+		outputfilename="$@" \
+		eecertlocation="$$ee_cer" \
+		eekeylocation="$$key" \
+		asid="$$ASnumber" \
 		roaipv4="$$IP4" \
 		roaipv6="$$IP6"
 

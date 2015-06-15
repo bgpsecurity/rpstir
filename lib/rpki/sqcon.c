@@ -15,7 +15,7 @@
 #include "diru.h"
 #include "err.h"
 #include "globals.h"
-
+#include "util/gettext_include.h"
 
 /*
  * Decode the last error on a handle 
@@ -192,7 +192,7 @@ scmcon *connectscm(
     {
         leen = strlen(oom);
         if (errmsg != NULL && emlen > leen)
-            (void)strncpy(errmsg, oom, leen);
+	  (void)strncpy(errmsg, oom, leen);
         return (NULL);
     }
     conp->mystat.errmsg = (char *)calloc(1024, sizeof(char));
@@ -526,7 +526,7 @@ static int valcols(
         {
             if (conp->mystat.errmsg != NULL)
                 (void)snprintf(conp->mystat.errmsg, conp->mystat.emlen,
-                               "Invalid column %s", ptr);
+                               _("Invalid column %s"), ptr);
             return (ERR_SCM_INVALCOL);
         }
     }
@@ -1496,7 +1496,7 @@ int setflagsscm(
 
 char *hexify(
     int bytelen,
-    void *ptr,
+    void const * ptr,
     int useox)
 {
     unsigned char *inptr;
@@ -1551,7 +1551,7 @@ char *hexify(
 
 void *unhexify(
     int strnglen,
-    char *strng)
+    char const * strng)
 {
     unsigned char *oot;
     unsigned int x;

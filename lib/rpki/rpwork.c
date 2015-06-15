@@ -6,6 +6,7 @@
 #include <time.h>
 #include <fcntl.h>
 #include "util/logging.h"
+#include "util/gettext_include.h"
 #include "rpki-object/certificate.h"
 
 extern struct done_certs done_certs;
@@ -285,7 +286,7 @@ static struct Certificate *mk_paracert(
                                                         self, numpts++);
             if (!distp)
             {
-                snprintf(errbuf, sizeof(errbuf), "Too many CRLDP extensions");
+                snprintf(errbuf, sizeof(errbuf), _("Too many CRLDP extensions"));
                 return (struct Certificate *)0;
             }
             struct GeneralName *gennamep =
@@ -294,7 +295,7 @@ static struct Certificate *mk_paracert(
             if (!gennamep)
             {
                 snprintf(errbuf, sizeof(errbuf),
-                         "Too many general names in CRLDP extensions");
+                         _("Too many general names in CRLDP extensions"));
                 return (struct Certificate *)0;
             }
             for (ept = pt; *ept > ' '; ept++);
@@ -340,7 +341,7 @@ static struct Certificate *mk_paracert(
        *akiExtp;                // new cert's aki
     if (!(skiExtp = find_extension(&myrootcert.toBeSigned.extensions, id_subjectKeyIdentifier, 0)))
     {
-        snprintf(errbuf, sizeof(errbuf), "Certificate has no SKI.");
+        snprintf(errbuf, sizeof(errbuf), _("Certificate has no SKI."));
         return (struct Certificate *)0;
     }
     if (!(akiExtp = find_extension(&paracertp->toBeSigned.extensions, id_authKeyId, 0)))
@@ -354,7 +355,7 @@ static struct Certificate *mk_paracert(
         }
         else
         {
-            snprintf(errbuf, sizeof(errbuf), "Certificate has no AKI.");
+            snprintf(errbuf, sizeof(errbuf), _("Certificate has no AKI."));
             return (struct Certificate *)0;
         }
     }
@@ -432,13 +433,13 @@ int get_CAcert(
         if (!j)
         {
             snprintf(errbuf, sizeof(errbuf),
-                     "No CA certificate found for SKI %s\n", ski);
+                     _("No CA certificate found for SKI %s\n"), ski);
             return -1;
         }
         else if (j > 2 || (j == 2 && !have_para))
         {
             snprintf(errbuf, sizeof(errbuf),
-                     "Found %d certificates for SKI %s\n", j, ski);
+                     _("Found %d certificates for SKI %s\n"), j, ski);
             return -1;
         }
         get_casn_file(&certp->self, this_cert_ansrp->fullname, 0);
@@ -499,35 +500,35 @@ static int sign_cert(
             cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
                                CRYPT_ALGO_RSA)) != 0
         || !(sigKeyContext_initialized = true))
-        msg = "creating context";
+        msg = _("creating context");
     else if ((ansr = cryptEncrypt(hashContext, signstring, sign_lth)) != 0 ||
              (ansr = cryptEncrypt(hashContext, signstring, 0)) != 0)
-        msg = "hashing";
+        msg = _("hashing");
     else if ((ansr = cryptGetAttributeString(hashContext,
                                              CRYPT_CTXINFO_HASHVALUE, hash,
                                              &signatureLength)) != 0)
-        msg = "getting attribute string";
+        msg = _("getting attribute string");
     else if ((ansr = cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED,
                                      CRYPT_KEYSET_FILE, keyring->filename,
                                      CRYPT_KEYOPT_READONLY)) != 0)
-        msg = "opening key set";
+        msg = _("opening key set");
     else if ((ansr = cryptGetPrivateKey(cryptKeyset, &sigKeyContext,
                                         CRYPT_KEYID_NAME, keyring->label,
                                         keyring->password)) != 0)
-        msg = "getting key";
+        msg = _("getting key");
     else if ((ansr = cryptCreateSignature(NULL, 0, &signatureLength,
                                           sigKeyContext, hashContext)) != 0)
-        msg = "signing";
+        msg = _("signing");
     else
     {
         signature = (uchar *) calloc(1, signatureLength + 20);
         if ((ansr = cryptCreateSignature(signature, signatureLength + 20,
                                          &signatureLength, sigKeyContext,
                                          hashContext)) != 0)
-            msg = "signing";
+            msg = _("signing");
         else if ((ansr = cryptCheckSignature(signature, signatureLength,
                                              sigKeyContext, hashContext)) != 0)
-            msg = "verifying";
+            msg = _("verifying");
     }
     if (hashContext_initialized)
     {
@@ -547,14 +548,14 @@ static int sign_cert(
         struct SignerInfo siginfo;
         SignerInfo(&siginfo, (ushort) 0);
         if ((ansr = decode_casn(&siginfo.self, signature)) < 0)
-            msg = "decoding signature";
+            msg = _("decoding signature");
         else if ((ansr = readvsize_casn(&siginfo.signature, &signstring)) < 0)
-            msg = "reading signature";
+            msg = _("reading signature");
         else
         {
             if ((ansr =
                  write_casn_bits(&certp->signature, signstring, ansr, 0)) < 0)
-                msg = "writing signature";
+                msg = _("writing signature");
             else
                 ansr = 0;
         }
@@ -566,7 +567,7 @@ static int sign_cert(
     if (ansr)
     {
         ansr = ERR_SCM_SIGNINGERR;
-        snprintf(errbuf, sizeof(errbuf), "Error %s\n", msg);
+        snprintf(errbuf, sizeof(errbuf), _("Error %s\n"), msg);
         fflush(stderr);
     }
     return ansr;
@@ -1464,13 +1465,13 @@ static int process_control_blocks(
             for (cc = skip; *cc != '\n'; cc++);
             if (*cc == '\n')
                 *cc = 0;
-            snprintf(errbuf, sizeof(errbuf), "Invalid SKI: %s", skip);
+            snprintf(errbuf, sizeof(errbuf), _("Invalid SKI: %s"), skip);
             return ERR_SCM_BADSKIBLOCK;
         }
         *cc = 0;
         if ((ansr = get_CAcert(skip, &done_certp)) < 0)
         {
-            snprintf(errbuf, sizeof(errbuf), "No file for SKI %s.", skip);
+            snprintf(errbuf, sizeof(errbuf), _("No file for SKI %s."), skip);
             return ansr;
         }
         ruleranges.numranges = 0;
@@ -1490,7 +1491,7 @@ static int process_control_blocks(
                 }
             }
             else
-                snprintf(errbuf, sizeof(errbuf), "Invalid prefix/range %s",
+                snprintf(errbuf, sizeof(errbuf), _("Invalid prefix/range %s"),
                          skibuf);
             return ansr;        // with error message in errbuf BADSKIBLOCK
         }                       // otherwise skibuf has another SKI line or
@@ -1581,7 +1582,7 @@ int read_SKI_blocks(
         locconp = conp;
         if (findorcreatedir(locscmp, locconp, Xrpdir, &XrpdirId) < 0)
         {
-            snprintf(errbuf, sizeof(errbuf), "Cannot find directory %s.",
+            snprintf(errbuf, sizeof(errbuf), _("Cannot find directory %s."),
                      Xrpdir);
             ansr = ERR_SCM_BADSKIFILE;
         }

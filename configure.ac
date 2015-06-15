@@ -14,6 +14,15 @@ AC_DEFINE_UNQUOTED([CONFIG_ENV_VAR], ["$CONFIG_ENV_VAR"])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
+
+datadir = @datadir@
+localedir = "./"
+AC_SUBST([datadir])
+AC_SUBST([localedir])
+AC_DEFINE_UNQUOTED([LOCALEDIR], ["$localedir"])
+
+AM_GNU_GETTEXT_VERSION([0.18.1])
+AM_GNU_GETTEXT([external])
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
@@ -276,7 +285,7 @@ if test "$ac_cv_func_getline" != yes; then
 fi
 
 
-AC_CONFIG_FILES([
+AC_CONFIG_FILES([ po/Makefile.in
     Makefile
     README
 ])

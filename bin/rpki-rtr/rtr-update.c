@@ -3,129 +3,32 @@
  ***********************/
 
 #include "util/logging.h"
+#include "db/connect.h"
+#include "db/clients/rtr.h"
 #include "config/config.h"
-#include "rpki/err.h"
-#include "rpki/scmf.h"
-#include "rpki/querySupport.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <inttypes.h>
 #include <time.h>
-
-static scm *scmp = NULL;
-static scmcon *connection = NULL;
-static scmsrcha *roaSrch = NULL;
-static scmtab *roaTable = NULL;
-static scmtab *sessionTable = NULL;
-static scmtab *fullTable = NULL;
-static scmtab *updateTable = NULL;
-static scmsrcha *snSrch = NULL;
-
-// serial number of this and previous update
-static unsigned int prevSerialNum,
-    currSerialNum,
-    lastSerialNum;
-
-static void setupSnQuery(
-    scm * scmp)
-{
-    snSrch = newsrchscm(NULL, 1, 0, 1);
-    addcolsrchscm(snSrch, "serial_num", SQL_C_ULONG, 8);
-    snSrch->wherestr = NULL;
-    updateTable = findtablescm(scmp, "rtr_update");
-    if (updateTable == NULL)
-        printf("Cannot find table rtr_update\n");
-}
-
-/*
- * helper function for getLastSerialNumber 
- */
-static int setLastSN(
-    scmcon * conp,
-    scmsrcha * s,
-    ssize_t numLine)
-{
-    (void)conp;
-    (void)numLine;
-    lastSerialNum = *((unsigned int *) (s->vec[0].valptr));
-    return -1;                  // stop after first row
-}
-
-/****
- * find the serial number from the most recent update
- ****/
-static unsigned int getLastSerialNumber(
-    scmcon * connect,
-    scm * scmp)
-{
-    lastSerialNum = 0;
-    if (snSrch == NULL)
-        setupSnQuery(scmp);
-    searchscm(connect, updateTable, snSrch, NULL, setLastSN,
-              SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR,
-              "create_time desc");
-    return lastSerialNum;
-}
-
-
-/******
- * callback that writes the data from a ROA into the update table
- *   if the ROA is valid
- *****/
-static int writeROAData(
-    scmcon * conp,
-    scmsrcha * s,
-    ssize_t numLine)
-{
-    unsigned int asn = *((unsigned int *) s->vec[0].valptr);
-    char *ptr = (char *)s->vec[1].valptr,
-        *end;
-    char msg[1024];
-    int sta;
-
-    UNREFERENCED_PARAMETER(conp);
-    UNREFERENCED_PARAMETER(numLine);
-
-    if (!checkValidity((char *)s->vec[2].valptr, 0, scmp, connection))
-        return -1;
-    while ((end = strstr(ptr, ", ")) != NULL)
-    {
-        end[0] = '\0';
-        end[1] = '\0';
-        snprintf(msg, sizeof(msg),
-                 "insert ignore into %s values (%u, %u, \"%s\");",
-                 fullTable->tabname, currSerialNum, asn, ptr);
-        sta = statementscm_no_data(connection, msg);
-        checkErr(sta < 0, "Can't insert into %s", fullTable->tabname);
-        ptr = end + 2;
-    }
-    if (ptr[0] != '\0')
-    {
-        snprintf(msg, sizeof(msg),
-                 "insert ignore into %s values (%u, %u, \"%s\");",
-                 fullTable->tabname, currSerialNum, asn, ptr);
-        sta = statementscm_no_data(connection, msg);
-        checkErr(sta < 0, "Can't insert into %s", fullTable->tabname);
-    }
-    return 1;
-}
 
 
 int main(
     int argc,
     char **argv)
 {
-    char msg[1024];
-    int sta;
-    unsigned int session_count;
-    unsigned int update_count;
-    unsigned int update_had_changes;    // whether there are any changes from
-                                        // prevSerialNum to currSerialNum
-    unsigned int dont_proceed;
-    int first_time = 0;
-    int force_update = 0;
+    int ret = EXIT_SUCCESS;
+    bool done_db_init = false;
+    bool done_db_thread_init = false;
+    dbconn * db = NULL;
+
+    bool first_time;
+    bool force_update = false;
+    bool update_had_changes;
+    serial_number_t previous_serial;
+    serial_number_t current_serial;
 
     if (argc < 1 || argc > 2)
     {
@@ -147,77 +50,72 @@ int main(
     }
 
     // initialize the database connection
-    scmp = initscm();
-    checkErr(scmp == NULL, "Cannot initialize database schema\n");
-    connection = connectscm(scmp->dsn, msg, sizeof(msg));
-    checkErr(connection == NULL, "Cannot connect to database: %s\n", msg);
-
-    sessionTable = findtablescm(scmp, "rtr_session");
-    checkErr(sessionTable == NULL, "Cannot find table rtr_session\n");
-
-    sta = newhstmt(connection);
-    checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-    sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_session;");
-    checkErr(sta < 0, "Can't query rtr_session\n");
-    sta = getuintscm(connection, &session_count);
-    pophstmt(connection);
-    checkErr(sta < 0, "Can't get results of querying rtr_session\n");
-    if (session_count == 0)
+    if (!db_init())
     {
-        LOG(LOG_ERR, "The rpki-rtr database isn't initialized.");
-        LOG(LOG_ERR, "See %s-rpki-rtr-initialize.", PACKAGE_NAME);
-        return EXIT_FAILURE;
+        LOG(LOG_ERR, "Could not initialize database program.");
+        ret = EXIT_FAILURE;
+        goto done;
     }
-    else if (session_count != 1)
+    done_db_init = true;
+
+    if (!db_thread_init())
+    {
+        LOG(LOG_ERR, "Could not initialize database thread.");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+    done_db_thread_init = true;
+
+    db = db_connect_default(DB_CLIENT_RTR);
+    if (db == NULL)
     {
         LOG(LOG_ERR,
-            "The rtr_session table has %u entries, which should never happen.",
-            session_count);
-        LOG(LOG_ERR,
-            "Consider running %s-rpki-rtr-clear and %s-rpki-rtr-initialize.",
-            PACKAGE_NAME, PACKAGE_NAME);
+            "Could not connect to the database, check your config "
+            "file.");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+
+
+    if (!db_rtr_has_valid_session(db))
+    {
         return EXIT_FAILURE;
     }
 
-    sta = newhstmt(connection);
-    checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-    sta = statementscm(connection, "SELECT COUNT(*) FROM rtr_update;");
-    checkErr(sta < 0, "Can't query rtr_update\n");
-    sta = getuintscm(connection, &update_count);
-    pophstmt(connection);
-    checkErr(sta < 0, "Can't get results of querying rtr_update\n");
-    if (update_count <= 0)
-        first_time = 1;
-
-    // delete any updates that weren't completed
-    sta = statementscm_no_data(connection,
-                               "delete rtr_incremental\n"
-                               "from rtr_incremental\n"
-                               "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
-                               "where rtr_update.serial_num is null;");
-    checkErr(sta < 0, "Can't remove unfinished entries from rtr_incremental");
-
-    sta = statementscm_no_data(connection,
-                               "delete rtr_full\n"
-                               "from rtr_full\n"
-                               "left join rtr_update on rtr_full.serial_num = rtr_update.serial_num\n"
-                               "where rtr_update.serial_num is null;");
-    checkErr(sta < 0, "Can't remove unfinished entries from rtr_full");
-
-    // find the last serial number
-    if (first_time)
+    // Get the previous serial number.
+    switch (db_rtr_get_latest_sernum(db, &previous_serial))
     {
-        srandom((unsigned int)time(NULL));
-        prevSerialNum = (unsigned int) random();
+        case GET_SERNUM_SUCCESS:
+            first_time = false;
+            // previous_serial was set by db_rtr_get_latest_sernum
+            break;
+
+        case GET_SERNUM_NONE:
+            first_time = true;
+            // Set previous_serial to a pseudo-random number
+            srandom((unsigned int)time(NULL));
+            previous_serial = (serial_number_t)random();
+            break;
+
+        case GET_SERNUM_ERR:
+        default:
+            LOG(LOG_ERR, "Error finding latest serial number.");
+            ret = EXIT_FAILURE;
+            goto done;
     }
-    else
+
+    if (!db_rtr_delete_incomplete_updates(db))
     {
-        prevSerialNum = getLastSerialNumber(connection, scmp);
+        LOG(LOG_ERR, "Error deleting incomplete updates.");
+        ret = EXIT_FAILURE;
+        goto done;
     }
+
+    // Get/compute the current serial number.
     if (argc > 1)
     {
-        force_update = 1;
-        if (sscanf(argv[1], "%" SCNu32, &currSerialNum) != 1)
+        force_update = true;
+        if (sscanf(argv[1], "%" SCNSERIAL, &current_serial) != 1)
         {
             fprintf(stderr,
                     "Error: next serial number must be a nonnegative integer\n");
@@ -226,136 +124,99 @@ int main(
     }
     else
     {
-        currSerialNum = (prevSerialNum == UINT_MAX) ? 0 : (prevSerialNum + 1);
+        // NOTE: this relies on unsigned integer wrap-around to zero
+        current_serial = previous_serial + 1;
     }
 
-    if (!first_time)
+    // Make sure we're not about to overwrite current_serial, create a
+    // loop, or start a diverging history, even though these should be
+    // *really* unlikely.
+    if (!first_time &&
+        !db_rtr_good_serials(db, previous_serial, current_serial))
     {
-        // make sure we're not about to overwrite currSerialNum, create a
-        // loop,
-        // or start a diverging history, even though these should be *really*
-        // unlikely
-        sta = newhstmt(connection);
-        checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-        snprintf(msg, sizeof(msg),
-                 "SELECT COUNT(*) > 0 FROM rtr_update WHERE\n"
-                 "serial_num = %u OR prev_serial_num = %u OR prev_serial_num = %u;",
-                 currSerialNum, currSerialNum, prevSerialNum);
-        sta = statementscm(connection, msg);
-        checkErr(sta < 0, "Can't query rtr_update for unusual corner cases\n");
-        sta = getuintscm(connection, &dont_proceed);
-        pophstmt(connection);
-        checkErr(sta < 0,
-                 "Can't get results of querying rtr_update for unusual corner cases\n");
-
         if (argc > 1)
         {
-            checkErr(dont_proceed,
-                     "Error: rtr_update is full or in an unusual state, or the specified next serial number already exists\n");
+            LOG(LOG_ERR,
+                "Error: rtr_update is full or in an unusual state, "
+                "or the specified next serial number already "
+                "exists.");
         }
         else
         {
-            checkErr(dont_proceed,
-                     "Error: rtr_update table is either full or in an unusual state\n");
+            LOG(LOG_ERR,
+                "Error: rtr_update table is either full or in an "
+                "unusual state.");
+        }
+
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+
+    if (!db_rtr_insert_full(db, current_serial))
+    {
+        LOG(LOG_ERR, "Could not copy current RPKI state.");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+
+    if (!first_time &&
+        !db_rtr_insert_incremental(db, previous_serial, current_serial))
+    {
+        LOG(LOG_ERR, "Could not compute incremental changes.");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
+
+    if (first_time)
+    {
+        update_had_changes = true;
+    }
+    else
+    {
+        switch (db_rtr_has_incremental_changes(db, current_serial))
+        {
+            case 1:
+                update_had_changes = true;
+                break;
+
+            case 0:
+                update_had_changes = false;
+                break;
+
+            case -1:
+            default:
+                LOG(LOG_ERR,
+                    "Error determining if there were any changes.");
+                ret = EXIT_FAILURE;
+                goto done;
         }
     }
 
-    // setup up the query if this is the first time
-    // note that the where string is set to only select valid roa's, where
-    // the definition of valid is given by the configuration file
-    if (roaSrch == NULL)
-    {
-        QueryField *field;
-        roaSrch = newsrchscm(NULL, 3, 0, 1);
-        field = findField("asn");
-        addcolsrchscm(roaSrch, "asn", field->sqlType, field->maxSize);
-        field = findField("ip_addrs");
-        addcolsrchscm(roaSrch, "ip_addrs", field->sqlType, field->maxSize);
-        field = findField("ski");
-        addcolsrchscm(roaSrch, "ski", field->sqlType, field->maxSize);
-        roaSrch->wherestr[0] = 0;
-        addQueryFlagTests(roaSrch->wherestr, 0);
-        roaTable = findtablescm(scmp, "roa");
-        checkErr(roaTable == NULL, "Cannot find table roa\n");
-        fullTable = findtablescm(scmp, "rtr_full");
-        checkErr(fullTable == NULL, "Cannot find table rtr_full\n");
-    }
-
-    // write all the data into the database (done writing "full")
-    sta = searchscm(connection, roaTable, roaSrch, NULL,
-                    writeROAData, SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    checkErr(sta < 0 && sta != ERR_SCM_NODATA, "searchscm for ROAs failed\n");
-
-    if (!first_time)
-    {
-        char differences_query_fmt[] =
-            "INSERT INTO rtr_incremental (serial_num, is_announce, asn, ip_addr)\n"
-            "SELECT %u, %d, t1.asn, t1.ip_addr\n"
-            "FROM rtr_full AS t1\n"
-            "LEFT JOIN rtr_full AS t2 ON t2.serial_num = %u AND t2.asn = t1.asn AND t2.ip_addr = t1.ip_addr\n"
-            "WHERE t1.serial_num = %u AND t2.serial_num IS NULL;";
-
-        // announcements
-        snprintf(msg, sizeof(msg), differences_query_fmt,
-                 currSerialNum, 1, prevSerialNum, currSerialNum);
-        sta = statementscm_no_data(connection, msg);
-        checkErr(sta < 0,
-                 "Can't populate rtr_incremental with announcements from serial number %u to %u",
-                 prevSerialNum, currSerialNum);
-
-        // withdrawals
-        snprintf(msg, sizeof(msg), differences_query_fmt,
-                 currSerialNum, 0, currSerialNum, prevSerialNum);
-        sta = statementscm_no_data(connection, msg);
-        checkErr(sta < 0,
-                 "Can't populate rtr_incremental with withdrawals from serial number %u to %u",
-                 prevSerialNum, currSerialNum);
-    }
-
-    // write the current serial number and time, making the data available
-    if (first_time)
-    {
-        update_had_changes = 1;
-
-        snprintf(msg, sizeof(msg),
-                 "insert into rtr_update values (%u, NULL, now(), true);",
-                 currSerialNum);
-    }
-    else
-    {
-        sta = newhstmt(connection);
-        checkErr(!SQLOK(sta), "Can't create a new statement handle\n");
-        snprintf(msg, sizeof(msg),
-                 "SELECT COUNT(*) > 0 FROM rtr_incremental WHERE serial_num = %u;",
-                 currSerialNum);
-        sta = statementscm(connection, msg);
-        checkErr(sta < 0,
-                 "Can't query rtr_incremental to find out if there are any changes\n");
-        sta = getuintscm(connection, &update_had_changes);
-        pophstmt(connection);
-        checkErr(sta < 0,
-                 "Can't get results of querying rtr_incremental to find out if there are any changes\n");
-
-        snprintf(msg, sizeof(msg),
-                 "insert into rtr_update values (%u, %u, now(), true);",
-                 currSerialNum, prevSerialNum);
-    }
-
-    // msg should now contain a statement to make updates available
     if (update_had_changes || force_update)
     {
-        sta = statementscm_no_data(connection, msg);
-        checkErr(sta < 0, "Can't make updates available");
+        // Make the new serial number available for use.
+        if (
+            !db_rtr_insert_update(db, current_serial, previous_serial,
+                first_time))
+        {
+            LOG(LOG_ERR, "Error making updates available.");
+            ret = EXIT_FAILURE;
+            goto done;
+        }
     }
     else
     {
-        fprintf(stderr,
-                "Note: data had no changes since the last update, so no update was made.\n");
+        LOG(LOG_INFO,
+            "Data had no changes since the last update, so no update "
+            "was made.");
 
-        snprintf(msg, sizeof(msg),
-                 "delete from rtr_full where serial_num = %u;", currSerialNum);
-        sta = statementscm_no_data(connection, msg);
-        checkErr(sta < 0, "Can't delete duplicate data in rtr_full");
+        // The new data in rtr_full is useless, so delete it.
+        if (!db_rtr_delete_full(db, current_serial))
+        {
+            LOG(LOG_ERR, "Error deleting duplicate data in rtr_full.");
+            ret = EXIT_FAILURE;
+            goto done;
+        }
 
         // there's nothing to delete from rtr_incremental
     }
@@ -367,45 +228,43 @@ int main(
     // NOTE: The order of these updates and deletes is important.
     // All data must be marked as unusable according to rtr_update
     // before it is deleted from rtr_full or rtr_incremental.
-    snprintf(msg, sizeof(msg),
-             "update rtr_update set has_full = false where serial_num<>%u and serial_num<>%u;",
-             prevSerialNum, currSerialNum);
-    sta = statementscm_no_data(connection, msg);
-    checkErr(sta < 0, "Can't mark old rtr_full data as no longer available");
+    if (
+        !db_rtr_ignore_old_full(
+            db, current_serial, previous_serial) ||
+        !db_rtr_delete_old_full(
+            db, current_serial, previous_serial) ||
+        !db_rtr_delete_old_update(
+            db, current_serial, previous_serial) ||
+        !db_rtr_ignore_old_incremental(db) ||
+        !db_rtr_delete_old_incremental(db) ||
+        false)
+    {
+        LOG(LOG_ERR, "Error cleaning up old data.");
+        ret = EXIT_FAILURE;
+        goto done;
+    }
 
-    snprintf(msg, sizeof(msg),
-             "delete from rtr_full where serial_num<>%u and serial_num<>%u;",
-             prevSerialNum, currSerialNum);
-    sta = statementscm_no_data(connection, msg);
-    checkErr(sta < 0, "Can't delete old rtr_full data");
 
-    snprintf(msg, sizeof(msg),
-             "delete from rtr_update\n"
-             "where create_time < adddate(now(), interval -%zu hour)\n"
-             "and serial_num<>%u and serial_num<>%u;",
-             CONFIG_RPKI_RTR_RETENTION_HOURS_get(),
-             prevSerialNum, currSerialNum);
-    sta = statementscm_no_data(connection, msg);
-    checkErr(sta < 0, "Can't delete expired update metadata");
+done:
 
-    sta = statementscm_no_data(connection,
-                               "update rtr_update as r1\n"
-                               "left join rtr_update as r2 on r2.serial_num = r1.prev_serial_num\n"
-                               "set r1.prev_serial_num = NULL\n"
-                               "where r2.serial_num is null;");
-    checkErr(sta < 0,
-             "Can't mark old rtr_incremental data as no longer available");
+    if (db != NULL)
+    {
+        db_disconnect(db);
+    }
 
-    sta = statementscm_no_data(connection,
-                               "delete rtr_incremental\n"
-                               "from rtr_incremental\n"
-                               "left join rtr_update on rtr_incremental.serial_num = rtr_update.serial_num\n"
-                               "where rtr_update.prev_serial_num is null;");
-    checkErr(sta < 0, "Can't delete old rtr_incremental data");
+    if (done_db_thread_init)
+    {
+        db_thread_close();
+    }
+
+    if (done_db_init)
+    {
+        db_close();
+    }
 
     config_unload();
 
     CLOSE_LOG();
 
-    return 0;
+    return ret;
 }

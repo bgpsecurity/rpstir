@@ -2,6 +2,7 @@
  * $Id$ 
  */
 
+#include "util/gettext_include.h"
 
 #include "rpki/cms/roa_utils.h"
 
@@ -106,7 +107,7 @@ int main(
     sta = roaFromConfig(filename_cnf, 0, &roa);
     if (sta < 0)
     {
-        (void)fprintf(stderr, "roaFromConfig(%s) failed with error %s (%d)\n",
+        (void)fprintf(stderr, _("roaFromConfig(%s) failed with error %s (%d)\n"),
                       filename_cnf, err2string(sta), sta);
         return sta;
     }
@@ -114,21 +115,21 @@ int main(
     delete_casn(&roa.self);
     if (sta < 0)
     {
-        (void)fprintf(stderr, "roaToFile(%s) failed with error %s (%d)\n",
+        (void)fprintf(stderr, _("roaToFile(%s) failed with error %s (%d)\n"),
                       filename_pem, err2string(sta), sta);
         return sta;
     }
     sta = roaFromFile(filename_pem, FMT_PEM, cTRUE, &roa2);
     if (sta < 0)
     {
-        (void)fprintf(stderr, "roaFromFile(%s) failed with error %s (%d)\n",
+        (void)fprintf(stderr, _("roaFromFile(%s) failed with error %s (%d)\n"),
                       filename_pem, err2string(sta), sta);
         return sta;
     }
     ski = (char *)roaSKI(&roa2);
     if (ski == NULL || ski[0] == 0)
     {
-        (void)fprintf(stderr, "ROA has NULL SKI\n");
+        (void)fprintf(stderr, _("ROA has NULL SKI\n"));
         return -2;
     }
     scmp = initscm();
@@ -137,14 +138,14 @@ int main(
         delete_casn(&roa2.self);
         free(ski);
         (void)fprintf(stderr,
-                      "Internal error: cannot initialize database schema\n");
+                      _("Internal error: cannot initialize database schema\n"));
         return -3;
     }
     memset(errmsg, 0, 1024);
     conp = connectscm(scmp->dsn, errmsg, 1024);
     if (conp == NULL)
     {
-        (void)fprintf(stderr, "Cannot connect to DSN %s: %s\n",
+        (void)fprintf(stderr, _("Cannot connect to DSN %s: %s\n"),
                       scmp->dsn, errmsg);
         delete_casn(&roa2.self);
         free(ski);
@@ -158,7 +159,7 @@ int main(
     if (cert == NULL)
     {
         (void)fprintf(stderr,
-                      "ROA certificate has no parent in DB: error %s (%d)\n",
+                      _("ROA certificate has no parent in DB: error %s (%d)\n"),
                       err2string(sta), sta);
         delete_casn(&roa2.self);
         return sta;
@@ -167,7 +168,7 @@ int main(
     if (blob == NULL)
     {
         (void)fprintf(stderr,
-                      "Cannot read certificate from %s: error %s (%d)\n", fn,
+                      _("Cannot read certificate from %s: error %s (%d)\n"), fn,
                       err2string(sta), sta);
 
         X509_free(cert);
@@ -180,7 +181,7 @@ int main(
     if (sta < 0)
     {
         (void)fprintf(stderr,
-                      "ROA failed semantic validation: error %s (%d)\n",
+                      _("ROA failed semantic validation: error %s (%d)\n"),
                       err2string(sta), sta);
         delete_casn(&roa2.self);
         return sta;
@@ -188,7 +189,7 @@ int main(
     fp = fopen("roa.txt", "a");
     if (fp == NULL)
     {
-        (void)fprintf(stderr, "Cannot open roa.txt\n");
+        (void)fprintf(stderr, _("Cannot open roa.txt\n"));
         delete_casn(&roa2.self);
         return -5;
     }
@@ -198,7 +199,7 @@ int main(
     if (sta < 0)
     {
         (void)fprintf(stderr,
-                      "Cannot generate ROA filter output: error %s (%d)\n",
+                      _("Cannot generate ROA filter output: error %s (%d)\n"),
                       err2string(sta), sta);
         return sta;
     }

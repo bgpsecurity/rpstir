@@ -1,25 +1,63 @@
 # Utility functions for shell scripts
 
-warn () {
-    echo "WARNING:" "$@" >&2
-}
+# 'pecho': portable echo.  POSIX says echo might interpret backslashes
+# and a first argument that begins with '-', but printf is consistent.
+# This function assumes that IFS is either unset or the first
+# character of IFS is a space.
+pecho() { printf %s\\n "$*"; }
 
-error () {
-    echo "ERROR:" "$@" >&2
-}
+log() { pecho "$@"; }
+warn() { log "WARNING: $@" >&2; }
+error() { log "ERROR: $@" >&2; }
+fatal() { error "$@"; exit 1; }
 
-fatal () {
-    error "$@"
-    exit 1
-}
+# 'try': function to make it easier to catch errors
+#
+# 'set -e' is not clearly specified by POSIX, and different shells do
+# very different things.  Thus, it's not very useful for catching
+# errors.  'try' is intended to be easy to use; usually you can just
+# put it in front of a command, e.g.:
+#
+#     try some_command --arg
+#
+# and it will cause the script to exit non-zero if the command fails.
+#
+# Caveats:
+#
+#   * redirection errors aren't caught by 'try', so the following
+#     won't cause the script to exit:
+#
+#         try echo foo >/no/such/directory/file
+#
+#     you'll have to do this instead:
+#
+#         try echo foo >/no/such/directory/file || exit 1
+#
+#     or, to get an "ERROR: ..." message:
+#
+#         try eval 'try echo foo >/no/such/directory/file'
+#
+#   * the error message doesn't quote special characters in the
+#     arguments, which can lead to misleading error messages:
+#
+#         $ try false "spaces and a single quote '"
+#         ERROR: 'false spaces and a single quote '' failed
+#
+#   * the 'exit 1' in fatal() and try() only causes a subshell to
+#     exit, so if you're running something in a subshell you'll need
+#     to add '|| exit 1' after the subshell.  For example:
+#
+#         val=$(try some_command --arg) || exit 1
+#
+#     note that POSIX allows the final stage in a pipeline to be in a
+#     subshell, so you'll need '|| exit 1' after pipelines too:
+#
+#         pecho foo | try some_command --arg || exit 1
+#
+try() { "$@" || fatal "'$@' failed"; }
 
 # depends on the script defining a usage function that prints a help message
-usage_fatal () {
-    error "$@"
-    echo >&2
-    usage
-    exit 1
-}
+usage_fatal() { error "$@"; pecho "" >&2; usage >&2; exit 1; }
 
 
 # Try to lock a mutex pathname.

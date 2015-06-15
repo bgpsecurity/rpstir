@@ -1,3 +1,22 @@
+2015-06-12  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.am (SUBDIRS): Add po.
+	* configure.ac (AC_CONFIG_FILES): Add po/Makefile.in.
+
+2015-06-12  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* build-aux/gettext.m4: New file, from gettext-0.18.1.
+	* build-aux/iconv.m4: New file, from gettext-0.18.1.
+	* build-aux/lib-ld.m4: New file, from gettext-0.18.1.
+	* build-aux/lib-link.m4: New file, from gettext-0.18.1.
+	* build-aux/lib-prefix.m4: New file, from gettext-0.18.1.
+	* build-aux/nls.m4: New file, from gettext-0.18.1.
+	* build-aux/po.m4: New file, from gettext-0.18.1.
+	* build-aux/progtest.m4: New file, from gettext-0.18.1.
+	* Makefile.am (SUBDIRS): New variable.
+	(EXTRA_DIST): Add build-aux/config.rpath.
+	* configure.ac (AC_CONFIG_FILES): Add po/Makefile.in.
+
 0.10
 
 	* Add beta support for running rpstir in 64-bit mode.

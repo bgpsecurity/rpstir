@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "gettext_include.h"
+
 /* LOG_LEVEL_TEXT[0] == "EMERG", etc. (RFC 5424) */
 extern const char *LOG_LEVEL_TEXT[];
 
@@ -43,9 +45,9 @@ volatile sig_atomic_t LOG_LEVEL;
         { \
             if (LOG_LEVEL >= LOG_DEBUG) \
             { \
-                syslog((priority), "%s: %s:%d in %s(): " format,        \
+	      syslog((priority), _("%s: %s:%d in %s(): " format),	\
                        LOG_LEVEL_TEXT[priority],                        \
-                       __FILE__, __LINE__, __func__, ## __VA_ARGS__);   \
+		     __FILE__, __LINE__, __func__, ## __VA_ARGS__);	\
             } \
             else \
             { \

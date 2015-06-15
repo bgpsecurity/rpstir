@@ -180,6 +180,7 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "AIA in TA cert", /* ERR_SCM_AIATA */
     "Invalid signed attribute", /* ERR_SCM_INVALSATTR */
     "TA cert has inherit resources", /* ERR_SCM_TAINHERIT */
+    "Truncated data", /* ERR_SCM_TRUNCATED */
 };
 
 char *err2string(

@@ -1,0 +1,23 @@
+     ../../lib/db/clients/chaser.c \
+     ../../lib/db/clients/rtr.c \
+     ../../lib/db/connect.c \
+     ../../lib/db/prep-stmt.c \
+     ../../lib/db/util.c \
+     ../../lib/rpki-object/certificate.c \
+     ../../lib/rpki-object/cms/cms.c \
+     ../../lib/rpki-object/crl.c \
+     ../../lib/rpki-object/signature.c \
+     ../../lib/rpki-rtr/pdu.c \
+     ../../lib/rpki/err.c \
+     ../../lib/rpki/initscm.c \
+     ../../lib/rpki/myssl.c \
+     ../../lib/rpki/querySupport.c \
+     ../../lib/rpki/rpcommon.c \
+     ../../lib/rpki/rpwork.c \
+     ../../lib/rpki/sqcon.c \
+     ../../lib/rpki/sqhl.c \
+     ../../lib/rpki/tests/roa_test/roa_test.c \
+     ../../lib/rpki/tests/test_check_sig.c \
+     ../../lib/rpki/tests/test_val2.c \
+     ../../lib/util/semaphore_compat.c \
+     ../../lib/util/tests/stringutils-test.c

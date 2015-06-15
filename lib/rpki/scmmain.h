@@ -8,6 +8,31 @@
 
 #ifdef SCM_DEFINED_HERE
 
+/**
+ * @brief Column definitions to represent a prefix and maximum length.
+ *
+ *   - prefix: IPv4 or IPv6 prefix, network byte order, filled with 0s
+ *     to the full length for the address family. E.g., 1.2.3.0 would
+ *     be 0x01020300, and 123:4567:: would be
+ *     0x01234567000000000000000000000000
+ *   - prefix_length: Number of used bits in prefix.
+ *   - prefix_max_length: Maximum length of any sub-prefixes.
+ *
+ * @sa SCM_CHECKS_PREFIX_MAXLEN
+ */
+#define SCM_COLDEFS_PREFIX_MAXLEN \
+    "prefix VARBINARY(16) NOT NULL," \
+    "prefix_length TINYINT UNSIGNED NOT NULL," \
+    "prefix_max_length TINYINT UNSIGNED NOT NULL"
+
+/**
+ * @brief CHECKs for the columns in #SCM_COLDEFS_PREFIX_MAXLEN.
+ */
+#define SCM_CHECKS_PREFIX_MAXLEN \
+    "CHECK (length(prefix) = 4 OR length(prefix) = 16)," \
+    "CHECK (prefix_length <= prefix_max_length)," \
+    "CHECK (prefix_max_length <= length(prefix) * 8)"
+
 /*
  * Table definitions 
  */
@@ -96,8 +121,7 @@ static scmtab scmtabbuilder[] = {
       * Usage notes: the ski is the ski of the signing cert, and is thus
       * effectively the parent of this ROA. The asn is the AS number from the
       * ROA (there is only one now, not a list). The IP address information is 
-      * not stored here; it must be fetched from the file itself using the ROA 
-      * read code. local_id is as with certs and crls. 
+      * stored in rpki_roa_prefix below. local_id is as with certs and crls.
       */
      "rpki_roa",
      "ROA",
@@ -107,7 +131,6 @@ static scmtab scmtabbuilder[] = {
      "sig      VARCHAR(520) NOT NULL,"
      "sigval   INT UNSIGNED DEFAULT 0,"
      "hash     VARCHAR(256),"
-     "ip_addrs VARCHAR(32768) NOT NULL,"
      "asn      INT UNSIGNED NOT NULL,"
      "flags    INT UNSIGNED DEFAULT 0,"
      "local_id INT UNSIGNED NOT NULL UNIQUE,"
@@ -116,6 +139,18 @@ static scmtab scmtabbuilder[] = {
      "         KEY sig (sig),"
      "         KEY lid (local_id),"
      "         KEY ski (ski)",
+     NULL,
+     0},
+    {
+     "rpki_roa_prefix",
+     "ROA_PREFIX",
+     "roa_local_id INT UNSIGNED NOT NULL,"
+     SCM_COLDEFS_PREFIX_MAXLEN ","
+     "KEY (roa_local_id, prefix),"
+     "FOREIGN KEY (roa_local_id) REFERENCES rpki_roa (local_id) "
+     "    ON DELETE CASCADE "
+     "    ON UPDATE CASCADE,"
+     SCM_CHECKS_PREFIX_MAXLEN,
      NULL,
      0},
     {                           /* RPKI_MANIFEST */
@@ -207,8 +242,9 @@ static scmtab scmtabbuilder[] = {
      "RTR_FULL",
      "serial_num  INT UNSIGNED NOT NULL,"
      "asn         INT UNSIGNED NOT NULL,"
-     "ip_addr     VARCHAR(50) NOT NULL,"
-     "            PRIMARY KEY (serial_num, asn, ip_addr)",
+     SCM_COLDEFS_PREFIX_MAXLEN ","
+     "            PRIMARY KEY (serial_num, asn, prefix, prefix_length, prefix_max_length),"
+     SCM_CHECKS_PREFIX_MAXLEN,
      NULL,
      0},
     {                           /* RTR_INCREMENTAL */
@@ -223,11 +259,15 @@ static scmtab scmtabbuilder[] = {
                                                  * x */
      "is_announce BOOLEAN NOT NULL,"    /* announcement or withdrawal */
      "asn         INT UNSIGNED NOT NULL,"
-     "ip_addr     VARCHAR(50) NOT NULL,"
-     "            PRIMARY KEY (serial_num, asn, ip_addr)",
+     SCM_COLDEFS_PREFIX_MAXLEN ","
+     "            PRIMARY KEY (serial_num, asn, prefix, prefix_length, prefix_max_length),"
+     SCM_CHECKS_PREFIX_MAXLEN,
      NULL,
      0},
 };
+
+#undef SCM_COLDEFS_PREFIX_MAXLEN
+#undef SCM_CHECKS_PREFIX_MAXLEN
 
 #endif
 

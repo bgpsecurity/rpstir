@@ -8,10 +8,20 @@ version 0 End of Data, session id = 42, length = 12, serial number = 5
 --- serial_query 42 5
 --- expecting: difference from 5 to 7
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 5.0.1.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 5.0.2.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 5.0.3.0, AS number = 5
@@ -22,16 +32,18 @@ version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 5.3.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 5.4.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 5.5.0.0, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 6.0.1.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 6.0.2.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 6.0.3.0, AS number = 6
@@ -44,26 +56,14 @@ version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 6.4.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 6.5.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 6.6.0.0, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 2.0.1.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 2.0.2.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 2.1.0.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 2.2.0.0, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
 version 0 End of Data, session id = 42, length = 12, serial number = 7
 --- serial_query 42 7
 --- expecting: empty set
@@ -72,10 +72,20 @@ version 0 End of Data, session id = 42, length = 12, serial number = 7
 --- serial_query 42 5
 --- expecting: difference from 5 to 8
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 5.0.1.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 5.0.2.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 5.0.3.0, AS number = 5
@@ -86,16 +96,18 @@ version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 5.3.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 5.4.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 5.5.0.0, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 6.0.1.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 6.0.2.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 6.0.3.0, AS number = 6
@@ -108,30 +120,26 @@ version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 6.4.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 6.5.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 6.6.0.0, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 2.0.1.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 2.0.2.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 2.1.0.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 2.2.0.0, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::100, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::200, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::300, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::400, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:1::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:2::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:3::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:4::, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.1.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.2.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.3.0, AS number = 4
@@ -140,14 +148,16 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.2.0.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.3.0.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.4.0.0, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:1::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:2::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:3::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:4::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::100, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::200, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::300, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::400, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.1.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.2.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.3.0, AS number = 5
@@ -158,16 +168,18 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.3.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.4.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.5.0.0, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.1.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.2.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.3.0, AS number = 6
@@ -180,26 +192,14 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.4.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.5.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.6.0.0, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 2.0.1.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 2.0.2.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 2.1.0.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 2.2.0.0, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
 version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 6
 --- expecting: Cache Reset
@@ -207,10 +207,18 @@ version 0 Cache Reset, length = 8
 --- serial_query 42 7
 --- expecting: difference from 7 to 8
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::100, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::200, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::300, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::400, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:1::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:2::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:3::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:4::, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.1.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.2.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.3.0, AS number = 4
@@ -219,14 +227,16 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.2.0.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.3.0.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.4.0.0, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:1::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:2::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:3::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:4::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::100, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::200, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::300, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::400, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.1.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.2.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.3.0, AS number = 5
@@ -237,16 +247,18 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.3.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.4.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.5.0.0, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.1.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.2.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.3.0, AS number = 6
@@ -259,26 +271,14 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.4.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.5.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.6.0.0, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 2.0.1.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 2.0.2.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 2.1.0.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 2.2.0.0, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
 version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 8
 --- expecting: empty set
@@ -293,10 +293,18 @@ version 0 Cache Reset, length = 8
 --- serial_query 42 7
 --- expecting: difference from 7 to 8
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::100, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::200, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::300, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::400, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:1::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:2::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:3::, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:4::, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.1.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.2.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 4.0.3.0, AS number = 4
@@ -305,14 +313,16 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.2.0.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.3.0.0, AS number = 4
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 4.4.0.0, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:1::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:2::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:3::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 4:4::, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::100, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::200, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::300, AS number = 4
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 4::400, AS number = 4
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.1.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.2.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 5.0.3.0, AS number = 5
@@ -323,16 +333,18 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.3.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.4.0.0, AS number = 5
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 5.5.0.0, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:1::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:2::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:3::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:4::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 5:5::, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::100, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::200, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::300, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::400, AS number = 5
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 5::500, AS number = 5
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.1.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.2.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 6.0.3.0, AS number = 6
@@ -345,26 +357,14 @@ version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, 
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.4.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.5.0.0, AS number = 6
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 6.6.0.0, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:1::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:2::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:3::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:4::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:5::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 6:6::, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::100, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::200, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::300, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::400, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::500, AS number = 6
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 6::600, AS number = 6
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
+version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 2.0.1.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 24, max length = 25, prefix = 2.0.2.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 2.1.0.0, AS number = 2147483647
 version 0 IPv4 Prefix, length = 20, flags = 0x1 [ANNOUNCE], prefix length = 16, max length = 16, prefix = 2.2.0.0, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:1::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 32, max length = 127, prefix = 2:2::, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::100, AS number = 2147483647
-version 0 IPv6 Prefix, length = 32, flags = 0x1 [ANNOUNCE], prefix length = 120, max length = 120, prefix = 2::200, AS number = 2147483647
 version 0 End of Data, session id = 42, length = 12, serial number = 8
 --- serial_query 42 8
 --- expecting: empty set
@@ -399,24 +399,24 @@ version 0 End of Data, session id = 42, length = 12, serial number = 16
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 17
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
 version 0 End of Data, session id = 42, length = 12, serial number = 17
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 18
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
 version 0 End of Data, session id = 42, length = 12, serial number = 18
 --- serial_query 42 8
 --- expecting: withdraw AS 1, ending at serial 19
 version 0 Cache Response, session id = 42, length = 8
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
+version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 24, max length = 25, prefix = 1.0.1.0, AS number = 1
 version 0 IPv4 Prefix, length = 20, flags = 0x0 [WITHDRAW], prefix length = 16, max length = 16, prefix = 1.1.0.0, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 32, max length = 127, prefix = 1:1::, AS number = 1
-version 0 IPv6 Prefix, length = 32, flags = 0x0 [WITHDRAW], prefix length = 120, max length = 120, prefix = 1::100, AS number = 1
 version 0 End of Data, session id = 42, length = 12, serial number = 19

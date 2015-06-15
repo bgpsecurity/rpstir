@@ -39,7 +39,7 @@ PACKAGE_NAME_BINS =
 
 BUILT_SOURCES =
 CLEANFILES =
-EXTRA_DIST =
+EXTRA_DIST = build-aux/config.rpath 
 TESTS =
 bin_PROGRAMS =
 bin_SCRIPTS =
@@ -107,3 +107,5 @@ include mk/cleandirs.mk
 include mk/copyfiles.mk
 include mk/package-name-bins.mk
 include mk/subst-files.mk
+
+SUBDIRS = po po

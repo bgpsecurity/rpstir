@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 #include "pdu.h"
-
+#include "util/gettext_include.h"
 
 // based on RFC 1982, Section 3.2
 bool serial_number_greater(
@@ -664,34 +664,34 @@ void pdu_sprint(
     switch (pdu->pduType)
     {
     case PDU_SERIAL_NOTIFY:
-        SNPRINTF(" Serial Notify");
+        SNPRINTF(_(" Serial Notify"));
         break;
     case PDU_SERIAL_QUERY:
-        SNPRINTF(" Serial Query");
+        SNPRINTF(_(" Serial Query"));
         break;
     case PDU_RESET_QUERY:
-        SNPRINTF(" Reset Query");
+        SNPRINTF(_(" Reset Query"));
         break;
     case PDU_CACHE_RESPONSE:
-        SNPRINTF(" Cache Response");
+        SNPRINTF(_(" Cache Response"));
         break;
     case PDU_IPV4_PREFIX:
-        SNPRINTF(" IPv4 Prefix");
+        SNPRINTF(_(" IPv4 Prefix"));
         break;
     case PDU_IPV6_PREFIX:
-        SNPRINTF(" IPv6 Prefix");
+        SNPRINTF(_(" IPv6 Prefix"));
         break;
     case PDU_END_OF_DATA:
-        SNPRINTF(" End of Data");
+        SNPRINTF(_(" End of Data"));
         break;
     case PDU_CACHE_RESET:
-        SNPRINTF(" Cache Reset");
+        SNPRINTF(_(" Cache Reset"));
         break;
     case PDU_ERROR_REPORT:
-        SNPRINTF(" Error Report");
+        SNPRINTF(_(" Error Report"));
         break;
     default:
-        SNPRINTF(" unknown type (%" PRIu8 ")", pdu->pduType);
+        SNPRINTF(_(" unknown type (%" PRIu8 ")"), pdu->pduType);
         break;
     }
 
@@ -701,7 +701,7 @@ void pdu_sprint(
     case PDU_SERIAL_QUERY:
     case PDU_CACHE_RESPONSE:
     case PDU_END_OF_DATA:
-        SNPRINTF(", session id = %" PRIu16, pdu->sessionId);
+      SNPRINTF(_(", session id = %" PRIu16), pdu->sessionId);
         break;
     case PDU_RESET_QUERY:
     case PDU_IPV4_PREFIX:
@@ -713,31 +713,31 @@ void pdu_sprint(
         switch (pdu->errorCode)
         {
         case ERR_CORRUPT_DATA:
-            SNPRINTF(" (Corrupt Data)");
+            SNPRINTF(_(" (Corrupt Data)"));
             break;
         case ERR_INTERNAL_ERROR:
-            SNPRINTF(" (Internal Error)");
+            SNPRINTF(_(" (Internal Error)"));
             break;
         case ERR_NO_DATA:
-            SNPRINTF(" (No Data)");
+            SNPRINTF(_(" (No Data)"));
             break;
         case ERR_INVALID_REQUEST:
-            SNPRINTF(" (Invalid Request)");
+            SNPRINTF(_(" (Invalid Request)"));
             break;
         case ERR_UNSUPPORTED_VERSION:
-            SNPRINTF(" (Unsupported Version)");
+            SNPRINTF(_(" (Unsupported Version)"));
             break;
         case ERR_UNSUPPORTED_TYPE:
-            SNPRINTF(" (Unsupported Type)");
+            SNPRINTF(_(" (Unsupported Type)"));
             break;
         case ERR_UNKNOWN_WITHDRAW:
-            SNPRINTF(" (Unknown Withdraw)");
+            SNPRINTF(_(" (Unknown Withdraw)"));
             break;
         case ERR_DUPLICATE_ANNOUNCE:
-            SNPRINTF(" (Duplicate Announce)");
+            SNPRINTF(_(" (Duplicate Announce)"));
             break;
         default:
-            SNPRINTF(" (unknown error code %" PRIu16 ")", pdu->errorCode);
+            SNPRINTF(_(" (unknown error code %" PRIu16 ")"), pdu->errorCode);
             break;
         }
         break;
@@ -752,34 +752,34 @@ void pdu_sprint(
     case PDU_SERIAL_NOTIFY:
     case PDU_SERIAL_QUERY:
     case PDU_END_OF_DATA:
-        SNPRINTF(", serial number = %" PRIu32, pdu->serialNumber);
+      SNPRINTF(_(", serial number = %" PRIu32), pdu->serialNumber);
         break;
     case PDU_RESET_QUERY:
     case PDU_CACHE_RESPONSE:
     case PDU_CACHE_RESET:
         break;
     case PDU_IPV4_PREFIX:
-        SNPRINTF(", flags = ");
+        SNPRINTF(_(", flags = "));
         SNPRINTF_FLAGS(pdu->ip4PrefixData.flags);
-        SNPRINTF(", prefix length = %" PRIu8, pdu->ip4PrefixData.prefixLength);
-        SNPRINTF(", max length = %" PRIu8, pdu->ip4PrefixData.maxLength);
-        SNPRINTF(", prefix = ");
+        SNPRINTF(_(", prefix length = %" PRIu8), pdu->ip4PrefixData.prefixLength);
+        SNPRINTF(_(", max length = %" PRIu8), pdu->ip4PrefixData.maxLength);
+        SNPRINTF(_(", prefix = "));
         SNPRINTF_IP4(pdu->ip4PrefixData.prefix4);
-        SNPRINTF(", AS number = %" PRIu32, pdu->ip4PrefixData.asNumber);
+        SNPRINTF(_(", AS number = %" PRIu32), pdu->ip4PrefixData.asNumber);
         break;
     case PDU_IPV6_PREFIX:
-        SNPRINTF(", flags = ");
+        SNPRINTF(_(", flags = "));
         SNPRINTF_FLAGS(pdu->ip6PrefixData.flags);
-        SNPRINTF(", prefix length = %" PRIu8, pdu->ip6PrefixData.prefixLength);
-        SNPRINTF(", max length = %" PRIu8, pdu->ip6PrefixData.maxLength);
-        SNPRINTF(", prefix = ");
+        SNPRINTF(_(", prefix length = %" PRIu8), pdu->ip6PrefixData.prefixLength);
+        SNPRINTF(_(", max length = %" PRIu8), pdu->ip6PrefixData.maxLength);
+        SNPRINTF(_(", prefix = "));
         SNPRINTF_IP6(pdu->ip6PrefixData.prefix6);
-        SNPRINTF(", AS number = %" PRIu32, pdu->ip6PrefixData.asNumber);
+        SNPRINTF(_(", AS number = %" PRIu32), pdu->ip6PrefixData.asNumber);
         break;
     case PDU_ERROR_REPORT:
-        SNPRINTF(", encapsulated PDU length = %" PRIu32,
+      SNPRINTF(_(", encapsulated PDU length = %" PRIu32),
                  pdu->errorData.encapsulatedPDULength);
-        SNPRINTF(", error text = [%" PRIu32 "] \"",
+        SNPRINTF(_(", error text = [%" PRIu32 "] \""),
                  pdu->errorData.errorTextLength);
         for (i = 0; i < pdu->errorData.errorTextLength; ++i)
         {

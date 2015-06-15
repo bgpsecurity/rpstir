@@ -15,6 +15,7 @@
 #include <rpki-asn1/extensions.h>
 
 #include "cms.h"
+#include "util/gettext_include.h"
 
 // find the SID for this CMS and return it
 static struct casn *findSID(
@@ -80,7 +81,7 @@ const char *signCMS(
 
     // find the SID 
     if ((sidp = findSID(cms)) == NULL)
-        return "finding SID";
+        return _("finding SID");
 
     // copy the CMS's SID over to the signature's SID
     copy_casn(&sigInfop->sid.subjectKeyIdentifier, sidp);
@@ -109,12 +110,12 @@ const char *signCMS(
     if ((tbs_lth =
          readvsize_casn(&cms->content.signedData.encapContentInfo.eContent.
                         self, &tbsp)) < 0)
-        return "getting content";
+        return _("getting content");
 
     // set up the context, initialize crypt
     memset(hash, 0, 40);
     if (cryptInit() != CRYPT_OK)
-        return "initializing cryptlib";
+        return _("initializing cryptlib");
 
     // the following calls function f, and if f doesn't return 0 sets
     // msg to m, then breaks out of the loop. Used immediately below.
@@ -167,7 +168,7 @@ const char *signCMS(
         // get the size of signed attributes and allocate space for them
         if ((tbs_lth = size_casn(&sigInfop->signedAttrs.self)) < 0)
         {
-            msg = "sizing SignerInfo";
+            msg = _("sizing SignerInfo");
             break;
         }
         tbsp = (uchar *) calloc(1, tbs_lth);
@@ -295,13 +296,13 @@ const char *signCMSBlob(
     {
         if ((tbs_lth = vsize_casn(&encapContentInfop->eContent)) < 0)
         {
-            errmsg = "sizing eContent";
+            errmsg = _("sizing eContent");
             return errmsg;
         }
         tbsp = (unsigned char *)calloc(1, tbs_lth);
         if (!tbsp)
         {
-            errmsg = "out of memory";
+            errmsg = _("out of memory");
             return errmsg;
         }
 
@@ -312,13 +313,13 @@ const char *signCMSBlob(
         // get the size of signed attributes and allocate space for them
         if ((tbs_lth = size_casn(&signerInfop->signedAttrs.self)) < 0)
         {
-            errmsg = "sizing SignerInfo";
+            errmsg = _("sizing SignerInfo");
             return errmsg;
         }
         tbsp = (unsigned char *)calloc(1, tbs_lth);
         if (!tbsp)
         {
-            errmsg = "out of memory";
+            errmsg = _("out of memory");
             return errmsg;
         }
 
@@ -334,39 +335,39 @@ const char *signCMSBlob(
         errmsg = "creating hash context";
     else if (cryptEncrypt(hashContext, tbsp, tbs_lth) < 0 ||
              cryptEncrypt(hashContext, tbsp, 0) < 0)
-        errmsg = "hashing attrs";
+        errmsg = _("hashing attrs");
     else if (cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE,
                                      hash, &signatureLength) < 0)
-        errmsg = "getting attr hash";
+        errmsg = _("getting attr hash");
 
     // get the key and sign it
     else if (cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE,
                              keyfilename, CRYPT_KEYOPT_READONLY) < 0)
-        errmsg = "opening key set";
+        errmsg = _("opening key set");
     else if (cryptCreateContext(&sigKeyContext, CRYPT_UNUSED,
                                 CRYPT_ALGO_RSA) < 0 ||
              !(sigKeyContext_initialized = true))
-        errmsg = "creating RSA context";
+        errmsg = _("creating RSA context");
     else if (cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME,
                                 "label", "password") < 0)
-        errmsg = "getting key";
+        errmsg = _("getting key");
     else if (cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
                                   hashContext) < 0)
-        errmsg = "signing";
+        errmsg = _("signing");
 
     // compute signature
     else if ((signature =
               (unsigned char *)calloc(1, signatureLength + 20)) == 0)
-        errmsg = "out of memory";
+        errmsg = _("out of memory");
     // second parameter is signatureMaxLength, so we allow a little more
     else if (cryptCreateSignature
              (signature, signatureLength + 20, &signatureLength, sigKeyContext,
               hashContext) < 0)
-        errmsg = "signing";
+        errmsg = _("signing");
     // verify that the signature is right
     else if (cryptCheckSignature(signature, signatureLength, sigKeyContext,
                                  hashContext) < 0)
-        errmsg = "verifying";
+        errmsg = _("verifying");
 
     if (hashContext_initialized)
     {

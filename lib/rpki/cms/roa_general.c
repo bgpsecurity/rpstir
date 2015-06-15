@@ -442,125 +442,132 @@ uint32_t roaAS_ID(
     return (uint32_t)iAS_ID;
 }
 
-/*
- * void roaFree(struct ROA *r) { if (NULL != r) { delete_casn(&(r->self));
- * free((void *)r); } } 
- */
-static int convertAddr(
-    int family,
-    struct ROAIPAddress *ipaddressp,
-    char *outbuf,
-    int outbufLth)
-{
-    memset(outbuf, 0, outbufLth);
-    uchar abuf[36];
-    int addrLth = read_casn(&ipaddressp->address, abuf);
-    if (family == AF_INET)
-    {
-        uint32_t addrVal = 0;
-        uint32_t xx;
-        int ii;
-        if (outbufLth < INET_ADDRSTRLEN + 6)
-            return ERR_SCM_INVALSZ;
-        for (ii = 1; ii < addrLth; ii++)
-            addrVal = (addrVal << 8) + abuf[ii];
-        while (ii++ <= (int)sizeof(unsigned int))
-            addrVal <<= 8;
-        xx = htonl(addrVal);
-        if (!inet_ntop(family, &xx, outbuf, outbufLth))
-            return ERR_SCM_INVALIPL;
-        // prefix length is ((addrLth - 1) * 8) - unused bits
-        sprintf(&outbuf[strlen(outbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
-    }
-    else if (family == AF_INET6)
-    {
-        if (outbufLth < INET6_ADDRSTRLEN + 6)
-            return ERR_SCM_INVALSZ;
-        uchar addrVal[16];
-        memset(addrVal, 0, 16);
-        memcpy(addrVal, &abuf[1], addrLth - 1);
-        if (!inet_ntop(family, &addrVal, outbuf, outbufLth))
-            return ERR_SCM_INVALIPL;
-        sprintf(&outbuf[strlen(outbuf)], "/%d", ((addrLth - 1) * 8) - abuf[0]);
-    }
-    else
-        return ERR_SCM_INVALIPB;
-
-    int lth = strlen(outbuf);
-    if (vsize_casn(&ipaddressp->maxLength))
-    {
-        long j;
-        read_casn_num(&ipaddressp->maxLength, &j);
-        sprintf(&outbuf[lth], "(%d)", (int)j);
-        lth = strlen(outbuf);
-    }
-    return lth;
-}
-
-int roaGetIPAddresses(
+ssize_t roaGetPrefixes(
     struct CMS *rp,
-    char **str)
+    struct roa_prefix * * prefixes)
 {
     struct ROAIPAddrBlocks *addrBlocksp =
         &rp->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks;
     struct ROAIPAddressFamily *famp;
-    int replysiz = 0,
-        lth;
-    char *replyp = NULL;
-    char tmpbuf[INET6_ADDRSTRLEN + 8];  // to be on safe side
-    *str = NULL;                // in case of failure
+
+    // Actual length of *prefixes
+    size_t prefixes_length = 0;
+
+    // Allocated length of *prefixes.  Start small, but big enough to
+    // avoid most reallocations.
+    size_t prefixes_allocated = 16;
+
+    *prefixes = malloc(prefixes_allocated * sizeof(struct roa_prefix));
+    if (*prefixes == NULL)
+    {
+        return ERR_SCM_NOMEM;
+    }
+
     for (famp =
          (struct ROAIPAddressFamily *)member_casn(&addrBlocksp->self, 0); famp;
          famp = (struct ROAIPAddressFamily *)next_of(&famp->self))
     {
+        // first two bytes are AFI in network byte order, third byte
+        // is the optional SAFI, fourth byte is ???
         uchar famtyp[4];
-        if (read_casn(&famp->addressFamily, famtyp) < 0)
+        // min length of AFI/SAFI is 2
+        if (read_casn(&famp->addressFamily, famtyp) < 2)
+        {
+            free(*prefixes);
+            *prefixes = NULL;
             return -1;
-        int family;
-        if (famtyp[1] == 1)
-            family = AF_INET;
-        else if (famtyp[1] == 2)
-            family = AF_INET6;
+        }
+
+        uint_fast16_t afi = ((uint_fast16_t)famtyp[0] << 8) + famtyp[1];
+        uint_fast8_t prefix_family_length;
+        switch (afi)
+        {
+            case 1:
+                prefix_family_length = 4;
+                break;
+
+            case 2:
+                prefix_family_length = 16;
+                break;
+
+            default:
+                free(*prefixes);
+                *prefixes = NULL;
+                return -1;
+        }
+
         struct ROAIPAddress *ipaddressp;
         for (ipaddressp =
              (struct ROAIPAddress *)member_casn(&famp->addresses.self, 0);
              ipaddressp;
              ipaddressp = (struct ROAIPAddress *)next_of(&ipaddressp->self))
         {
-            lth =
-                convertAddr(family, ipaddressp, tmpbuf, INET6_ADDRSTRLEN + 8);
-            if (lth < 0)
+            if (prefixes_length >= prefixes_allocated)
             {
-                if (replyp)
-                    free(replyp);
-                return lth;
-            }
-            if (!replysiz)
-            {                   // lth + 1 allows for null
-                if (!(replyp = (char *)calloc(1, lth + 1)))
+                prefixes_allocated *= 2;
+
+                struct roa_prefix * new_prefixes = realloc(
+                    *prefixes,
+                    prefixes_allocated * sizeof(struct roa_prefix));
+                if (new_prefixes == NULL)
+                {
+                    free(*prefixes);
+                    *prefixes = NULL;
                     return ERR_SCM_NOMEM;
-                strcpy(replyp, tmpbuf);
-                replysiz = lth; // size without null
+                }
+                *prefixes = new_prefixes;
+            }
+
+            (*prefixes)[prefixes_length].prefix_family_length =
+                prefix_family_length;
+
+            // Buffer for a single IP prefix, stored as a BIT STRING.
+            // The first byte will hold the number of unused (padding)
+            // bits in the last byte.
+            /**
+             * \todo change the magic 16 to a symbolic constant (it's
+             * the maximum address length of all supported address
+             * families, in bytes)
+             */
+            uint8_t prefix_buf[1+16];
+
+            int prefix_buflen =
+                read_casn(&ipaddressp->address, prefix_buf);
+            memset((*prefixes)[prefixes_length].prefix, 0,
+                prefix_family_length);
+            memcpy((*prefixes)[prefixes_length].prefix,
+                prefix_buf + 1, prefix_buflen - 1);
+
+            (*prefixes)[prefixes_length].prefix_length =
+                ((prefix_buflen - 1) * 8) - prefix_buf[0];
+
+            int vsize = vsize_casn(&ipaddressp->maxLength);
+            if (vsize < 0)
+            {
+                free(*prefixes);
+                *prefixes = NULL;
+                return -1;
+            }
+            else if (vsize > 0)
+            {
+                long prefix_max_length;
+                read_casn_num(&ipaddressp->maxLength,
+                    &prefix_max_length);
+                (*prefixes)[prefixes_length].prefix_max_length =
+                    prefix_max_length;
             }
             else
             {
-                char *tmpp = (char *)realloc(replyp, replysiz + lth + 3);
-                if (!tmpp)
-                {
-                    free(replyp);
-                    return ERR_SCM_NOMEM;;
-                }
-                replyp = tmpp;
-                char *b = &replyp[replysiz];
-                *b++ = ',';
-                *b++ = ' ';
-                strcpy(b, tmpbuf);
-                replysiz += lth + 2;    // without null
+                // Default max length is equal to the prefix length
+                (*prefixes)[prefixes_length].prefix_max_length =
+                    (*prefixes)[prefixes_length].prefix_length;
             }
+
+            ++prefixes_length;
         }
     }
-    *str = replyp;
-    return 0;
+
+    return prefixes_length;
 }
 
 int roaGenerateFilter(

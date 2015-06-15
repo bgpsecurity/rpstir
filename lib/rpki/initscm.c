@@ -15,6 +15,7 @@
 #include "scmmain.h"
 #undef   SCM_DEFINED_HERE
 
+#include "util/gettext_include.h"
 
 /*
  * Free all the memory allocated in building an scm 
@@ -366,13 +367,13 @@ int main(
 
     (void)setbuf(stdout, NULL);
     scmp = initscm();
-    (void)printf("DSN name is %s\n", scmp->dsn);
-    (void)printf("Number of tables is %d\n", scmp->ntables);
+    (void)printf(_("DSN name is %s\n"), scmp->dsn);
+    (void)printf(_("Number of tables is %d\n"), scmp->ntables);
     for (i = 0; i < scmp->ntables; i++)
     {
         (void)printf("%d\t%s\t%s\n", i + 1,
                      scmp->tables[i].tabname, scmp->tables[i].hname);
-        (void)printf("    Table columns: %d\n\t", scmp->tables[i].ncols);
+        (void)printf(_("    Table columns: %d\n\t"), scmp->tables[i].ncols);
         for (j = 0; j < scmp->tables[i].ncols; j++)
             (void)printf(" %s", scmp->tables[i].cols[j]);
         (void)printf("\n");

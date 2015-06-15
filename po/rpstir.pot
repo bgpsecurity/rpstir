@@ -1,0 +1,2433 @@
+# SOME DESCRIPTIVE TITLE.
+# This file is put in the public domain.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: rpstir 0.10\n"
+"Report-Msgid-Bugs-To: rpstir-support@bbn.com\n"
+"POT-Creation-Date: 2015-06-12 18:03-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: lib/db/clients/chaser.c:31 lib/db/clients/chaser.c:132
+#: lib/db/clients/chaser.c:308 lib/db/clients/chaser.c:459
+#: lib/db/clients/rtr.c:1655
+msgid "mysql_stmt_execute() failed"
+msgstr ""
+
+#: lib/db/clients/chaser.c:45 lib/db/clients/chaser.c:161
+#: lib/db/clients/chaser.c:327 lib/db/clients/chaser.c:478
+#: lib/db/clients/rtr.c:133 lib/db/clients/rtr.c:208 lib/db/clients/rtr.c:274
+#: lib/db/clients/rtr.c:361 lib/db/clients/rtr.c:469 lib/db/clients/rtr.c:840
+#: lib/db/clients/rtr.c:1247 lib/db/clients/rtr.c:1359
+#: lib/db/clients/rtr.c:1479 lib/db/clients/rtr.c:1669
+msgid "mysql_stmt_bind_result() failed"
+msgstr ""
+
+#: lib/db/clients/chaser.c:54 lib/db/clients/chaser.c:170
+#: lib/db/clients/chaser.c:336 lib/db/clients/chaser.c:487
+#: lib/db/clients/rtr.c:142 lib/db/clients/rtr.c:217 lib/db/clients/rtr.c:283
+#: lib/db/clients/rtr.c:370 lib/db/clients/rtr.c:478 lib/db/clients/rtr.c:852
+#: lib/db/clients/rtr.c:1261 lib/db/clients/rtr.c:1368
+msgid "mysql_stmt_store_result() failed"
+msgstr ""
+
+#: lib/db/clients/chaser.c:63
+msgid "couldn't read time from db"
+msgstr ""
+
+#: lib/db/clients/chaser.c:71 lib/db/clients/rtr.c:159
+#: lib/db/clients/rtr.c:238 lib/db/clients/rtr.c:293 lib/db/clients/rtr.c:395
+#: lib/db/clients/rtr.c:488 lib/db/clients/rtr.c:1378
+#: lib/db/clients/rtr.c:1489 lib/db/clients/rtr.c:1679
+msgid "mysql_stmt_fetch() failed"
+msgstr ""
+
+#: lib/db/clients/chaser.c:126 lib/db/clients/chaser.c:302
+#: lib/db/clients/chaser.c:453 lib/db/clients/rtr.c:110
+#: lib/db/clients/rtr.c:338 lib/db/clients/rtr.c:439 lib/db/clients/rtr.c:796
+#: lib/db/clients/rtr.c:1204 lib/db/clients/rtr.c:1459
+#: lib/db/clients/rtr.c:1526 lib/db/clients/rtr.c:1580
+#: lib/db/clients/rtr.c:1613 lib/db/clients/rtr.c:1649
+#: lib/db/clients/rtr.c:1729 lib/db/clients/rtr.c:1763
+#: lib/db/clients/rtr.c:1803 lib/db/clients/rtr.c:1843
+#: lib/db/clients/rtr.c:1890
+msgid "mysql_stmt_bind_param() failed"
+msgstr ""
+
+#: lib/db/clients/chaser.c:181 lib/db/clients/chaser.c:347
+#: lib/db/clients/chaser.c:498
+msgid "got zero results"
+msgstr ""
+
+#: lib/db/clients/chaser.c:190 lib/db/clients/chaser.c:231
+#: lib/db/clients/chaser.c:356 lib/db/clients/chaser.c:397
+#: lib/db/clients/chaser.c:507 lib/db/clients/chaser.c:548
+#: lib/rpki-object/cms/cms.c:305 lib/rpki-object/cms/cms.c:322
+#: lib/rpki-object/cms/cms.c:361 lib/rpki-object/signature.c:35
+#: lib/rpki-object/signature.c:111
+msgid "out of memory"
+msgstr ""
+
+#: lib/db/clients/chaser.c:202 lib/db/clients/chaser.c:368
+#: lib/db/clients/chaser.c:519
+msgid "got mysql_no_data"
+msgstr ""
+
+#: lib/db/clients/chaser.c:207 lib/db/clients/chaser.c:373
+#: lib/db/clients/chaser.c:524
+msgid "got mysql_data_truncated"
+msgstr ""
+
+#: lib/db/clients/chaser.c:291
+#, c-format
+msgid "invalid timestamp: %s"
+msgstr ""
+
+#: lib/db/clients/rtr.c:118
+msgid "mysql_stmt_execute(DB_PSTMT_RTR_GET_SESSION) failed"
+msgstr ""
+
+#: lib/db/clients/rtr.c:151
+msgid "more or less than one session id exists"
+msgstr ""
+
+#: lib/db/clients/rtr.c:193
+msgid "mysql_stmt_execute(DB_PSTMT_RTR_GET_LATEST_SERNUM) failed"
+msgstr ""
+
+#: lib/db/clients/rtr.c:260
+msgid "mysql_stmt_execute(DB_PSTMT_RTR_HAS_ROWS_RTR_UPDATE) failed"
+msgstr ""
+
+#: lib/db/clients/rtr.c:346
+msgid "mysql_stmt_execute(DB_PSTMT_RTR_READ_SER_NUM_AS_PREV) failed"
+msgstr ""
+
+#: lib/db/clients/rtr.c:447
+msgid "mysql_stmt_execute(DB_PSTMT_RTR_READ_SER_NUM_AS_CURRENT) failed"
+msgstr ""
+
+#: lib/db/clients/rtr.c:505
+msgid "got NULL parameter"
+msgstr ""
+
+#: lib/db/clients/rtr.c:591 lib/db/clients/rtr.c:1050
+msgid "could not alloc for query_state"
+msgstr ""
+
+#: lib/db/clients/rtr.c:648
+msgid "could not retrieve number of rows from rtr_update"
+msgstr ""
+
+#: lib/db/clients/rtr.c:681 lib/db/clients/rtr.c:1116
+msgid "max_rows too small"
+msgstr ""
+
+#: lib/db/clients/rtr.c:687 lib/db/clients/rtr.c:1130
+msgid "no data is available to send to routers"
+msgstr ""
+
+#: lib/db/clients/rtr.c:690 lib/db/clients/rtr.c:698 lib/db/clients/rtr.c:716
+#: lib/db/clients/rtr.c:1010 lib/db/clients/rtr.c:1022
+#: lib/db/clients/rtr.c:1311 lib/db/clients/rtr.c:1323
+#, c-format
+msgid "returning %zu PDUs"
+msgstr ""
+
+#: lib/db/clients/rtr.c:696
+msgid "can't update the router from the given serial number"
+msgstr ""
+
+#: lib/db/clients/rtr.c:704 lib/db/clients/rtr.c:1139
+msgid "couldn't get session id"
+msgstr ""
+
+#: lib/db/clients/rtr.c:711
+msgid "no new data for the router from the given serial number"
+msgstr ""
+
+#: lib/db/clients/rtr.c:713 lib/db/clients/rtr.c:942 lib/db/clients/rtr.c:952
+#: lib/db/clients/rtr.c:1320
+msgid "calling fill_pdu_end_of_data()"
+msgstr ""
+
+#: lib/db/clients/rtr.c:803 lib/db/clients/rtr.c:1213
+msgid "could not retrieve data from rtr_incremental"
+msgstr ""
+
+#: lib/db/clients/rtr.c:868 lib/db/clients/rtr.c:1280
+msgid "could not create PDU_IPVx_PREFIX"
+msgstr ""
+
+#: lib/db/clients/rtr.c:883 lib/db/clients/rtr.c:1297
+msgid "error during mysql_stmt_fetch()"
+msgstr ""
+
+#: lib/db/clients/rtr.c:920
+msgid "error while checking validity of serial number"
+msgstr ""
+
+#: lib/db/clients/rtr.c:925
+msgid "serial number became invalid after creating PDUs"
+msgstr ""
+
+#: lib/db/clients/rtr.c:951
+msgid "error while looking for next serial number.  still sending pdus"
+msgstr ""
+
+#: lib/db/clients/rtr.c:980 lib/db/clients/rtr.c:1123
+msgid "could not alloc for array of PDU"
+msgstr ""
+
+#: lib/db/clients/rtr.c:1087
+msgid "no has_full for latest serial number"
+msgstr ""
+
+#: lib/db/clients/rtr.c:1390
+msgid "The rpki-rtr database isn't initialized."
+msgstr ""
+
+#: lib/db/clients/rtr.c:1391
+#, c-format
+msgid "See %s-rpki-rtr-initialize."
+msgstr ""
+
+#: lib/db/clients/rtr.c:1397
+#, c-format
+msgid "The rtr_session table has %llu entries, which should never happen."
+msgstr ""
+
+#: lib/db/clients/rtr.c:1401
+#, c-format
+msgid "Consider running %s-rpki-rtr-clear and %s-rpki-rtr-initialize."
+msgstr ""
+
+#: lib/db/connect.c:28
+msgid "could not initialize mysql library"
+msgstr ""
+
+#: lib/db/connect.c:76 lib/db/connect.c:91 lib/db/connect.c:143
+msgid " MySQL reconnect option might not be set properly"
+msgstr ""
+
+#: lib/db/connect.c:81
+msgid "could not reconnect to MySQL db"
+msgstr ""
+
+#: lib/db/connect.c:119
+msgid "insufficient memory to alloc MYSQL object"
+msgstr ""
+
+#: lib/db/connect.c:133
+msgid "could not connect to MySQL db"
+msgstr ""
+
+#: lib/db/connect.c:149
+msgid "could not alloc for conn"
+msgstr ""
+
+#: lib/db/connect.c:161
+msgid "could not add prepared statements to db connection"
+msgstr ""
+
+#: lib/db/connect.c:178
+msgid "could not alloc for strings"
+msgstr ""
+
+#: lib/db/connect.c:185
+msgid "got invalid flags"
+msgstr ""
+
+#: lib/db/connect.c:129
+msgid "));"
+msgstr ""
+
+#: lib/db/prep-stmt.c:213
+msgid "could not alloc for prepared statement"
+msgstr ""
+
+#: lib/db/prep-stmt.c:219
+msgid "error preparing statement"
+msgstr ""
+
+#: lib/db/prep-stmt.c:258
+msgid "could not alloc array of statement handles"
+msgstr ""
+
+#: lib/db/prep-stmt.c:267
+msgid "could not prepare a statement"
+msgstr ""
+
+#: lib/db/util.c:40
+#, c-format
+msgid "connection to MySQL server was lost: %s"
+msgstr ""
+
+#: lib/db/util.c:44
+msgid "not able to reconnect to MySQL server"
+msgstr ""
+
+#: lib/db/util.c:50
+msgid "reconnection to MySQL server failed"
+msgstr ""
+
+#: lib/db/util.c:88
+msgid "the argument row is NULL"
+msgstr ""
+
+#: lib/db/util.c:104
+#, c-format
+msgid "could not find field name:  %s"
+msgstr ""
+
+#: lib/db/util.c:114
+msgid "could not alloc memory"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:84
+msgid "low cert size"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:93
+msgid "gen_hash failed"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:106
+msgid "error sizing toBeSigned"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:116
+msgid "error initializing cryptlib"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:127
+msgid "error creating hash context"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:153
+msgid "error creating pubkey context"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:217
+msgid "error checking signature"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:340
+#, c-format
+msgid "invalid address family %d"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:346
+msgid "low > high"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:422
+msgid "failed to write prefix"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:431
+msgid "failed to write the low end of the range"
+msgstr ""
+
+#: lib/rpki-object/certificate.c:438
+msgid "failed to write the high end of the range"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:84
+msgid "finding SID"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:113
+msgid "getting content"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:118 lib/rpki-object/crl.c:33
+msgid "initializing cryptlib"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:171 lib/rpki-object/cms/cms.c:316
+msgid "sizing SignerInfo"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:299
+msgid "sizing eContent"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:338
+msgid "hashing attrs"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:341
+msgid "getting attr hash"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:346 lib/rpki-object/crl.c:54
+#: lib/rpki/rpwork.c:514
+msgid "opening key set"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:350
+msgid "creating RSA context"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:353 lib/rpki-object/crl.c:58
+#: lib/rpki/rpwork.c:518
+msgid "getting key"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:356 lib/rpki-object/cms/cms.c:366
+#: lib/rpki-object/crl.c:62 lib/rpki-object/crl.c:69 lib/rpki/rpwork.c:521
+#: lib/rpki/rpwork.c:528
+msgid "signing"
+msgstr ""
+
+#: lib/rpki-object/cms/cms.c:370 lib/rpki-object/crl.c:73
+#: lib/rpki/rpwork.c:531
+msgid "verifying"
+msgstr ""
+
+#: lib/rpki-object/crl.c:43 lib/rpki/rpwork.c:503
+msgid "creating context"
+msgstr ""
+
+#: lib/rpki-object/crl.c:46 lib/rpki/rpwork.c:506
+msgid "hashing"
+msgstr ""
+
+#: lib/rpki-object/crl.c:50 lib/rpki/rpwork.c:510
+msgid "getting attribute string"
+msgstr ""
+
+#: lib/rpki-object/crl.c:95 lib/rpki/rpwork.c:551
+msgid "decoding signature"
+msgstr ""
+
+#: lib/rpki-object/crl.c:97 lib/rpki/rpwork.c:553
+msgid "reading signature"
+msgstr ""
+
+#: lib/rpki-object/crl.c:100 lib/rpki/rpwork.c:558
+msgid "writing signature"
+msgstr ""
+
+#: lib/rpki-object/signature.c:28
+msgid "can't size the content"
+msgstr ""
+
+#: lib/rpki-object/signature.c:45
+msgid "can't initialize cryptlib"
+msgstr ""
+
+#: lib/rpki-object/signature.c:52
+msgid "can't create hash context"
+msgstr ""
+
+#: lib/rpki-object/signature.c:59
+msgid "can't create sig key context"
+msgstr ""
+
+#: lib/rpki-object/signature.c:68
+msgid "can't hash content"
+msgstr ""
+
+#: lib/rpki-object/signature.c:77
+msgid "error getting attribute string"
+msgstr ""
+
+#: lib/rpki-object/signature.c:86
+msgid "can't open key set"
+msgstr ""
+
+#: lib/rpki-object/signature.c:95
+msgid "can't get key"
+msgstr ""
+
+#: lib/rpki-object/signature.c:103
+msgid "can't determine size of signature"
+msgstr ""
+
+#: lib/rpki-object/signature.c:120
+msgid "can't sign hash"
+msgstr ""
+
+#: lib/rpki-object/signature.c:128
+msgid "signature verification failed"
+msgstr ""
+
+#: lib/rpki-object/signature.c:141
+msgid "can't decode signature"
+msgstr ""
+
+#: lib/rpki-object/signature.c:149
+msgid "can't read signature from SignerInfo"
+msgstr ""
+
+#: lib/rpki-object/signature.c:161
+msgid "can't write signature"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:667
+msgid " Serial Notify"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:670
+msgid " Serial Query"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:673
+msgid " Reset Query"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:676
+msgid " Cache Response"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:679
+msgid " IPv4 Prefix"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:682
+msgid " IPv6 Prefix"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:685
+msgid " End of Data"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:688
+msgid " Cache Reset"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:691
+msgid " Error Report"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:694
+#, c-format
+msgid " unknown type (%<PRIu8>)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:704
+msgid ", session id = %"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:716
+msgid " (Corrupt Data)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:719
+msgid " (Internal Error)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:722
+msgid " (No Data)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:725
+msgid " (Invalid Request)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:728
+msgid " (Unsupported Version)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:731
+msgid " (Unsupported Type)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:734
+msgid " (Unknown Withdraw)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:737
+msgid " (Duplicate Announce)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:740
+#, c-format
+msgid " (unknown error code %<PRIu16>)"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:755
+msgid ", serial number = %"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:762 lib/rpki-rtr/pdu.c:771
+msgid ", flags = "
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:764 lib/rpki-rtr/pdu.c:773
+msgid ", prefix length = %"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:765 lib/rpki-rtr/pdu.c:774
+msgid ", max length = %"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:766 lib/rpki-rtr/pdu.c:775
+msgid ", prefix = "
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:768 lib/rpki-rtr/pdu.c:777
+msgid ", AS number = %"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:780
+msgid ", encapsulated PDU length = %"
+msgstr ""
+
+#: lib/rpki-rtr/pdu.c:782
+#, c-format
+msgid ", error text = [%<PRIu32>] \""
+msgstr ""
+
+#: lib/rpki/err.c:7
+msgid "No error"
+msgstr ""
+
+#: lib/rpki/err.c:8
+msgid "Cannot open file"
+msgstr ""
+
+#: lib/rpki/err.c:9
+msgid "Out of memory"
+msgstr ""
+
+#: lib/rpki/err.c:10
+msgid "Invalid argument"
+msgstr ""
+
+#: lib/rpki/err.c:11
+msgid "SQL error"
+msgstr ""
+
+#: lib/rpki/err.c:12
+msgid "Invalid column"
+msgstr ""
+
+#: lib/rpki/err.c:13
+msgid "Null column"
+msgstr ""
+
+#: lib/rpki/err.c:14
+msgid "No such table"
+msgstr ""
+
+#: lib/rpki/err.c:15
+msgid "No data"
+msgstr ""
+
+#: lib/rpki/err.c:16
+msgid "Null value"
+msgstr ""
+
+#: lib/rpki/err.c:17
+msgid "Invalid size"
+msgstr ""
+
+#: lib/rpki/err.c:19
+msgid "Link skipped"
+msgstr ""
+
+#: lib/rpki/err.c:20
+msgid "Bad filename or file not found"
+msgstr ""
+
+#: lib/rpki/err.c:21
+msgid "Inconsistent filename"
+msgstr ""
+
+#: lib/rpki/err.c:22
+msgid "Not a directory"
+msgstr ""
+
+#: lib/rpki/err.c:23
+msgid "Internal error"
+msgstr ""
+
+#: lib/rpki/err.c:24
+msgid "X509 error"
+msgstr ""
+
+#: lib/rpki/err.c:25
+msgid "Error reading cert"
+msgstr ""
+
+#: lib/rpki/err.c:26
+msgid "Missing subject field"
+msgstr ""
+
+#: lib/rpki/err.c:27
+msgid "Missing issuer field"
+msgstr ""
+
+#: lib/rpki/err.c:28
+msgid "Missing serial number"
+msgstr ""
+
+#: lib/rpki/err.c:30
+msgid "Bignum error"
+msgstr ""
+
+#: lib/rpki/err.c:31
+msgid "Missing start date"
+msgstr ""
+
+#: lib/rpki/err.c:32
+msgid "Missing end date"
+msgstr ""
+
+#: lib/rpki/err.c:33
+msgid "Invalid date/time"
+msgstr ""
+
+#: lib/rpki/err.c:34
+msgid "Extension error"
+msgstr ""
+
+#: lib/rpki/err.c:35
+msgid "Invalid extension"
+msgstr ""
+
+#: lib/rpki/err.c:36
+msgid "Profile violation"
+msgstr ""
+
+#: lib/rpki/err.c:37
+msgid "Missing extension"
+msgstr ""
+
+#: lib/rpki/err.c:38
+msgid "Not self-signed"
+msgstr ""
+
+#: lib/rpki/err.c:39
+msgid "Certificate validation error"
+msgstr ""
+
+#: lib/rpki/err.c:41
+msgid "Certificate context error"
+msgstr ""
+
+#: lib/rpki/err.c:42
+msgid "X509 stack error"
+msgstr ""
+
+#: lib/rpki/err.c:43
+msgid "Certificate store error"
+msgstr ""
+
+#: lib/rpki/err.c:44
+msgid "Cert store init error"
+msgstr ""
+
+#: lib/rpki/err.c:45
+msgid "Missing AKI"
+msgstr ""
+
+#: lib/rpki/err.c:46
+msgid "CRL error"
+msgstr ""
+
+#: lib/rpki/err.c:47
+msgid "Error reading CRL"
+msgstr ""
+
+#: lib/rpki/err.c:48
+msgid "Not implemented"
+msgstr ""
+
+#: lib/rpki/err.c:49
+msgid "Invalid AS number"
+msgstr ""
+
+#: lib/rpki/err.c:50
+msgid "Invalid SKI"
+msgstr ""
+
+#: lib/rpki/err.c:52
+msgid "Invalid IP address block"
+msgstr ""
+
+#: lib/rpki/err.c:53
+msgid "Invalid IP address length"
+msgstr ""
+
+#: lib/rpki/err.c:54
+msgid "Invalid version number"
+msgstr ""
+
+#: lib/rpki/err.c:55
+msgid "ASN.1 library error"
+msgstr ""
+
+#: lib/rpki/err.c:56
+msgid "Not an EE certificate"
+msgstr ""
+
+#: lib/rpki/err.c:57
+msgid "Invalid certificate flags"
+msgstr ""
+
+#: lib/rpki/err.c:58
+msgid "Bad certificate version"
+msgstr ""
+
+#: lib/rpki/err.c:59
+msgid "Extension must be critical"
+msgstr ""
+
+#: lib/rpki/err.c:60
+msgid "Must be CA cert"
+msgstr ""
+
+#: lib/rpki/err.c:61
+msgid "Pathlen invalid"
+msgstr ""
+
+#: lib/rpki/err.c:63
+msgid "Missing basic constraints"
+msgstr ""
+
+#: lib/rpki/err.c:64
+msgid "Duplicate basic constraints"
+msgstr ""
+
+#: lib/rpki/err.c:65
+msgid "Cannot be CA cert"
+msgstr ""
+
+#: lib/rpki/err.c:66
+msgid "Extension cannot be critical"
+msgstr ""
+
+#: lib/rpki/err.c:67
+msgid "Missing SKI"
+msgstr ""
+
+#: lib/rpki/err.c:68
+msgid "Duplicate SKI"
+msgstr ""
+
+#: lib/rpki/err.c:69
+msgid "authCertIssuer present"
+msgstr ""
+
+#: lib/rpki/err.c:70
+msgid "AuthCertSN present"
+msgstr ""
+
+#: lib/rpki/err.c:71
+msgid "Duplicate AKI"
+msgstr ""
+
+#: lib/rpki/err.c:72
+msgid "Missing key usage"
+msgstr ""
+
+#: lib/rpki/err.c:74
+msgid "Duplicate key usage"
+msgstr ""
+
+#: lib/rpki/err.c:75
+msgid "CRLDP in TA cert"
+msgstr ""
+
+#: lib/rpki/err.c:76
+msgid "Missing CRLDP"
+msgstr ""
+
+#: lib/rpki/err.c:77
+msgid "Duplicate CRLDP"
+msgstr ""
+
+#: lib/rpki/err.c:78
+msgid "CRLDP with subfields"
+msgstr ""
+
+#: lib/rpki/err.c:79
+msgid "Cannot get CRLDP name field"
+msgstr ""
+
+#: lib/rpki/err.c:80
+msgid "CRLDP not a URI"
+msgstr ""
+
+#: lib/rpki/err.c:81
+msgid "Missing AIA"
+msgstr ""
+
+#: lib/rpki/err.c:82
+msgid "Duplicate AIA"
+msgstr ""
+
+#: lib/rpki/err.c:83
+msgid "AIA not a URI"
+msgstr ""
+
+#: lib/rpki/err.c:85
+msgid "Missing SIA"
+msgstr ""
+
+#: lib/rpki/err.c:86
+msgid "Duplicate SIA"
+msgstr ""
+
+#: lib/rpki/err.c:87
+msgid "SIA not a URI"
+msgstr ""
+
+#: lib/rpki/err.c:88
+msgid "Missing policy ext"
+msgstr ""
+
+#: lib/rpki/err.c:89
+msgid "Duplicate policy ext"
+msgstr ""
+
+#: lib/rpki/err.c:90
+msgid "Invalid policy qualifiers"
+msgstr ""
+
+#: lib/rpki/err.c:91
+msgid "Invalid OID"
+msgstr ""
+
+#: lib/rpki/err.c:92
+msgid "Missing RFC3779 ext"
+msgstr ""
+
+#: lib/rpki/err.c:93
+msgid "Duplicate IP resources"
+msgstr ""
+
+#: lib/rpki/err.c:94
+msgid "Duplicate AS# resources"
+msgstr ""
+
+#: lib/rpki/err.c:96
+msgid "Invalid signature"
+msgstr ""
+
+#: lib/rpki/err.c:97
+msgid "Hashable string size error"
+msgstr ""
+
+#: lib/rpki/err.c:98
+msgid "Hashable string read error"
+msgstr ""
+
+#: lib/rpki/err.c:99
+msgid "Bad address family"
+msgstr ""
+
+#: lib/rpki/err.c:100
+msgid "Bad digest algorithm"
+msgstr ""
+
+#: lib/rpki/err.c:101
+msgid "Bad Content type"
+msgstr ""
+
+#: lib/rpki/err.c:102
+msgid "Unsigned attributes"
+msgstr ""
+
+#: lib/rpki/err.c:103
+msgid "Invalid IP family"
+msgstr ""
+
+#: lib/rpki/err.c:104
+msgid "No signature"
+msgstr ""
+
+#: lib/rpki/err.c:105
+msgid "Duplicate signature"
+msgstr ""
+
+#: lib/rpki/err.c:107
+msgid "Error creating hash"
+msgstr ""
+
+#: lib/rpki/err.c:108
+msgid "Error in FileAndHash"
+msgstr ""
+
+#: lib/rpki/err.c:109
+msgid "Wrong number of certificates"
+msgstr ""
+
+#: lib/rpki/err.c:110
+msgid "Invalid dates"
+msgstr ""
+
+#: lib/rpki/err.c:111
+msgid "Differing algorithms in cert"
+msgstr ""
+
+#: lib/rpki/err.c:112
+msgid "Basic constraints in EE cert"
+msgstr ""
+
+#: lib/rpki/err.c:113
+msgid "Error in SignerInfos"
+msgstr ""
+
+#: lib/rpki/err.c:114
+msgid "Error making para-certificate"
+msgstr ""
+
+#: lib/rpki/err.c:115
+msgid "Invalid IP numbers"
+msgstr ""
+
+#: lib/rpki/err.c:116
+msgid "Invalid constraints entry"
+msgstr ""
+
+#: lib/rpki/err.c:118
+msgid "Conflicting constraint entry"
+msgstr ""
+
+#: lib/rpki/err.c:119
+msgid "Can't open constraints file"
+msgstr ""
+
+#: lib/rpki/err.c:120
+msgid "Can't find RP certificate"
+msgstr ""
+
+#: lib/rpki/err.c:121
+msgid "Defective constraints file"
+msgstr ""
+
+#: lib/rpki/err.c:122
+msgid "Error signing para-cert"
+msgstr ""
+
+#: lib/rpki/err.c:123
+msgid "Invalid ROA"
+msgstr ""
+
+#: lib/rpki/err.c:125
+msgid "Invalid manifest"
+msgstr ""
+
+#: lib/rpki/err.c:126
+msgid "Error writing EE cert"
+msgstr ""
+
+#: lib/rpki/err.c:127
+msgid "Key too small"
+msgstr ""
+
+#: lib/rpki/err.c:129
+msgid "Invalid indefinite ASN.1 length"
+msgstr ""
+
+#: lib/rpki/err.c:130
+msgid "Certificate expired"
+msgstr ""
+
+#: lib/rpki/err.c:131
+msgid "Invalid subject name"
+msgstr ""
+
+#: lib/rpki/err.c:132
+msgid "Invalid issuer name"
+msgstr ""
+
+#: lib/rpki/err.c:133
+msgid "Invalid AKI"
+msgstr ""
+
+#: lib/rpki/err.c:134
+msgid "No rsync URI in CRLDP"
+msgstr ""
+
+#: lib/rpki/err.c:135
+msgid "Bad serial number"
+msgstr ""
+
+#: lib/rpki/err.c:136
+msgid "Should not have CRL"
+msgstr ""
+
+#: lib/rpki/err.c:137
+msgid "Error starting Cryptlib"
+msgstr ""
+
+#: lib/rpki/err.c:138
+msgid "Bad hash algorithm"
+msgstr ""
+
+#: lib/rpki/err.c:140
+msgid "Bad number of digest algorithms"
+msgstr ""
+
+#: lib/rpki/err.c:141
+msgid "Bad number of signer infos"
+msgstr ""
+
+#: lib/rpki/err.c:142
+msgid "Invalid signer infos version"
+msgstr ""
+
+#: lib/rpki/err.c:143
+msgid "Invalid signer info sid"
+msgstr ""
+
+#: lib/rpki/err.c:144
+msgid "Invalid signer info time"
+msgstr ""
+
+#: lib/rpki/err.c:145
+msgid "Invalid CMS version"
+msgstr ""
+
+#: lib/rpki/err.c:146
+msgid "Invalid message digest"
+msgstr ""
+
+#: lib/rpki/err.c:147
+msgid "Invalid signed attributes"
+msgstr ""
+
+#: lib/rpki/err.c:148
+msgid "Invalid content type"
+msgstr ""
+
+#: lib/rpki/err.c:149
+msgid "Invalid binary signing time"
+msgstr ""
+
+#: lib/rpki/err.c:151
+msgid "Invalid signature algorithm"
+msgstr ""
+
+#: lib/rpki/err.c:152
+msgid "Invalid ROA version"
+msgstr ""
+
+#: lib/rpki/err.c:153
+msgid "Invalid manifest version"
+msgstr ""
+
+#: lib/rpki/err.c:154
+msgid "Invalid AS numbers"
+msgstr ""
+
+#: lib/rpki/err.c:155
+msgid "AS number outside range"
+msgstr ""
+
+#: lib/rpki/err.c:156
+msgid "No IP addresses"
+msgstr ""
+
+#: lib/rpki/err.c:157
+msgid "No AS number"
+msgstr ""
+
+#: lib/rpki/err.c:158
+msgid "ROA IP addresses not in EE"
+msgstr ""
+
+#: lib/rpki/err.c:159
+msgid "IP addresses overlap"
+msgstr ""
+
+#: lib/rpki/err.c:161
+msgid "Bad hash in manifest"
+msgstr ""
+
+#: lib/rpki/err.c:162
+msgid "Invalid digest in CMS"
+msgstr ""
+
+#: lib/rpki/err.c:163
+msgid "Wrong manifest hash in DB"
+msgstr ""
+
+#: lib/rpki/err.c:164
+msgid "Missing CRL version"
+msgstr ""
+
+#: lib/rpki/err.c:165
+msgid "Wrong CRL version"
+msgstr ""
+
+#: lib/rpki/err.c:166
+msgid "CRL Entry Extension present"
+msgstr ""
+
+#: lib/rpki/err.c:167
+msgid "Invalid filename in manifest"
+msgstr ""
+
+#: lib/rpki/err.c:168 lib/rpki/myssl.c:4298
+msgid "Invalid revocation date"
+msgstr ""
+
+#: lib/rpki/err.c:169 lib/rpki/myssl.c:4267
+msgid "Invalid revoked serial number"
+msgstr ""
+
+#: lib/rpki/err.c:170 lib/rpki/myssl.c:4436
+msgid "No CRL number extension"
+msgstr ""
+
+#: lib/rpki/err.c:171
+msgid "Invalid manifest number"
+msgstr ""
+
+#: lib/rpki/err.c:172
+msgid "Duplicate file in manifest"
+msgstr ""
+
+#: lib/rpki/err.c:173
+msgid "EKU erroneously present"
+msgstr ""
+
+#: lib/rpki/err.c:174
+msgid "Unsupported Public Key Info"
+msgstr ""
+
+#: lib/rpki/err.c:175
+msgid "Routing Domain Identifier(s) present"
+msgstr ""
+
+#: lib/rpki/err.c:176
+msgid "Invalid CRLNumber"
+msgstr ""
+
+#: lib/rpki/err.c:177
+msgid "Missing RFC3779 IP extension"
+msgstr ""
+
+#: lib/rpki/err.c:178
+msgid "Object has been revoked"
+msgstr ""
+
+#: lib/rpki/err.c:179
+msgid "Non-inherit resources present"
+msgstr ""
+
+#: lib/rpki/err.c:180
+msgid "Invalid character sequence"
+msgstr ""
+
+#: lib/rpki/err.c:181
+msgid "AIA in TA cert"
+msgstr ""
+
+#: lib/rpki/err.c:182
+msgid "Invalid signed attribute"
+msgstr ""
+
+#: lib/rpki/err.c:183
+msgid "TA cert has inherit resources"
+msgstr ""
+
+#: lib/rpki/err.c:184
+msgid "Truncated data"
+msgstr ""
+
+#: lib/rpki/initscm.c:370
+#, c-format
+msgid "DSN name is %s\n"
+msgstr ""
+
+#: lib/rpki/initscm.c:371
+#, c-format
+msgid "Number of tables is %d\n"
+msgstr ""
+
+#: lib/rpki/initscm.c:376
+#, c-format
+msgid ""
+"    Table columns: %d\n"
+"\t"
+msgstr ""
+
+#: lib/rpki/myssl.c:1053 lib/rpki/myssl.c:1693
+#, c-format
+msgid "Missing CF_FIELD %d"
+msgstr ""
+
+#: lib/rpki/myssl.c:1626
+msgid "Wrong number of CRL extensions"
+msgstr ""
+
+#: lib/rpki/myssl.c:1646
+#, c-format
+msgid "Invalid CRL extension [%d]"
+msgstr ""
+
+#: lib/rpki/myssl.c:1682
+msgid "Duplicate extensions"
+msgstr ""
+
+#: lib/rpki/myssl.c:1946
+msgid ""
+"OpenSSL reports an unsupported critical extension in an X.509 certificate.  "
+"Please ensure that OpenSSL was compiled with RFC 3779 support."
+msgstr ""
+
+#: lib/rpki/myssl.c:1970
+#, c-format
+msgid "rescert_version_check: version %lu"
+msgstr ""
+
+#: lib/rpki/myssl.c:2022
+msgid "couldn't determine cert_type to test against"
+msgstr ""
+
+#: lib/rpki/myssl.c:2044
+msgid "[basic_const] CA_CERT: basic_constraints NOT critical!"
+msgstr ""
+
+#: lib/rpki/myssl.c:2052
+msgid "Couldn't parse basic_constraints"
+msgstr ""
+
+#: lib/rpki/myssl.c:2059
+msgid "[basic_const] testing for CA_CERT: cA boolean NOT set"
+msgstr ""
+
+#: lib/rpki/myssl.c:2067
+msgid "[basic_const] basic constraints pathlen present - profile violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2079
+msgid "[basic_const] basic_constraints not present"
+msgstr ""
+
+#: lib/rpki/myssl.c:2084
+msgid "[basic_const] multiple instances of extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2108
+msgid "[basic_const] jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2147
+msgid "SKI marked as critical, profile violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2155
+msgid "[ski] ski extension missing"
+msgstr ""
+
+#: lib/rpki/myssl.c:2160
+msgid "[ski] multiple instances of ski extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2202
+#, c-format
+msgid "wrong ski length: %d instead of 160 bits"
+msgstr ""
+
+#: lib/rpki/myssl.c:2210
+msgid "failed to read ski"
+msgstr ""
+
+#: lib/rpki/myssl.c:2215
+msgid "SKI does not match Subject Public Key Info"
+msgstr ""
+
+#: lib/rpki/myssl.c:2221
+msgid "could not find ski extension for cert"
+msgstr ""
+
+#: lib/rpki/myssl.c:2227
+msgid "[ski]jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2264
+msgid "[aki] critical, profile violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2272
+msgid "Failed to parse AKI"
+msgstr ""
+
+#: lib/rpki/myssl.c:2283
+msgid "[aki] key identifier sub field not present"
+msgstr ""
+
+#: lib/rpki/myssl.c:2291
+msgid "[aki_chk] authorityCertIssuer is present = violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2299
+msgid "[aki_chk] authorityCertSerialNumber is present = violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2308
+#, c-format
+msgid "[aki] key identifier has %d bytes instead of %d"
+msgstr ""
+
+#: lib/rpki/myssl.c:2324
+msgid "[aki_chk] missing AKI extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2329
+msgid "[aki_chk] duplicate AKI extensions"
+msgstr ""
+
+#: lib/rpki/myssl.c:2338
+msgid "[aki]jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2372
+msgid "[kusage] not marked critical, violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2401
+msgid "[key_usage] missing Key Usage extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2406
+msgid "[key_usage] multiple key_usage extensions"
+msgstr ""
+
+#: lib/rpki/myssl.c:2415
+msgid "[key_usage] jump to..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2441
+msgid "[extended_key_usage] marked critical, violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2452
+msgid "[extended_key_usage] EKU present in CA cert"
+msgstr ""
+
+#: lib/rpki/myssl.c:2464
+msgid "[extended_key_usage] EKU present in CMS EE cert"
+msgstr ""
+
+#: lib/rpki/myssl.c:2471
+msgid "[extended_key_usage] jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2516
+msgid "[crldp] crldp found in self-signed cert"
+msgstr ""
+
+#: lib/rpki/myssl.c:2523
+msgid "[crldp] marked critical, violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2541
+msgid "[crldp] missing crldp extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2546
+msgid "[crldp] duplicate crldp extensions"
+msgstr ""
+
+#: lib/rpki/myssl.c:2557
+msgid "[crldp] could not retrieve crldp extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2567
+msgid "[crldp] incorrect crldp sub fields"
+msgstr ""
+
+#: lib/rpki/myssl.c:2579
+msgid "[crldp] error retrieving distribution point name"
+msgstr ""
+
+#: lib/rpki/myssl.c:2589
+msgid "[crldp] general name of non GEN_URI type found"
+msgstr ""
+
+#: lib/rpki/myssl.c:2608
+msgid "[crldp] no general name of type URI"
+msgstr ""
+
+#: lib/rpki/myssl.c:2615
+msgid "[crldp] no general name of type URI with RSYNC access method"
+msgstr ""
+
+#: lib/rpki/myssl.c:2629
+msgid "[crldp] jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2675
+msgid "[aia] marked critical, violation"
+msgstr ""
+
+#: lib/rpki/myssl.c:2691
+msgid "[aia] AIA present in TA cert"
+msgstr ""
+
+#: lib/rpki/myssl.c:2700
+msgid "[aia] missing aia extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2705
+msgid "[aia] multiple aia extensions"
+msgstr ""
+
+#: lib/rpki/myssl.c:2722
+msgid "[aia] could not retrieve aia extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:2731
+msgid "[aia] error retrieving access description"
+msgstr ""
+
+#: lib/rpki/myssl.c:2740
+msgid "[aia] access type of non GEN_URI found"
+msgstr ""
+
+#: lib/rpki/myssl.c:2757
+msgid "[aia] no aia name of type URI rsync"
+msgstr ""
+
+#: lib/rpki/myssl.c:2768
+msgid "[aia] jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:2820
+msgid "no SIA found"
+msgstr ""
+
+#: lib/rpki/myssl.c:2825
+msgid "multiple SIA found"
+msgstr ""
+
+#: lib/rpki/myssl.c:2830
+msgid "error reading SIA"
+msgstr ""
+
+#: lib/rpki/myssl.c:2839
+msgid "critical bit set for SIA"
+msgstr ""
+
+#: lib/rpki/myssl.c:2847
+msgid "could not read certificate type; or unknown type"
+msgstr ""
+
+#: lib/rpki/myssl.c:2893
+msgid "did not find rsync uri for repository for SIA"
+msgstr ""
+
+#: lib/rpki/myssl.c:2898
+msgid "did not find rsync uri for manifest for SIA"
+msgstr ""
+
+#: lib/rpki/myssl.c:2926
+msgid "in EE-cert SIA, found accessMethod != id-ad-signedObject"
+msgstr ""
+
+#: lib/rpki/myssl.c:2934
+msgid "did not find rsync uri for signedObject for SIA"
+msgstr ""
+
+#: lib/rpki/myssl.c:2982
+msgid "[policy] not marked as critical"
+msgstr ""
+
+#: lib/rpki/myssl.c:2990
+msgid "[policy] policy extension missing"
+msgstr ""
+
+#: lib/rpki/myssl.c:2996
+msgid "[policy] multiple instances of policy extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:3008
+msgid "[policy] policies present but could not retrieve"
+msgstr ""
+
+#: lib/rpki/myssl.c:3015
+msgid "[policy] incorrect number of policies"
+msgstr ""
+
+#: lib/rpki/myssl.c:3023
+msgid "[policy] could not retrieve policyinfo"
+msgstr ""
+
+#: lib/rpki/myssl.c:3034
+#, c-format
+msgid "len: %d value: %s\n"
+msgstr ""
+
+#: lib/rpki/myssl.c:3035
+msgid "[policy] OID Policy Identifier value incorrect"
+msgstr ""
+
+#: lib/rpki/myssl.c:3044
+msgid "[policy] too many policy qualifiers"
+msgstr ""
+
+#: lib/rpki/myssl.c:3055
+msgid "[policy] invalid policy qualifier ID, only CPS is allowed"
+msgstr ""
+
+#: lib/rpki/myssl.c:3062
+msgid "[policy] jump to return..."
+msgstr ""
+
+#: lib/rpki/myssl.c:3087
+msgid "no IP extension found"
+msgstr ""
+
+#: lib/rpki/myssl.c:3092
+msgid "multiple IP extensions found"
+msgstr ""
+
+#: lib/rpki/myssl.c:3098
+msgid "IP extension is empty"
+msgstr ""
+
+#: lib/rpki/myssl.c:3108 lib/rpki/myssl.c:3123
+msgid "IP extension not marked critical"
+msgstr ""
+
+#: lib/rpki/myssl.c:3114
+msgid "IP extension critical flag is longer than one byte"
+msgstr ""
+
+#: lib/rpki/myssl.c:3137
+msgid "IP address family contains a SAFI"
+msgstr ""
+
+#: lib/rpki/myssl.c:3150
+msgid "IP resources marked inherit in a trust anchor"
+msgstr ""
+
+#: lib/rpki/myssl.c:3157
+msgid "IP extension has no resources and is not marked inherit"
+msgstr ""
+
+#: lib/rpki/myssl.c:3185
+msgid "no AS extension found"
+msgstr ""
+
+#: lib/rpki/myssl.c:3190
+msgid "multiple AS extensions found"
+msgstr ""
+
+#: lib/rpki/myssl.c:3196
+msgid "AS extension is empty"
+msgstr ""
+
+#: lib/rpki/myssl.c:3206 lib/rpki/myssl.c:3221
+msgid "AS extension not marked critical"
+msgstr ""
+
+#: lib/rpki/myssl.c:3212
+msgid "AS extension critical flag is longer than one byte"
+msgstr ""
+
+#: lib/rpki/myssl.c:3228
+msgid "AS extension contains non-NULL rdi element"
+msgstr ""
+
+#: lib/rpki/myssl.c:3238
+msgid "AS resources marked inherit in a trust anchor"
+msgstr ""
+
+#: lib/rpki/myssl.c:3242
+msgid "AS resources marked as inherit"
+msgstr ""
+
+#: lib/rpki/myssl.c:3247
+msgid "AS NumbersOrRanges is empty, or error reading it"
+msgstr ""
+
+#: lib/rpki/myssl.c:3287
+msgid "cert has neither IP resources, nor AS resources"
+msgstr ""
+
+#: lib/rpki/myssl.c:3297
+msgid "couldn't get IP extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:3303
+msgid "cert IP resources are not in canonical form"
+msgstr ""
+
+#: lib/rpki/myssl.c:3317
+msgid "couldn't get AS extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:3323
+msgid "cert AS resources are not in canonical form"
+msgstr ""
+
+#: lib/rpki/myssl.c:3451
+msgid "RDNSeq contains >2 RelativeDistinguishedName"
+msgstr ""
+
+#: lib/rpki/myssl.c:3464
+msgid "RelativeDistinguishedName contains >2 Attribute Value Assertions"
+msgstr ""
+
+#: lib/rpki/myssl.c:3476
+msgid "multiple CommonNames"
+msgstr ""
+
+#: lib/rpki/myssl.c:3484 lib/rpki/myssl.c:3489
+msgid "CommonName not printableString"
+msgstr ""
+
+#: lib/rpki/myssl.c:3497
+msgid "multiple SerialNumbers"
+msgstr ""
+
+#: lib/rpki/myssl.c:3505
+msgid ""
+"AttributeValueAssertion contains an OID that is neither id_commonName nor "
+"id_serialNumber"
+msgstr ""
+
+#: lib/rpki/myssl.c:3513
+msgid "no CommonName present"
+msgstr ""
+
+#: lib/rpki/myssl.c:3538
+msgid "length of outer sig alg oid <= 0"
+msgstr ""
+
+#: lib/rpki/myssl.c:3547
+msgid "outer sig alg oid actual length != stated length"
+msgstr ""
+
+#: lib/rpki/myssl.c:3554 lib/rpki/myssl.c:3585
+msgid "inner sig alg oid does not match spec"
+msgstr ""
+
+#: lib/rpki/myssl.c:3562
+msgid "length of inner sig alg oid <= 0"
+msgstr ""
+
+#: lib/rpki/myssl.c:3577
+msgid "inner sig alg oid actual length != stated length"
+msgstr ""
+
+#: lib/rpki/myssl.c:3596
+msgid "inner and outer sig alg oids do not match"
+msgstr ""
+
+#: lib/rpki/myssl.c:3608
+msgid "length of subj pub key sig alg oid <= 0"
+msgstr ""
+
+#: lib/rpki/myssl.c:3619
+msgid "subj pub key sig alg oid actual length != stated length"
+msgstr ""
+
+#: lib/rpki/myssl.c:3626
+msgid "subj pub key sig alg id does not match spec"
+msgstr ""
+
+#: lib/rpki/myssl.c:3637
+#, c-format
+msgid "subj pub key too long (%d bytes)"
+msgstr ""
+
+#: lib/rpki/myssl.c:3649
+#, c-format
+msgid "subj pub key actual length (%d) != stated (%d)"
+msgstr ""
+
+#: lib/rpki/myssl.c:3657
+#, c-format
+msgid "subj pub key not a whole number of bytes (between %d and %d)"
+msgstr ""
+
+#: lib/rpki/myssl.c:3671
+msgid "error decoding subj pub key"
+msgstr ""
+
+#: lib/rpki/myssl.c:3681
+msgid "error parsing public key modulus"
+msgstr ""
+
+#: lib/rpki/myssl.c:3687
+msgid "empty public key modulus"
+msgstr ""
+
+#: lib/rpki/myssl.c:3699
+#, c-format
+msgid "subj pub key modulus is negative (length = %d bytes)"
+msgstr ""
+
+#: lib/rpki/myssl.c:3710
+#, c-format
+msgid "subj pub key modulus has leading zero-byte (length = %d bytes)"
+msgstr ""
+
+#: lib/rpki/myssl.c:3734 lib/rpki/myssl.c:3739
+#, c-format
+msgid "subj pub key modulus bit-length (%d) != %d"
+msgstr ""
+
+#: lib/rpki/myssl.c:3752
+msgid "error reading subj pub key exponent"
+msgstr ""
+
+#: lib/rpki/myssl.c:3758
+#, c-format
+msgid "subj pub key exponent != %d"
+msgstr ""
+
+#: lib/rpki/myssl.c:3783
+msgid "serial number field too long"
+msgstr ""
+
+#: lib/rpki/myssl.c:3793
+msgid "serial number actual length != stated length"
+msgstr ""
+
+#: lib/rpki/myssl.c:3800
+msgid "serial number is negative"
+msgstr ""
+
+#: lib/rpki/myssl.c:3816
+msgid "serial number is zero"
+msgstr ""
+
+#: lib/rpki/myssl.c:3839
+msgid "invalid certificate, notBefore > notAfter"
+msgstr ""
+
+#: lib/rpki/myssl.c:3859
+msgid "certificate has issuer unique ID"
+msgstr ""
+
+#: lib/rpki/myssl.c:3865
+msgid "certificate has subject unique ID"
+msgstr ""
+
+#: lib/rpki/myssl.c:3924
+#, c-format
+msgid "<oid too large to print>"
+msgstr ""
+
+#: lib/rpki/myssl.c:3930
+#, c-format
+msgid "certificate has unknown extension %s"
+msgstr ""
+
+#: lib/rpki/myssl.c:4116
+msgid "Wrong CRL inner signature algorithm"
+msgstr ""
+
+#: lib/rpki/myssl.c:4122
+msgid "Wrong CRL outer signature algorithm"
+msgstr ""
+
+#: lib/rpki/myssl.c:4145
+msgid "Bad CRL issuer"
+msgstr ""
+
+#: lib/rpki/myssl.c:4199
+msgid "failed to read CRL time field(s)"
+msgstr ""
+
+#: lib/rpki/myssl.c:4205
+msgid "CRL time field(s) don't fit into database"
+msgstr ""
+
+#: lib/rpki/myssl.c:4210
+msgid "Invalid CRL, thisUpdate > nextUpdate"
+msgstr ""
+
+#: lib/rpki/myssl.c:4222
+#, c-format
+msgid "thisUpdate %<PRId64> seconds in the future"
+msgstr ""
+
+#: lib/rpki/myssl.c:4253
+msgid "Revocation entry has extension(s)"
+msgstr ""
+
+#: lib/rpki/myssl.c:4260
+msgid "Revoked serial number too long"
+msgstr ""
+
+#: lib/rpki/myssl.c:4273
+msgid "Negative revoked serial number"
+msgstr ""
+
+#: lib/rpki/myssl.c:4288
+msgid "Revoked serial number is zero"
+msgstr ""
+
+#: lib/rpki/myssl.c:4303
+msgid "Revocation date in the future"
+msgstr ""
+
+#: lib/rpki/myssl.c:4307
+msgid "Revocation date doesn't fit in database"
+msgstr ""
+
+#: lib/rpki/myssl.c:4374
+msgid "CRL Authority Key Identifier extension marked critical"
+msgstr ""
+
+#: lib/rpki/myssl.c:4380
+msgid "Duplicate CRL Authority Key Identifier extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:4390
+msgid "CRL number extension marked critical"
+msgstr ""
+
+#: lib/rpki/myssl.c:4395
+msgid "Duplicate CRL number extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:4403
+msgid "Forbidden CRL extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:4410
+msgid "Can't get memory while checking CRL"
+msgstr ""
+
+#: lib/rpki/myssl.c:4421
+msgid "Error reading CRLExtension OID"
+msgstr ""
+
+#: lib/rpki/myssl.c:4424
+#, c-format
+msgid "Forbidden extension oid %s"
+msgstr ""
+
+#: lib/rpki/myssl.c:4431
+msgid "No Authority Key Identifier extension"
+msgstr ""
+
+#: lib/rpki/myssl.c:4445
+msgid "error reading CRLNumber"
+msgstr ""
+
+#: lib/rpki/myssl.c:4450
+msgid "CRLNumber too long"
+msgstr ""
+
+#: lib/rpki/myssl.c:4458
+msgid "CRLNumber is negative"
+msgstr ""
+
+#: lib/rpki/querySupport.c:185 lib/rpki/querySupport.c:198
+#, c-format
+msgid "multiple parents (%d) found; results suspect"
+msgstr ""
+
+#: lib/rpki/querySupport.c:312
+msgid "invalid prefix_family_length %"
+msgstr ""
+
+#: lib/rpki/querySupport.c:320
+msgid "error converting prefix to a string"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:360
+msgid "Ejecting out of range\n"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:397
+msgid "Injecting out of range\n"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:597
+#, c-format
+msgid "Ranges touch "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:619 lib/rpki/rpcommon.c:623
+#, c-format
+msgid "Invalid IPv4 "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:621
+#, c-format
+msgid "Missing IPv4 "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:627
+#, c-format
+msgid "Bad/disordered IPv4 group "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:630
+#, c-format
+msgid "Missing/invalid IPv6 "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:632
+#, c-format
+msgid "Bad/disordered IPv6 group "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:634
+#, c-format
+msgid "Missing/invalid AS# "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:636
+#, c-format
+msgid "Bad/disordered AS# group "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:638
+#, c-format
+msgid "Empty SKI block "
+msgstr ""
+
+#: lib/rpki/rpcommon.c:654
+#, c-format
+msgid "No private key method."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:660
+#, c-format
+msgid "Invalid private key method."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:679
+#, c-format
+msgid "Error in top level certificate"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:681
+#, c-format
+msgid "No top level certificate."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:692
+#, c-format
+msgid "Error translating root cert file name"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:699
+#, c-format
+msgid "Top level certificate name too long"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:707
+#, c-format
+msgid "Invalid top level certificate: %s."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:770
+#, c-format
+msgid "Invalid control message: %s.\n"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:778 lib/rpki/rpcommon.c:926
+#, c-format
+msgid "Error in control section"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:784
+#, c-format
+msgid "No/not TRUE or FALSE in %s."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:833
+#, c-format
+msgid "Invalid Xcp entry: %s."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:856
+#, c-format
+msgid "Invalid line: %s."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:875
+#, c-format
+msgid "Invalid TAG entry: %s."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:882
+#, c-format
+msgid "Error in TAG entries"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:916
+#, c-format
+msgid "No private key material"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:928
+#, c-format
+msgid "No control section."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:942
+#, c-format
+msgid "CONTROL message out of order: %s"
+msgstr ""
+
+#: lib/rpki/rpcommon.c:950
+#, c-format
+msgid "No SKI entry in file."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:955
+#, c-format
+msgid "Incomplete SKI entry."
+msgstr ""
+
+#: lib/rpki/rpcommon.c:964
+#, c-format
+msgid "Error at this line of control file: %s."
+msgstr ""
+
+#: lib/rpki/rpwork.c:198
+#, c-format
+msgid "Added %s to DB"
+msgstr ""
+
+#: lib/rpki/rpwork.c:202
+#, c-format
+msgid "Adding %s to DB failed with error %d"
+msgstr ""
+
+#: lib/rpki/rpwork.c:289
+#, c-format
+msgid "Too many CRLDP extensions"
+msgstr ""
+
+#: lib/rpki/rpwork.c:298
+#, c-format
+msgid "Too many general names in CRLDP extensions"
+msgstr ""
+
+#: lib/rpki/rpwork.c:344
+#, c-format
+msgid "Certificate has no SKI."
+msgstr ""
+
+#: lib/rpki/rpwork.c:358
+#, c-format
+msgid "Certificate has no AKI."
+msgstr ""
+
+#: lib/rpki/rpwork.c:436
+#, c-format
+msgid "No CA certificate found for SKI %s\n"
+msgstr ""
+
+#: lib/rpki/rpwork.c:442
+#, c-format
+msgid "Found %d certificates for SKI %s\n"
+msgstr ""
+
+#: lib/rpki/rpwork.c:570
+#, c-format
+msgid "Error %s\n"
+msgstr ""
+
+#: lib/rpki/rpwork.c:1036
+#, c-format
+msgid "Did not expand %s in block %s."
+msgstr ""
+
+#: lib/rpki/rpwork.c:1468
+#, c-format
+msgid "Invalid SKI: %s"
+msgstr ""
+
+#: lib/rpki/rpwork.c:1474
+#, c-format
+msgid "No file for SKI %s."
+msgstr ""
+
+#: lib/rpki/rpwork.c:1494
+#, c-format
+msgid "Invalid prefix/range %s"
+msgstr ""
+
+#: lib/rpki/rpwork.c:1568
+msgid "Starting LTA work"
+msgstr ""
+
+#: lib/rpki/rpwork.c:1585
+#, c-format
+msgid "Cannot find directory %s."
+msgstr ""
+
+#: lib/rpki/rpwork.c:1605
+#, c-format
+msgid "Error adding paracert %s to DB"
+msgstr ""
+
+#: lib/rpki/rpwork.c:1644
+msgid "Finished LTA work"
+msgstr ""
+
+#: lib/rpki/sqcon.c:174
+msgid "Cannot allocate HENV handle"
+msgstr ""
+
+#: lib/rpki/sqcon.c:175
+msgid "Out of memory!"
+msgstr ""
+
+#: lib/rpki/sqcon.c:529
+#, c-format
+msgid "Invalid column %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:66
+msgid "Error finding directory table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:72
+msgid "Error finding metadata table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:78
+msgid "Error finding certificate table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:84
+msgid "Error finding crl table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:90
+msgid "Error finding roa table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:96
+msgid "Error finding roa_prefix table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:102
+msgid "Error finding manifest table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:108
+msgid "Error finding ghostbusters table"
+msgstr ""
+
+#: lib/rpki/sqhl.c:1543
+#, c-format
+msgid "could not set ROA sigval: conp->mystat.errmsg = %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:1862
+#, c-format
+msgid "Hash not ok on file %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:1905
+#, c-format
+msgid "invalid manifest filename %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:1979
+#, c-format
+msgid "Child cert %s had bad signature"
+msgstr ""
+
+#: lib/rpki/sqhl.c:2742
+#, c-format
+msgid "Failed to load CRL: %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:2748
+#, c-format
+msgid "CRL failed standalone profile check: %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:2951
+#, c-format
+msgid "Error adding embedded certificate %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3145
+#, c-format
+msgid "Error inserting ROA prefixes. SQL query: %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3166
+#, c-format
+msgid "Error deleting row from rpki_roa: %s (%d)"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3186
+#, c-format
+msgid "Error deleting from rpki_roa_prefix with roa_local_id %s: %s (%d)"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3326
+#, c-format
+msgid "invalid manifest %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3362
+msgid "thisUpdate is too large"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3369
+msgid "Could not read time for thisUpdate"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3383
+msgid "nextUpdate is too large"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3390
+msgid "Could not read time for nextUpdate"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3513
+#, c-format
+msgid "invalid ghostbusters %s"
+msgstr ""
+
+#: lib/rpki/sqhl.c:3553
+msgid "There are too many ghostbusters records in the database."
+msgstr ""
+
+#: lib/rpki/sqhl.c:4459
+msgid "Application Started"
+msgstr ""
+
+#: lib/rpki/sqhl.c:4469
+msgid "Application Ended"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:110
+#, c-format
+msgid "roaFromConfig(%s) failed with error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:118
+#, c-format
+msgid "roaToFile(%s) failed with error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:125
+#, c-format
+msgid "roaFromFile(%s) failed with error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:132
+#, c-format
+msgid "ROA has NULL SKI\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:141
+#, c-format
+msgid "Internal error: cannot initialize database schema\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:148
+#, c-format
+msgid "Cannot connect to DSN %s: %s\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:162
+#, c-format
+msgid "ROA certificate has no parent in DB: error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:171
+#, c-format
+msgid "Cannot read certificate from %s: error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:184
+#, c-format
+msgid "ROA failed semantic validation: error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:192
+#, c-format
+msgid "Cannot open roa.txt\n"
+msgstr ""
+
+#: lib/rpki/tests/roa_test/roa_test.c:202
+#, c-format
+msgid "Cannot generate ROA filter output: error %s (%d)\n"
+msgstr ""
+
+#: lib/rpki/tests/test_check_sig.c:26
+#, c-format
+msgid "Need argvs for CMS(s)\n"
+msgstr ""
+
+#: lib/rpki/tests/test_check_sig.c:31
+#, c-format
+msgid "Reading CMS failed\n"
+msgstr ""
+
+#: lib/rpki/tests/test_check_sig.c:37
+#, c-format
+msgid "Couldn't get certificate in CMS\n"
+msgstr ""
+
+#: lib/rpki/tests/test_check_sig.c:40
+msgid "something else"
+msgstr ""
+
+#: lib/rpki/tests/test_check_sig.c:49
+#, c-format
+msgid "Checking %s %s\n"
+msgstr ""
+
+#: lib/rpki/tests/test_check_sig.c:51 lib/rpki/tests/test_val2.c:30
+msgid "failed."
+msgstr ""
+
+#: lib/rpki/tests/test_val2.c:20
+#, c-format
+msgid "Need argv[1] for roa\n"
+msgstr ""
+
+#: lib/rpki/tests/test_val2.c:23
+#, c-format
+msgid "Testing %s and %s\n"
+msgstr ""
+
+#: lib/rpki/tests/test_val2.c:25
+#, c-format
+msgid "Reading roa failed at %d (%X) %s\n"
+msgstr ""
+
+#: lib/rpki/tests/test_val2.c:29
+#, c-format
+msgid "Checking %s\n"
+msgstr ""
+
+#: lib/util/semaphore_compat.c:253
+#, c-format
+msgid "failed to unlink semaphore %s, continuing anyway"
+msgstr ""
+
+#: lib/util/semaphore_compat.c:261
+#, c-format
+msgid "failed to create a semaphore after %d tries"
+msgstr ""
+
+#: lib/util/tests/stringutils-test.c:157
+#, c-format
+msgid "invalid seed: %s\n"
+msgstr ""
+
+#: lib/util/tests/stringutils-test.c:162
+#, c-format
+msgid "random seed = %u\n"
+msgstr ""

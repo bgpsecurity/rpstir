@@ -357,7 +357,7 @@ struct iprange *eject_range(
 {
     int typ;
     if (num < 0 || num >= iprangesp->numranges)
-        internal_error("Ejecting out of range\n");
+        internal_error(_("Ejecting out of range\n"));
     iprangesp->numranges--;
     struct iprange *newrangep =
         (struct iprange *)calloc(iprangesp->numranges, sizeof(struct iprange));
@@ -394,7 +394,7 @@ struct iprange *inject_range(
     int num)
 {
     if (num < 0 || num > iprangesp->numranges)
-        internal_error("Injecting out of range\n");
+        internal_error(_("Injecting out of range\n"));
     struct iprange *newrangep =
         (struct iprange *)calloc(iprangesp->numranges + 1,
                                  sizeof(struct iprange));
@@ -594,7 +594,7 @@ static int getIPBlock(
                          (iprangep->typ == IPv4) ? 4 : 16)) >= 0)
             {
                 snprintf(errbuf, sizeof(errbuf),
-                         (!j) ? "Ranges touch " : "Ranges out of order ");
+                         (!j) ? _("Ranges touch ") : _("Ranges out of order "));
                 return ERR_SCM_BADSKIBLOCK;
             }
         }
@@ -616,26 +616,26 @@ int getSKIBlock(
     int ansr = ERR_SCM_BADSKIBLOCK;
     int val;
     if ((val = next_cmd(skibuf, siz, SKI)) < 0)
-        snprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
+        snprintf(errbuf, sizeof(errbuf), _("Invalid IPv4 "));
     else if (!val)
-        snprintf(errbuf, sizeof(errbuf), "Missing IPv4 ");
+        snprintf(errbuf, sizeof(errbuf), _("Missing IPv4 "));
     else if (strcmp(skibuf, "IPv4\n"))
-        snprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
+        snprintf(errbuf, sizeof(errbuf), _("Invalid IPv4 "));
     else if (getIPBlock(SKI, IPv4, skibuf, siz) < 0)
     {
         if (!*errbuf)
-            snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv4 group ");
+            snprintf(errbuf, sizeof(errbuf), _("Bad/disordered IPv4 group "));
     }
     else if (strcmp(skibuf, "IPv6\n"))
-        snprintf(errbuf, sizeof(errbuf), "Missing/invalid IPv6 ");
+        snprintf(errbuf, sizeof(errbuf), _("Missing/invalid IPv6 "));
     else if (getIPBlock(SKI, IPv6, skibuf, siz) < 0)
-        snprintf(errbuf, sizeof(errbuf), "Bad/disordered IPv6 group ");
+        snprintf(errbuf, sizeof(errbuf), _("Bad/disordered IPv6 group "));
     else if (strcmp(skibuf, "AS#\n"))
-        snprintf(errbuf, sizeof(errbuf), "Missing/invalid AS# ");
+        snprintf(errbuf, sizeof(errbuf), _("Missing/invalid AS# "));
     else if (getIPBlock(SKI, ASNUM, skibuf, siz) < 0)
-        snprintf(errbuf, sizeof(errbuf), "Bad/disordered AS# group ");
+        snprintf(errbuf, sizeof(errbuf), _("Bad/disordered AS# group "));
     else if (ruleranges.numranges == 0)
-        snprintf(errbuf, sizeof(errbuf), "Empty SKI block ");
+        snprintf(errbuf, sizeof(errbuf), _("Empty SKI block "));
     else
     {
         ansr = 1;
@@ -651,13 +651,13 @@ static int parse_privatekey(
     char *cc;
     if (strncmp(skibuf, "PRIVATEKEYMETHOD", 16))
     {
-        snprintf(errbuf, sizeof(errbuf), "No private key method.");
+        snprintf(errbuf, sizeof(errbuf), _("No private key method."));
         return ERR_SCM_BADSKIFILE;
     }
     for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
     if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc, file_being_parsed) < 0)
     {
-        snprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
+        snprintf(errbuf, sizeof(errbuf), _("Invalid private key method."));
         return ERR_SCM_BADSKIFILE;
     }
     return 0;
@@ -676,9 +676,9 @@ static int parse_topcert(
     {
         ansr = ERR_SCM_NORPCERT;
         if (val < 0)
-            snprintf(errbuf, sizeof(errbuf), "Error in top level certificate");
+            snprintf(errbuf, sizeof(errbuf), _("Error in top level certificate"));
         else
-            snprintf(errbuf, sizeof(errbuf), "No top level certificate.");
+            snprintf(errbuf, sizeof(errbuf), _("No top level certificate."));
     }
     else
     {                           // get root cert
@@ -689,14 +689,14 @@ static int parse_topcert(
         if (!c)
         {
             snprintf(errbuf, sizeof(errbuf),
-                     "Error translating root cert file name");
+                     _("Error translating root cert file name"));
             ansr = ERR_SCM_NORPCERT;
         }
         else if (strlen(c) >= sizeof(myrootfullname) - 2)
         {
             ansr = ERR_SCM_NORPCERT;
             snprintf(errbuf, sizeof(errbuf),
-                     "Top level certificate name too long");
+                     _("Top level certificate name too long"));
         }
         else
         {
@@ -704,7 +704,7 @@ static int parse_topcert(
             if (get_casn_file(&myrootcert.self, myrootfullname, 0) < 0)
             {
                 snprintf(errbuf, sizeof(errbuf),
-                         "Invalid top level certificate: %s.", myrootfullname);
+                         _("Invalid top level certificate: %s."), myrootfullname);
                 ansr = ERR_SCM_NORPCERT;
             }
             else
@@ -767,7 +767,7 @@ static int parse_control_section(
         else
         {
             ansr = ERR_SCM_BADSKIFILE;
-            snprintf(errbuf, sizeof(errbuf), "Invalid control message: %s.\n",
+            snprintf(errbuf, sizeof(errbuf), _("Invalid control message: %s.\n"),
                      cc);
         }
         if (!ansr)
@@ -775,13 +775,13 @@ static int parse_control_section(
             if ((val = next_cmd(skibuf, siz, SKI)) <= 0)
             {
                 c = NULL;
-                snprintf(errbuf, sizeof(errbuf), "Error in control section");
+                snprintf(errbuf, sizeof(errbuf), _("Error in control section"));
             }
         }
     }
     if (ansr == -1)
     {
-        snprintf(errbuf, sizeof(errbuf), "No/not TRUE or FALSE in %s.",
+        snprintf(errbuf, sizeof(errbuf), _("No/not TRUE or FALSE in %s."),
                  skibuf);
         ansr = ERR_SCM_BADSKIFILE;
     }
@@ -830,7 +830,7 @@ static int parse_Xcp(
     else if (nextword(cc))
     {
         ansr = ERR_SCM_BADSKIFILE;
-        snprintf(errbuf, sizeof(errbuf), "Invalid Xcp entry: %s.", skibuf);
+        snprintf(errbuf, sizeof(errbuf), _("Invalid Xcp entry: %s."), skibuf);
     }
     else if (check_cp(cc) < 0)
         ansr = ERR_SCM_BADSKIFILE;
@@ -853,7 +853,7 @@ static int parse_tag_section(
         cc = nextword(skibuf);
         if (skibuf[3] != ' ')
         {
-            snprintf(errbuf, sizeof(errbuf), "Invalid line: %s.", skibuf);
+            snprintf(errbuf, sizeof(errbuf), _("Invalid line: %s."), skibuf);
             ansr = ERR_SCM_BADSKIFILE;
             break;
         }
@@ -872,14 +872,14 @@ static int parse_tag_section(
         else
         {
             ansr = ERR_SCM_BADSKIFILE;
-            snprintf(errbuf, sizeof(errbuf), "Invalid TAG entry: %s.", cc);
+            snprintf(errbuf, sizeof(errbuf), _("Invalid TAG entry: %s."), cc);
         }
         if (!ansr)
         {
             if ((val = next_cmd(skibuf, siz, SKI)) <= 0)
             {
                 ansr = ERR_SCM_BADSKIFILE;
-                snprintf(errbuf, sizeof(errbuf), "Error in TAG entries");
+                snprintf(errbuf, sizeof(errbuf), _("Error in TAG entries"));
             }
         }
     }
@@ -913,7 +913,7 @@ int parse_SKI_blocks(
     if ((ansr = next_cmd(skibuf, siz, SKI)) <= 0)
     {
         ansr = ERR_SCM_BADSKIFILE;
-        snprintf(errbuf, sizeof(errbuf), "No private key material");
+        snprintf(errbuf, sizeof(errbuf), _("No private key material"));
     }
     else
         ansr = parse_privatekey(keyring, skibuf, SKI_filename);
@@ -923,9 +923,9 @@ int parse_SKI_blocks(
     if (!ansr && (val = next_cmd(skibuf, siz, SKI)) <= 0)
     {
         if (val < 0)
-            snprintf(errbuf, sizeof(errbuf), "Error in control section");
+            snprintf(errbuf, sizeof(errbuf), _("Error in control section"));
         else
-            snprintf(errbuf, sizeof(errbuf), "No control section.");
+            snprintf(errbuf, sizeof(errbuf), _("No control section."));
         ansr = ERR_SCM_BADSKIFILE;
     }
     // step 2
@@ -939,7 +939,7 @@ int parse_SKI_blocks(
         if (!*errbuf && !strncmp(skibuf, "CONTROL ", 8))
         {
             snprintf(errbuf, sizeof(errbuf),
-                     "CONTROL message out of order: %s", skibuf);
+                     _("CONTROL message out of order: %s"), skibuf);
             ansr = ERR_SCM_BADSKIFILE;
         }
         else if (!ansr)
@@ -947,12 +947,12 @@ int parse_SKI_blocks(
             if (strncmp(skibuf, "SKI ", 4))
             {
                 ansr = ERR_SCM_BADSKIFILE;
-                snprintf(errbuf, sizeof(errbuf), "No SKI entry in file.");
+                snprintf(errbuf, sizeof(errbuf), _("No SKI entry in file."));
             }
             else if (!(cc = nextword(skibuf)) || *cc < ' ')
             {
                 ansr = ERR_SCM_BADSKIFILE;
-                snprintf(errbuf, sizeof(errbuf), "Incomplete SKI entry.");
+                snprintf(errbuf, sizeof(errbuf), _("Incomplete SKI entry."));
             }
         }
     }

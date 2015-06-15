@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,9 @@
 #include <my_global.h>
 #include <mysql.h>
 #include <errmsg.h>
+
+#include "config/config.h"
+#include "rpki/db_constants.h"
 
 #include "db-internal.h"
 #include "util/logging.h"
@@ -114,4 +118,89 @@ int getStringByFieldname(
     (*out)[len] = '\0';
 
     return 0;
+}
+
+void flag_tests_empty(
+    struct flag_tests * tests)
+{
+    tests->mask = 0;
+    tests->result = 0;
+}
+
+void flag_tests_default(
+    struct flag_tests * tests)
+{
+    // NOTE: This must be kept in sync with addQueryFlagTests.
+
+    flag_tests_empty(tests);
+
+    flag_tests_add_tests_by_mask(tests, SCM_FLAG_VALIDATED, true);
+
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+    {
+        flag_tests_add_tests_by_mask(tests, SCM_FLAG_NOCHAIN, false);
+    }
+
+    if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
+    {
+        flag_tests_add_tests_by_mask(tests, SCM_FLAG_STALECRL, false);
+    }
+
+    if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
+    {
+        flag_tests_add_tests_by_mask(tests, SCM_FLAG_STALEMAN, false);
+    }
+
+    if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
+    {
+        flag_tests_add_tests_by_mask(tests, SCM_FLAG_ONMAN, true);
+    }
+
+    if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
+    {
+        flag_tests_add_tests_by_mask(tests, SCM_FLAG_NOTYET, false);
+    }
+}
+
+void flag_tests_add_test_by_index(
+    struct flag_tests * tests,
+    uint_fast16_t flag,
+    bool isset)
+{
+    flag_tests_add_tests_by_mask(
+        tests,
+        1ULL << flag,
+        isset);
+}
+
+void flag_tests_add_tests_by_mask(
+    struct flag_tests * tests,
+    unsigned long long mask,
+    bool isset)
+{
+    tests->mask |= mask;
+
+    if (isset)
+    {
+        tests->result |= mask;
+    }
+    else
+    {
+        tests->result &= ~mask;
+    }
+}
+
+void flag_tests_bind(
+    MYSQL_BIND * parameters,
+    struct flag_tests const * tests)
+{
+    parameters[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    parameters[0].buffer = (void *)&tests->mask;
+    parameters[0].is_unsigned = (my_bool)1;
+    parameters[0].is_null = (my_bool *)0;
+
+    parameters[1].buffer_type = MYSQL_TYPE_LONGLONG;
+    parameters[1].buffer = (void *)&tests->result;
+    parameters[1].is_unsigned = (my_bool)1;
+    parameters[1].is_null = (my_bool *)0;
 }

@@ -18,6 +18,8 @@ extern void addQueryFlagTests(
 /****** prototype for a function for displaying a field *****/
 typedef int (
     *displayfunc) (
+    scm * scmp,
+    scmcon * connection,
     scmsrcha * s,
     int idx1,
     char *returnStr);
@@ -78,4 +80,4 @@ void setIsManifest(
 #define Q_FOR_MAN       0x20
 #define Q_FOR_GBR       0x40
 
-#define MAX_RESULT_SZ 8192
+#define MAX_RESULT_SZ (128 * 1024)

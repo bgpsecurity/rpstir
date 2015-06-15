@@ -7,6 +7,7 @@
 #include <fcntl.h>
 
 #include "util/logging.h"
+#include "util/gettext_include.h"
 
 #include "semaphore_compat.h"
 
@@ -140,11 +141,11 @@ static void initialize_support_unnamed()
 
     if (support_unnamed)
     {
-        LOG(LOG_DEBUG, "system appears to support unnamed semaphores");
+      LOG(LOG_DEBUG, "system appears to support unnamed semaphores");
     }
     else
     {
-        LOG(LOG_DEBUG, "system does not appear to support unnamed semaphores");
+      LOG(LOG_DEBUG, "system does not appear to support unnamed semaphores");
     }
 }
 
@@ -251,7 +252,7 @@ sem_t * semcompat_new(
                 {
                     LOG(LOG_WARNING,
                         "failed to unlink semaphore %s, continuing anyway",
-                        name);
+			  name);
                 }
 
                 return ret;
