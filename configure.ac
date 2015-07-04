@@ -61,8 +61,8 @@ AC_PROG_SED
 AM_PATH_PYTHON([$MIN_PYTHON_VERSION])
 AC_PROG_LN_S
 
-# Ideally this should be a check for how to create a temporary file on each platform,
-# but this seems to work for now on multiple platforms.
+# Ideally this should be a check for how to create a temporary file on
+# each platform, but this seems to work for now on multiple platforms.
 MKTEMP="mktemp -t tmp.XXXXXXXXXX"
 MKTEMP_DIR="mktemp -t tmp.XXXXXXXXXX -d"
 AC_SUBST([MKTEMP])
@@ -76,42 +76,56 @@ fi
 
 AC_ARG_WITH(
     [ssl-include],
-    [AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ])],
+    [AS_HELP_STRING(
+        [--with-ssl-include],
+        [Path to OpenSSL library install location: Defaults to
+         /usr/local/ssl/include])],
     [ ssl_include=$withval],
     [ ssl_include=/usr/local/ssl/include]
 )
 
 AC_ARG_WITH(
     [ssl-lib],
-    [AS_HELP_STRING([--with-ssl-lib],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/lib ])],
+    [AS_HELP_STRING(
+        [--with-ssl-lib],
+        [Path to OpenSSL library install location: Defaults to
+         /usr/local/ssl/lib])],
     [ ssl_lib=$withval],
     [ ssl_lib=/usr/local/ssl/lib]
 )
 
 AC_ARG_WITH(
     [cryptlib-include],
-    [AS_HELP_STRING([--with-cryptlib-include],[Path to cryptlib install location: Defaults to /usr/local/include ])],
+    [AS_HELP_STRING(
+        [--with-cryptlib-include],
+        [Path to cryptlib install location: Defaults to /usr/local/include])],
     [ cryptlib_include=$withval],
     [ cryptlib_include=/usr/local/include]
 )
 
 AC_ARG_WITH(
     [odbc-include],
-    [AS_HELP_STRING([--with-odbc-include],[Path to odbc include files: Defaults to /usr/local/include ])],
+    [AS_HELP_STRING(
+        [--with-odbc-include],
+        [Path to odbc include files: Defaults to /usr/local/include])],
     [ odbc_include=$withval],
     [ odbc_include=/usr/local/include]
 )
 
 AC_ARG_WITH(
     [cryptlib-lib],
-    [AS_HELP_STRING([--with-cryptlib-lib],[Path to cryptlib install location: Defaults to /usr/local/lib ])],
+    [AS_HELP_STRING(
+        [--with-cryptlib-lib],
+        [Path to cryptlib install location: Defaults to /usr/local/lib])],
     [ cryptlib_lib=$withval],
     [ cryptlib_lib=/usr/local/lib]
 )
 
 AC_ARG_WITH(
     [odbc-lib],
-    [AS_HELP_STRING([--with-odbc-lib],[Path to odbc install location: Defaults to /usr/local/lib ])],
+    [AS_HELP_STRING(
+        [--with-odbc-lib],
+        [Path to odbc install location: Defaults to /usr/local/lib])],
     [ odbc_lib=$withval],
     [ odbc_lib=/usr/local/lib]
 )
@@ -125,7 +139,8 @@ AC_ARG_WITH(
 
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
-  # this is a bit of a hack because mysql_config --include specified non-system include flags
+  # this is a bit of a hack because mysql_config --include specified
+  # non-system include flags
   for flag in `$MYSQL_CONFIG --include`; do
     case $flag in
       -I*)
@@ -138,7 +153,8 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
     esac
   done
 
-  # this is a bit of a hack because mysql_config --libs_r specifies compiler flags, not linker flags
+  # this is a bit of a hack because mysql_config --libs_r specifies
+  # compiler flags, not linker flags
   mysql_config_LIBS=""
   for flag in `$MYSQL_CONFIG --libs_r`; do
     case $flag in
@@ -155,7 +171,8 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   done
   LIBS="${mysql_config_LIBS} ${LIBS}"
 else
-  AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
+  AC_MSG_ERROR(
+    [cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 AC_MSG_CHECKING([whether mysql flags are useable])
 AC_LINK_IFELSE(
@@ -199,9 +216,20 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
 CFLAGS="${CFLAGS_RESTORE-}"
 AC_ARG_ENABLE(
     [stack-protector],
-    [AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ])],
-    [ if test x"$enableval" != xno; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ],
-    [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
+    [AS_HELP_STRING(
+        [--enable-stack-protector],
+        [Whether or not to add -fstack-protector to CFLAGS: Defaults
+         to yes when using gcc and no otherwise])],
+    [
+        if test x"$enableval" != xno; then
+            CFLAGS="${CFLAGS-} -fstack-protector"
+        fi
+    ],
+    [
+        if test x"$HAVE_STACK_PROTECTOR" = xyes; then
+            CFLAGS="${CFLAGS-} -fstack-protector"
+        fi
+    ]
 )
 
 #Check for pthreads.
