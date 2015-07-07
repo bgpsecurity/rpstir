@@ -711,7 +711,7 @@ int roaGenerateFilter2(
         for (j = 0; j < iAddrNum; j++)
         {
             while ((iRes = snprintf(rstrp, remLen, "%s %s %s\n", cSID, cAS_ID,
-                                    pcAddresses[j])) > remLen)
+                                    pcAddresses[j])) >= remLen)
             {
                 int used = rstrp - strp;
                 strp = (char *)realloc(strp, strLen += FILTER_INCR);

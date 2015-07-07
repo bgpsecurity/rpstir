@@ -285,7 +285,7 @@ int write_casn_double(
     {
         *locbuf = 3;
         if (snprintf((char *)&locbuf[1], sizeof(locbuf) - 1,
-                     DBL_PRINTF_EFORMAT, box.dbl_val) > (int)sizeof(locbuf) - 1)
+                     DBL_PRINTF_EFORMAT, box.dbl_val) >= (int)sizeof(locbuf) - 1)
             return _casn_obj_err(casnp, ASN_BOUNDS_ERR);
         for (c = &locbuf[1]; *c; c++);  // go to end
         while (*(--c) == ' ')
