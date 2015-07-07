@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.11, rpstir-support@bbn.com)
+AC_PREREQ([2.59])
+AC_INIT([rpstir], [0.11], [rpstir-support@bbn.com])
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
 PACKAGE_NAME_UC="RPSTIR"
@@ -19,7 +19,7 @@ AM_SILENT_RULES
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_PATH_PROG(GIT, git)
+AC_PATH_PROG([GIT], [git])
 AC_MSG_CHECKING([for extra version information])
 if test "x${GIT}" != x -a -x "${GIT}" -a -d "${srcdir}/.git"; then
     PACKAGE_VERSION_FULL="$(
@@ -78,54 +78,54 @@ fi
 
 AC_ARG_WITH(
     [ssl-include],
-    AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ]),
+    [AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ])],
     [ ssl_include=$withval],
     [ ssl_include=/usr/local/ssl/include]
 )
 
 AC_ARG_WITH(
     [ssl-lib],
-    AS_HELP_STRING([--with-ssl-lib],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/lib ]),
+    [AS_HELP_STRING([--with-ssl-lib],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/lib ])],
     [ ssl_lib=$withval],
     [ ssl_lib=/usr/local/ssl/lib]
 )
 
 AC_ARG_WITH(
     [cryptlib-include],
-    AS_HELP_STRING([--with-cryptlib-include],[Path to cryptlib install location: Defaults to /usr/local/include ]),
+    [AS_HELP_STRING([--with-cryptlib-include],[Path to cryptlib install location: Defaults to /usr/local/include ])],
     [ cryptlib_include=$withval],
     [ cryptlib_include=/usr/local/include]
 )
 
 AC_ARG_WITH(
     [odbc-include],
-    AS_HELP_STRING([--with-odbc-include],[Path to odbc include files: Defaults to /usr/local/include ]),
+    [AS_HELP_STRING([--with-odbc-include],[Path to odbc include files: Defaults to /usr/local/include ])],
     [ odbc_include=$withval],
     [ odbc_include=/usr/local/include]
 )
 
 AC_ARG_WITH(
     [cryptlib-lib],
-    AS_HELP_STRING([--with-cryptlib-lib],[Path to cryptlib install location: Defaults to /usr/local/lib ]),
+    [AS_HELP_STRING([--with-cryptlib-lib],[Path to cryptlib install location: Defaults to /usr/local/lib ])],
     [ cryptlib_lib=$withval],
     [ cryptlib_lib=/usr/local/lib]
 )
 
 AC_ARG_WITH(
     [odbc-lib],
-    AS_HELP_STRING([--with-odbc-lib],[Path to odbc install location: Defaults to /usr/local/lib ]),
+    [AS_HELP_STRING([--with-odbc-lib],[Path to odbc install location: Defaults to /usr/local/lib ])],
     [ odbc_lib=$withval],
     [ odbc_lib=/usr/local/lib]
 )
 
 AC_ARG_WITH(
     [mysql-config],
-    AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ]),
+    [AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ])],
     [ mysql_config=$withval],
     [ mysql_config=mysql_config]
 )
 
-AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
+AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --include specified non-system include flags
   for flag in `$MYSQL_CONFIG --include`; do
@@ -201,7 +201,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
 CFLAGS="${CFLAGS_RESTORE-}"
 AC_ARG_ENABLE(
     [stack-protector],
-    AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ]),
+    [AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ])],
     [ if test x"$enableval" != xno; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ],
     [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
 )
