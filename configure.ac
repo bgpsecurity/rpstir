@@ -21,7 +21,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_PATH_PROG([GIT], [git])
 AC_MSG_CHECKING([for extra version information])
-if test "x${GIT}" != x -a -x "${GIT}" -a -d "${srcdir}/.git"; then
+if test "x${GIT}" != x && test -x "${GIT}" && test -d "${srcdir}/.git"; then
     PACKAGE_VERSION_FULL="$(
         cd "${srcdir}" &&
         ${GIT} describe --tags --long --always --dirty)"
@@ -124,7 +124,7 @@ AC_ARG_WITH(
 )
 
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
-if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
+if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --include specified non-system include flags
   for flag in `$MYSQL_CONFIG --include`; do
     case $flag in
