@@ -215,28 +215,22 @@ CC="$PTHREAD_CC"
 
 #Checks for libraries.
 AC_SEARCH_LIBS([dlopen],[dl],[],[
-	echo "Error: libdl is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([libdl is required for building this project])
 ])
 AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst iodbcinst],[],[
-	echo "Error: ODBC is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([ODBC is required for building this project])
 ])
 AC_SEARCH_LIBS([SQLConnect],[odbc iodbc],[], [
-	echo "Error: ODBC is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([ODBC is required for building this project])
 ])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
-	echo "Error: cryptlib is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([cryptlib is required for building this project])
 ])
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
-	echo "Error: OpenSSL is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([OpenSSL is required for building this project])
 ])
 AC_SEARCH_LIBS([v3_addr_validate_path], [crypto],[],[
-	echo "Error: OpenSSL with RFC 3779 is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
 ])
 
 # Checks for header files.
