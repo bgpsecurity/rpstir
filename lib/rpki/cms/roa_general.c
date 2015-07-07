@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "roa_utils.h"
@@ -718,6 +719,10 @@ int roaGenerateFilter2(
                 strp = (char *)realloc(strp, strLen += FILTER_INCR);
                 rstrp = &strp[used];
                 remLen += FILTER_INCR;
+            }
+            if (iRes < 0)
+            {
+                abort();
             }
 
             remLen -= strlen(rstrp);

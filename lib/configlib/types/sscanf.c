@@ -29,9 +29,13 @@ bool config_type_sscanf_converter(
         return false;
     }
 
-    if ((ssize_t)
-        xsnprintf(scan_format, sizeof(scan_format), "%%%s%%n",
-                  args->scan_format) >= (ssize_t) sizeof(scan_format))
+    int len = snprintf(scan_format, sizeof(scan_format), "%%%s%%n",
+                       args->scan_format);
+    if (len < 0)
+    {
+        abort();
+    }
+    if ((ssize_t)len >= (ssize_t) sizeof(scan_format))
     {
         LOG(LOG_ERR, "scan_format too long: %s", args->scan_format);
         free(*data);
