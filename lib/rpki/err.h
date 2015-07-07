@@ -178,10 +178,12 @@
  * macro that prints an error string and call return if a condition is true
  */
 #define checkErr(test, printArgs...)                                    \
-    if (test) {                                                         \
-        (void)fprintf(stderr, printArgs);                               \
-        return -1;                                                      \
-    }
+    do {                                                                \
+        if (test) {                                                     \
+            (void)fprintf(stderr, printArgs);                           \
+            return -1;                                                  \
+        }                                                               \
+    } while (0)
 
 extern char *err2string(
     int errr);

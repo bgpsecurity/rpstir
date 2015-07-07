@@ -22,7 +22,8 @@
  * i.e. bad syntax) and #22 (invalid length field).
  */
 
-#define TEST(t) {                                                       \
+#define TEST(t)                                                         \
+    do {                                                                \
         struct t guy;                                                   \
         int ret;                                                        \
         t(&guy, (ushort)0);                                             \
@@ -31,7 +32,7 @@
             printf("accepted %s as a " #t " (should have failed)\n",    \
                    filename);                                           \
         }                                                               \
-    }
+    } while (0)
 
 int main(
     int argc,
