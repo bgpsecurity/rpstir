@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(rpstir, 0.11, rpstir-support@bbn.com)
+AC_PREREQ([2.60])
+AC_INIT([rpstir], [0.11], [rpstir-support@bbn.com])
 PACKAGE_LONGNAME="Relying Party Security Technology for Internet Routing"
 AC_SUBST([PACKAGE_LONGNAME])
 PACKAGE_NAME_UC="RPSTIR"
@@ -19,9 +19,9 @@ AM_SILENT_RULES
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_PATH_PROG(GIT, git)
+AC_PATH_PROG([GIT], [git])
 AC_MSG_CHECKING([for extra version information])
-if test "x${GIT}" != x -a -x "${GIT}" -a -d "${srcdir}/.git"; then
+if test "x${GIT}" != x && test -x "${GIT}" && test -d "${srcdir}/.git"; then
     PACKAGE_VERSION_FULL="$(
         cd "${srcdir}" &&
         ${GIT} describe --tags --long --always --dirty)"
@@ -52,19 +52,17 @@ AC_SUBST([MIN_PYTHON_VERSION])
 AM_MAINTAINER_MODE
 : ${CFLAGS=""}
 # Checks for programs.
-#AC_PROG_CXX
 AC_PROG_CC
-AM_PROG_CC_C_O
-#AC_PROG_AWK
-AC_PROG_MAKE_SET
+AC_PROG_CC_C99
+AS_IF([test "x${ac_cv_prog_cc_c99}" = xno],
+      [AC_MSG_ERROR([C99 compiler is required])])
 AC_PROG_RANLIB
-#AC_PROG_LIBTOOL
 AC_PROG_SED
 AM_PATH_PYTHON([$MIN_PYTHON_VERSION])
 AC_PROG_LN_S
 
-# Ideally this should be a check for how to create a temporary file on each platform,
-# but this seems to work for now on multiple platforms.
+# Ideally this should be a check for how to create a temporary file on
+# each platform, but this seems to work for now on multiple platforms.
 MKTEMP="mktemp -t tmp.XXXXXXXXXX"
 MKTEMP_DIR="mktemp -t tmp.XXXXXXXXXX -d"
 AC_SUBST([MKTEMP])
@@ -78,56 +76,71 @@ fi
 
 AC_ARG_WITH(
     [ssl-include],
-    AS_HELP_STRING([--with-ssl-include],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/include ]),
+    [AS_HELP_STRING(
+        [--with-ssl-include],
+        [Path to OpenSSL library install location: Defaults to
+         /usr/local/ssl/include])],
     [ ssl_include=$withval],
     [ ssl_include=/usr/local/ssl/include]
 )
 
 AC_ARG_WITH(
     [ssl-lib],
-    AS_HELP_STRING([--with-ssl-lib],[Path to OpenSSL library install location: Defaults to /usr/local/ssl/lib ]),
+    [AS_HELP_STRING(
+        [--with-ssl-lib],
+        [Path to OpenSSL library install location: Defaults to
+         /usr/local/ssl/lib])],
     [ ssl_lib=$withval],
     [ ssl_lib=/usr/local/ssl/lib]
 )
 
 AC_ARG_WITH(
     [cryptlib-include],
-    AS_HELP_STRING([--with-cryptlib-include],[Path to cryptlib install location: Defaults to /usr/local/include ]),
+    [AS_HELP_STRING(
+        [--with-cryptlib-include],
+        [Path to cryptlib install location: Defaults to /usr/local/include])],
     [ cryptlib_include=$withval],
     [ cryptlib_include=/usr/local/include]
 )
 
 AC_ARG_WITH(
     [odbc-include],
-    AS_HELP_STRING([--with-odbc-include],[Path to odbc include files: Defaults to /usr/local/include ]),
+    [AS_HELP_STRING(
+        [--with-odbc-include],
+        [Path to odbc include files: Defaults to /usr/local/include])],
     [ odbc_include=$withval],
     [ odbc_include=/usr/local/include]
 )
 
 AC_ARG_WITH(
     [cryptlib-lib],
-    AS_HELP_STRING([--with-cryptlib-lib],[Path to cryptlib install location: Defaults to /usr/local/lib ]),
+    [AS_HELP_STRING(
+        [--with-cryptlib-lib],
+        [Path to cryptlib install location: Defaults to /usr/local/lib])],
     [ cryptlib_lib=$withval],
     [ cryptlib_lib=/usr/local/lib]
 )
 
 AC_ARG_WITH(
     [odbc-lib],
-    AS_HELP_STRING([--with-odbc-lib],[Path to odbc install location: Defaults to /usr/local/lib ]),
+    [AS_HELP_STRING(
+        [--with-odbc-lib],
+        [Path to odbc install location: Defaults to /usr/local/lib])],
     [ odbc_lib=$withval],
     [ odbc_lib=/usr/local/lib]
 )
 
 AC_ARG_WITH(
     [mysql-config],
-    AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ]),
+    [AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ])],
     [ mysql_config=$withval],
     [ mysql_config=mysql_config]
 )
 
-AC_PATH_PROG(MYSQL_CONFIG, ${mysql_config})
-if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
-  # this is a bit of a hack because mysql_config --include specified non-system include flags
+AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
+if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
+  # this is a bit of a hack because mysql_config --include specified
+  # non-system include flags
   for flag in `$MYSQL_CONFIG --include`; do
     case $flag in
       -I*)
@@ -140,7 +153,8 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
     esac
   done
 
-  # this is a bit of a hack because mysql_config --libs_r specifies compiler flags, not linker flags
+  # this is a bit of a hack because mysql_config --libs_r specifies
+  # compiler flags, not linker flags
   mysql_config_LIBS=""
   for flag in `$MYSQL_CONFIG --libs_r`; do
     case $flag in
@@ -157,7 +171,8 @@ if test "x${MYSQL_CONFIG}" != x -a -x "${MYSQL_CONFIG}"; then
   done
   LIBS="${mysql_config_LIBS} ${LIBS}"
 else
-  AC_MSG_ERROR([cannot find or execute mysql_config, make sure MySQL client is installed])
+  AC_MSG_ERROR(
+    [cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 AC_MSG_CHECKING([whether mysql flags are useable])
 AC_LINK_IFELSE(
@@ -201,9 +216,20 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
 CFLAGS="${CFLAGS_RESTORE-}"
 AC_ARG_ENABLE(
     [stack-protector],
-    AS_HELP_STRING([--enable-stack-protector],[Whether or not to add -fstack-protector to CFLAGS: Defaults to yes when using gcc and no otherwise ]),
-    [ if test x"$enableval" != xno; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ],
-    [ if test x"$HAVE_STACK_PROTECTOR" = xyes; then CFLAGS="${CFLAGS-} -fstack-protector"; fi ]
+    [AS_HELP_STRING(
+        [--enable-stack-protector],
+        [Whether or not to add -fstack-protector to CFLAGS: Defaults
+         to yes when using gcc and no otherwise])],
+    [
+        if test x"$enableval" != xno; then
+            CFLAGS="${CFLAGS-} -fstack-protector"
+        fi
+    ],
+    [
+        if test x"$HAVE_STACK_PROTECTOR" = xyes; then
+            CFLAGS="${CFLAGS-} -fstack-protector"
+        fi
+    ]
 )
 
 #Check for pthreads.
@@ -217,34 +243,27 @@ CC="$PTHREAD_CC"
 
 #Checks for libraries.
 AC_SEARCH_LIBS([dlopen],[dl],[],[
-	echo "Error: libdl is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([libdl is required for building this project])
 ])
 AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst iodbcinst],[],[
-	echo "Error: ODBC is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([ODBC is required for building this project])
 ])
 AC_SEARCH_LIBS([SQLConnect],[odbc iodbc],[], [
-	echo "Error: ODBC is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([ODBC is required for building this project])
 ])
 AC_SEARCH_LIBS([cryptInit], [cl],[],[
-	echo "Error: cryptlib is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([cryptlib is required for building this project])
 ])
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
-	echo "Error: OpenSSL is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([OpenSSL is required for building this project])
 ])
 AC_SEARCH_LIBS([v3_addr_validate_path], [crypto],[],[
-	echo "Error: OpenSSL with RFC 3779 is required for building this project"
-	exit -1;
+    AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
 ])
 
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h my_global.h mysql.h netdb.h netinet/in.h semaphore.h stdbool.h stdlib.h string.h strings.h sys/file.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termios.h unistd.h wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -258,19 +277,7 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_FORK
-AC_FUNC_GETPGRP
-AC_PROG_GCC_TRADITIONAL
-#AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_FUNC_MMAP
-#AC_FUNC_REALLOC
-AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
-AC_FUNC_STAT
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([alarm bzero clock_gettime dup2 getcwd gethostbyaddr gethostbyname gethostname getline getpass memmove memset mkdir munmap mysql_real_connect select sem_timedwait socket strcasecmp strchr strdup strerror strncasecmp strpbrk strrchr strstr strtol strtoul strtoull])
+AC_CHECK_FUNCS([clock_gettime getline sem_timedwait])
 if test "$ac_cv_func_getline" != yes; then
     AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
 fi
