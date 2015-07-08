@@ -294,21 +294,27 @@ int check_fileAndHash(
  *
  *       SignedAttributes ::= SET SIZE (1..MAX) OF Attribute
  *
- *       Attribute ::= SEQUENCE { attrType OBJECT IDENTIFIER, attrValues SET OF
- *         AttributeValue }
+ *       Attribute ::= SEQUENCE {
+ *         attrType OBJECT IDENTIFIER,
+ *         attrValues SET OF AttributeValue }
  *
  *       AttributeValue ::= ANY
  *
  * The signedAttrs element MUST include only a single instance of any
- * particular attribute.  Additionally, even though the syntax allows for a
- * SET OF AttributeValue, in an RPKI signed object, the attrValues MUST
- * consist of only a single AttributeValue.
+ * particular attribute.  Additionally, even though the syntax allows
+ * for a SET OF AttributeValue, in an RPKI signed object, the attrValues
+ * MUST consist of only a single AttributeValue.
  *
- * @param[in] attrsp Attributes to search for the OID in. @param[in] oidp
- * Attribute OID to search for. @param[out] found_any True indicates any
- * attributes with the OID were found. False indicates no attributes with the
- * OID were found. @return Non-NULL unique attribute, or NULL if the attribute
- * was not found or was not unique.
+ * @param[in] attrsp
+ *     Attributes to search for the OID in.
+ * @param[in] oidp
+ *     Attribute OID to search for.
+ * @param[out] found_any
+ *     True indicates any attributes with the OID were found.  False
+ *     indicates no attributes with the OID were found.
+ * @return
+ *     Non-NULL unique attribute, or NULL if the attribute was not
+ *     found or was not unique.
  */
 static struct Attribute *find_unique_attr(
     struct SignedAttributes *attrsp,

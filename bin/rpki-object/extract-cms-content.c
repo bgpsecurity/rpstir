@@ -23,7 +23,8 @@ static void usage(
 /**
    Print the CMS file's encapsulated content to stdout.
 
-   @return True on success, false on failure.
+   @return
+       True on success, false on failure.
 */
 static bool extract_content(
     const char * file)

@@ -32,9 +32,12 @@ static char const *const RSYNC_SCHEME = "rsync://";
 
 
 /**=============================================================================
- * @note This function only does a string comparison, not a file lookup.
+ * @note
+ *     This function only does a string comparison, not a file lookup.
  *     @pre str1 <= str2, lexicographically.
- * @ret 1 if str2 is a file or directory under str1.
+ *
+ * @ret
+ *     1 if str2 is a file or directory under str1.
  *     0 otherwise.
 ------------------------------------------------------------------------------*/
 static int is_subsumed(
@@ -83,8 +86,11 @@ static void free_uris(
  * rsync://foo.com/a/../b should be collapsed to rsync://foo.com/b
  * rsync://foo.com/a/../.. should be removed
  *
- * @note Might modify parameter.
- * @ret 0 if input was not modified
+ * @note
+ *     Might modify parameter.
+ *
+ * @ret
+ *     0 if input was not modified
  *     -1 if input was modified, but remains valid
  *     -2 if input was invalid
 ------------------------------------------------------------------------------*/
@@ -165,8 +171,11 @@ static int remove_dot_dot(
 }
 
 /**=============================================================================
- * @note Might modify parameter.
- * @ret 0 if input was not modified
+ * @note
+ *     Might modify parameter.
+ *
+ * @ret
+ *     0 if input was not modified
  *     -1 if input was modified, but remains valid
  *     -2 if input was invalid
 ------------------------------------------------------------------------------*/
@@ -245,7 +254,8 @@ static int check_uri_chars(
 }
 
 /**=============================================================================
- * @note caller frees param "in"
+ * @note
+ *     caller frees param "in"
 ------------------------------------------------------------------------------*/
 static int append_uri(
     char const *in)
@@ -278,12 +288,16 @@ static int append_uri(
  * Warn if no path segments.
  * If module only, use trailing slash, else no trailing slash.
  *
- * @note Call this after instances of "//" have been collapsed.
+ * @note
+ *     Call this after instances of "//" have been collapsed.
  *
- * @note Might modify parameter.
- * @param in is of the general form "authority/module/path"
+ * @note
+ *     Might modify parameter.
  *
- * @ret 0 if input was not modified
+ * @param in
+ *     is of the general form "authority/module/path"
+ * @ret
+ *     0 if input was not modified
  *     -1 if input was modified, but remains valid
  *     -2 if input was invalid
  *     -3 if input becomes too long with added '/'
@@ -356,9 +370,11 @@ static int check_trailing_slash(
 }
 
 /**=============================================================================
- * @note caller frees param "in"
+ * @note
+ *     caller frees param "in"
  *
- * TODO:  unit test for max_length needs to change when DB_URI_LEN changes.  Fix that.
+ * TODO:  unit test for max_length needs to change when DB_URI_LEN
+ * changes.  Fix that.
 ------------------------------------------------------------------------------*/
 static int handle_uri_string(
     char const *in)
@@ -636,7 +652,8 @@ static int query_sia(
 }
 
 /**=============================================================================
- * @brief Get the current time from the db.
+ * @brief
+ *     Get the current time from the db.
 ------------------------------------------------------------------------------*/
 static int query_read_timestamp(
     dbconn * db)
@@ -687,7 +704,8 @@ static int printUsage(
 }
 
 /**=============================================================================
- * @ret 0 on success
+ * @ret
+ *     0 on success
  *     -1 on failure
 ------------------------------------------------------------------------------*/
 int main(

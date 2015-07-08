@@ -32,8 +32,8 @@ static void skip_whitespace(
 }
 
 /**
-   Increment the line_offset to the end of the line,
-   iff line_offset points to the start of a comment.
+   Increment the line_offset to the end of the line, iff line_offset
+   points to the start of a comment.
 */
 static void skip_comment(
     const char *line,
@@ -62,7 +62,8 @@ static void skip_comment(
    @param[out] option
        Return value of the parsed option, or CONFIG_OPTION_NONE if
        it's an empty line.
-   @return True on success, false on error.
+   @return
+       True on success, false on error.
 */
 static bool get_option(
     size_t num_options,
@@ -124,12 +125,15 @@ static bool get_option(
 /**
    Get the next value to an option.
 
-   @param line The line itself.
+   @param line
+       The line itself.
    @param line_offset
        Input/output param for offset within line before/after the
        option value.
-   @param[out] value Return a malloc()-allocated buffer with the option value.
-   @return True on success, false on error.
+   @param[out] value
+       Return a malloc()-allocated buffer with the option value.
+   @return
+       True on success, false on error.
 */
 static bool get_value(
     const struct config_context *context,
@@ -233,9 +237,9 @@ static bool get_value(
             continue;
         }
 
-        // NOTE: at this point, the current character is either invalid or a
-        // continuation
-        // of the value.  It cannot end the value unless it's invalid.
+        // NOTE: at this point, the current character is either
+        // invalid or a continuation of the value.  It cannot end the
+        // value unless it's invalid.
 
         if (quoted && !escaped && line[*line_offset] == '\\')
         {
@@ -364,21 +368,27 @@ static bool get_value(
 /**
    Get all the values on a line.
 
-   @param head Context of the line.
-   @param tail Innermost file of the line's context, or NULL
-       if this line isn't from a file.
-   @param option_line Line where the the option started.
-   @param line_offset Input param for offset within the line before
-       the first value to parse.  Output param for the
-       offset after the inter-word whitespace and
-       optional comment after the last value on the
-       line.  On output, line[*line_offset] should be
-       one of: '\n', '\\', or '\0'.
-   @param values Input array of size *num_values (on input),
-       allocated to MAX_ARRAY_LENGTH.  Output array of
-       size *num_values (on output).
-   @param num_values See param values above.
-   @return True on success, false on error.
+   @param head
+       Context of the line.
+   @param tail
+       Innermost file of the line's context, or NULL if this line
+       isn't from a file.
+   @param option_line
+       Line where the the option started.
+   @param line_offset
+       Input param for offset within the line before the first value
+       to parse.  Output param for the offset after the inter-word
+       whitespace and optional comment after the last value on the
+       line.  On output, line[*line_offset] should be one of: '\n',
+       '\\', or '\0'.
+   @param values
+       Input array of size *num_values (on input), allocated to
+       MAX_ARRAY_LENGTH.  Output array of size *num_values (on
+       output).
+   @param num_values
+       See param values above.
+   @return
+       True on success, false on error.
 */
 static bool get_all_values(
     const struct config_context *head,
@@ -451,12 +461,14 @@ static bool get_all_values(
 /**
    Convert and validate values from strings to their native types.
 
-   @note config_option and config_value are pointers to individual
+   @note
+       config_option and config_value are pointers to individual
        structures, not arrays.
 
-   @param is_default True if this is being called on values from
-       the option's defaults, false if this is being
-       called on values from a config file.
+   @param is_default
+       True if this is being called on values from the option's
+       defaults, false if this is being called on values from a config
+       file.
 */
 static bool convert_values(
     const struct config_context *context,
@@ -563,8 +575,9 @@ static bool convert_values(
 /**
    Call fgets() after resetting errno to zero.
 
-   This is useful in a loop condition where it's important to distinguish
-   between fgets returning NULL because of an error or because of end of file.
+   This is useful in a loop condition where it's important to
+   distinguish between fgets returning NULL because of an error or
+   because of end of file.
 */
 static char * fgets_reset_errno(
     char *s,

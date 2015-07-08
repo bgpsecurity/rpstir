@@ -268,8 +268,9 @@ static int displaySNList(
 }
 
 /**
- * @brief callback state for the display_ip_addrs_valuefunc()
- *     callback function
+ * @brief
+ *     callback state for the display_ip_addrs_valuefunc() callback
+ *     function
  */
 struct display_ip_addrs_context
 {
@@ -281,7 +282,8 @@ struct display_ip_addrs_context
 };
 
 /**
- * @brief searchscm() callback for display_ip_addrs(), called for each
+ * @brief
+ *     searchscm() callback for display_ip_addrs(), called for each
  *     prefix in a ROA
  */
 static int display_ip_addrs_valuefunc(
@@ -351,7 +353,8 @@ static int display_ip_addrs_valuefunc(
 }
 
 /**
- * @brief displayfunc to convert the list of prefixes in a ROA into a
+ * @brief
+ *     displayfunc to convert the list of prefixes in a ROA into a
  *     string, @p returnStr
  */
 static int display_ip_addrs(

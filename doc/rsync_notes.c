@@ -389,9 +389,10 @@ bool ready_for_next_attempt(URI_attempt *uri_attemptp)
 }
 
 /**
-   NOTE: This should be eventually replaced with a smarter function that looks
-   at URIs and picks the URI with the largest distance from
-   currently_processing, where "distance" somehow captures this notion:
+   NOTE: This should be eventually replaced with a smarter function
+   that looks at URIs and picks the URI with the largest distance from
+   currently_processing, where "distance" somehow captures this
+   notion:
 
    If curently_processing has:
 
@@ -400,9 +401,11 @@ bool ready_for_next_attempt(URI_attempt *uri_attemptp)
        rsync://bar.com/
        rsync://foo.org/
 
-   The prefered ordering of to_process, from best next choice to worst, is:
+   The prefered ordering of to_process, from best next choice to
+   worst, is:
 
-       rsync://quux.net/        because there are no URIs in the .net TLD
+       rsync://quux.net/        because there are no URIs in the .net
+                                TLD
        rsync://quux.org/        because there are fewer second-level
                                 domains in .org (foo.org) than .com
                                 (foo.com and bar.com)

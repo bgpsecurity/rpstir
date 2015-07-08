@@ -11,9 +11,10 @@
     } while (false)
 
 /**
-   @brief Test if the unsigned integer type @p container_type is able
-       to hold any value that the unsigned integer type @p datum_type
-       can hold.
+   @brief
+       Test if the unsigned integer type @p container_type is able to
+       hold any value that the unsigned integer type @p datum_type can
+       hold.
 */
 #define TYPE_CAN_HOLD_UINT(container_type, datum_type) \
     ((container_type)-1 >= (datum_type)-1)
