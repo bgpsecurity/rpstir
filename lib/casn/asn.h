@@ -11,11 +11,9 @@ Remarks:
 #ifndef _ASN_H
 #define _ASN_H
 
-#define uchar unsigned char
-#ifndef ushort
-#define ushort unsigned short
-#endif
-#define ulong unsigned long
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned long ulong;
 
 #define ASN_ANY              0
 #define ASN_BOOLEAN          1
