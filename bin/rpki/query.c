@@ -15,6 +15,7 @@
 #include "rpki/querySupport.h"
 #include "config/config.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 
 /*
@@ -114,30 +115,30 @@ static int handleResults(
         {
             if (field->sqlType == SQL_C_CHAR)
             {
-                snprintf(resultStr, MAX_RESULT_SZ,
-                         "%s", (char *)s->vec[result].valptr);
+                xsnprintf(resultStr, MAX_RESULT_SZ,
+                          "%s", (char *)s->vec[result].valptr);
             }
             else if (field->sqlType == SQL_C_BINARY)
             {
-                snprintf(resultStr, MAX_RESULT_SZ, "0x");
+                xsnprintf(resultStr, MAX_RESULT_SZ, "0x");
                 for (i = 0;
                      i < s->vec[result].avalsize && MAX_RESULT_SZ > 2 + 2*i;
                      ++i)
                 {
-                    snprintf(resultStr + 2 + 2*i, MAX_RESULT_SZ - (2 + 2*i),
-                             "%02" PRIX8,
-                             ((uint8_t *)s->vec[result].valptr)[i]);
+                    xsnprintf(resultStr + 2 + 2*i, MAX_RESULT_SZ - (2 + 2*i),
+                              "%02" PRIX8,
+                              ((uint8_t *)s->vec[result].valptr)[i]);
                 }
                 if (strlen("0x") + 2 * s->vec[result].avalsize >= MAX_RESULT_SZ &&
                     MAX_RESULT_SZ > strlen("..."))
                 {
-                    snprintf(resultStr + MAX_RESULT_SZ - (1 + strlen("...")),
-                             1 + strlen("..."), "...");
+                    xsnprintf(resultStr + MAX_RESULT_SZ - (1 + strlen("...")),
+                              1 + strlen("..."), "...");
                 }
             }
             else
-                snprintf(resultStr, MAX_RESULT_SZ,
-                         "%d", *((unsigned int *)s->vec[result].valptr));
+                xsnprintf(resultStr, MAX_RESULT_SZ,
+                          "%d", *((unsigned int *)s->vec[result].valptr));
             result++;
         }
         else

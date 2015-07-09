@@ -2,6 +2,7 @@
 // #include <linux/limits.h>
 #include "parse.h"
 #include "main.h"
+#include "util/stringutils.h"
 
 /*
  * $Id$ 
@@ -341,7 +342,7 @@ char *makeGenericStr(
     }
 
     strip(copiedStr, WHITESPACE);
-    ret = snprintf(retStr, holdLen, "%c %s\r\n", c, copiedStr);
+    ret = xsnprintf(retStr, holdLen, "%c %s\r\n", c, copiedStr);
     if (retlen)
         *retlen = ret;
 
@@ -847,7 +848,7 @@ char *makeStartStr(
     if (!out_str)
         return (NULL);
 
-    snprintf(out_str, 3, "B "); /* auto tack of \0 */
+    xsnprintf(out_str, 3, "B "); /* auto tack of \0 */
 
     strncat(out_str, time_str, strlen(time_str));
 
@@ -873,7 +874,7 @@ char *makeEndStr(
     if (!out_str)
         return (NULL);
 
-    snprintf(out_str, 3, "E "); /* auto tack of \0 */
+    xsnprintf(out_str, 3, "E "); /* auto tack of \0 */
 
     strncat(out_str, time_str, strlen(time_str));
 

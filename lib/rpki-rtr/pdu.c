@@ -585,7 +585,12 @@ void pdu_sprint(
 		do { \
 			if (offset < PDU_SPRINT_BUFSZ) \
 			{ \
-				offset += snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
+				int SNPRINTF_ret = snprintf(buffer + offset, PDU_SPRINT_BUFSZ - offset, format, ## __VA_ARGS__); \
+				if (SNPRINTF_ret < 0) \
+				{ \
+					abort(); \
+				} \
+				offset += SNPRINTF_ret; \
 			} \
 			\
 			if (offset >= PDU_SPRINT_BUFSZ) \

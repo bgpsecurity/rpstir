@@ -5,9 +5,11 @@
 
 #include <assert.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "roa_utils.h"
+#include "util/stringutils.h"
 
 #define SKI_SIZE 20
 
@@ -630,8 +632,8 @@ int roaGenerateFilter(
         {
             if (str != NULL)
             {
-                iRes = snprintf(str, strLen, "%s %s %s\n",
-                                cSID, cAS_ID, pcAddresses[j]);
+                xsnprintf(str, strLen, "%s %s %s\n",
+                          cSID, cAS_ID, pcAddresses[j]);
                 strLen -= strlen(str);
                 str += strlen(str);
             }
@@ -711,12 +713,16 @@ int roaGenerateFilter2(
         for (j = 0; j < iAddrNum; j++)
         {
             while ((iRes = snprintf(rstrp, remLen, "%s %s %s\n", cSID, cAS_ID,
-                                    pcAddresses[j])) > remLen)
+                                    pcAddresses[j])) >= remLen)
             {
                 int used = rstrp - strp;
                 strp = (char *)realloc(strp, strLen += FILTER_INCR);
                 rstrp = &strp[used];
                 remLen += FILTER_INCR;
+            }
+            if (iRes < 0)
+            {
+                abort();
             }
 
             remLen -= strlen(rstrp);

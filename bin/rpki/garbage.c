@@ -11,6 +11,7 @@
 #include "rpki/err.h"
 #include "config/config.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 /*
  * $Id$ 
@@ -67,13 +68,13 @@ static int handleIfStale(
         return 0;               // exists another crl that is current
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
     mysql_escape_string(escaped_issuer, theIssuer, strlen(theIssuer));
-    snprintf(msg, 600,
-             "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
-             certTable->tabname, SCM_FLAG_STALECRL, escaped_aki,
-             escaped_issuer);
+    xsnprintf(msg, 600,
+              "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
+              certTable->tabname, SCM_FLAG_STALECRL, escaped_aki,
+              escaped_issuer);
     addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
     addFlagTest(msg, SCM_FLAG_CA, 1, 1);
-    snprintf(msg + strlen(msg), 600, ";");
+    xsnprintf(msg + strlen(msg), 600, ";");
     return statementscm_no_data(conp, msg);
 }
 
@@ -90,8 +91,8 @@ static int handleIfCurrent(
     UNREFERENCED_PARAMETER(s);
     if (cnt == 0)
         return 0;               // exists another crl that is current
-    snprintf(msg, 128, "update %s set flags = flags - %d where local_id=%d;",
-             certTable->tabname, SCM_FLAG_STALECRL, theID);
+    xsnprintf(msg, 128, "update %s set flags = flags - %d where local_id=%d;",
+              certTable->tabname, SCM_FLAG_STALECRL, theID);
     return statementscm_no_data(conp, msg);
 }
 
@@ -123,9 +124,9 @@ static int countCurrentCRLs(
     {
         theID = *((unsigned int *)s->vec[2].valptr);
     }
-    snprintf(cntSrch->wherestr, WHERESTR_SIZE,
-             "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
-             escaped_issuer, escaped_aki, currTimestamp);
+    xsnprintf(cntSrch->wherestr, WHERESTR_SIZE,
+              "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
+              escaped_issuer, escaped_aki, currTimestamp);
     return searchscm(conp, crlTable, cntSrch, countHandler, NULL,
                      SCM_SRCH_DOCOUNT, NULL);
 }
@@ -145,10 +146,10 @@ static int handleStaleMan2(
 {
     char escaped_files[2 * strlen(files) + 1];
     mysql_escape_string(escaped_files, files, strlen(files));
-    snprintf(staleManStmt, MANFILES_SIZE,
-             "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
-             tab->tabname, SCM_FLAG_STALEMAN,
-             2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
+    xsnprintf(staleManStmt, MANFILES_SIZE,
+              "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
+              tab->tabname, SCM_FLAG_STALEMAN,
+              2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
     return statementscm_no_data(conp, staleManStmt);
 }
 
@@ -178,10 +179,10 @@ static int handleFreshMan2(
 {
     char escaped_files[2 * strlen(files) + 1];
     mysql_escape_string(escaped_files, files, strlen(files));
-    snprintf(staleManStmt, MANFILES_SIZE,
-             "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
-             tab->tabname, SCM_FLAG_STALEMAN,
-             2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
+    xsnprintf(staleManStmt, MANFILES_SIZE,
+              "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
+              tab->tabname, SCM_FLAG_STALEMAN,
+              2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
     return statementscm_no_data(conp, staleManStmt);
 }
 
@@ -265,7 +266,7 @@ int main(
     // to be unknown
     srch.nused = 0;
     srch.vald = 0;
-    snprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
+    xsnprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
     srch.wherestr = msg;
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
@@ -306,7 +307,7 @@ int main(
         free(staleManFiles[i]);
     }
     srch.vald = 0;
-    snprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
+    xsnprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -351,8 +352,8 @@ int main(
     }
 
     // write timestamp into database
-    snprintf(msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
-             metaTable->tabname, currTimestamp);
+    xsnprintf(msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
+              metaTable->tabname, currTimestamp);
     status = statementscm_no_data(connect, msg);
     if (status != 0)
     {

@@ -22,6 +22,7 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include "casn/asn.h"
 #include "casn/casn.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 extern int aflag;
 
@@ -211,10 +212,10 @@ static int putform(
         }
         val = (val << 7) + *b++;
         if (val < 80)
-            snprintf((char *)locbuf, sizeof(locbuf), "%ld.%ld", (val / 40),
-                     (val % 40));
+            xsnprintf((char *)locbuf, sizeof(locbuf), "%ld.%ld", (val / 40),
+                      (val % 40));
         else
-            snprintf((char *)locbuf, sizeof(locbuf), "2.%ld", val - 80);
+            xsnprintf((char *)locbuf, sizeof(locbuf), "2.%ld", val - 80);
         for (d = locbuf; *d; d++);
         while (b < e)
         {
@@ -223,8 +224,8 @@ static int putform(
                 val = (val << 7) + (*b & 0x7F);
             }
             val = (val << 7) + *b++;
-            snprintf((char *)d, (sizeof(locbuf) - (d - &locbuf[0])), ".%ld",
-                     val);
+            xsnprintf((char *)d, (sizeof(locbuf) - (d - &locbuf[0])), ".%ld",
+                      val);
             while (*d)
                 d++;
         }

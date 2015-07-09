@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include "util/logging.h"
 #include "rpki-object/certificate.h"
+#include "util/stringutils.h"
 
 extern struct done_certs done_certs;
 
@@ -285,7 +286,7 @@ static struct Certificate *mk_paracert(
                                                         self, numpts++);
             if (!distp)
             {
-                snprintf(errbuf, sizeof(errbuf), "Too many CRLDP extensions");
+                xsnprintf(errbuf, sizeof(errbuf), "Too many CRLDP extensions");
                 return (struct Certificate *)0;
             }
             struct GeneralName *gennamep =
@@ -293,8 +294,8 @@ static struct Certificate *mk_paracert(
                                                   fullName.self, 0);
             if (!gennamep)
             {
-                snprintf(errbuf, sizeof(errbuf),
-                         "Too many general names in CRLDP extensions");
+                xsnprintf(errbuf, sizeof(errbuf),
+                          "Too many general names in CRLDP extensions");
                 return (struct Certificate *)0;
             }
             for (ept = pt; *ept > ' '; ept++);
@@ -340,7 +341,7 @@ static struct Certificate *mk_paracert(
        *akiExtp;                // new cert's aki
     if (!(skiExtp = find_extension(&myrootcert.toBeSigned.extensions, id_subjectKeyIdentifier, 0)))
     {
-        snprintf(errbuf, sizeof(errbuf), "Certificate has no SKI.");
+        xsnprintf(errbuf, sizeof(errbuf), "Certificate has no SKI.");
         return (struct Certificate *)0;
     }
     if (!(akiExtp = find_extension(&paracertp->toBeSigned.extensions, id_authKeyId, 0)))
@@ -354,7 +355,7 @@ static struct Certificate *mk_paracert(
         }
         else
         {
-            snprintf(errbuf, sizeof(errbuf), "Certificate has no AKI.");
+            xsnprintf(errbuf, sizeof(errbuf), "Certificate has no AKI.");
             return (struct Certificate *)0;
         }
     }
@@ -431,14 +432,14 @@ int get_CAcert(
         }
         if (!j)
         {
-            snprintf(errbuf, sizeof(errbuf),
-                     "No CA certificate found for SKI %s\n", ski);
+            xsnprintf(errbuf, sizeof(errbuf),
+                      "No CA certificate found for SKI %s\n", ski);
             return -1;
         }
         else if (j > 2 || (j == 2 && !have_para))
         {
-            snprintf(errbuf, sizeof(errbuf),
-                     "Found %d certificates for SKI %s\n", j, ski);
+            xsnprintf(errbuf, sizeof(errbuf),
+                      "Found %d certificates for SKI %s\n", j, ski);
             return -1;
         }
         get_casn_file(&certp->self, this_cert_ansrp->fullname, 0);
@@ -566,7 +567,7 @@ static int sign_cert(
     if (ansr)
     {
         ansr = ERR_SCM_SIGNINGERR;
-        snprintf(errbuf, sizeof(errbuf), "Error %s\n", msg);
+        xsnprintf(errbuf, sizeof(errbuf), "Error %s\n", msg);
         fflush(stderr);
     }
     return ansr;
@@ -1407,8 +1408,8 @@ static int process_control_block(
             if (conflict_test(run, done_certp))
             {
                 currskibuf[strlen(currskibuf) - 1] = 0; // trim CR
-                snprintf(errbuf, sizeof(errbuf), "in block %s at %s",
-                         currskibuf, skibuf);
+                xsnprintf(errbuf, sizeof(errbuf), "in block %s at %s",
+                          currskibuf, skibuf);
                 *skibuf = 0;
                 return ERR_SCM_USECONFLICT;
             }
@@ -1464,13 +1465,13 @@ static int process_control_blocks(
             for (cc = skip; *cc != '\n'; cc++);
             if (*cc == '\n')
                 *cc = 0;
-            snprintf(errbuf, sizeof(errbuf), "Invalid SKI: %s", skip);
+            xsnprintf(errbuf, sizeof(errbuf), "Invalid SKI: %s", skip);
             return ERR_SCM_BADSKIBLOCK;
         }
         *cc = 0;
         if ((ansr = get_CAcert(skip, &done_certp)) < 0)
         {
-            snprintf(errbuf, sizeof(errbuf), "No file for SKI %s.", skip);
+            xsnprintf(errbuf, sizeof(errbuf), "No file for SKI %s.", skip);
             return ansr;
         }
         ruleranges.numranges = 0;
@@ -1485,13 +1486,13 @@ static int process_control_blocks(
                 size_t errlen = strlen(errbuf);
                 if (errlen + 1 < sizeof(errbuf))
                 {
-                    snprintf(&errbuf[errlen], sizeof(errbuf) - errlen, "at %s",
-                             skibuf);
+                    xsnprintf(&errbuf[errlen], sizeof(errbuf) - errlen, "at %s",
+                              skibuf);
                 }
             }
             else
-                snprintf(errbuf, sizeof(errbuf), "Invalid prefix/range %s",
-                         skibuf);
+                xsnprintf(errbuf, sizeof(errbuf), "Invalid prefix/range %s",
+                          skibuf);
             return ansr;        // with error message in errbuf BADSKIBLOCK
         }                       // otherwise skibuf has another SKI line or
                                 // NULL
@@ -1581,8 +1582,8 @@ int read_SKI_blocks(
         locconp = conp;
         if (findorcreatedir(locscmp, locconp, Xrpdir, &XrpdirId) < 0)
         {
-            snprintf(errbuf, sizeof(errbuf), "Cannot find directory %s.",
-                     Xrpdir);
+            xsnprintf(errbuf, sizeof(errbuf), "Cannot find directory %s.",
+                      Xrpdir);
             ansr = ERR_SCM_BADSKIFILE;
         }
         else

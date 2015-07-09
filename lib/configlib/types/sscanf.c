@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include "sscanf.h"
+#include "util/stringutils.h"
 
 bool config_type_sscanf_converter(
     const struct config_context * context,
@@ -28,9 +29,13 @@ bool config_type_sscanf_converter(
         return false;
     }
 
-    if ((ssize_t)
-        snprintf(scan_format, sizeof(scan_format), "%%%s%%n",
-                 args->scan_format) >= (ssize_t) sizeof(scan_format))
+    int len = snprintf(scan_format, sizeof(scan_format), "%%%s%%n",
+                       args->scan_format);
+    if (len < 0)
+    {
+        abort();
+    }
+    if ((ssize_t)len >= (ssize_t) sizeof(scan_format))
     {
         LOG(LOG_ERR, "scan_format too long: %s", args->scan_format);
         free(*data);
@@ -101,7 +106,7 @@ char * config_type_sscanf_converter_inverse(
                 LOG(LOG_ERR, "out of memory");
                 return NULL;
             }
-            snprintf(output, output_size, "%" PRIdMAX, value);
+            xsnprintf(output, output_size, "%" PRIdMAX, value);
             return output;
         }
 
@@ -134,7 +139,7 @@ char * config_type_sscanf_converter_inverse(
                 LOG(LOG_ERR, "out of memory");
                 return NULL;
             }
-            snprintf(output, output_size, "%" PRIuMAX, value);
+            xsnprintf(output, output_size, "%" PRIuMAX, value);
             return output;
         }
 

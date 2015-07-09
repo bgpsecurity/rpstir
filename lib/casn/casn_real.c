@@ -14,7 +14,9 @@ Remarks:
 char casn_real_sfcsid[] = "@(#)casn_real.c 860P";
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "casn.h"
+#include "util/stringutils.h"
 
 extern int _casn_obj_err(
     struct casn *,
@@ -284,8 +286,13 @@ int write_casn_double(
     else if (type == 10)
     {
         *locbuf = 3;
-        if (snprintf((char *)&locbuf[1], sizeof(locbuf) - 1,
-                     DBL_PRINTF_EFORMAT, box.dbl_val) > (int)sizeof(locbuf) - 1)
+        int len = snprintf((char *)&locbuf[1], sizeof(locbuf) - 1,
+                           DBL_PRINTF_EFORMAT, box.dbl_val);
+        if (len < 0)
+        {
+            abort();
+        }
+        if (len >= (int)sizeof(locbuf) - 1)
             return _casn_obj_err(casnp, ASN_BOUNDS_ERR);
         for (c = &locbuf[1]; *c; c++);  // go to end
         while (*(--c) == ' ')
@@ -314,7 +321,7 @@ int write_casn_double(
         else
         {                       // append nulls since sprintf will not
             for (ptp = Ep; ptp < &Ep[6]; *ptp++ = 0);
-            snprintf(Ep, 6, "E%ld", exponent);
+            xsnprintf(Ep, 6, "E%ld", exponent);
         }
         i = strlen((char *)locbuf);
     }

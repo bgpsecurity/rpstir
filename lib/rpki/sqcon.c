@@ -15,6 +15,7 @@
 #include "diru.h"
 #include "err.h"
 #include "globals.h"
+#include "util/stringutils.h"
 
 
 /*
@@ -385,7 +386,7 @@ int createdbscm(
     mk = (char *)calloc(leen, sizeof(char));
     if (mk == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(mk, leen, "CREATE DATABASE %s;", dbname);
+    xsnprintf(mk, leen, "CREATE DATABASE %s;", dbname);
     sta = statementscm_no_data(conp, mk);
     free((void *)mk);
     return (sta);
@@ -410,7 +411,7 @@ int deletedbscm(
     mk = (char *)calloc(leen, sizeof(char));
     if (mk == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(mk, leen, "DROP DATABASE IF EXISTS %s;", dbname);
+    xsnprintf(mk, leen, "DROP DATABASE IF EXISTS %s;", dbname);
     sta = statementscm_no_data(conp, mk);
     free((void *)mk);
     return (sta);
@@ -435,8 +436,8 @@ static int createonetablescm(
     mk = (char *)calloc(leen, sizeof(char));
     if (mk == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(mk, leen, "CREATE TABLE %s ( %s ) ENGINE=InnoDB;",
-                   tabp->tabname, tabp->tstr);
+    xsnprintf(mk, leen, "CREATE TABLE %s ( %s ) ENGINE=InnoDB;",
+              tabp->tabname, tabp->tstr);
     sta = statementscm_no_data(conp, mk);
     free((void *)mk);
     return (sta);
@@ -464,7 +465,7 @@ int createalltablesscm(
     mk = (char *)calloc(leen, sizeof(char));
     if (mk == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(mk, leen, "USE %s;", scmp->db);
+    xsnprintf(mk, leen, "USE %s;", scmp->db);
     sta = statementscm_no_data(conp, mk);
     if (sta < 0)
         return (sta);
@@ -525,8 +526,8 @@ static int valcols(
         if (findcol(tabp, ptr) < 0)
         {
             if (conp->mystat.errmsg != NULL)
-                (void)snprintf(conp->mystat.errmsg, conp->mystat.emlen,
-                               "Invalid column %s", ptr);
+                xsnprintf(conp->mystat.errmsg, conp->mystat.emlen,
+                          "Invalid column %s", ptr);
             return (ERR_SCM_INVALCOL);
         }
     }
@@ -643,8 +644,8 @@ int insertscm(
     stmt = (char *)calloc(leen, sizeof(char));
     if (stmt == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(stmt, leen, "INSERT INTO %s (%s", tabp->tabname,
-                   arr->vec[0].column);
+    xsnprintf(stmt, leen, "INSERT INTO %s (%s", tabp->tabname,
+              arr->vec[0].column);
     for (i = 1; i < arr->nused; i++)
     {
         wsta = strwillfit(stmt, leen, wsta, ", ");
@@ -748,8 +749,8 @@ int getmaxidscm(
     sta = newhstmt(conp);
     if (!SQLOK(sta))
         return sta;
-    (void)snprintf(stmt, sizeof(stmt),
-                   "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
+    xsnprintf(stmt, sizeof(stmt),
+              "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
     sta = statementscm(conp, stmt);
     if (sta < 0)
         return (sta);
@@ -1121,7 +1122,7 @@ void addFlagTest(
      * or < 0x04 (in which case bit 0x04 is not set). 
      */
     int len = strlen(whereStr);
-    snprintf(&whereStr[len], WHERESTR_SIZE - len, "%s ((flags%%%d)%s%d)", needAnd ? " and" : "", 2 * flagVal    /* 2x 
+    xsnprintf(&whereStr[len], WHERESTR_SIZE - len, "%s ((flags%%%d)%s%d)", needAnd ? " and" : "", 2 * flagVal   /* 2x
                                                                                                                  * since 
                                                                                                                  * we 
                                                                                                                  * are 
@@ -1131,7 +1132,7 @@ void addFlagTest(
                                                                                                                  * this 
                                                                                                                  * value 
                                                                                                                  */ ,
-             isSet ? ">=" : "<", flagVal);
+              isSet ? ">=" : "<", flagVal);
 }
 
 /*
@@ -1324,7 +1325,7 @@ int searchorcreatescm(
     ins->vec[0].value = (char *)calloc(16, sizeof(char));
     if (ins->vec[0].value == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(ins->vec[0].value, 16, "%u", mid);
+    xsnprintf(ins->vec[0].value, 16, "%u", mid);
     sta = insertscm(conp, tabp, ins);
     free((void *)(ins->vec[0].value));
     if (sta < 0)
@@ -1372,7 +1373,7 @@ int deletescm(
     stmt = (char *)calloc(leen, sizeof(char));
     if (stmt == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(stmt, leen, "DELETE FROM %s", tabp->tabname);
+    xsnprintf(stmt, leen, "DELETE FROM %s", tabp->tabname);
     if (deld != NULL)
     {
         wsta = strwillfit(stmt, leen, wsta, " WHERE ");
@@ -1452,8 +1453,8 @@ int setflagsscm(
     stmt = (char *)calloc(leen, sizeof(char));
     if (stmt == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(stmt, leen, "UPDATE %s SET flags=%u WHERE ", tabp->tabname,
-                   flags);
+    xsnprintf(stmt, leen, "UPDATE %s SET flags=%u WHERE ", tabp->tabname,
+              flags);
     wsta = strwillfit(stmt, leen, wsta, where->vec[0].column);
     if (wsta >= 0)
         wsta = strwillfit(stmt, leen, wsta, "=\"");
@@ -1535,7 +1536,7 @@ char *hexify(
         *outptr++ = '0', left--;
     for (i = 0; i < bytelen; i++)
     {
-        (void)snprintf(outptr, left, "%2.2x", *inptr);
+        xsnprintf(outptr, left, "%2.2x", *inptr);
         outptr += 2;
         left -= 2;
         inptr++;
@@ -1612,9 +1613,9 @@ int updateblobscm(
     stmt = (char *)calloc(leen, sizeof(char));
     if (stmt == NULL)
         return (ERR_SCM_NOMEM);
-    (void)snprintf(stmt, leen,
-                   "UPDATE %s SET sninuse=%u, snlist=%s WHERE local_id=%u;",
-                   tabp->tabname, sninuse, hexi, lid);
+    xsnprintf(stmt, leen,
+              "UPDATE %s SET sninuse=%u, snlist=%s WHERE local_id=%u;",
+              tabp->tabname, sninuse, hexi, lid);
     sta = statementscm_no_data(conp, stmt);
     free((void *)stmt);
     free((void *)hexi);
@@ -1659,9 +1660,9 @@ int updateranlastscm(
     default:
         return (ERR_SCM_INVALARG);
     }
-    (void)snprintf(stmt, sizeof(stmt),
-                   "UPDATE %s SET %s=\"%s\" WHERE local_id=1;", mtab->tabname,
-                   ent, now);
+    xsnprintf(stmt, sizeof(stmt),
+              "UPDATE %s SET %s=\"%s\" WHERE local_id=1;", mtab->tabname,
+              ent, now);
     sta = statementscm_no_data(conp, stmt);
     return (sta);
 }

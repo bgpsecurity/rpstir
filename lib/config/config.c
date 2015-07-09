@@ -8,6 +8,7 @@
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string_cvt.h"
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 #include "config.h"
 
@@ -297,8 +298,8 @@ bool my_config_load(
         return false;
     }
 
-    snprintf(user_conf_file, user_conf_file_len, "%s/.%s.conf", user_home,
-             PACKAGE_NAME);
+    xsnprintf(user_conf_file, user_conf_file_len, "%s/.%s.conf", user_home,
+              PACKAGE_NAME);
 
     char const * const default_config_files[] = {
         user_conf_file,

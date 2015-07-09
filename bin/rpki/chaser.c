@@ -447,7 +447,11 @@ static int handle_uri_string(
         }
         else if (-3 == ret)
         {
-            snprintf(scrubbed_str2, 50, "%s", scrubbed_str);
+            int len = snprintf(scrubbed_str2, 50, "%s", scrubbed_str);
+            if (len < 0)
+            {
+                abort();
+            }
             LOG(LOG_WARNING, "uri too long, dropping:  %s <truncated>",
                 scrubbed_str2);
             goto get_next_section;
@@ -760,7 +764,11 @@ int main(
         if (DB_URI_LEN < strlen(uri))
         {
             scrub_for_print(scrubbed_str, uri, DST_SZ, NULL, "");
-            snprintf(msg, 50, "%s", scrubbed_str);
+            int len = snprintf(msg, 50, "%s", scrubbed_str);
+            if (len < 0)
+            {
+                abort();
+            }
             LOG(LOG_WARNING,
                 "uri from file too long, dropping:  %s <truncated>", msg);
             continue;

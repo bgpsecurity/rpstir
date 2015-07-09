@@ -12,6 +12,7 @@
 
 #include "diru.h"
 #include "err.h"
+#include "util/stringutils.h"
 
 
 /*
@@ -252,7 +253,7 @@ int splitdf(
         *outfile = outf;
     if (outfull != NULL)
     {
-        (void)snprintf(work, PATH_MAX, "%s/%s", outd, outf);
+        xsnprintf(work, PATH_MAX, "%s/%s", outd, outf);
         *outfull = strdup(work);
         if (*outfull == NULL)
             return (ERR_SCM_NOMEM);

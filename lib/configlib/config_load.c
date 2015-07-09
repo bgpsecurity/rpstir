@@ -299,8 +299,8 @@ static bool get_value(
                 goto done;
             }
 
-            snprintf(variable, variable_size + 1, "%s",
-                     line + *line_offset + 2);
+            strncpy(variable, line + *line_offset + 2, variable_size);
+            variable[variable_size] = 0;
 
             variable_value = getenv(variable);
             if (variable_value == NULL)
