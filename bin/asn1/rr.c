@@ -98,11 +98,14 @@ int main(
     char **argv)
 {
     /*
-     * $b(+ 1. Scan argvs to see if -r flag is set IF standard input and
-     * output have been redirected, run with them Scan argvs and at any file
-     * name Append .raw and open that as standard input Append .req and open
-     * that as standard output Convert the input file Close both standard
-     * input and output 2. Exit with OK message $b)
+     * 1. Scan argvs to see if -r flag is set
+     *    IF standard input and output have been redirected, run with them
+     *    Scan argvs and at any file name
+     *         Append .raw and open that as standard input
+     *         Append .req and open that as standard output
+     *         Convert the input file
+     *         Close both standard input and output
+     * 2. Exit with OK message
      */
     char *c,
       **p;
@@ -160,39 +163,68 @@ char *do_it(
     int level)
 {
     /*
-     * $b(+ Function: Converts text PM-request/response to true form
+     * Function: Converts text PM-request/response to true form
      *
      * Inputs: Standard input is an input file
      *
      * Outputs: Standard output is result
      *
-     * 1. IF not at top level, skip to first blank Starting with no left
-     * margin, WHILE forever Skip white space IF at line end Get another line
-     * Go to first non-blank IF no left margin, set it to greater of this or
-     * min IF at EOF OR line starts before left margin IF translating dot
-     * notation, put it out IF had a start for this line, set the length IF
-     * not at top level, return current pointer Break out of WHILE 2. IF not
-     * in a comment IF no left margin, set it to this IF char is numeric, IF
-     * string is decimal or hex, output data to appropriate place ELSE (dot
-     * notation) append to dot_buf ELSE IF char is quote, put data in
-     * appropriate place ELSE IF char is '{' IF this is the first one, get
-     * space Set the offset in varfld ELSE IF char is '}' Set the length in
-     * varfld Write varfld to output ELSE IF char is '/' OR '-', note half in
-     * comment ELSE IF starting a hash here, mark that ELSE IF not at a
-     * reserved word, skip it ELSE IF had an ASN.1 item started, set its
-     * length IF there's a tag, print it ELSE convert the next word from hex
-     * Put out zero length IF it's constructed Call this function for the next
-     * level Set the length of this item IF should be at a higher level,
-     * return current pointer IF at end of line, break out of WHILE Continue
-     * in WHILE 3. ELSE IF half in a comment IF char is second half, note
-     * fully in comment ELSE IF char is non-whitespace, Note not in comment
-     * Back up one char to repeat ELSE IF fully in comment IF char is firts
-     * exit char, note half out of comment ELSE IF char is non-whitespace,
-     * note fully out of comment ELSE IF half out of comment IF char is final
-     * exit char, note out of comment ELSE IF char is non-whitespace, note
-     * fully in comment IF at a non-null, go to next char 4. IF have anything
-     * in asn_area, put that out IF have any vararea, write it to output IF -r
-     * switch is set, put length in proper field $b)
+     * 1. IF not at top level, skip to first blank
+     *    Starting with no left margin, WHILE forever
+     *         Skip white space
+     *         IF at line end
+     *             Get another line
+     *             Go to first non-blank
+     *             IF no left margin, set it to greater of this or min
+     *             IF at EOF OR line starts before left margin
+     *                 IF translating dot notation, put it out
+     *                 IF had a start for this line, set the length
+     *                 IF not at top level, return current pointer
+     *                 Break out of WHILE
+     * 2.      IF not in a comment
+     *             IF no left margin, set it to this
+     *             IF char is numeric,
+     *                 IF string is decimal or hex, output data to appropriate
+     *                   place
+     *                 ELSE (dot notation) append to dot_buf
+     *             ELSE IF char is quote, put data in appropriate place
+     *             ELSE IF char is '{'
+     *                 IF this is the first one, get space
+     *                 Set the offset in varfld
+     *             ELSE IF char is '}'
+     *                 Set the length in varfld
+     *                 Write varfld to output
+     *             ELSE IF char is '/' OR '-', note half in comment
+     *             ELSE IF starting a hash here, mark that
+     *             ELSE
+     *                 IF not at a reserved word, skip it
+     *                 ELSE
+     *                     IF had an ASN.1 item started, set its length
+     *                     IF there's a tag, print it
+     *                     ELSE convert the next word from hex
+     *                     Put out zero length
+     *                     IF it's constructed
+     *                         Call this function for the next level
+     *                         Set the length of this item
+     *                         IF should be at a higher level, return current
+     *                           pointer
+     *                         IF at end of line, break out of WHILE
+     *                         Continue in WHILE
+     * 3.      ELSE IF half in a comment
+     *                 IF char is second half, note fully in comment
+     *                 ELSE IF char is non-whitespace,
+     *                     Note not in comment
+     *                     Back up one char to repeat
+     *         ELSE IF fully in comment
+     *             IF char is firts exit char, note half out of comment
+     *             ELSE IF char is non-whitespace, note fully out of comment
+     *         ELSE IF half out of comment
+     *             IF char is final exit char, note out of comment
+     *             ELSE IF char is non-whitespace, note fully in comment
+     *         IF at a non-null, go to next char
+     * 4. IF have anything in asn_area, put that out
+     *    IF have any vararea, write it to output
+     *    IF -r switch is set, put length in proper field
      */
 
     char *b,
@@ -500,12 +532,14 @@ char *cvt_out(
     char *c)
 {
     /*
-     * $b(+ Function: Converts string pointed to by c and puts it in right
-     * place
+     * Function: Converts string pointed to by c and puts it in right place
      *
-     * IF string is decimal, convert it to a hex string See if there is an odd
-     * number of nibbles IF so. put out the first nibble as a number FOR each
-     * byte pair Convert byte pairs to a byte Write the byte to output $b)
+     * IF string is decimal, convert it to a hex string
+     * See if there is an odd number of nibbles
+     * IF so. put out the first nibble as a number
+     * FOR each byte pair
+     *     Convert byte pairs to a byte
+     *     Write the byte to output
      */
     uchar val;
     char *a,

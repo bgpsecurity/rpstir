@@ -256,14 +256,26 @@ int ghostbustersValidate(
  * and a negative error code on failure. It is assumed that this function is
  * called as follows:
  *
- * scm *scmp; // previously opened DB schema scmcon *conp; // previously
- * opened DB connection X509 *cert; uchar *blob; char *ski; char *fn; int
- * valid = -1; int sta;
+ *     scm *scmp; // previously opened DB schema
+ *     scmcon *conp; // previously opened DB connection
+ *     X509 *cert;
+ *     uchar *blob;
+ *     char *ski;
+ *     char *fn;
+ *     int valid = -1;
+ *     int sta;
  *
- * sta = roaValidate(r); if ( sta == 0 ) { ski = (char *)roaSKI(r); if ( ski
- * != NULL ) { cert = roa_parent(scmp, conp, ski, &fn, &sta); if ( cert !=
- * NULL && sta == 0 ) { blob = read cert from file (fn); valid =
- * roaValidate2(r, blob); } } }
+ *     sta = roaValidate(r);
+ *     if (sta == 0) {
+ *         ski = (char *)roaSKI(r);
+ *         if (ski != NULL) {
+ *             cert = roa_parent(scmp, conp, ski, &fn, &sta);
+ *             if (cert != NULL && sta == 0) {
+ *                 blob = read cert from file (fn);
+ *                 valid = roaValidate2(r, blob);
+ *             }
+ *         }
+ *     }
  */
 extern int roaValidate2(
     struct CMS *r);

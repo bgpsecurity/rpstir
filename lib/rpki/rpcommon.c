@@ -901,14 +901,18 @@ int parse_SKI_blocks(
     int *locflagsp)
 {
     /*
-     * Procedure: 1. Get nformation on the top level certificate Get first SKI
-     * line from the control file 2. IF no error, process the control section
-     * IF no error, process the tag section 3. IF no error AND the next is
-     * part of the control section, note error
+     * Procedure:
+     * 1. Get nformation on the top level certificate
+     *    Get first SKI line from the control file
+     * 2. IF no error, process the control section
+     *    IF no error, process the tag section
+     * 3. IF no error AND the next is part of the control section, note error
      *
-     * FOR each item in done_certs Flag the target cert in the database as
-     * having a para Sign the paracertificate Put it into database with para
-     * flag Free all and return error
+     *      FOR each item in done_certs
+     *        Flag the target cert in the database as having a para
+     *        Sign the paracertificate
+     *        Put it into database with para flag
+     *    Free all and return error
      */
     Certificate(&myrootcert, (ushort)0);
     char *c,
