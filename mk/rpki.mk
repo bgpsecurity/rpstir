@@ -44,6 +44,50 @@ EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options}
 CLEANFILES += ${CERTS} ${KEYS} ${ROAS}
 
 ######################################################################
+## roa-ee-munge test
+######################################################################
+# see ticket #28
+TESTS += \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap
+check_SCRIPTS += \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap
+tests/subsystem/roa-ee-munge/roa-ee-munge.tap: \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap.in
+MK_SUBST_FILES_EXEC += \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap
+CERTS += \
+	tests/subsystem/roa-ee-munge/ta-good.cer \
+	tests/subsystem/roa-ee-munge/ta-bad.cer \
+	tests/subsystem/roa-ee-munge/ee-good.cer \
+	tests/subsystem/roa-ee-munge/ee-bad.cer
+ROAS += \
+	tests/subsystem/roa-ee-munge/ee-good.roa \
+	tests/subsystem/roa-ee-munge/ee-bad.roa
+tests/subsystem/roa-ee-munge/ta-good.cer: \
+	tests/subsystem/roa-ee-munge/ta-good.options \
+	tests/subsystem/roa-ee-munge/ta-good.key
+tests/subsystem/roa-ee-munge/ta-bad.cer: \
+	tests/subsystem/roa-ee-munge/ta-bad.options \
+	tests/subsystem/roa-ee-munge/ta-bad.key
+tests/subsystem/roa-ee-munge/ee-good.cer: \
+	tests/subsystem/roa-ee-munge/ee-good.options \
+	tests/subsystem/roa-ee-munge/ee-good.key
+tests/subsystem/roa-ee-munge/ee-good.roa: \
+	tests/subsystem/roa-ee-munge/ee-good.cer \
+	tests/subsystem/roa-ee-munge/ee-good.key \
+	tests/subsystem/roa-ee-munge/ee-good.roa.options
+tests/subsystem/roa-ee-munge/ee-bad.cer: \
+	tests/subsystem/roa-ee-munge/ee-bad.options \
+	tests/subsystem/roa-ee-munge/ee-bad.key
+tests/subsystem/roa-ee-munge/ee-bad.roa: \
+	tests/subsystem/roa-ee-munge/ee-bad.cer \
+	tests/subsystem/roa-ee-munge/ee-bad.key \
+	tests/subsystem/roa-ee-munge/ee-bad.roa.options
+clean-local: clean-roa-ee-munge
+clean-roa-ee-munge:
+	rm -rf tests/subsystem/roa-ee-munge/roa-ee-munge.tap.cache
+
+######################################################################
 ## chaser
 ######################################################################
 pkglibexec_PROGRAMS += bin/rpki/chaser
