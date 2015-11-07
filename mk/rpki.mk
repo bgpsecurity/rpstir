@@ -1,3 +1,51 @@
+######################################################################
+## helpers to generate keys, certs, and roas
+######################################################################
+set_vars= \
+	target='$@' && \
+	top_srcdir='${top_srcdir}' && \
+	target_dir=$${target%/*}
+boilerplate= \
+	${set_vars} && \
+	mkdir -p "$${target_dir}" && \
+	TEST_LOG_NAME=$${target\#\#*/} \
+		TEST_LOG_DIR=$${target_dir} \
+		STRICT_CHECKS=0 \
+		${LOG_COMPILER}
+create_object = ${boilerplate} bin/rpki-object/create_object/create_object
+gen_key = ${boilerplate} bin/rpki-object/gen_key
+KEYS = ${CERTS:.cer=.key}
+CERTS =
+ROAS =
+${KEYS}: bin/rpki-object/gen_key
+	${gen_key} "$${target}" 2048
+${CERTS}: bin/rpki-object/create_object/create_object
+	${create_object} \
+		-f "$${top_srcdir}"/"$${target%.cer}".options \
+		CERT \
+		serial=1 \
+		notbefore=000101010101Z \
+		notafter=21001231235959Z \
+		crldp=rsync://invalid/invalid.crl \
+		outputfilename="$${target}"
+${ROAS}: bin/rpki-object/create_object/create_object
+	${set_vars} && \
+	eeopt=$${target%.roa}.options && \
+	eekey=$$(sed -n -e 's/^subjkeyfile=\(.*\)/\1/p' \
+			"$${top_srcdir}"/"$${eeopt}") && \
+	${create_object} \
+		-f "$${top_srcdir}"/"$${target}".options \
+		ROA \
+		eecertlocation="$${target%.roa}".cer \
+		eekeylocation="$${eekey}" \
+		outputfilename="$${target}"
+check_DATA += ${CERTS} ${KEYS} ${ROAS}
+EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options}
+CLEANFILES += ${CERTS} ${KEYS} ${ROAS}
+
+######################################################################
+## chaser
+######################################################################
 pkglibexec_PROGRAMS += bin/rpki/chaser
 
 bin_rpki_chaser_LDADD = \

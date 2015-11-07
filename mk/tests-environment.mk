@@ -62,3 +62,5 @@ cat-logs:
 			echo; \
 		fi; \
 	done
+
+EXTRA_DIST += tests/util.sh
