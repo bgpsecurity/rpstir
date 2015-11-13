@@ -116,7 +116,7 @@ version @MIN_OPENSSL_VERSION@) from http://www.openssl.org.  We recommend the de
 installation target directory /usr/local/ssl.  As of version 1.0.1e,
 the steps were:
 
-	$ ./config enable-rfc3779
+	$ ./config shared enable-rfc3779
 	$ make depend
 	$ make
 	$ make test
