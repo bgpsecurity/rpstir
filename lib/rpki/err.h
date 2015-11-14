@@ -189,7 +189,8 @@
  * @brief
  *     get the human-friendly description of an error code
  */
-extern char *err2string(
+const char *
+err2string(
     int err);
 
 #endif

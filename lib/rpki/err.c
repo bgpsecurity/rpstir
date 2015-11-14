@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-static char *errs[-(ERR_SCM_MAXERR) + 1] = {
+static const char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "No error",                 /* ERR_SCM_NOERR */
     "Cannot open file",         /* ERR_SCM_COFILE */
     "Out of memory",            /* ERR_SCM_NOMEM */
@@ -183,7 +183,8 @@ static char *errs[-(ERR_SCM_MAXERR) + 1] = {
     "Truncated data", /* ERR_SCM_TRUNCATED */
 };
 
-char *err2string(
+const char *
+err2string(
     int err)
 {
     if (err > 0 || err < ERR_SCM_MAXERR)
