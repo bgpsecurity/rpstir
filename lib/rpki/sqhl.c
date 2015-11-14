@@ -1099,9 +1099,9 @@ struct cert_answers *find_parent_cert(
  *     The subject of the certificate to search for.  This may be
  *     NULL, in which case only @p ski is used to perform the search.
  * @param[out] stap
- *     Error code.  On success the value at this location might be set
- *     to 0 or might be left alone.  On error it is set to a non-zero
- *     value.  This parameter may be NULL.
+ *     Error code.  On success the value at this location is set to 0.
+ *     On error it is set to a non-zero value.  This parameter may be
+ *     NULL.
  * @param[out] pathname
  *     If non-NULL, the full pathname of the matching certificate will
  *     be written to the buffer at this location.  The buffer must
@@ -1113,9 +1113,7 @@ struct cert_answers *find_parent_cert(
  * @note
  *     It is not an error if there are no matches or if there are
  *     multiple matches.  To distinguish an error from no matches,
- *     set the value at @p stap to 0 before calling this function and
- *     check to see if the value is still zero after this function
- *     returns.
+ *     check the value at @p stap after this function returns.
  */
 static X509 *parent_cert(
     scmcon *conp,
@@ -1177,6 +1175,8 @@ static X509 *parent_cert(
         *flagsp = cert_ansrp->flags;
     return readCertFromFile(ofullname, stap);
 no_parent:
+    if (stap)
+        *stap = 0;
     return NULL;
 }
 
