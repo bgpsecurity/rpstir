@@ -1,5 +1,5 @@
-#ifndef _MYERR_H_
-#define _MYERR_H_
+#ifndef LIB_RPKI_ERR_H
+#define LIB_RPKI_ERR_H
 
 #include <stdio.h>
 

@@ -1,5 +1,5 @@
-#ifndef _SQHL_H_
-#define _SQHL_H_
+#ifndef LIB_RPKI_SQHL_H
+#define LIB_RPKI_SQHL_H
 
 #include <stdio.h>
 #include "db_constants.h"

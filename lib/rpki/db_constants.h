@@ -1,5 +1,5 @@
-#ifndef _PROTO_DB_CONSTANTS_H
-#define _PROTO_DB_CONSTANTS_H
+#ifndef LIB_RPKI_DB_CONSTANTS_H
+#define LIB_RPKI_DB_CONSTANTS_H
 
 
 /*

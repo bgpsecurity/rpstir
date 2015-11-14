@@ -1,5 +1,5 @@
-#ifndef _SCMF_H_
-#define _SCMF_H_
+#ifndef LIB_RPKI_SCMF_H
+#define LIB_RPKI_SCMF_H
 
 #include <inttypes.h>
 #include <unistd.h>

@@ -1,5 +1,5 @@
-#ifndef _MYSSL_H_
-#define _MYSSL_H_
+#ifndef LIB_RPKI_MYSSL_H
+#define LIB_RPKI_MYSSL_H
 
 #include <openssl/err.h>
 #include <openssl/x509.h>

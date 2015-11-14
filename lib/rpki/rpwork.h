@@ -1,5 +1,5 @@
-#ifndef _RPWORK_H
-#define _RPWORK_H
+#ifndef LIB_RPKI_RPWORK_H
+#define LIB_RPKI_RPWORK_H
 
 #include "err.h"
 #include "scm.h"

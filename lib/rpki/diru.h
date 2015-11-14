@@ -1,5 +1,5 @@
-#ifndef _DIRU_H_
-#define _DIRU_H_
+#ifndef LIB_RPKI_DIRU_H
+#define LIB_RPKI_DIRU_H
 
 /*
  * Directory utility functions
