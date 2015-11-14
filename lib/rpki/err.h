@@ -7,172 +7,236 @@
  * Error codes
  */
 
-#define ERR_SCM_NOERR         0
-#define ERR_SCM_COFILE       -1 /* cannot open file */
-#define ERR_SCM_NOMEM        -2 /* out of memory */
-#define ERR_SCM_INVALARG     -3 /* invalid argument */
-#define ERR_SCM_SQL          -4 /* SQL error */
-#define ERR_SCM_INVALCOL     -5 /* invalid column */
-#define ERR_SCM_NULLCOL      -6 /* null column */
-#define ERR_SCM_NOSUCHTAB    -7 /* no such table */
-#define ERR_SCM_NODATA       -8 /* no matching data in table */
-#define ERR_SCM_NULLVALP     -9 /* null value pointer */
-#define ERR_SCM_INVALSZ     -10 /* invalid size */
-#define ERR_SCM_ISLINK      -11 /* links not processed */
-#define ERR_SCM_BADFILE     -12 /* invalid file */
-#define ERR_SCM_INVALFN     -13 /* inconsistent filename */
-#define ERR_SCM_NOTADIR     -14 /* not a directory */
-#define ERR_SCM_INTERNAL    -15 /* internal error */
-#define ERR_SCM_X509        -16 /* X509 error */
-#define ERR_SCM_BADCERT     -17 /* error reading cert */
-#define ERR_SCM_NOSUBJECT   -18 /* subject in cert missing */
-#define ERR_SCM_NOISSUER    -19 /* issuer in cert missing */
-#define ERR_SCM_NOSN        -20 /* serial number in cert missing */
-#define ERR_SCM_BIGNUMERR   -21 /* error converting ASN.1 to a bignum */
-#define ERR_SCM_NONB4       -22 /* not-before field is missing */
-#define ERR_SCM_NONAF       -23 /* not-after field is missing */
-#define ERR_SCM_INVALDT     -24 /* invalid date/time */
-#define ERR_SCM_BADEXT      -25 /* extension error */
-#define ERR_SCM_INVALEXT    -26 /* invalid extension */
-#define ERR_SCM_XPROFILE    -27 /* profile violation */
-#define ERR_SCM_MISSEXT     -28 /* missing extension */
-#define ERR_SCM_NOTSS       -29 /* not self-signed */
-#define ERR_SCM_NOTVALID    -30 /* cert validation error */
-#define ERR_SCM_CERTCTX     -31 /* cannot create cert context */
-#define ERR_SCM_X509STACK   -32 /* x509 stack creation error */
-#define ERR_SCM_STORECTX    -33 /* store ctx creation error */
-#define ERR_SCM_STOREINIT   -34 /* store init error */
-#define ERR_SCM_NOAKI       -35 /* missing aki */
-#define ERR_SCM_CRL         -36 /* CRL error */
-#define ERR_SCM_BADCRL      -37 /* error reading CRL */
-#define ERR_SCM_NOTIMPL     -38 /* not implemented */
-#define ERR_SCM_INVALASID   -39 /* invalid AS# */
-#define ERR_SCM_INVALSKI    -40 /* invalid SKI */
-#define ERR_SCM_INVALIPB    -41 /* invalid IP address block */
-#define ERR_SCM_INVALIPL    -42 /* invalid IP address length */
-#define ERR_SCM_INVALVER    -43 /* invalid version */
-#define ERR_SCM_INVALASN    -44 /* ASN.1 library error */
-#define ERR_SCM_NOTEE       -45 /* not an EE cert */
-#define ERR_SCM_BADFLAGS    -46 /* cert flags don't match cert type */
-#define ERR_SCM_BADCERTVERS -47 /* bad certificate version */
-#define ERR_SCM_NCEXT       -48 /* extension must be critical */
-#define ERR_SCM_NOTCA       -49 /* cA boolean should have been set */
-#define ERR_SCM_BADPATHLEN  -50 /* pathlen should not have been present */
-#define ERR_SCM_NOBC        -51 /* missing basic constraints */
-#define ERR_SCM_DUPBC       -52 /* duplicate basic constraints */
-#define ERR_SCM_ISCA        -53 /* cA boolean set in EE cert */
-#define ERR_SCM_CEXT        -54 /* non-critical extension marked as crit */
-#define ERR_SCM_NOSKI       -55 /* SKI extension missing */
-#define ERR_SCM_DUPSKI      -56 /* duplicate SKI extension */
-#define ERR_SCM_ACI         -57 /* authCertIssuer present, shouldn't be */
-#define ERR_SCM_ACSN        -58 /* authCertSN present, shouldn't be */
-#define ERR_SCM_DUPAKI      -59 /* duplicate AKI */
-#define ERR_SCM_NOKUSAGE    -60 /* missing key usage ext */
-#define ERR_SCM_DUPKUSAGE   -61 /* duplicate key usage */
-#define ERR_SCM_CRLDPTA     -62 /* CRLDP found in TA cert */
-#define ERR_SCM_NOCRLDP     -63 /* missing CRLDP */
-#define ERR_SCM_DUPCRLDP    -64 /* duplicate CRLDP */
-#define ERR_SCM_CRLDPSF     -65 /* CRLDP has subfields, shouldn't */
-#define ERR_SCM_CRLDPNM     -66 /* cannot get name component of CRLDP */
-#define ERR_SCM_BADCRLDP    -67 /* CLRDP not a URI */
-#define ERR_SCM_NOAIA       -68 /* missing AIA */
-#define ERR_SCM_DUPAIA      -69 /* duplicate AIA */
-#define ERR_SCM_BADAIA      -70 /* AIA not a URI */
-#define ERR_SCM_NOSIA       -71 /* missing SIA */
-#define ERR_SCM_DUPSIA      -72 /* duplicate SIA */
-#define ERR_SCM_BADSIA      -73 /* SIA not a URI */
-#define ERR_SCM_NOPOLICY    -74 /* missing policy extension */
-#define ERR_SCM_DUPPOLICY   -75 /* duplicate policy extension */
-#define ERR_SCM_POLICYQ     -76 /* invalid policy qualifiers */
-#define ERR_SCM_BADOID      -77 /* invalid/unexpected OID */
-#define ERR_SCM_NOIPAS      -78 /* missing IP or AS# resources */
-#define ERR_SCM_DUPIP       -79 /* duplicate IP resource extension */
-#define ERR_SCM_DUPAS       -80 /* duplicate AS2 resource extension */
-#define ERR_SCM_INVALSIG    -81 /* invalid signature */
-#define ERR_SCM_HSSIZE      -82 /* error sizing hashable string */
-#define ERR_SCM_HSREAD      -83 /* error reading hashable string */
-#define ERR_SCM_BADAF       -84 /* bad address family */
-#define ERR_SCM_BADDA       -85 /* bad digest algorithm */
-#define ERR_SCM_BADCT       -86 /* bad content type */
-#define ERR_SCM_UNSIGATTR   -87 /* unsigned attributes */
-#define ERR_SCM_INVALFAM    -88 /* invalid IP family */
-#define ERR_SCM_NOSIG       -89 /* no signature */
-#define ERR_SCM_DUPSIG      -90 /* duplicate signature */
-#define ERR_SCM_BADMKHASH   -91 /* error making hash */
-#define ERR_SCM_BADFAH      -92 /* error reading FileAndHash */
-#define ERR_SCM_BADNUMCERTS -93 /* wrong number of certificates */
-#define ERR_SCM_BADDATES    -94 /* invalid dates */
-#define ERR_SCM_BADALG      -95 /* differing algorithms in certificate */
-#define ERR_SCM_BCPRES      -96 /* basic constraints present in EE cert */
-#define ERR_SCM_BADSIGINFO  -97 /* error in SignerInfo */
-#define ERR_SCM_BADPARACERT -98 /* error making paracert */
-#define ERR_SCM_BADIPRANGE  -99 /* invalid IP numbers */
-#define ERR_SCM_BADSKIBLOCK -100        /* invalid constraints entry */
-#define ERR_SCM_USECONFLICT -101        /* conflicting usages */
-#define ERR_SCM_NOSKIFILE   -102        /* can't open constraints file */
-#define ERR_SCM_NORPCERT    -103        /* Can't find RP certificate */
-#define ERR_SCM_BADSKIFILE  -104        /* defective constraints file */
-#define ERR_SCM_SIGNINGERR  -105        /* error signing para-cert */
-#define ERR_SCM_INVALROA    -106        /* invalid ROA */
-#define ERR_SCM_INVALMAN    -108        /* invalid manifest */
-#define ERR_SCM_WRITE_EE    -109        /* error writing EE certificate */
-#define ERR_SCM_SMALLKEY    -110        /* key too small */
-#define ERR_SCM_ASN1_LTH    -111        /* invalid ASN.1 length */
-#define ERR_SCM_EXPIRED     -112        /* certificate expired */
-#define ERR_SCM_BADSUBJECT  -113        /* invalid subject name */
-#define ERR_SCM_BADISSUER   -114        /* invalid issuer name */
-#define ERR_SCM_INVALAKI    -115        /* invalid AKI */
-#define ERR_SCM_CRLDPNMRS   -116        /* no rsync URI in CRLDP */
-#define ERR_SCM_BADSERNUM   -117        /* bad serial number */
-#define ERR_SCM_HASCRL      -118        /* should not have CRL */
-#define ERR_SCM_CRYPTLIB    -119        /* error starting Cryptlib */
-#define ERR_SCM_BADHASHALG  -120        /* bad hash algorithm */
-#define ERR_SCM_BADNUMDALG  -121        /* bad number of digest algorithms */
-#define ERR_SCM_NUMSIGINFO  -122        /* bad number of signer infos */
-#define ERR_SCM_SIGINFOVER  -123        /* invalid signer infos version */
-#define ERR_SCM_SIGINFOSID  -124        /* invalid signer info sid */
-#define ERR_SCM_SIGINFOTIM  -125        /* invalid signer info time */
-#define ERR_SCM_BADCMSVER   -126        /* invalid CMS version */
-#define ERR_SCM_BADMSGDIGEST -127       /* invalid message digest */
-#define ERR_SCM_BADSIGATTRS -128        /* invalid signed attributes */
-#define ERR_SCM_BADCONTTYPE -129        /* invalid content type */
-#define ERR_SCM_BINSIGTIME  -130        /* invalid binary signing time */
-#define ERR_SCM_BADSIGALG   -131        /* invalid signature algorithm */
-#define ERR_SCM_BADROAVER   -132        /* invalid ROA version */
-#define ERR_SCM_BADMANVER   -133        /* invalid manifest version */
-#define ERR_SCM_BADASRANGE  -134        /* invalid AS numbers */
-#define ERR_SCM_BADASNUM    -135        /* AS number outside range */
-#define ERR_SCM_NOIPADDR    -136        /* no IP addresses */
-#define ERR_SCM_NOASNUM     -137        /* no AS numbers */
-#define ERR_SCM_ROAIPMISMATCH -138      /* ROA IP addressess aren't covered by
-                                         * EE's IPs */
-#define ERR_SCM_IPTOUCH     -139        /* IP addresses overlap */
-#define ERR_SCM_BADMFTHASH  -140        /* bad manifest hash */
-#define ERR_SCM_BADDIGEST   -141        /* invalid digest */
-#define ERR_SCM_BADMFTDBHASH -142       /* wrong manifest hash in DB */
-#define ERR_SCM_NOCRLVER    -143        /* missing CRL version */
-#define ERR_SCM_BADCRLVER   -144        /* wrong CRL version */
-#define ERR_SCM_CRLENTRYEXT -145        /* CRL Entry Extension present */
-#define ERR_SCM_BADMFTFILENAME -146     /* invalid filename in a manifest */
-#define ERR_SCM_BADREVDATE  -147        /* Invalid revocation date */
-#define ERR_SCM_BADREVSNUM  -148        /* Invalid revoked serial number */
-#define ERR_SCM_NOCRLNUM    -149        /* No CRL number extension */
-#define ERR_SCM_BADMFTNUM   -150        /* invalid manifest number */
-#define ERR_SCM_MFTDUPFILE  -151        /* duplicate file in manifest */
-#define ERR_SCM_EKU         -152        /* EKU present when it shouldn't be */
-#define ERR_SCM_UNSUPPUBKEY -153        /* Unsupported Public Key Info */
-#define ERR_SCM_BADASRDI    -154        /* Routing Domain Identifier(s)
-                                         * present */
-#define ERR_SCM_BADCRLNUM   -155        /* Invalid CRLNumber */
-#define ERR_SCM_NOIPEXT     -156        /* Missing RFC3779 IP extension */
-#define ERR_SCM_REVOKED     -157        /* Object has been revoked */
-#define ERR_SCM_NOTINHERIT  -158        /* Non-inherit resources present */
-#define ERR_SCM_BADCHAR     -159        /* Invalid character sequence */
-#define ERR_SCM_AIATA       -160        /* AIA found in TA cert */
-#define ERR_SCM_INVALSATTR  -161        /* Invalid signed attribute */
-#define ERR_SCM_TAINHERIT   -162        /* TA cert has inherit resources */
-#define ERR_SCM_TRUNCATED   -163        /* Truncated data */
-#define ERR_SCM_MAXERR      -163
+/**
+ * @brief
+ *     helper macro to avoid typing out the list of error codes
+ *     multiple times
+ */
+#define ERROR_CODES(f)                                                  \
+    f(ERR_SCM_NOERR, "No error") /* this entry must be first */         \
+    f(ERR_SCM_COFILE, "Cannot open file")                               \
+    f(ERR_SCM_NOMEM, "Out of memory")                                   \
+    f(ERR_SCM_INVALARG, "Invalid argument")                             \
+    f(ERR_SCM_SQL, "SQL error")                                         \
+    f(ERR_SCM_INVALCOL, "Invalid column")                               \
+    f(ERR_SCM_NULLCOL, "Null column")                                   \
+    f(ERR_SCM_NOSUCHTAB, "No such table")                               \
+    f(ERR_SCM_NODATA, "No data")                                        \
+    f(ERR_SCM_NULLVALP, "Null value")                                   \
+    f(ERR_SCM_INVALSZ, "Invalid size")                                  \
+    f(ERR_SCM_ISLINK, "Link skipped")                                   \
+    f(ERR_SCM_BADFILE, "Bad filename or file not found")                \
+    f(ERR_SCM_INVALFN, "Inconsistent filename")                         \
+    f(ERR_SCM_NOTADIR, "Not a directory")                               \
+    f(ERR_SCM_INTERNAL, "Internal error")                               \
+    f(ERR_SCM_X509, "X509 error")                                       \
+    f(ERR_SCM_BADCERT, "Error reading cert")                            \
+    f(ERR_SCM_NOSUBJECT, "Missing subject field")                       \
+    f(ERR_SCM_NOISSUER, "Missing issuer field")                         \
+    f(ERR_SCM_NOSN, "Missing serial number")                            \
+    f(ERR_SCM_BIGNUMERR, "Bignum error")                                \
+    f(ERR_SCM_NONB4, "Missing start date")                              \
+    f(ERR_SCM_NONAF, "Missing end date")                                \
+    f(ERR_SCM_INVALDT, "Invalid date/time")                             \
+    f(ERR_SCM_BADEXT, "Extension error")                                \
+    f(ERR_SCM_INVALEXT, "Invalid extension")                            \
+    f(ERR_SCM_XPROFILE, "Profile violation")                            \
+    f(ERR_SCM_MISSEXT, "Missing extension")                             \
+    f(ERR_SCM_NOTSS, "Not self-signed")                                 \
+    f(ERR_SCM_NOTVALID, "Certificate validation error")                 \
+    f(ERR_SCM_CERTCTX, "Certificate context error")                     \
+    f(ERR_SCM_X509STACK, "X509 stack error")                            \
+    f(ERR_SCM_STORECTX, "Certificate store error")                      \
+    f(ERR_SCM_STOREINIT, "Cert store init error")                       \
+    f(ERR_SCM_NOAKI, "Missing AKI")                                     \
+    f(ERR_SCM_CRL, "CRL error")                                         \
+    f(ERR_SCM_BADCRL, "Error reading CRL")                              \
+    f(ERR_SCM_NOTIMPL, "Not implemented")                               \
+    f(ERR_SCM_INVALASID, "Invalid AS number")                           \
+    f(ERR_SCM_INVALSKI, "Invalid SKI")                                  \
+    f(ERR_SCM_INVALIPB, "Invalid IP address block")                     \
+    f(ERR_SCM_INVALIPL, "Invalid IP address length")                    \
+    f(ERR_SCM_INVALVER, "Invalid version number")                       \
+    f(ERR_SCM_INVALASN, "ASN.1 library error")                          \
+    f(ERR_SCM_NOTEE, "Not an EE certificate")                           \
+    f(ERR_SCM_BADFLAGS, "Invalid certificate flags")                    \
+    f(ERR_SCM_BADCERTVERS, "Bad certificate version")                   \
+    f(ERR_SCM_NCEXT, "Extension must be critical")                      \
+    f(ERR_SCM_NOTCA, "Must be CA cert")                                 \
+    f(ERR_SCM_BADPATHLEN, "Pathlen invalid")                            \
+    f(ERR_SCM_NOBC, "Missing basic constraints")                        \
+    f(ERR_SCM_DUPBC, "Duplicate basic constraints")                     \
+    f(ERR_SCM_ISCA, "Cannot be CA cert")                                \
+    f(ERR_SCM_CEXT, "Extension cannot be critical")                     \
+    f(ERR_SCM_NOSKI, "Missing SKI")                                     \
+    f(ERR_SCM_DUPSKI, "Duplicate SKI")                                  \
+    f(ERR_SCM_ACI, "authCertIssuer present")                            \
+    f(ERR_SCM_ACSN, "AuthCertSN present")                               \
+    f(ERR_SCM_DUPAKI, "Duplicate AKI")                                  \
+    f(ERR_SCM_NOKUSAGE, "Missing key usage")                            \
+    f(ERR_SCM_DUPKUSAGE, "Duplicate key usage")                         \
+    f(ERR_SCM_CRLDPTA, "CRLDP in TA cert")                              \
+    f(ERR_SCM_NOCRLDP, "Missing CRLDP")                                 \
+    f(ERR_SCM_DUPCRLDP, "Duplicate CRLDP")                              \
+    f(ERR_SCM_CRLDPSF, "CRLDP with subfields")                          \
+    f(ERR_SCM_CRLDPNM, "Cannot get CRLDP name field")                   \
+    f(ERR_SCM_BADCRLDP, "CRLDP not a URI")                              \
+    f(ERR_SCM_NOAIA, "Missing AIA")                                     \
+    f(ERR_SCM_DUPAIA, "Duplicate AIA")                                  \
+    f(ERR_SCM_BADAIA, "AIA not a URI")                                  \
+    f(ERR_SCM_NOSIA, "Missing SIA")                                     \
+    f(ERR_SCM_DUPSIA, "Duplicate SIA")                                  \
+    f(ERR_SCM_BADSIA, "SIA not a URI")                                  \
+    f(ERR_SCM_NOPOLICY, "Missing policy ext")                           \
+    f(ERR_SCM_DUPPOLICY, "Duplicate policy ext")                        \
+    f(ERR_SCM_POLICYQ, "Invalid policy qualifiers")                     \
+    f(ERR_SCM_BADOID, "Invalid OID")                                    \
+    f(ERR_SCM_NOIPAS, "Missing RFC3779 ext")                            \
+    f(ERR_SCM_DUPIP, "Duplicate IP resources")                          \
+    f(ERR_SCM_DUPAS, "Duplicate AS# resources")                         \
+    f(ERR_SCM_INVALSIG, "Invalid signature")                            \
+    f(ERR_SCM_HSSIZE, "Hashable string size error")                     \
+    f(ERR_SCM_HSREAD, "Hashable string read error")                     \
+    f(ERR_SCM_BADAF, "Bad address family")                              \
+    f(ERR_SCM_BADDA, "Bad digest algorithm")                            \
+    f(ERR_SCM_BADCT, "Bad Content type")                                \
+    f(ERR_SCM_UNSIGATTR, "Unsigned attributes")                         \
+    f(ERR_SCM_INVALFAM, "Invalid IP family")                            \
+    f(ERR_SCM_NOSIG, "No signature")                                    \
+    f(ERR_SCM_DUPSIG, "Duplicate signature")                            \
+    f(ERR_SCM_BADMKHASH, "Error creating hash")                         \
+    f(ERR_SCM_BADFAH, "Error in FileAndHash")                           \
+    f(ERR_SCM_BADNUMCERTS, "Wrong number of certificates")              \
+    f(ERR_SCM_BADDATES, "Invalid dates")                                \
+    f(ERR_SCM_BADALG, "Differing algorithms in cert")                   \
+    f(ERR_SCM_BCPRES, "Basic constraints in EE cert")                   \
+    f(ERR_SCM_BADSIGINFO, "Error in SignerInfos")                       \
+    f(ERR_SCM_BADPARACERT, "Error making para-certificate")             \
+    f(ERR_SCM_BADIPRANGE, "Invalid IP numbers")                         \
+    f(ERR_SCM_BADSKIBLOCK, "Invalid constraints entry")                 \
+    f(ERR_SCM_USECONFLICT, "Conflicting constraint entry")              \
+    f(ERR_SCM_NOSKIFILE, "Can't open constraints file")                 \
+    f(ERR_SCM_NORPCERT, "Can't find RP certificate")                    \
+    f(ERR_SCM_BADSKIFILE, "Defective constraints file")                 \
+    f(ERR_SCM_SIGNINGERR, "Error signing para-cert")                    \
+    f(ERR_SCM_INVALROA, "Invalid ROA")                                  \
+    f(ERR_SCM_INVALMAN, "Invalid manifest")                             \
+    f(ERR_SCM_WRITE_EE, "Error writing EE cert")                        \
+    f(ERR_SCM_SMALLKEY, "Key too small")                                \
+    f(ERR_SCM_ASN1_LTH, "Invalid indefinite ASN.1 length")              \
+    f(ERR_SCM_EXPIRED, "Certificate expired")                           \
+    f(ERR_SCM_BADSUBJECT, "Invalid subject name")                       \
+    f(ERR_SCM_BADISSUER, "Invalid issuer name")                         \
+    f(ERR_SCM_INVALAKI, "Invalid AKI")                                  \
+    f(ERR_SCM_CRLDPNMRS, "No rsync URI in CRLDP")                       \
+    f(ERR_SCM_BADSERNUM, "Bad serial number")                           \
+    f(ERR_SCM_HASCRL, "Should not have CRL")                            \
+    f(ERR_SCM_CRYPTLIB, "Error starting Cryptlib")                      \
+    f(ERR_SCM_BADHASHALG, "Bad hash algorithm")                         \
+    f(ERR_SCM_BADNUMDALG, "Bad number of digest algorithms")            \
+    f(ERR_SCM_NUMSIGINFO, "Bad number of signer infos")                 \
+    f(ERR_SCM_SIGINFOVER, "Invalid signer infos version")               \
+    f(ERR_SCM_SIGINFOSID, "Invalid signer info sid")                    \
+    f(ERR_SCM_SIGINFOTIM, "Invalid signer info time")                   \
+    f(ERR_SCM_BADCMSVER, "Invalid CMS version")                         \
+    f(ERR_SCM_BADMSGDIGEST, "Invalid message digest")                   \
+    f(ERR_SCM_BADSIGATTRS, "Invalid signed attributes")                 \
+    f(ERR_SCM_BADCONTTYPE, "Invalid content type")                      \
+    f(ERR_SCM_BINSIGTIME, "Invalid binary signing time")                \
+    f(ERR_SCM_BADSIGALG, "Invalid signature algorithm")                 \
+    f(ERR_SCM_BADROAVER, "Invalid ROA version")                         \
+    f(ERR_SCM_BADMANVER, "Invalid manifest version")                    \
+    f(ERR_SCM_BADASRANGE, "Invalid AS numbers")                         \
+    f(ERR_SCM_BADASNUM, "AS number outside range")                      \
+    f(ERR_SCM_NOIPADDR, "No IP addresses")                              \
+    f(ERR_SCM_NOASNUM, "No AS number")                                  \
+    f(ERR_SCM_ROAIPMISMATCH, "ROA IP addresses not in EE")              \
+    f(ERR_SCM_IPTOUCH, "IP addresses overlap")                          \
+    f(ERR_SCM_BADMFTHASH, "Bad hash in manifest")                       \
+    f(ERR_SCM_BADDIGEST, "Invalid digest in CMS")                       \
+    f(ERR_SCM_BADMFTDBHASH, "Wrong manifest hash in DB")                \
+    f(ERR_SCM_NOCRLVER, "Missing CRL version")                          \
+    f(ERR_SCM_BADCRLVER, "Wrong CRL version")                           \
+    f(ERR_SCM_CRLENTRYEXT, "CRL Entry Extension present")               \
+    f(ERR_SCM_BADMFTFILENAME, "Invalid filename in manifest")           \
+    f(ERR_SCM_BADREVDATE, "Invalid revocation date")                    \
+    f(ERR_SCM_BADREVSNUM, "Invalid revoked serial number")              \
+    f(ERR_SCM_NOCRLNUM, "No CRL number extension")                      \
+    f(ERR_SCM_BADMFTNUM, "Invalid manifest number")                     \
+    f(ERR_SCM_MFTDUPFILE, "Duplicate file in manifest")                 \
+    f(ERR_SCM_EKU, "EKU erroneously present")                           \
+    f(ERR_SCM_UNSUPPUBKEY, "Unsupported Public Key Info")               \
+    f(ERR_SCM_BADASRDI, "Routing Domain Identifier(s) present")         \
+    f(ERR_SCM_BADCRLNUM, "Invalid CRLNumber")                           \
+    f(ERR_SCM_NOIPEXT, "Missing RFC3779 IP extension")                  \
+    f(ERR_SCM_REVOKED, "Object has been revoked")                       \
+    f(ERR_SCM_NOTINHERIT, "Non-inherit resources present")              \
+    f(ERR_SCM_BADCHAR, "Invalid character sequence")                    \
+    f(ERR_SCM_AIATA, "AIA in TA cert")                                  \
+    f(ERR_SCM_INVALSATTR, "Invalid signed attribute")                   \
+    f(ERR_SCM_TAINHERIT, "TA cert has inherit resources")               \
+    f(ERR_SCM_TRUNCATED, "Truncated data")                              \
+    // end of error codes list
+
+#define ERROR_ENUM_POS(NAME, DESCR) POS_##NAME,
+#define ERROR_ENUM(NAME, DESCR) NAME = -POS_##NAME,
+
+/**
+ * @brief
+ *     helper enum to make it easier to create the err_code enum
+ *
+ * do not use this -- use the ::err_code enum entries instead
+ */
+enum {
+    ERROR_CODES(ERROR_ENUM_POS)
+    POS_ERR_SCM_MAXERR_PLUS_ONE // this must be last
+};
+
+/**
+ * @brief
+ *     error codes (and one success code)
+ *
+ * Only zero (::ERR_SCM_NOERR) is a success code; all other values
+ * indicate an error.
+ *
+ * All values in this enum are guaranteed to be non-positive.
+ *
+ * @warning
+ *     Assuming the function that sets the error code does not
+ *     intentionally use positive values for non-error purposes, code
+ *     should test `foo != 0`, not `foo < 0`, when checking for
+ *     errors.  This avoids tricky problems if a bug causes a function
+ *     to accidentally yield a positive value.
+ *
+ * @warning
+ *     While the C standard says that enumeration constants have type
+ *     `int` (C99 6.4.4.3p2, 6.7.2.2p3), an enumeration type may be
+ *     smaller or bigger than an `int` (and may be unsigned) as long
+ *     as the enumeration type can represent all of its members (C99
+ *     6.7.2.2p4).  Thus, `sizeof(int)` might not equal
+ *     `sizeof(err_code)`, and code should not pass the address of an
+ *     ::err_code to a function that takes a pointer to an `int` (and
+ *     vice-versa).
+ *
+ * @warning
+ *     Care should be taken when using these error codes for the exit
+ *     status of a utility.  For determining exit status from shell
+ *     scripts, POSIX Issue 7 TC1 XCU Section 2.8.2 essentially says
+ *     that the return value of a utility is computed by taking the 8
+ *     least significant bits of the exit status (the value passed to
+ *     _Exit(), _exit(), or exit() or returned from main()).  Thus,
+ *     the exit status is effectively cast to a uint8_t before being
+ *     returned.  If there are any error codes less than -255, those
+ *     error codes will be misinterpreted.  In particular, if a
+ *     utility exits using an error code that happens to have the
+ *     value -256 (or -512, etc.), the utility effectively returns 0
+ *     (success).
+ */
+typedef enum {
+    ERROR_CODES(ERROR_ENUM)
+    /** @brief the value of the most negative error code */
+    ERR_SCM_MAXERR = -(POS_ERR_SCM_MAXERR_PLUS_ONE - 1)
+} err_code;
 
 /*
  * macro that prints an error string and call return if a condition is true
