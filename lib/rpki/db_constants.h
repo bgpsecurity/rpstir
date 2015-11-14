@@ -2,14 +2,16 @@
 #define LIB_RPKI_DB_CONSTANTS_H
 
 
-/*
- * Signature validation states
+/**
+ * @brief
+ *     Signature validation states
  */
-
-#define SIGVAL_UNKNOWN     0
-#define SIGVAL_NOTPRESENT  1
-#define SIGVAL_VALID       2
-#define SIGVAL_INVALID     3
+typedef enum {
+    SIGVAL_UNKNOWN = 0,
+    SIGVAL_NOTPRESENT,
+    SIGVAL_VALID,
+    SIGVAL_INVALID,
+} sigval_state;
 
 /*
  * Flags
