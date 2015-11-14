@@ -47,6 +47,9 @@ struct cert_ansr {
 };
 
 struct cert_answers {
+    /**
+     * If negative, this is an `ERR_SCM_*` error code.
+     */
     int num_ansrs;
     struct cert_ansr *cert_ansrp;
 };

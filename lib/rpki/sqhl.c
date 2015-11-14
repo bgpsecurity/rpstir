@@ -927,6 +927,13 @@ static int checkit(
  *
  * Unlike cert2fields(), this just fills in the X509 structure, not
  * the certfields
+ *
+ * @param[out] stap
+ *     Error code.  On error, the value at this location is set to a
+ *     non-zero value.  Otherwise, it is set to 0.  This parameter
+ *     MUST NOT be NULL.
+ * @return
+ *     NULL on error, non-NULL otherwise.
  */
 static X509 *readCertFromFile(
     char *ofullname,
@@ -1054,6 +1061,44 @@ struct cert_answers *find_parent_cert(
     return &cert_answers;
 }
 
+/**
+ * @brief
+ *     find a certificate matching a given SKI/subject
+ *
+ * If there are multiple matches, only one of them is returned (which
+ * one is unspecified).
+ *
+ * @param[in] conp
+ *     Database connection.  This MUST NOT be NULL.
+ * @param[in] ski
+ *     The subject key identifier (SKI) of the certificate to search
+ *     for.  This MUST NOT be NULL.
+ * @param[in] subject
+ *     The subject of the certificate to search for.  This may be
+ *     NULL, in which case only @p ski is used to perform the search.
+ * @param[out] stap
+ *     Error code.  On success the value at this location might be set
+ *     to 0 or might be left alone.  On error it is set to a non-zero
+ *     value.  This parameter MUST NOT be NULL.
+ * @param[out] pathname
+ *     If non-NULL, this points to a pointer identifying the start of
+ *     a buffer.  The full pathname of the matching certificate will
+ *     be written to this buffer.  The buffer must have size at least
+ *     @c PATH_MAX.  The value at this location is never changed.
+ *     This may be NULL.  WARNING:  This function does NOT allocate
+ *     the buffer and return its location; the buffer must be provided
+ *     by the caller.
+ * @return
+ *     NULL on error or if there is no match, otherwise it returns the
+ *     matching cert.
+ *
+ * @note
+ *     It is not an error if there are no matches or if there are
+ *     multiple matches.  To distinguish an error from no matches,
+ *     set the value at @p stap to 0 before calling this function and
+ *     check to see if the value is still zero after this function
+ *     returns.
+ */
 static X509 *parent_cert(
     scmcon *conp,
     char *ski,
@@ -1356,6 +1401,21 @@ static int verify_cert(
 /**
  * @brief
  *     crl verification code
+ *
+ * @param[out] x509sta
+ *     The value at this location will be set to an error code
+ *     indicating whether there was an error finding the parent
+ *     certificate (if any).  This may be NULL.
+ * @param[out] chainOK
+ *     The value at this location will be set to true if a parent
+ *     certificate was found, false otherwise.  Setting this to true
+ *     does NOT mean that the CRL is valid, only that a parent cert
+ *     was found.  This MUST NOT be NULL.
+ * @return
+ *     0 if no parent was found (regardless of any other properties of
+ *     the CRL), or if a parent was found and the CRL validates
+ *     against the parent.  Otherwise, this returns a non-zero error
+ *     code.
  */
 static int verify_crl(
     scmcon *conp,
@@ -1386,6 +1446,9 @@ static int verify_crl(
 /**
  * @brief
  *     roa utility
+ *
+ * @param[out] stap
+ *     Error code.  This parameter MUST NOT be NULL.
  */
 static unsigned char *readfile(
     char *fn,
@@ -1455,6 +1518,16 @@ static unsigned char *readfile(
 /**
  * @brief
  *     roa verification code
+ *
+ * @param[out] chainOK
+ *     The value at this location will be set to true if a validated
+ *     path to a trust anchor exists, false otherwise.  This MUST NOT
+ *     be NULL.
+ * @return
+ *     0 if the ROA passes standalone validation checks (no checks
+ *     against the parent cert) and either no parent cert is found or
+ *     the path checks pass and there is no error.  Otherwise, a
+ *     non-zero error code.
  */
 static int verify_roa(
     scmcon *conp,
@@ -2036,6 +2109,11 @@ static int cparents(
     return (0);
 }
 
+/**
+ * @return
+ *     number of valid parents on success (non-negative), error code
+ *     on failure (negative).
+ */
 static int countvalidparents(
     scmcon *conp,
     char *IS,
@@ -2774,6 +2852,11 @@ int add_crl(
     return (sta);
 }
 
+/**
+ * @return
+ *     On success, the size of the SKI in bytes.  On error, a negative
+ *     error code (one of the ERR_SCM_* values).
+ */
 static int hexify_ski(
     struct Certificate *certp,
     char *skip)

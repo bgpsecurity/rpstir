@@ -23,8 +23,19 @@
 /** @brief manifests are only DER for now */
 #define OT_MAN          4
 #define OT_GBR          5
+/** @brief highest-valued DER type */
 #define OT_MAXBASIC     5
 
+/**
+ * @brief
+ *     difference between DER and PEM equivalent types
+ *
+ * The types that are less than ::OT_PEM_OFFSET are DER types and
+ * the types that are greater than or equal to ::OT_PEM_OFFSET are
+ * PEM types.  The PEM types are exactly ::OT_PEM_OFFSET greater
+ * than their corresponding DER types (e.g., `OT_CRL_PEM == OT_CRL
+ * + OT_PEM_OFFSET`).
+ */
 #define OT_PEM_OFFSET   128
 
 /** @brief PEM encoded certificate */
@@ -310,6 +321,17 @@ extern int set_cert_flag(
     unsigned int id,
     unsigned int flags);
 
+/**
+ * @warning
+ *     The following functions all use the same static memory and must
+ *     not be called concurrently (including multiple concurrent
+ *     invocations of the same function):
+ *       * find_parent_cert()
+ *       * find_cert_by_aKI()
+ *       * find_trust_anchors()
+ *     Any call to any of these functions overwrites the results
+ *     returned from a previous call to any of these functions.
+ */
 extern struct cert_answers *find_cert_by_aKI(
     char *ski,
     char *aki,
@@ -321,12 +343,44 @@ extern struct cert_answers *find_cert_by_aKI(
  *     Get parent certificates by looking up the cert's issuer and AKI
  *     in the db.
  *
+ * @warning
+ *     The following functions all use the same static memory and must
+ *     not be called concurrently (including multiple concurrent
+ *     invocations of the same function):
+ *       * find_parent_cert()
+ *       * find_cert_by_aKI()
+ *       * find_trust_anchors()
+ *     Any call to any of these functions overwrites the results
+ *     returned from a previous call to any of these functions.
+ *
+ * @param[in] ski
+ *     The subject key identifier (SKI) of each parent certificate
+ *     (the child's AKI).  This MUST NOT be NULL.
+ * @param[in] subject
+ *     The subject of each parent certificate (the child's issuer).
+ *     This may be NULL, in which case only @p ski is used to perform
+ *     the search.
+ * @param[in] conp
+ *     Database connection.  This MUST NOT be NULL.
+ * @return
+ *     The certificates that match the given @p ski and @p subject.
  */
 extern struct cert_answers *find_parent_cert(
     char *ski,
     char *subject,
     scmcon *conp);
 
+/**
+ * @warning
+ *     The following functions all use the same static memory and must
+ *     not be called concurrently (including multiple concurrent
+ *     invocations of the same function):
+ *       * find_parent_cert()
+ *       * find_cert_by_aKI()
+ *       * find_trust_anchors()
+ *     Any call to any of these functions overwrites the results
+ *     returned from a previous call to any of these functions.
+ */
 extern struct cert_answers *find_trust_anchors(
     scm *sscmp,
     scmcon *conp);
@@ -353,6 +407,14 @@ extern char *retrieve_tdir(
  *
  * @param[in] ski
  *     SKI of the ROA
+ * @param[out] fn
+ *     If non-NULL, this points to a pointer identifying the start of
+ *     a buffer.  The full pathname of the parent certificate will be
+ *     written to this buffer.  The buffer must have size at least @c
+ *     PATH_MAX.  The value at this location is never changed.  This
+ *     may be NULL.  WARNING:  This function does NOT allocate the
+ *     buffer and return its location; the buffer must be provided by
+ *     the caller.
  * @return
  *     an X509 * on success, NULL on error
  */

@@ -58,12 +58,24 @@ typedef struct _cert_fields {
     unsigned int flags;
 } cert_fields;
 
+/**
+ * @param[out] stap
+ *     On error the value at this location will be set to an error
+ *     code.  On success, the value at this location may be set to 0
+ *     or may be left alone.  This MUST NOT be NULL.
+ */
 typedef char *(
     *cf_get)(
     X509 *x,
     int *stap,
     int *x509stap);
 
+/**
+ * @param[out] stap
+ *     On error the value at this location will be set to an error
+ *     code.  On success, the value at this location may be set to 0
+ *     or may be left alone.  This MUST NOT be NULL.
+ */
 typedef void (
     *cfx_get)(
     const X509V3_EXT_METHOD *meth,
@@ -132,7 +144,7 @@ extern void freecf(
  * @param[out] stap
  *     On success, the value at this "status pointer" is set to 0.  On
  *     failure, it is set to the appropriate error code
- *     (e.g. ERR_SCM_INVALDT).
+ *     (e.g. ERR_SCM_INVALDT).  This MUST NOT be NULL.
  * @return
  *     The return value is allocated memory.
  */
@@ -144,10 +156,17 @@ extern char *ASNTimeToDBTime(
 /**
  * @brief
  *     converts the local time into GMT in a form recognized by the DB
+ *
+ * @param[out] stap
+ *     Error code.  This parameter may be NULL.
  */
 extern char *LocalTimeToDBTime(
     int *stap);
 
+/**
+ * @param[out] stap
+ *     Error code.  This parameter may be NULL.
+ */
 extern char *UnixTimeToDBTime(
     time_t clck,
     int *stap);
@@ -242,12 +261,24 @@ typedef struct _crl_fields {
     unsigned int flags;
 } crl_fields;
 
+/**
+ * @param[out] stap
+ *     On error the value at this location will be set to an error
+ *     code.  On success, the value at this location may be set to 0
+ *     or may be left alone.  This MUST NOT be NULL.
+ */
 typedef char *(
     *crf_get)(
     X509_CRL *x,
     int *stap,
     int *crlstap);
 
+/**
+ * @param[out] stap
+ *     On error the value at this location will be set to an error
+ *     code.  On success, the value at this location may be set to 0
+ *     or may be left alone.  This MUST NOT be NULL.
+ */
 typedef void (
     *crfx_get)(
     const X509V3_EXT_METHOD *meth,
@@ -300,14 +331,19 @@ extern void freecrf(
  *     field.  This field requires DB access and is therefore not set
  *     by this function.
  *
+ * @param[in,out] xp
+ *     On success the value at this location will be set to a pointer
+ *     to a CRL structure.  If either @p fname or @p fullname are NULL
+ *     or empty strings, the value at this location must point to an
+ *     existing CRL structure.  This MUST NOT be NULL.
  * @param[out] stap
  *     On success the value at this location will be set to 0.  On
  *     failure the value at this location is set to a negative error
- *     code.
+ *     code.  This MUST NOT be NULL.
  * @param[out] crlstap
  *     On success the value at this location is set to 1.  If an X509
  *     error occured, the value at this location is set to indicate
- *     the particular error.
+ *     the particular error.  This MUST NOT be NULL.
  * @return
  *     On success this function returns a pointer to allocated memory
  *     containing all the indicated fields (except the
