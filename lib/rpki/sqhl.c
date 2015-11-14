@@ -1123,19 +1123,19 @@ static X509 *parent_cert(
          *     ignores error code without explanation (num_ansrs might
          *     be negative)
          */
-        return NULL;
+        goto no_parent;
     if (cert_answersp->num_ansrs == 1)
     {
         cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (cert_ansrp->flags & (SCM_FLAG_ISTARGET | SCM_FLAG_HASPARACERT))
-            return NULL;
+            goto no_parent;
     }
     else if (cert_answersp->num_ansrs == 2)
     {
         // do they conflict?
         if (((cert_answersp->cert_ansrp[0].flags & ff) &
              (cert_ansrp->flags & ff)))
-            return NULL;
+            goto no_parent;
         // if using paracerts, choose the paracert
 
         if ((useParacerts &&
@@ -1144,7 +1144,7 @@ static X509 *parent_cert(
              !(cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT)))
             cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (!parentAKI || !parentIssuer)
-            return NULL;
+            goto no_parent;
         /** @bug parentAKI is not a buffer of known length */
         strcpy(parentAKI, cert_ansrp->aki);
         /** @bug parentIssuer is not a buffer of known length */
@@ -1156,13 +1156,15 @@ static X509 *parent_cert(
          *     what if there are many matches (e.g., cert renewal,
          *     evil twin)?
          */
-        return NULL;
+        goto no_parent;
     xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(pathname, ofullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
     return readCertFromFile(ofullname, stap);
+no_parent:
+    return NULL;
 }
 
 struct cert_answers *find_cert_by_aKI(
