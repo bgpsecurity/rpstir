@@ -293,7 +293,7 @@ int statementscm_no_data(
 
     ret = newhstmt(conp);
     if (!SQLOK(ret))
-        return ret;
+        return ERR_SCM_SQL;
 
     ret = statementscm(conp, stm);
 
@@ -665,7 +665,7 @@ int getmaxidscm(
         return (ERR_SCM_INVALARG);
     sta = newhstmt(conp);
     if (!SQLOK(sta))
-        return sta;
+        return ERR_SCM_SQL;
     xsnprintf(stmt, sizeof(stmt),
               "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
     sta = statementscm(conp, stmt);
