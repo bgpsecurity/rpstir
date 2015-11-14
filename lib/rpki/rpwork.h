@@ -150,7 +150,7 @@ nextword(
 
 char myrootfullname[PATH_MAX];
 
-int
+err_code
 parse_SKI_blocks(
     struct keyring *,
     FILE *,
@@ -159,12 +159,12 @@ parse_SKI_blocks(
     int,
     int *);
 
-int
+err_code
 get_CAcert(
     char *,
     struct done_cert **);
 
-int
+err_code
 getSKIBlock(
     FILE *,
     char *,

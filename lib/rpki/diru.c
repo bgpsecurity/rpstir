@@ -102,7 +102,8 @@ int strwillfit(
     return (already + newlen);
 }
 
-int splitdf(
+err_code
+splitdf(
     char *dirprefix,
     char *dirname,
     char *fname,
@@ -229,7 +230,8 @@ int splitdf(
     return (0);
 }
 
-int isokfile(
+err_code
+isokfile(
     char *fname)
 {
     struct stat mystat;

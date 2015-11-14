@@ -64,7 +64,8 @@ static char *nextSKI,
  * @brief
  *     callback to indicate that a parent was found
  */
-static int registerParent(
+static err_code
+registerParent(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -309,7 +310,8 @@ struct display_ip_addrs_context
  *     searchscm() callback for display_ip_addrs(), called for each
  *     prefix in a ROA
  */
-static int display_ip_addrs_valuefunc(
+static err_code
+display_ip_addrs_valuefunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t idx)
@@ -397,7 +399,7 @@ static int display_ip_addrs(
         roaPrefixTable = findtablescm(scmp, "ROA_PREFIX");
     }
 
-    int sta;
+    err_code sta;
 
     unsigned long roa_local_id =
         *((unsigned long *)(s->vec[idx1].valptr));

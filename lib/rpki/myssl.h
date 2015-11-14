@@ -1,6 +1,8 @@
 #ifndef LIB_RPKI_MYSSL_H
 #define LIB_RPKI_MYSSL_H
 
+#include "err.h"
+
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -67,7 +69,7 @@ typedef struct _cert_fields {
 typedef char *(
     *cf_get)(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /**
@@ -81,7 +83,7 @@ typedef void (
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /*
@@ -150,7 +152,7 @@ extern void freecf(
  */
 extern char *ASNTimeToDBTime(
     char *in,
-    int *stap,
+    err_code *stap,
     int only_gentime);
 
 /**
@@ -161,7 +163,7 @@ extern char *ASNTimeToDBTime(
  *     Error code.  This parameter may be NULL.
  */
 extern char *LocalTimeToDBTime(
-    int *stap);
+    err_code *stap);
 
 /**
  * @param[out] stap
@@ -169,26 +171,27 @@ extern char *LocalTimeToDBTime(
  */
 extern char *UnixTimeToDBTime(
     time_t clck,
-    int *stap);
+    err_code *stap);
 
 /*
  * This utility function just gets the SKI from an X509 data structure.
  */
 extern char *X509_to_ski(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 extern char *X509_to_subject(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /*
  * Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
  * on a single file.
  */
-extern int rescert_profile_chk(
+err_code
+rescert_profile_chk(
     X509 *x,
     struct Certificate *certp,
     int ct);
@@ -201,7 +204,8 @@ extern int rescert_profile_chk(
  *
  * Check CRL conformance with respect to RFCs 5280 and 6487.
   -----------------------------------------------------------------------------*/
-extern int crl_profile_chk(
+err_code
+crl_profile_chk(
     struct CertificateRevocationList *crlp);
 
 /*
@@ -228,7 +232,7 @@ extern cert_fields *cert2fields(
     char *fullname,
     int typ,
     X509 **xp,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /*
@@ -270,7 +274,7 @@ typedef struct _crl_fields {
 typedef char *(
     *crf_get)(
     X509_CRL *x,
-    int *stap,
+    err_code *stap,
     int *crlstap);
 
 /**
@@ -284,7 +288,7 @@ typedef void (
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,
-    int *stap,
+    err_code *stap,
     int *crlstap);
 
 /*
@@ -337,9 +341,9 @@ extern void freecrf(
  *     or empty strings, the value at this location must point to an
  *     existing CRL structure.  This MUST NOT be NULL.
  * @param[out] stap
- *     On success the value at this location will be set to 0.  On
- *     failure the value at this location is set to a negative error
- *     code.  This MUST NOT be NULL.
+ *     The value at this location will be set to an error code
+ *     indicating the success of this function.  This MUST NOT be
+ *     NULL.
  * @param[out] crlstap
  *     On success the value at this location is set to 1.  If an X509
  *     error occured, the value at this location is set to indicate
@@ -355,7 +359,7 @@ extern crl_fields *crl2fields(
     char *fullname,
     int typ,
     X509_CRL **xp,
-    int *stap,
+    err_code *stap,
     int *crlstap,
     void *goodoidp);
 

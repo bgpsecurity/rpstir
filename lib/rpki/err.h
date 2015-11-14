@@ -256,6 +256,6 @@ typedef enum {
  */
 const char *
 err2string(
-    int err);
+    err_code err);
 
 #endif

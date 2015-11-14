@@ -84,10 +84,11 @@ static int format_aKI(
     return (c - namep);
 }
 
-static int add_paracert2DB(
+static err_code
+add_paracert2DB(
     struct done_cert *done_certp)
 {
-    int ansr;
+    err_code ansr;
     char fullname[PATH_MAX];
     char ski[80];
     ulong flags;
@@ -339,7 +340,8 @@ static void fill_done_cert(
     done_certp->perf = 0;
 }
 
-int get_CAcert(
+err_code
+get_CAcert(
     char *ski,
     struct done_cert **done_certpp)
 {
@@ -411,7 +413,8 @@ int get_CAcert(
     return 0;
 }
 
-static int sign_cert(
+static err_code
+sign_cert(
     struct keyring *keyring,
     struct Certificate *certp)
 {
@@ -1158,6 +1161,7 @@ static int modify_paracert(
     int typ;
     int changes = 0;
     int did = 0;
+    err_code err;
     // start at beginning of SKI list and IPv4 family in certificate
     // beginning of SKI list
     struct iprange *rulerangep = ruleranges.iprangep;
@@ -1196,9 +1200,8 @@ static int modify_paracert(
             return did;
         remake_cert_ranges(paracertp);
     }
-    did = sign_cert(keyring, paracertp);
-    if (did < 0)
-        return did;
+    if ((err = sign_cert(keyring, paracertp)) < 0)
+        return err;
     return changes;
 }
 
@@ -1219,14 +1222,15 @@ static int modify_paracert(
  *         ELSE add the cert & paracert to the done list
  * 4.    IF something was done, call this function with this child
  */
-static int search_downward(
+static err_code
+search_downward(
     struct keyring *keyring,
     struct Certificate *topcertp)
 {
     struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, 0);
     struct Certificate *childcertp;
-    int ansr = 0;
+    err_code err = 0;
     int numkid;
     int numkids;
     char pSKI[64];
@@ -1277,7 +1281,7 @@ static int search_downward(
                 continue;
         }
         // step 2
-        ansr = modify_paracert(keyring, 1, done_certp->paracertp);
+        int ansr = modify_paracert(keyring, 1, done_certp->paracertp);
         done_certp->perf |= (WASPERFORATED | WASPERFORATEDTHISBLK);
         if (have == 0)
         {
@@ -1293,16 +1297,19 @@ static int search_downward(
             }
         }
         if (ansr > 0)
-            ansr = search_downward(keyring, done_certp->origcertp);
-        if (ansr < 0)
+            err = search_downward(keyring, done_certp->origcertp);
+        else if (ansr < 0)
+            err = ansr;
+        if (err)
             break;
     }
     free(mycert_answers.cert_ansrp);
     delete_casn(&childcertp->self);
-    return ansr;
+    return err;
 }
 
-static int process_trust_anchors(
+static err_code
+process_trust_anchors(
     struct keyring *keyring)
 {
     struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
@@ -1380,7 +1387,8 @@ static int process_trust_anchors(
  *      them
  *    Return 0
  */
-static int process_control_block(
+static err_code
+process_control_block(
     struct keyring *keyring,
     struct done_cert *done_certp)
 {
@@ -1391,6 +1399,7 @@ static int process_control_block(
     for (run = 0; 1; run++)
     {
         int ansr;
+        err_code err;
         if (((done_certp->perf & WASPERFORATED) && !run) ||
             ((done_certp->perf & WASEXPANDED) && run))
         {
@@ -1423,8 +1432,8 @@ static int process_control_block(
         extp = find_extension(&done_certp->origcertp->toBeSigned.extensions,
                               id_authKeyId, 0);
         format_aKI(skibuf, &extp->extnValue.authKeyId.keyIdentifier);
-        if ((ansr = get_CAcert(skibuf, &ndone_certp)) < 0)
-            return ansr;
+        if ((err = get_CAcert(skibuf, &ndone_certp)) < 0)
+            return err;
         done_certp = ndone_certp;
     }
     // oldcert is at a self-signed cert
@@ -1449,12 +1458,13 @@ static int process_control_block(
  *      Process the trust anchors with these constraints
  *    WHILE skibuf has anything
  */
-static int process_control_blocks(
+static err_code
+process_control_blocks(
     struct keyring *keyring,
     FILE *SKI)
 {
     struct done_cert *done_certp;
-    int ansr;
+    err_code ansr;
     do
     {
         char *cc;
@@ -1522,7 +1532,7 @@ static int process_control_blocks(
                 }
             }
         }
-        int err;
+        err_code err;
 
         err = process_control_block(keyring, done_certp);
         /** @bug ignores error code without explanation */
@@ -1545,7 +1555,8 @@ static int process_control_blocks(
     return 0;
 }
 
-int read_SKI_blocks(
+err_code
+read_SKI_blocks(
     scm *scmp,
     scmcon *conp,
     char *skiblockfile)
@@ -1563,10 +1574,10 @@ int read_SKI_blocks(
      */
     Certificate(&myrootcert, (ushort) 0);
     int numcert;
-    int locansr = 0;
+    err_code locansr = 0;
     char locfilename[128];
     *locfilename = 0;
-    int ansr = 0;
+    err_code ansr = 0;
     struct keyring keyring = { NULL, NULL, NULL };
     // step 1
     FILE *SKI = fopen(skiblockfile, "r");

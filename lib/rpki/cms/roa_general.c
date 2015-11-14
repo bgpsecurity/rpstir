@@ -567,7 +567,8 @@ ssize_t roaGetPrefixes(
     return prefixes_length;
 }
 
-int roaGenerateFilter(
+err_code
+roaGenerateFilter(
     struct CMS *r,
     uchar *cert,
     FILE *fp,

@@ -118,7 +118,8 @@ static void encodeblock(
  ** base64 encode a stream adding padding and line breaks as per spec.
  ** ALLOCATES MEMORY that must be freed elsewhere
  */
-static int encode_b64(
+static err_code
+encode_b64(
     unsigned char *bufIn,
     int inSize,
     unsigned char **bufOut,
@@ -320,7 +321,8 @@ static void decodeblock(
  ** decode a base64 encoded stream discarding padding, line breaks and noise
  ** ALLOCATES MEMORY that must be freed elsewhere
  */
-int decode_b64(
+err_code
+decode_b64(
     unsigned char *bufIn,
     int inSize,
     unsigned char **bufOut,
@@ -432,7 +434,8 @@ int decode_b64(
 //
 // ///////////////////////////////////////////////////////////
 
-static int ctocval(
+static err_code
+ctocval(
     unsigned char cIn,
     unsigned char *val,
     int radix)
@@ -455,14 +458,15 @@ static int ctocval(
 
 // Crappy substitute function for pleasant function that returned a short
 // (now string to 2 char array) BUT it assures no endianness crap
-static int ip_strto2c(
+static err_code
+ip_strto2c(
     unsigned char *strToTranslate,
     unsigned char *c2Returned,
     int radix)
 {
     int i = 0;
     int iLen = 0;
-    int sta;
+    err_code sta;
     unsigned short int sAns = 0;
     unsigned char cTemp = 0;
     unsigned char c2Ans[2];
@@ -497,14 +501,15 @@ static int ip_strto2c(
     return 0;
 }
 
-static int ip_strtoc(
+static err_code
+ip_strtoc(
     unsigned char *strToTranslate,
     unsigned char *cReturned,
     int radix)
 {
     int i = 0;
     int iLen = 0;
-    int sta;
+    err_code sta;
     unsigned char cAns = 0;
     unsigned char cTemp = 0;
 
@@ -656,7 +661,8 @@ static int calculateAndClearMM(
 // JFG - Note: Currently handled by this function are addresses of the format
 // 168.156/24, which may not be canonical, but which interprets out to
 // 168.156.0.0/24 for now.
-static int translateIPv4Prefix(
+static err_code
+translateIPv4Prefix(
     unsigned char *ipstring,
     unsigned char **ipbytearray,
     int *iprefixlen)
@@ -665,7 +671,7 @@ static int translateIPv4Prefix(
     int iStringLen = 0;
     int iByteIndex = 0;
     int iTempIndex = 0;
-    int sta;
+    err_code sta;
     unsigned char cAddrPart = 0;
     unsigned char cPrefix = 0;
     unsigned char cLastChar = 0;
@@ -773,7 +779,8 @@ static int translateIPv4Prefix(
 
 // Translation of hexadecimal IPv6 addresses
 //
-static int translateIPv6Prefix(
+static err_code
+translateIPv6Prefix(
     unsigned char *ipstring,
     unsigned char **ipbytearray,
     int *iprefixlen)
@@ -784,7 +791,7 @@ static int translateIPv6Prefix(
     int iTempIndex = 0;
     int iColonCount = 0;
     int iSkippedBytes = 0;
-    int sta;
+    err_code sta;
     int iLoopStart = 0;
     int iPrefixMark = 0;
 
@@ -952,7 +959,8 @@ static int translateIPv6Prefix(
 //
 // ///////////////////////////////////////////////////////////
 
-static int setVersion(
+static err_code
+setVersion(
     struct CMS *roa,
     unsigned char *versionstring)
 {
@@ -994,7 +1002,8 @@ static int setVersion(
  roaFromConfig().  And/or we need to fix write_casn_num() as well as
  its internal limit-checking code.
 */
-static int setAS_ID(
+static err_code
+setAS_ID(
     struct CMS *roa,
     unsigned char *asidstring)
 {
@@ -1015,7 +1024,8 @@ static int setAS_ID(
     return 0;
 }
 
-static int setIPFamily(
+static err_code
+setIPFamily(
     struct CMS *roa,
     unsigned char *ipfamstring)
 {
@@ -1076,7 +1086,8 @@ static int setIPFamily(
     return ERR_SCM_INVALIPB;
 }
 
-static int setIPAddr(
+static err_code
+setIPAddr(
     struct CMS *roa,
     unsigned char *ipaddrstring)
 {
@@ -1088,7 +1099,7 @@ static int setIPAddr(
     unsigned char cBadBits = 0;
     int iBlocks = 0;
     int iAddrs = 0;
-    int sta = 0;
+    err_code sta = 0;
     int maxLen = 0;
     uchar *addrString;
 
@@ -1215,7 +1226,7 @@ static int setIPAddr(
 // min/max qualifiers
 #ifdef IP_RANGES_ALLOWED
 
-static int
+static err_code
 setIPAddrMin(
     struct CMS *roa,
     unsigned char *ipaddrminstring)
@@ -1226,7 +1237,7 @@ setIPAddrMin(
     int iPrefixSize = 0;
     int iGoodBytes = 0;
     unsigned char cBadBits = 0;
-    int sta = 0;
+    err_code sta = 0;
     int iBlocks = 0;
     int iAddrs = 0;
     struct IPAddressOrRangeA *roaAddr = NULL;
@@ -1337,7 +1348,7 @@ setIPAddrMin(
     return sta;
 }
 
-static int
+static err_code
 setIPAddrMax(
     struct CMS *roa,
     unsigned char *ipaddrmaxstring)
@@ -1348,7 +1359,7 @@ setIPAddrMax(
     int iPrefixSize = 0;
     int iGoodBytes = 0;
     unsigned char cBadBits = 0;
-    int sta = 0;
+    err_code sta = 0;
     int iBlocks = 0;
     int iAddrs = 0;
     struct IPAddressOrRangeA *roaAddr = NULL;
@@ -1461,7 +1472,8 @@ setIPAddrMax(
 
 #endif                          // IP_RANGES_ALLOWED
 
-static int setCertName(
+static err_code
+setCertName(
     struct CMS *roa,
     unsigned char *certfilenamestring)
 {
@@ -1494,7 +1506,8 @@ static int setCertName(
 //
 // ///////////////////////////////////////////////////////////
 
-static int confInterpret(
+static err_code
+confInterpret(
     char *filename,
     struct CMS *roa)
 {
@@ -1504,8 +1517,8 @@ static int confInterpret(
     unsigned char value[MAX_LINE + 1] = "";
 
     int iRet = 0;
-    int iRet2 = 0;
-    int iROAState = 0;
+    err_code iRet2 = 0;
+    err_code iROAState = 0;
     int iLineCount = 0;
     FILE *fp = NULL;
     enum configKeys ck = 0;
@@ -1692,13 +1705,14 @@ static int confInterpret(
 // Exported functions from roa_utils.h
 //
 // ///////////////////////////////////////////////////////////
-int roaFromFile(
+err_code
+roaFromFile(
     char *fname,
     int fmt,
     int doval,
     struct CMS *rp)
 {
-    int iReturn;
+    err_code iReturn;
     int fd;
     off_t iSize;
     ssize_t amt_read;
@@ -1777,13 +1791,14 @@ int roaFromFile(
     return iReturn;
 }
 
-int roaToFile(
+err_code
+roaToFile(
     struct CMS *r,
     char *fname,
     int fmt)
 {
     int fd = 0;
-    int iReturn = 0;
+    err_code iReturn = 0;
     int written;
     int iSizeDER;
     int iSizePEM = 0;

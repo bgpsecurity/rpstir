@@ -71,7 +71,8 @@ struct badfile {
  * The non-NULL return from this function is allocated memory that must be
  * freed by a call to roaFree().
  */
-int roaFromConfig(
+err_code
+roaFromConfig(
     char *fname,
     int doval,
     struct CMS *rp);
@@ -109,7 +110,8 @@ int roaToConfig(
  * The non-NULL return from this function is allocated memory that must be
  * freed by a call to roaFree().
  */
-int roaFromFile(
+err_code
+roaFromFile(
     char *fname,
     int fmt,
     int doval,
@@ -123,7 +125,8 @@ int roaFromFile(
  * On success this function returns 0; on failure it returns a negative error
  * code.
  */
-int roaToFile(
+err_code
+roaToFile(
     struct CMS *r,
     char *fname,
     int fmt);
@@ -140,7 +143,8 @@ int roaToFile(
  * On success this function returns 0; on failure it returns a negative error
  * code.
  */
-int roaGenerateFilter(
+err_code
+roaGenerateFilter(
     struct CMS *r,
     uchar *cert,
     FILE *fp,
@@ -227,7 +231,8 @@ uint32_t roaAS_ID(
  *     On success it returns 0; on failure, it returns a negative
  *     error code.
  */
-int roaValidate(
+err_code
+roaValidate(
     struct CMS *r);
 
 /**=========================================================================
@@ -301,7 +306,8 @@ int roaValidate(
  *   validity time raises the possibility of a substitution attack using a
  *   stale manifest, as described in Section 6.4.
  */
-int manifestValidate(
+err_code
+manifestValidate(
     struct CMS *r,
     int *stalep);
 
@@ -310,7 +316,8 @@ int manifestValidate(
  * record that do not require database access.  On success it returns
  * 0; on failure, it returns a negative error code.
  */
-int ghostbustersValidate(
+err_code
+ghostbustersValidate(
     struct CMS *cms);
 
 /**
@@ -328,7 +335,7 @@ int ghostbustersValidate(
  *     char *ski;
  *     char fn[PATH_MAX];
  *     int valid = -1;
- *     int sta;
+ *     err_code sta;
  *
  *     sta = roaValidate(r);
  *     if (sta == 0) {
@@ -346,7 +353,8 @@ int ghostbustersValidate(
  * @return
  *     0 on success and a negative error code on failure.
  */
-extern int roaValidate2(
+err_code
+roaValidate2(
     struct CMS *r);
 
 /**
@@ -364,7 +372,11 @@ extern int roaValidate2(
  *     The size of the buffer at @p inhash.
  * @return
  *     On success this function returns the length, in bytes, of the
- *     hash.  On failure it returns a negative error code.
+ *     hash.  On failure it returns a negative error code.  The @c
+ *     err_code type is not used as the return value type because the
+ *     C standard allows enum types to be smaller than @c int (even
+ *     though the enumeration constants themselves always have type @c
+ *     int), which would limit the maximum supported hash length.
  */
 int check_fileAndHash(
     struct FileAndHash *fahp,
@@ -390,7 +402,8 @@ void roaFree(
  * @brief
  *     This function checks the signature on a ROA.
  */
-int check_sig(
+err_code
+check_sig(
     struct CMS *rp,
     struct Certificate *certp);
 
@@ -410,7 +423,8 @@ int check_sig(
  * @param[out] outSize
  *     Size of the buffer at @p bufOut.
  */
-int decode_b64(
+err_code
+decode_b64(
     unsigned char *bufIn,
     int inSize,
     unsigned char **bufOut,

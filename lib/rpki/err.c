@@ -15,7 +15,7 @@ static const char *errs[] = {
 
 const char *
 err2string(
-    int err)
+    err_code err)
 {
     if (err > 0 || err < ERR_SCM_MAXERR)
         return (NULL);

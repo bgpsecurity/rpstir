@@ -36,7 +36,8 @@ static scmtab *certTable,
  * @brief
  *     callback function for searchscm() that records the timestamps
  */
-static int handleTimestamps(
+static err_code
+handleTimestamps(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -54,7 +55,8 @@ static int handleTimestamps(
  *
  * check if count == 0, and if so then do the setting of certs' flags
  */
-static int handleIfStale(
+static err_code
+handleIfStale(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt)
@@ -83,7 +85,8 @@ static int handleIfStale(
  *
  * check if count > 0, and if so then remove unknown flag from cert
  */
-static int handleIfCurrent(
+static err_code
+handleIfCurrent(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt)
@@ -107,7 +110,8 @@ static int handleIfCurrent(
  */
 static scmsrcha *cntSrch = NULL;
 
-static int countCurrentCRLs(
+static err_code
+countCurrentCRLs(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -146,7 +150,8 @@ static char staleManStmt[MANFILES_SIZE];
 static char *staleManFiles[10000];
 static int numStaleManFiles = 0;
 
-static int handleStaleMan2(
+static err_code
+handleStaleMan2(
     scmcon *conp,
     scmtab *tab,
     char *files)
@@ -160,7 +165,8 @@ static int handleStaleMan2(
     return statementscm_no_data(conp, staleManStmt);
 }
 
-static int handleStaleMan(
+static err_code
+handleStaleMan(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -179,7 +185,8 @@ static int handleStaleMan(
  * callback function for non-stale manifest search that marks accordingly
  * all objects referenced by manifest that is non-stale
  */
-static int handleFreshMan2(
+static err_code
+handleFreshMan2(
     scmcon *conp,
     scmtab *tab,
     char *files)
@@ -204,7 +211,7 @@ int main(
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
     unsigned long blah = 0;
-    int status;
+    err_code status;
     int i;
 
     // initialize

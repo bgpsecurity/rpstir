@@ -39,12 +39,13 @@ static int tdirlen = 0;         // length of tdir
 /*
  * save state in case operations leave db in bad state
  */
-static int saveState(
+static err_code
+saveState(
     scmcon *conp,
     scm *scmp)
 {
     int i;
-    int sta = 0;
+    err_code sta = 0;
     int leen;
     char *name;
     char *stmt;
@@ -71,12 +72,13 @@ static int saveState(
 /*
  * restore state when operations leave db in bad state
  */
-static int restoreState(
+static err_code
+restoreState(
     scmcon *conp,
     scm *scmp)
 {
     int i;
-    int sta = 0;
+    err_code sta = 0;
     int leen;
     char *name;
     char *stmt;
@@ -109,11 +111,12 @@ static int restoreState(
  * on failure.
  */
 
-static int deleteop(
+static err_code
+deleteop(
     scmcon *conp,
     scm *scmp)
 {
-    int sta;
+    err_code sta;
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
@@ -136,11 +139,12 @@ static int deleteop(
  * on failure.
  */
 
-static int createop(
+static err_code
+createop(
     scmcon *conp,
     scm *scmp)
 {
-    int sta;
+    err_code sta;
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
@@ -168,7 +172,8 @@ static int createop(
     return (sta);
 }
 
-static int create2op(
+static err_code
+create2op(
     scm *scmp,
     scmcon *conp,
     char *topdir)
@@ -176,7 +181,7 @@ static int create2op(
     scmkva aone;
     scmkv one;
     scmtab *mtab;
-    int sta;
+    err_code sta;
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
@@ -370,7 +375,8 @@ static char *afterwhite(
 
 static char *hdir = NULL;
 
-static int aur(
+static err_code
+aur(
     scm *scmp,
     scmcon *conp,
     char what,
@@ -379,7 +385,7 @@ static int aur(
     char *outdir;
     char *outfile;
     char *outfull;
-    int sta;
+    err_code sta;
     int trusted = 0;
 
     sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
@@ -449,7 +455,8 @@ static char *hasoneline(
  * any) into 'line', and put the remaining stuff into left.
  */
 
-static int sock1line(
+static err_code
+sock1line(
     int s,
     char **leftp,
     char **line)
@@ -556,7 +563,8 @@ static int sock1line(
  * informational text. Optional message.
  */
 
-static int sockline(
+static err_code
+sockline(
     scm *scmp,
     scmcon *conp,
     int s)
@@ -566,7 +574,7 @@ static int sockline(
     char *valu;
     char c;
     int done = 0;
-    int sta = 0;
+    err_code sta = 0;
 
     for (done = 0; !done;)
     {
@@ -678,7 +686,8 @@ static int sockline(
     return (sta);
 }
 
-static int fileline(
+static err_code
+fileline(
     scm *scmp,
     scmcon *conp,
     FILE *s)
@@ -687,7 +696,7 @@ static int fileline(
     char *valu;
     char c;
     int done = 0;
-    int sta = 0;
+    err_code sta = 0;
 
     for (done = 0; !done;)
     {
@@ -840,7 +849,7 @@ int main(
     int trusted = 0;
     int force = 0;
     int allowex = 0;
-    int sta = 0;
+    err_code sta = 0;
     int s;
     int c;
 
@@ -1135,7 +1144,7 @@ int main(
         char *line = NULL;
         size_t len = 0;
         ssize_t read;
-        int status;
+        err_code status;
 
         setallowexpired(allowex);
         while ((read = getline(&line, &len, stdin)) != -1)

@@ -1,6 +1,8 @@
 #ifndef LIB_RPKI_SQHL_H
 #define LIB_RPKI_SQHL_H
 
+#include "err.h"
+
 #include <stdio.h>
 #include "db_constants.h"
 #include "scm.h"
@@ -72,7 +74,7 @@ typedef enum {
  * Data types
  */
 
-typedef int (
+typedef err_code (
     *crlfunc)(
     scm *scmp,
     scmcon *conp,
@@ -104,7 +106,8 @@ struct goodoid {
  * It is assumed that the existence of the putative directory has already been
  * verified.
  */
-extern int findorcreatedir(
+err_code
+findorcreatedir(
     scm *scmp,
     scmcon *conp,
     char *dirname,
@@ -119,7 +122,8 @@ extern int findorcreatedir(
  *
  * This function returns 0 on success and a negative error code on failure.
  */
-extern int add_object(
+err_code
+add_object(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -136,7 +140,8 @@ extern int add_object(
  * dir_id) combination in the appropriate table and issue the delete
  * SQL call.
  */
-extern int delete_object(
+err_code
+delete_object(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -173,7 +178,8 @@ extern int infer_filetype(
  *
  * This function returns 0 on success and a negative error code on failure.
  */
-extern int add_cert(
+err_code
+add_cert(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -188,7 +194,8 @@ extern int add_cert(
  * Add a CRL to the DB.  This function returns 0 on success and a negative
  * error code on failure.
  */
-extern int add_crl(
+err_code
+add_crl(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -197,7 +204,8 @@ extern int add_crl(
     int utrust,
     int typ);
 
-extern int add_roa(
+err_code
+add_roa(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -210,7 +218,8 @@ extern int add_roa(
 /*
  * Add a manifest to the database
  */
-extern int add_manifest(
+err_code
+add_manifest(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -223,7 +232,8 @@ extern int add_manifest(
 /*
     Add a ghostbusters record to the database
 */
-extern int add_ghostbusters(
+err_code
+add_ghostbusters(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -255,7 +265,8 @@ extern int add_rta(
  *     On success this function returns 0.  On failure it returns a
  *     negative error code.
  */
-extern int iterate_crl(
+err_code
+iterate_crl(
     scm *scmp,
     scmcon *conp,
     crlfunc cfunc);
@@ -274,7 +285,8 @@ extern int iterate_crl(
  *     1 if it deleted something, 0 if it deleted nothing and a
  *     negative error code on failure.
  */
-extern int revoke_cert_by_serial(
+err_code
+revoke_cert_by_serial(
     scm *scmp,
     scmcon *conp,
     char *issuer,
@@ -285,7 +297,8 @@ extern int revoke_cert_by_serial(
  * @brief
  *     Delete a particular local_id from a table.
  */
-extern int deletebylid(
+err_code
+deletebylid(
     scmcon *conp,
     scmtab *tabp,
     unsigned int lid);
@@ -300,19 +313,22 @@ extern int deletebylid(
  * it marks them as NOTYET.  If it finds any where the end validity
  * date (valto) is in the past, it deletes them.
  */
-extern int certificate_validity(
+err_code
+certificate_validity(
     scm *scmp,
     scmcon *conp);
 
 /*
  * Update the metadata table to indicate when a particular client ran last.
  */
-extern int ranlast(
+err_code
+ranlast(
     scm *scmp,
     scmcon *conp,
     char *whichcli);
 
-extern int addStateToFlags(
+err_code
+addStateToFlags(
     unsigned int *flags,
     int isValid,
     char *filename,
@@ -320,7 +336,8 @@ extern int addStateToFlags(
     scm *scmp,
     scmcon *conp);
 
-extern int set_cert_flag(
+err_code
+set_cert_flag(
     scmcon *conp,
     unsigned int id,
     unsigned int flags);
@@ -394,7 +411,8 @@ extern struct Extension *get_extension(
     char *idp,
     int *count);
 
-extern int read_SKI_blocks(
+err_code
+read_SKI_blocks(
     scm *scmp,
     scmcon *conp,
     char *skiblockfile);
@@ -402,7 +420,7 @@ extern int read_SKI_blocks(
 extern char *retrieve_tdir(
     scm *scmp,
     scmcon *conp,
-    int *stap);
+    err_code *stap);
 
 /**
  * @brief
@@ -423,7 +441,7 @@ extern void *roa_parent(
     scmcon *conp,
     char *ski,
     char *fn,
-    int *stap);
+    err_code *stap);
 
 extern void startSyslog(
     char *appName);

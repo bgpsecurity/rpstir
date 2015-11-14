@@ -38,7 +38,7 @@ int strict_profile_checks = 0;
 
 char *ASNTimeToDBTime(
     char *bef,
-    int *stap,
+    err_code *stap,
     int only_gentime)
 {
     int year;
@@ -186,7 +186,7 @@ char *ASNTimeToDBTime(
 }
 
 char *LocalTimeToDBTime(
-    int *stap)
+    err_code *stap)
 {
     time_t clck;
     (void)time(&clck);
@@ -195,11 +195,11 @@ char *LocalTimeToDBTime(
 
 char *UnixTimeToDBTime(
     time_t clck,
-    int *stap)
+    err_code *stap)
 {
     struct tm *tmp;
     char *out;
-    int sta = 0;
+    err_code sta = 0;
 
     out = (char *)calloc(48, sizeof(char));
     if (out == NULL)
@@ -313,7 +313,7 @@ static char *addgn(
 
 static char *cf_get_subject(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     char *ptr;
@@ -343,7 +343,7 @@ static char *cf_get_subject(
 
 char *X509_to_subject(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     return cf_get_subject(x, stap, x509stap);
@@ -351,7 +351,7 @@ char *X509_to_subject(
 
 static char *cf_get_issuer(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     char *ptr;
@@ -377,7 +377,7 @@ static char *cf_get_issuer(
 
 static char *cf_get_sn(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     ASN1_INTEGER *a1;
@@ -444,7 +444,7 @@ static char *cf_get_sn(
 
 static char *cf_get_from(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     ASN1_GENERALIZEDTIME *nb4;
@@ -484,7 +484,7 @@ static char *cf_get_from(
 
 static char *cf_get_to(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     ASN1_GENERALIZEDTIME *naf;
@@ -522,7 +522,7 @@ static char *cf_get_to(
 
 static char *cf_get_sig(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     (void)x509stap;
@@ -548,7 +548,7 @@ static void cf_get_ski(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     char *ptr;
@@ -586,7 +586,7 @@ static void cf_get_aki(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     AUTHORITY_KEYID *aki;
@@ -626,7 +626,7 @@ static void cf_get_sia(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     AUTHORITY_INFO_ACCESS *aia;
@@ -660,7 +660,7 @@ static void cf_get_aia(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     AUTHORITY_INFO_ACCESS *aia;
@@ -694,7 +694,7 @@ static void cf_get_crldp(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     STACK_OF(DIST_POINT) * crld;
@@ -738,7 +738,7 @@ static void cf_get_flags(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     BASIC_CONSTRAINTS *bk;
@@ -767,7 +767,7 @@ static void cf_get_ipb(
     const X509V3_EXT_METHOD *meth,
     void *ex,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     X509_EXTENSION *exx;
@@ -839,7 +839,7 @@ cert_fields *cert2fields(
     char *fullname,
     int typ,
     X509 **xp,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     const unsigned char *udat;
@@ -1026,7 +1026,7 @@ cert_fields *cert2fields(
 
 char *X509_to_ski(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap)
 {
     const X509V3_EXT_METHOD *meth;
@@ -1109,7 +1109,7 @@ char *X509_to_ski(
 
 static char *crf_get_issuer(
     X509_CRL *x,
-    int *stap,
+    err_code *stap,
     int *crlstap)
 {
     char *ptr;
@@ -1135,7 +1135,7 @@ static char *crf_get_issuer(
 
 static char *crf_get_last(
     X509_CRL *x,
-    int *stap,
+    err_code *stap,
     int *crlstap)
 {
     ASN1_GENERALIZEDTIME *nb4;
@@ -1173,7 +1173,7 @@ static char *crf_get_last(
 
 static char *crf_get_next(
     X509_CRL *x,
-    int *stap,
+    err_code *stap,
     int *crlstap)
 {
     ASN1_GENERALIZEDTIME *naf;
@@ -1211,7 +1211,7 @@ static char *crf_get_next(
 
 static char *crf_get_sig(
     X509_CRL *x,
-    int *stap,
+    err_code *stap,
     int *crlstap)
 {
     (void)crlstap;
@@ -1246,7 +1246,7 @@ static void crf_get_crlno(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,
-    int *stap,
+    err_code *stap,
     int *crlstap)
 {
     ASN1_INTEGER *crlno_a1 = (ASN1_INTEGER *)exts;
@@ -1297,7 +1297,7 @@ static void crf_get_aki(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,
-    int *stap,
+    err_code *stap,
     int *crlstap)
 {
     AUTHORITY_KEYID *aki;
@@ -1361,7 +1361,7 @@ crl_fields *crl2fields(
     char *fullname,
     int typ,
     X509_CRL **xp,
-    int *stap,
+    err_code *stap,
     int *crlstap,
     void *oidtestp)
 {
@@ -1383,7 +1383,7 @@ crl_fields *crl2fields(
     int freex;
     int crlsta;
     int excnt;
-    int snerr;
+    err_code snerr;
     int need;
     int i;
     unsigned int snlen; // snlen (total num of serials) >= cf->snlen (num of valid serials)
@@ -1841,7 +1841,8 @@ static void x509v3_load_extensions(
  * Check certificate flags against the manifest certificate type
  */
 
-static int rescert_flags_chk(
+static err_code
+rescert_flags_chk(
     X509 *x,
     int ct)
 {
@@ -1892,7 +1893,8 @@ static int rescert_flags_chk(
  *  we require v3 certs (which is value 2)                   *
  ************************************************************/
 
-static int rescert_version_chk(
+static err_code
+rescert_version_chk(
     X509 *x)
 {
     long l;
@@ -1931,14 +1933,15 @@ static int rescert_version_chk(
  *                                                           *
  ************************************************************/
 
-static int rescert_basic_constraints_chk(
+static err_code
+rescert_basic_constraints_chk(
     X509 *x,
     int ct)
 {
     int i;
     int basic_flag = 0;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     X509_EXTENSION *ex = NULL;
     BASIC_CONSTRAINTS *bs = NULL;
 
@@ -2058,7 +2061,8 @@ static int rescert_basic_constraints_chk(
  *
  * @return 0 on success<br />negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_ski_chk(
+static err_code
+rescert_ski_chk(
     X509 *x,
     struct Certificate *certp)
 {
@@ -2066,7 +2070,7 @@ static int rescert_ski_chk(
     int ski_flag = 0;
     int i;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     X509_EXTENSION *ex = NULL;
 
     for (i = 0; i < X509_get_ext_count(x); i++)
@@ -2174,14 +2178,15 @@ static int rescert_ski_chk(
  *                                                           *
  ************************************************************/
 
-static int rescert_aki_chk(
+static err_code
+rescert_aki_chk(
     X509 *x,
     int ct)
 {
     int aki_flag = 0;
     int i;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     X509_EXTENSION *ex = NULL;
     AUTHORITY_KEYID *akid = NULL;
 
@@ -2285,13 +2290,14 @@ static int rescert_aki_chk(
  *                                                           *
  ************************************************************/
 
-static int rescert_key_usage_chk(
+static err_code
+rescert_key_usage_chk(
     X509 *x)
 {
     int kusage_flag = 0;
     int i;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     X509_EXTENSION *ex = NULL;
 
     for (i = 0; i < X509_get_ext_count(x); i++)
@@ -2352,14 +2358,15 @@ static int rescert_key_usage_chk(
 }
 
 /** Checks based on http://tools.ietf.org/html/rfc6487#section-4.8.5 */
-static int rescert_extended_key_usage_chk(
+static err_code
+rescert_extended_key_usage_chk(
     X509 *x,
     int ct)
 {
     int i;
     int eku_flag = 0;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     X509_EXTENSION *ex = NULL;
 
     for (i = 0; i < X509_get_ext_count(x); ++i)
@@ -2419,7 +2426,8 @@ static int rescert_extended_key_usage_chk(
  *                                                           *
  ************************************************************/
 
-static int rescert_crldp_chk(
+static err_code
+rescert_crldp_chk(
     X509 *x,
     int ct)
 {
@@ -2430,7 +2438,7 @@ static int rescert_crldp_chk(
     int j;
     int i;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     STACK_OF(DIST_POINT) * crldp = NULL;
     DIST_POINT *dist_st = NULL;
     X509_EXTENSION *ex = NULL;
@@ -2568,7 +2576,8 @@ static int rescert_crldp_chk(
  *                                                           *
  ************************************************************/
 
-static int rescert_aia_chk(
+static err_code
+rescert_aia_chk(
     X509 *x,
     int ct)
 {
@@ -2576,7 +2585,7 @@ static int rescert_aia_chk(
     int uri_flag = 0;
     int i;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     int aia_oid_len;
     AUTHORITY_INFO_ACCESS *aia = NULL;
     ACCESS_DESCRIPTION *adesc = NULL;
@@ -2734,7 +2743,8 @@ static int get_cert_type(
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_sia_chk(
+static err_code
+rescert_sia_chk(
     struct Certificate *certp)
 {
     int count = -1;
@@ -2875,13 +2885,14 @@ static int rescert_sia_chk(
  *                                                           *
  ************************************************************/
 
-static int rescert_cert_policy_chk(
+static err_code
+rescert_cert_policy_chk(
     X509 *x)
 {
     int policy_flag = 0;
     int i;
     int ex_nid;
-    int ret = 0;
+    err_code ret = 0;
     int len;
     X509_EXTENSION *ex = NULL;
     CERTIFICATEPOLICIES *ex_cpols = NULL;
@@ -3002,7 +3013,8 @@ static int rescert_cert_policy_chk(
  * error code.                                               *
  *                                                           *
  ************************************************************/
-static int rescert_ip_resources_chk(
+static err_code
+rescert_ip_resources_chk(
     struct Certificate *certp,
     int ct)
 {
@@ -3100,7 +3112,8 @@ static int rescert_ip_resources_chk(
  * openssl not checking AS number canonicity as of 1.0.0.d even tho it
  * contains Rob Austein's patch from Dec, 20101
  */
-static int rescert_as_resources_chk(
+static err_code
+rescert_as_resources_chk(
     struct Certificate *certp,
     int ct)
 {
@@ -3191,13 +3204,14 @@ static int rescert_as_resources_chk(
  * there are not multiple instances of the same extension    *
  * and that the extension(s) present are marked critical.    *
  ************************************************************/
-static int rescert_ip_asnum_chk(
+static err_code
+rescert_ip_asnum_chk(
     X509 *x,
     struct Certificate *certp,
     int ct)
 {
-    int have_ip_resources;
-    int have_as_resources;
+    err_code have_ip_resources;
+    err_code have_as_resources;
     ASIdentifiers *as_ext;
     IPAddrBlocks *ip_ext;
 
@@ -3284,7 +3298,8 @@ static int res_nid_cmp(
  * anyway in the future from this profile) IP Resources AS Resources
  */
 
-static int rescert_crit_ext_chk(
+static err_code
+rescert_crit_ext_chk(
     X509_EXTENSION *ex)
 {
     /*
@@ -3331,10 +3346,11 @@ static int rescert_crit_ext_chk(
  * this check or if it should be done elsewhere.             *
  ************************************************************/
 
-static int rescert_criticals_chk(
+static err_code
+rescert_criticals_chk(
     X509 *x)
 {
-    int ret = 0;
+    err_code ret = 0;
     int i;
     X509_EXTENSION *ex = NULL;
 
@@ -3362,7 +3378,8 @@ static int rescert_criticals_chk(
  * @param rdnseqp (struct RDNSequence*)
  * @return 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_name_chk(
+static err_code
+rescert_name_chk(
     struct RDNSequence *rdnseqp)
 {
     int sequence_length,
@@ -3456,7 +3473,8 @@ static int rescert_name_chk(
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_sig_algs_chk(
+static err_code
+rescert_sig_algs_chk(
     struct Certificate *certp)
 {
     int length = vsize_objid(&certp->algorithm.algorithm);
@@ -3699,7 +3717,8 @@ static int rescert_sig_algs_chk(
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_serial_number_chk(
+static err_code
+rescert_serial_number_chk(
     struct Certificate *certp)
 {
     int i;
@@ -3757,7 +3776,8 @@ static int rescert_serial_number_chk(
  * @param certp (struct Certificate*)
  * @retval ret 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_dates_chk(
+static err_code
+rescert_dates_chk(
     struct Certificate *certp)
 {
     if (diff_casn_time(&certp->toBeSigned.validity.notBefore.self,
@@ -3778,7 +3798,8 @@ static int rescert_dates_chk(
  * @param certp (struct Certificate*)
  * @return 0 on success<br />a negative integer on failure
  -----------------------------------------------------------------------------*/
-static int rescert_subj_iss_UID_chk(
+static err_code
+rescert_subj_iss_UID_chk(
     struct Certificate *certp)
 {
     if (size_casn(&certp->toBeSigned.issuerUniqueID) > 0)
@@ -3800,7 +3821,8 @@ static int rescert_subj_iss_UID_chk(
 /**
     @brief Check for unknown extensions.
 */
-static int rescert_extensions_chk(
+static err_code
+rescert_extensions_chk(
     struct Certificate *certp)
 {
     static char const *const allowed_extensions[] = {
@@ -3864,12 +3886,13 @@ static int rescert_extensions_chk(
 }
 
 
-int rescert_profile_chk(
+err_code
+rescert_profile_chk(
     X509 *x,
     struct Certificate *certp,
     int ct)
 {
-    int ret = 0;
+    err_code ret = 0;
 
     if (x == NULL || ct == UN_CERT)
         return (ERR_SCM_INVALARG);
@@ -3997,7 +4020,8 @@ int rescert_profile_chk(
  * consistent with [RFC5280].  RPs are NOT required to process version 1
  * CRLs (in contrast to [RFC5280]).
  -----------------------------------------------------------------------------*/
-static int crl_version_chk(
+static err_code
+crl_version_chk(
     struct CertificateRevocationList *crlp)
 {
     int ret = 0;
@@ -4028,7 +4052,8 @@ static int crl_version_chk(
  * v1.5 with SHA-256" or more simply "RSA with SHA-256".  The Object
  * Identifier (OID) sha256withRSAEncryption from [RFC4055] MUST be used.
  -----------------------------------------------------------------------------*/
-static int crl_sigalg_chk(
+static err_code
+crl_sigalg_chk(
     struct CertificateRevocationList *crlp)
 {
     if (!crlp)
@@ -4058,7 +4083,8 @@ static int crl_sigalg_chk(
  * http://tools.ietf.org/html/draft-ietf-sidr-res-certs-22#section-4.4
  * (same as for certificates)
  -----------------------------------------------------------------------------*/
-static int crl_issuer_chk(
+static err_code
+crl_issuer_chk(
     struct CertificateRevocationList *crlp)
 {
     if (!crlp)
@@ -4076,7 +4102,8 @@ static int crl_issuer_chk(
  *     Check whether the ::ChoiceOfTime is convertible to a
  *     database-style date and time.
  */
-static int cvt_crldate2DB(
+static err_code
+cvt_crldate2DB(
     struct ChoiceOfTime *cotp)
 {
     char *buf = NULL;
@@ -4103,13 +4130,14 @@ static int cvt_crldate2DB(
             return ERR_SCM_INVALDT;
         }
     }
-    int sta = 0;
+    err_code sta = 0;
     free(ASNTimeToDBTime(buf, &sta, 0));
     free(buf);
     return sta;
 }
 
-static int crl_dates_chk(
+static err_code
+crl_dates_chk(
     struct CertificateRevocationList *crlp)
 {
     if (!crlp)
@@ -4161,7 +4189,8 @@ static int crl_dates_chk(
  * MUST NOT be present.  No CRL entry extensions are supported in this
  * profile, and CRL entry extensions MUST NOT be present in a CRL.
  -----------------------------------------------------------------------------*/
-static int crl_entry_chk(
+static err_code
+crl_entry_chk(
     struct CRLEntry *entryp)
 {
     if (!entryp)
@@ -4245,7 +4274,8 @@ static int crl_entry_chk(
  * No CRL entry extensions are supported in this
  * profile, and CRL entry extensions MUST NOT be present in a CRL.
  -----------------------------------------------------------------------------*/
-static int crl_entries_chk(
+static err_code
+crl_entries_chk(
     struct CertificateRevocationList *crlp)
 {
     struct RevokedCertificatesInCertificateRevocationListToBeSigned *revlistp =
@@ -4258,7 +4288,7 @@ static int crl_entries_chk(
     for (entryp = (struct CRLEntry *)member_casn(&revlistp->self, 0);
          entryp != NULL; entryp = (struct CRLEntry *)next_of(&entryp->self))
     {
-        int ret = crl_entry_chk(entryp);
+        err_code ret = crl_entry_chk(entryp);
         if (ret < 0)
             return ret;
     }
@@ -4277,7 +4307,8 @@ static int crl_entries_chk(
  * to process CRLs with these extensions.  No other CRL extensions are
  * allowed.
  -----------------------------------------------------------------------------*/
-static int crl_extensions_chk(
+static err_code
+crl_extensions_chk(
     struct CertificateRevocationList *crlp)
 {
     // Check for exactly one AKI extension and one CRL number extension
@@ -4386,10 +4417,11 @@ static int crl_extensions_chk(
     return 0;
 }
 
-int crl_profile_chk(
+err_code
+crl_profile_chk(
     struct CertificateRevocationList *crlp)
 {
-    int ret = 0;
+    err_code ret = 0;
 
     if (!crlp)
         return ERR_SCM_INTERNAL;

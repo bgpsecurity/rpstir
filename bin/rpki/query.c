@@ -72,7 +72,8 @@ struct {
  * @brief
  *     callback function for searchscm() that prints the output
  */
-static int handleResults(
+static err_code
+handleResults(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -171,7 +172,8 @@ static char *tableName(
 /*
  * sets up and performs the database query, and handles the results
  */
-static int doQuery(
+static err_code
+doQuery(
     char **displays,
     char **filters,
     char *orderp)
@@ -185,7 +187,7 @@ static int doQuery(
     unsigned long blah = 0;
     int i;
     int j;
-    int status;
+    err_code status;
     QueryField *field;
     QueryField *field2;
     char *name;
@@ -343,7 +345,8 @@ static int doQuery(
 /*
  * show what options the user has for fields for display and filtering
  */
-static int listOptions(
+static err_code
+listOptions(
     void)
 {
     int i,
@@ -455,7 +458,7 @@ int main(
     char *clauses[MAX_CONDS];
     char *orderp = NULL;
     int i;
-    int status;
+    err_code status;
     int numDisplays = 0;
     int numClauses = 0;
 
