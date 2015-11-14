@@ -1599,12 +1599,13 @@ static int verify_roa(
 {
     unsigned char *blob = NULL;
     X509 *cert;
+    int sigval;
     int sta;
     char fn[PATH_MAX];
 
     // first, see if the ROA is already validated and in the DB
-    sta = get_sigval(conp, OT_ROA, ski, NULL);
-    if (sta == SIGVAL_VALID)
+    sigval = get_sigval(conp, OT_ROA, ski, NULL);
+    if (sigval == SIGVAL_VALID)
     {
         *chainOK = 1;
         return 0;
