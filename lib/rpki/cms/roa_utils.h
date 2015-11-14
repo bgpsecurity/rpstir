@@ -373,21 +373,6 @@ int check_fileAndHash(
     int inhashlen,
     int inhashtotlen);
 
-/*
- * This function performs all validations steps on a ROA that require an X509
- * certificate to have been fetched from the database. It returns 0 on success
- * and a negative error code on failure.  Any files with bad hashes are listed
- * in badfilespp as an array of char*, the last of which is null. The caller
- * is responsible for freeing each char* and then the array.
- */
-int manifestValidate2(
-    struct CMS *r,
-    char *dir,
-    struct badfile ***badfilesppp);
-
-void free_badfiles(
-    struct badfile **badfilespp);
-
 /**
  * @brief
  *     This function frees all memory allocated when "r" was created.

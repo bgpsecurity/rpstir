@@ -99,32 +99,6 @@ uchar asn_typ(
     return typ;
 }
 
-uchar *asn_typ_lth(
-    struct asn *asnp,
-    uchar *typ,
-    int new)
-{
-    uchar *from = asnp->stringp;
-    int ansr = -1;
-    ushort lth;
-    *typ = asn_typ(&from);
-    if (((lth = *from++) & ASN_INDEF))
-    {
-        if ((ansr = (lth &= (uchar) ~ ASN_INDEF)))
-        {
-            for (lth = 0; ansr--; lth = (lth << 8) + *from++);
-        }
-    }
-    if (new)
-    {
-        if (!(asnp->lth = lth) && !ansr)
-            asnp->level |= ASN_INDEF_FLAG;
-        else
-            asnp->level &= ~ASN_INDEF_FLAG;
-    }
-    return from;
-}
-
 /**
 Function: Counts number of ASN.1 items in string pointed to by from
 Inputs: Pointer to ASN.1-encoded string

@@ -820,14 +820,6 @@ static int perf_A_from_B(
     return ansr;
 }
 
-static void print_range(
-    char *title,
-    struct ipranges *rangesp)
-{
-    (void)title;
-    (void)rangesp;
-}
-
 static void copy_text(
     struct iprange *rulep,
     struct iprange *savp)
@@ -868,12 +860,9 @@ static int conflict_test(
         mk_certranges(&lessranges, done_certp->origcertp);
     }
     // step 2
-    print_range("From", &fromranges);
-    print_range("Less", &lessranges);
     if ((ansr = perf_A_from_B(&lessranges, &fromranges)) < 0)
         return ansr;
     // step 3
-    print_range("From", &fromranges);
     clear_ipranges(&lessranges);
     struct iprange *iprangep;
     int i;                      // copy rules to less
@@ -910,9 +899,7 @@ static int conflict_test(
         memcpy(siprangep->lolim, fiprangep->lolim, sizeof(fiprangep->lolim));
         memcpy(siprangep->hilim, fiprangep->hilim, sizeof(fiprangep->hilim));
     }
-    print_range("Less", &lessranges);
     ansr = perf_A_from_B(&lessranges, &fromranges);
-    print_range("From", &fromranges);
     if (ansr < 0)
         return ansr;
     if (fromranges.numranges > 1)

@@ -391,8 +391,6 @@ static int aur(
         free((void *)outfull);
         return sta;
     }
-    if (sta < 0)
-        return (sta);
     switch (what)
     {
     case 'a':

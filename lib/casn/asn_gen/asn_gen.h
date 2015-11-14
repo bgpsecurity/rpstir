@@ -567,10 +567,6 @@ cconstruct(
     );
 
 void
-construct(
-    );
-
-void
 cdo_hdr(
     );
 

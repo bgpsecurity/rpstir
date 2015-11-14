@@ -528,20 +528,13 @@ cleanup:
  * Callback function used in verification.
  */
 
-static int cbx509err = 0;
-
 static int verify_callback(
     int ok2,
     X509_STORE_CTX *store)
 {
     if (!ok2)
-    {
-        cbx509err = store->error;
         LOG(LOG_ERR, "Error: %s",
-                X509_verify_cert_error_string(cbx509err));
-    }
-    else
-        cbx509err = 0;
+            X509_verify_cert_error_string(store->error));
     return (ok2);
 }
 
@@ -1014,10 +1007,6 @@ static int addCert2List(
  *     static variables for efficiency, so only need to set up query
  *     once
  */
-static scmsrcha *parentSrch = NULL;
-static char *parentDir;
-static char *parentFile;
-static unsigned int *parentFlags;
 static char *parentAKI;
 static char *parentIssuer;
 
@@ -1038,9 +1027,6 @@ struct cert_answers *find_parent_cert(
         ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
         ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
                NULL);
-        parentFile = (char *)certSrch->vec[0].valptr;
-        parentDir = (char *)certSrch->vec[1].valptr;
-        parentFlags = (unsigned int *)certSrch->vec[2].valptr;
         parentAKI = (char *)certSrch->vec[3].valptr;
         parentIssuer = (char *)certSrch->vec[4].valptr;
     }
@@ -1115,9 +1101,6 @@ static X509 *parent_cert(
     if (flagsp)
         *flagsp = cert_ansrp->flags;
     return readCertFromFile(ofullname, stap);
-    if (*stap < 0)
-        return NULL;
-    return NULL;
 }
 
 struct cert_answers *find_cert_by_aKI(
@@ -1281,7 +1264,6 @@ static int verify_cert(
     int isTrusted,
     char *parentSKI,
     char *parentSubject,
-    int *x509stap,
     int *chainOK)
 {
     STACK_OF(X509) *sk_trusted = NULL;
@@ -1364,7 +1346,6 @@ static int verify_cert(
         sta =
             checkit(conp, cert_ctx, x, sk_untrusted, sk_trusted, purpose,
                     NULL);
-    *x509stap = cbx509err;
     sk_X509_pop_free(sk_untrusted, X509_free);
     sk_X509_pop_free(sk_trusted, X509_free);
     X509_STORE_free(cert_ctx);
@@ -1968,7 +1949,6 @@ static int verifyChildCert(
     int doVerify)
 {
     X509 *x = NULL;
-    int x509sta;
     int sta;
     int chainOK;
     char pathname[PATH_MAX];
@@ -1979,9 +1959,7 @@ static int verifyChildCert(
         x = readCertFromFile(pathname, &sta);
         if (x == NULL)
             return ERR_SCM_X509;
-        sta =
-            verify_cert(conp, x, 0, data->aki, data->issuer, &x509sta,
-                        &chainOK);
+        sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
         {
             LOG(LOG_ERR, "Child cert %s had bad signature", pathname);
@@ -2584,7 +2562,6 @@ static int add_cert_2(
     int sta = 0;
     int chainOK;
     int ct = UN_CERT;
-    int x509sta = 0;
 
     cf->dirid = id;
     struct Certificate cert;
@@ -2651,7 +2628,7 @@ static int add_cert_2(
     if (sta == 0)
     {
         sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
-                          cf->fields[CF_FIELD_ISSUER], &x509sta, &chainOK);
+                          cf->fields[CF_FIELD_ISSUER], &chainOK);
     }
     // check that no crls revoking this cert
     if (sta == 0)
@@ -2884,7 +2861,7 @@ static int extractAndAddCert(
     X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
     free(buf);
     // if deserialization failed, bail
-    if (x509p == NULL || sta < 0)
+    if (x509p == NULL)
         return ERR_SCM_X509;
     memset(certname, 0, sizeof(certname));
     memset(pathname, 0, sizeof(pathname));
@@ -3329,7 +3306,7 @@ int add_manifest(
         delete_casn(&cms.self);
         return ERR_SCM_INVALASN;
     }
-    if (sta < 0 || (sta = manifestValidate(&cms, &stale)) < 0)
+    if ((sta = manifestValidate(&cms, &stale)) < 0)
     {
         delete_casn(&cms.self);
         return sta;
@@ -3922,8 +3899,6 @@ static int revoke_cert_and_children(
             }
         }
     }
-    if (sta < 0)
-        return sta;
     return verifyOrNotChildren(conp, (char *)s->vec[1].valptr,
                                (char *)s->vec[2].valptr, NULL, NULL, lid, 0);
 }
@@ -4407,11 +4382,6 @@ void stopSyslog(
 void sqcleanup(
     void)
 {
-    if (parentSrch != NULL)
-    {
-        freesrchscm(parentSrch);
-        parentSrch = NULL;
-    }
     if (revokedSrch != NULL)
     {
         freesrchscm(revokedSrch);
