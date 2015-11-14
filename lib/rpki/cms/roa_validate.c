@@ -657,44 +657,6 @@ static int cmsValidate(
     return 0;
 }
 
-/*
- * void free_badfiles(struct badfile **badfilespp) { // for rsync_aur or
- * anyone else who calls manifestValidate2 struct badfile **bpp; for (bpp =
- * badfilespp; *bpp; bpp++) { free((*bpp)->fname); free(*bpp); }
- * free(badfilespp); }
- *
- * int manifestValidate2(struct ROA *rp, char *dirp, struct badfile
- * ***badfilesppp) { struct FileAndHash *fahp; struct Manifest *manp; struct
- * badfile **badfilespp = (struct badfile **)0; char *fname, *path; int
- * numbadfiles = 0, dir_lth, err = 0, ffd, tmp; // do general checks including
- * signature if cert is present if ((err = cmsValidate(rp)) < 0) return err;
- * // certificate check if
- * (num_items(&rp->content.signedData.certificates.self) != 1) return
- * ERR_SCM_BADNUMCERTS; // other specific manifest checks if
- * (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
- * id_roa_pki_manifest)) return ERR_SCM_BADCT; manp =
- * &rp->content.signedData.encapContentInfo.eContent.manifest; ulong mlo, mhi;
- * if (read_casn_time(&manp->thisUpdate, &mlo) <= 0 ||
- * read_casn_time(&manp->nextUpdate, &mhi) <= 0 || mlo >= mhi) return
- * ERR_SCM_BADDATES; // all checks done.  Get to the details if (dirp && *dirp)
- * { dir_lth = strlen(dirp) + 1; if (dirp[dir_lth - 2] == '/') dir_lth--; } else
- * dir_lth = 0; path = (char *)calloc(1, dir_lth + 1); for (fahp = (struct
- * FileAndHash *)member_casn(&manp->fileList.self, 0); fahp; fahp = (struct
- * FileAndHash *)next_of(&fahp->self)) { int name_lth = vsize_casn(&fahp->file);
- * fname = (char *)calloc(1, name_lth + 8); read_casn(&fahp->file, (uchar
- * *)fname); path = (char *)realloc(path, dir_lth + name_lth + 4); if (dir_lth)
- * strcat(strncpy(path, dirp, dir_lth), "/"); strcat(path, fname); tmp = 0; if
- * ((ffd = open(path, O_RDONLY)) < 0) tmp = ERR_SCM_COFILE; else tmp =
- * check_fileAndHash(fahp, ffd); if (tmp < 0) // add the file to the list { if
- * (numbadfiles == 0) badfilespp = (struct badfile **)calloc(2, sizeof(struct
- * badfile *)); else badfilespp = (struct badfile **)realloc(badfilespp,
- * ((numbadfiles + 2) * sizeof(struct badfile *))); struct badfile *badfilep =
- * (struct badfile *)calloc(1, sizeof(struct badfile)); badfilespp[numbadfiles++]
- * = badfilep; badfilespp[numbadfiles] = (struct badfile *)0; badfilep->fname =
- * fname; badfilep->err = tmp; if (!err) err = tmp; } else free(fname); }
- * free(path); *badfilesppp = badfilespp; return err; }
- */
-
 static int check_mft_version(
     struct casn *casnp)
 {
@@ -964,29 +926,6 @@ int manifestValidate(
 
     return 0;
 }
-
-/*
- * // NOTE: check_asnums function is not needed for validating a ROA. //
- * Keeping it here (commented out) because it may be useful elsewhere. static
- * int check_asnums(struct Certificate *certp, int iAS_ID) { struct Extension
- * *extp; for (extp = (struct Extension
- * *)member_casn(&certp->toBeSigned.extensions. self, 0); extp &&
- * diff_objid(&extp->extnID, id_pe_autonomousSysNum); extp = (struct Extension
- * *)next_of(&extp->self)); if (!extp) return 0; struct ASNumberOrRangeA
- * *asNumOrRangeAp; if
- * (size_casn(&extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges.self))
- * { int isWithin = 0; for (asNumOrRangeAp = (struct ASNumberOrRangeA
- * *)member_casn(
- * &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges.self, 0);
- * asNumOrRangeAp; asNumOrRangeAp = (struct ASNumberOrRangeA
- * *)next_of(&asNumOrRangeAp->self)) { if (size_casn(&asNumOrRangeAp->num)) {
- * if (!diff_casn_num(&asNumOrRangeAp->num, iAS_ID)) { isWithin++; break; } }
- * else // it's a range { if (diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID)
- * <= 0 && diff_casn_num(&asNumOrRangeAp->range.max, iAS_ID) >= 0 &&
- * diff_casn_num(&asNumOrRangeAp->range.min, iAS_ID) != -2) //not error {
- * isWithin++; break; } } } if (!isWithin) return ERR_SCM_BADASNUM; } return
- * 1; }
- */
 
 struct certrange {
     uchar lo[18],
@@ -1300,9 +1239,7 @@ int roaValidate2(
             for (ripAddrFamp =
                  &rp->content.signedData.encapContentInfo.eContent.roa.
                  ipAddrBlocks.rOAIPAddressFamily;
-                 /*
-                  * iRes == cTRUE &&
-                  */ ripAddrFamp;
+                 ripAddrFamp;
                  ripAddrFamp =
                  (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
             {                   // find that family in cert
@@ -1383,7 +1320,6 @@ int roaValidate2(
     {
         iRes = check_sig(rp, cert);
     }
-    // delete_casn(&cert.self);
     return iRes;
 }
 

@@ -31,9 +31,6 @@
 
 #include "rpki/err.h"
 
-// #define FALSE 0
-// #define TRUE 1
-
 #define cFALSE 0
 #define cTRUE  1
 
@@ -42,12 +39,6 @@
 #ifndef min
 #define min(a,b) ((a)<(b)?(a):(b))
 #endif                          /* min */
-
-// #define ROA_VALID 0
-// #define ROA_INVALID 1
-
-// JFG - Reinsert this definition here if ranges are reinstated in asn
-// #define IP_RANGES_ALLOWED
 
 extern int strict_profile_checks_cms;
 

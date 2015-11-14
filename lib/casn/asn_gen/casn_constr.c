@@ -180,7 +180,7 @@ void cconstruct(
      * definition Make a definition for any found
      */
     char *c;
-    int /* did, */ classgeneration;
+    int classgeneration;
     struct name_table *ntbp;
     struct name_table *ptbp;
     long parenttype = -1;
@@ -660,7 +660,6 @@ static int constr_item(
             cat(itemname, c);
         }
         *itemname |= 0x20;
-        // if (thisdefined > 0 && type < 0 && !*subclass) done(true, MSG_INCOMPLETE_ITEM, itemname);
         if ((option & ASN_ENUM_FLAG) && !sub_val)
             tag = type = -1;
         /*

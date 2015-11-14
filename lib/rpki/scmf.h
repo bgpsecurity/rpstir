@@ -24,7 +24,6 @@ typedef struct _scmcon          /* connection info */
 {
     SQLHENV henv;               /* environment handle */
     SQLHDBC hdbc;               /* database handle */
-    // SQLHSTMT hstmt; /* statement handle */
     stmtstk *hstmtp;            /* stack of statement handles */
     int connected;              /* are we connected? */
     scmstat mystat;             /* statistics and errors */

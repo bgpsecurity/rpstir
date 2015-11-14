@@ -574,17 +574,14 @@ static int get_cert_sigval(
     }
     xsnprintf(sigsrch->wherestr, WHERESTR_SIZE,
               "ski=\"%s\" and subject=\"%s\"", ski, subj);
-    // (void)printf("Wherestr = %s\n", sigsrch->wherestr);
     sta = searchscm(conp, theCertTable, sigsrch, NULL, ok,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    // (void)printf("Sta = %d\n", sta);
     if (sta < 0)
         return SIGVAL_UNKNOWN;
     svalp = (unsigned int *)(sigsrch->vec[0].valptr);
     if (svalp == NULL)
         return SIGVAL_UNKNOWN;
     sval = *(int *)svalp;
-    // (void)printf("Sval = %d\n", sta);
     if (sval < SIGVAL_UNKNOWN || sval > SIGVAL_INVALID)
         return SIGVAL_UNKNOWN;
     return sval;
@@ -608,17 +605,14 @@ static int get_roa_sigval(
                SIGVAL_UNKNOWN);
     }
     xsnprintf(sigsrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
-    // (void)printf("Wherestr = %s\n", sigsrch->wherestr);
     sta = searchscm(conp, theROATable, sigsrch, NULL, ok,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    // (void)printf("Sta = %d\n", sta);
     if (sta < 0)
         return SIGVAL_UNKNOWN;
     svalp = (unsigned int *)(sigsrch->vec[0].valptr);
     if (svalp == NULL)
         return SIGVAL_UNKNOWN;
     sval = *(int *)svalp;
-    // (void)printf("Sval = %d\n", sta);
     if (sval < SIGVAL_UNKNOWN || sval > SIGVAL_INVALID)
         return SIGVAL_UNKNOWN;
     return sval;
@@ -666,9 +660,7 @@ static int set_cert_sigval(
     xsnprintf(stmt, sizeof(stmt),
               "update %s set sigval=%d where ski=\"%s\" and subject=\"%s\";",
               theCertTable->tabname, valu, ski, escaped_subj);
-    // (void)printf("SET: %s\n", stmt);
     sta = statementscm_no_data(conp, stmt);
-    // (void)printf("Statementscn returns %d\n", sta);
     return sta;
 }
 
@@ -687,9 +679,7 @@ static int set_roa_sigval(
     xsnprintf(stmt, sizeof(stmt),
               "update %s set sigval=%d where ski=\"%s\";",
               theROATable->tabname, valu, ski);
-    // (void)printf("SET: %s\n", stmt);
     sta = statementscm_no_data(conp, stmt);
-    // (void)printf("Statementscn returns %d\n", sta);
     return sta;
 }
 
@@ -749,7 +739,6 @@ static int local_verify(
     char *subj = NULL;
     char *ski = NULL;
 
-    // (void)printf("LOCAL VERIFY!\n");
     // first, get the subject and the SKI
     subj = X509_to_subject(cert, &sta, &x509sta);
     if (subj != NULL)
@@ -758,7 +747,6 @@ static int local_verify(
         if (ski != NULL)
         {
             sigval = get_sigval(thecon, OT_CER, subj, ski);
-            // (void)printf("Sigval from db: %d\n", sigval);
         }
     }
     switch (sigval)
@@ -783,7 +771,6 @@ static int local_verify(
     mok = X509_verify(cert, pkey);
     if (mok)
     {
-        // (void)printf("Sigval to db: %d\n", SIGVAL_VALID);
         set_sigval(thecon, OT_CER, subj, ski, SIGVAL_VALID);
     }
     if (subj != NULL)
@@ -810,10 +797,8 @@ static int our_verify(
     X509 *xissuer;
     EVP_PKEY *pkey = NULL;
 
-    // (void)printf("OUR VERIFY!\n");
     cb = ctx->verify_cb;
     n = sk_X509_num(ctx->chain);
-    // (void)printf("NUM is %d\n", n);
     ctx->error_depth = n - 1;
     n--;
     xissuer = sk_X509_value(ctx->chain, n);
@@ -864,9 +849,6 @@ static int our_verify(
             pkey = NULL;
         }
         xsubject->valid = 1;
-        /*
-         * mok = check_cert_time(ctx, xsubject); if ( !mok ) goto end;
-         */
         ctx->current_issuer = xissuer;
         ctx->current_cert = xsubject;
         mok = cb(1, ctx);
@@ -934,7 +916,6 @@ static int checkit(
         X509_STORE_CTX_set_purpose(csc, purpose);
     old_vfunc = ctx->verify;
     thecon = conp;
-    // (void)printf("Checkit: Here\n");
     csc->verify = our_verify;
     i = X509_verify_cert(csc);
     csc->verify = old_vfunc;
@@ -1183,8 +1164,6 @@ struct cert_answers *find_trust_anchors(
 {
     int sta;
     initTables(scmp);
-    // if (certSrch == NULL)
-    // {
     certSrch = newsrchscm(NULL, 6, 0, 1);
     ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
     ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
@@ -1192,7 +1171,6 @@ struct cert_answers *find_trust_anchors(
     ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
     ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
     ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
-    // }
     sta = 0;
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
@@ -1510,11 +1488,9 @@ static int verify_roa(
     char *fn2;
 
     // first, see if the ROA is already validated and in the DB
-    // (void)printf("VERIFY_ROA\n");
     sta = get_sigval(conp, OT_ROA, ski, NULL);
     if (sta == SIGVAL_VALID)
     {
-        // (void)printf("ALREADY validated this ROA!\n");
         *chainOK = 1;
         return 0;
     }
@@ -1538,7 +1514,6 @@ static int verify_roa(
         free((void *)blob);
     }
     X509_free(cert);
-    // (void)printf("VERIFY_ROA %d\n", sta);
     if (sta >= 0)
     {
         sta = set_sigval(conp, OT_ROA, ski, NULL, SIGVAL_VALID);
@@ -1869,8 +1844,6 @@ static int updateManifestObjs(
             else
             {
                 char *h = hexify(sta, bytehash, HEXIFY_NO);
-                // (void)fprintf(stderr, "Updating hash of %s to %s\n", file,
-                // h);
                 xsnprintf(flagStmt, sizeof(flagStmt),
                           "update %s set flags=flags+%d, hash=\"%s\""
                           " where local_id=%d;",
@@ -2687,7 +2660,6 @@ static int add_cert_2(
                            cf->fields[CF_FIELD_ISSUER]);
     }
     // actually add the certificate
-    // sta = 0; chainOK = 1; // uncomment this line for running test 8
     if (sta == 0)
     {
         sta =
@@ -3639,7 +3611,7 @@ int add_object(
     char *outfile,
     char *outdir,
     char *outfull,
-    int utrust)                 // , char *manState)
+    int utrust)
 {
     unsigned int id = 0;
     unsigned int obj_id = 0;
@@ -3763,7 +3735,6 @@ static int crliterator(
         {
             // per STK action item #7 we no longer set SN to zero as an
             // exemplar
-            // snlist[i] = 0;
             chgd++;
         }
     }
@@ -3776,7 +3747,6 @@ static int crliterator(
     // update the sninuse and snlist values
     // per STK action item #7 we are not zero-ing out snlist entries, so
     // we never want to update sninuse
-    // sninuse -= chgd;
     if (sninuse > 0)
         sta = updateblobscm(conp, crlip->tabp, snlist, sninuse, snlen, lid);
     else
@@ -3800,7 +3770,6 @@ int iterate_crl(
     crlinfo crli;
     char issuer[512];
     char aki[512];
-    // void *snlist;
     int sta;
 
     // go for broke and allocate a blob large enough that it can hold
@@ -3870,7 +3839,6 @@ int iterate_crl(
     srch.context = (void *)&crli;
     sta = searchscm(conp, theCRLTable, &srch, NULL, crliterator,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    // free(snlist);
     return (sta);
 }
 

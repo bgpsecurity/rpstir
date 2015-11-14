@@ -985,91 +985,6 @@ static int setVersion(
     return 0;
 }
 
-#ifdef NOTDEF
-
-static int setSID(
-    struct CMS *roa,
-    unsigned char *sidstring)
-{
-    int iLen = 0;
-    int sidIndex = 0;
-    int stringIndex = 0;
-    int sta;
-
-    unsigned char cSIDPart = 0;
-    unsigned char stringtemp[3];
-    unsigned char sid[20];
-
-    memset(sid, 0, 20);
-    memset(stringtemp, 0, 3);
-
-    // Because we only accept SKIs as SIDs
-    // (xx:xx:(...16 more ...):xx:xx
-    iLen = strlen((char *)sidstring);
-    if (59 != iLen)
-        return ERR_SCM_INVALSKI;
-
-    // Read and translate SID, paired hex -> char
-    sidIndex = 0;
-    stringIndex = 0;
-    while (sidIndex < 20)
-    {
-        memcpy(stringtemp, &sidstring[stringIndex], 2);
-        // Currently relying on strtos to tell us if any
-        // of the characters in the string is untranslatable
-        sta = ip_strtoc(stringtemp, &cSIDPart, 16);
-        if (sta < 0)
-            return sta;
-        else
-            sid[sidIndex] = cSIDPart;
-        stringIndex += 3;
-        sidIndex++;
-    }
-
-    write_casn(&
-               (roa->content.signedData.signerInfos.signerInfo.
-                sid.subjectKeyIdentifier), sid, 20);
-    g_lastInstruction = NONE;
-    return 0;
-}
-
-#endif
-/*
- *
- * This has been replaced by signCMS
- *
- * static int setSignature(struct ROA* roa, unsigned char* signstring, int
- * lth, char *filename) { CRYPT_CONTEXT hashContext; CRYPT_CONTEXT
- * sigKeyContext; CRYPT_KEYSET cryptKeyset; uchar hash[40]; uchar *signature =
- * NULL; int ansr = 0, signatureLength; char *msg;
- *
- * memset(hash, 0, 40); cryptInit(); if ((ansr =
- * cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0 ||
- * (ansr = cryptCreateContext(&sigKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA))
- * != 0) msg = "creating context"; else if ((ansr = cryptEncrypt(hashContext,
- * signstring, lth)) != 0 || (ansr = cryptEncrypt(hashContext, signstring, 0))
- * != 0) msg = "hashing"; else if ((ansr =
- * cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash,
- * &signatureLength)) != 0) msg = "getting attribute string"; else if ((ansr =
- * cryptKeysetOpen(&cryptKeyset, CRYPT_UNUSED, CRYPT_KEYSET_FILE, filename,
- * CRYPT_KEYOPT_READONLY)) != 0) msg = "opening key set"; else if ((ansr =
- * cryptGetPrivateKey(cryptKeyset, &sigKeyContext, CRYPT_KEYID_NAME, "label",
- * "password")) != 0) msg = "getting key"; else if ((ansr =
- * cryptCreateSignature(NULL, 0, &signatureLength, sigKeyContext,
- * hashContext)) != 0) msg = "signing"; else { signature = (uchar *)calloc(1,
- * signatureLength +20); if ((ansr = cryptCreateSignature(signature, 200,
- * &signatureLength, sigKeyContext, hashContext)) != 0) msg = "signing"; else
- * if ((ansr = cryptCheckSignature(signature, signatureLength, sigKeyContext,
- * hashContext)) != 0) msg = "verifying"; }
- *
- * cryptDestroyContext(hashContext); cryptDestroyContext(sigKeyContext);
- * cryptEnd(); if (ansr == 0) {
- * decode_casn(&(roa->content.signedData.signerInfos.signerInfo.self),
- * signature); ansr = 0; } else { // printf("Signature failed in %s with error
- * %d\n", msg, ansr); ansr = ERR_SCM_INVALSIG; } g_lastInstruction = NONE; if
- * ( signature != NULL ) free(signature); return ansr; }
- */
-
 /*
  FIXME: This does not handle the full range of 32-bit AS numbers.
  Fortunately, it is called only from a single unit test and is never
@@ -1179,12 +1094,7 @@ static int setIPAddr(
 
     struct ROAIPAddressFamily *roaFamily = NULL;
 
-    /*
-     * #ifdef IP_RANGES_ALLOWED struct IPAddressOrRangeA *roaAddr = NULL;
-     * #else
-     */
     struct ROAIPAddress *roaAddr = NULL;
-    // #endif
 
     memset(ipv4array, 0, 5);
     memset(ipv6array, 0, 17);
@@ -1242,14 +1152,6 @@ static int setIPAddr(
                 member_casn(&
                             (roa->content.signedData.encapContentInfo.eContent.
                              roa.ipAddrBlocks.self), iBlocks - 1);
-            /*
-             * #ifdef IP_RANGES_ALLOWED iAddrs =
-             * num_items(&(roaFamily->addressesOrRanges.self)); if (0 <=
-             * iAddrs) { roaAddr = (struct IPAddressOrRangeA*)
-             * inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
-             * write_casn(&(roaAddr->addressPrefix), ipv4array, iGoodBytes); }
-             * else sta = ERR_SCM_INVALIPB; #else
-             */
             iAddrs = num_items(&(roaFamily->addresses.self));
             if (0 <= iAddrs)
             {
@@ -1262,7 +1164,6 @@ static int setIPAddr(
             }
             else
                 sta = ERR_SCM_INVALIPB;
-            // #endif
         }
         else
             sta = ERR_SCM_INVALIPB;
@@ -1289,14 +1190,6 @@ static int setIPAddr(
                 member_casn(&
                             (roa->content.signedData.encapContentInfo.eContent.
                              roa.ipAddrBlocks.self), iBlocks - 1);
-            /*
-             * #ifdef IP_RANGES_ALLOWED iAddrs =
-             * num_items(&(roaFamily->addressesOrRanges.self)); if (0 <=
-             * iAddrs) { roaAddr = (struct IPAddressOrRangeA*)
-             * inject_casn(&(roaFamily->addressesOrRanges.self), iAddrs);
-             * write_casn(&(roaAddr->addressPrefix), ipv6array, iGoodBytes); }
-             * else sta = ERR_SCM_INVALIPB; #else
-             */
             iAddrs = num_items(&(roaFamily->addresses.self));
             if (0 <= iAddrs)
             {
@@ -1309,7 +1202,6 @@ static int setIPAddr(
             }
             else
                 sta = ERR_SCM_INVALIPB;
-            // #endif
         }
         else
             sta = ERR_SCM_INVALIPB;
@@ -1626,7 +1518,6 @@ static int confInterpret(
     if (NULL == fp)
     {
         // Error
-        // printf("Error opening file %s\n", filename);
         return ERR_SCM_COFILE;
     }
 
@@ -1658,7 +1549,6 @@ static int confInterpret(
             iRet2 = sscanf(line, "%s%*[ \t]%*[=]%*[ \t]%s", key, value);
             if (2 != iRet2)
             {
-                // printf("Error parsing line %d\n", iLineCount);
                 iROAState = ERR_SCM_INVALARG;
             }
             else
@@ -1689,18 +1579,11 @@ static int confInterpret(
                         iRet2 = ERR_SCM_INVALARG;
                         break;
                     }
-                    // iRet2 = setSID(roa, value);
                     iConfiguredKey[ck] = cTRUE;
                     break;
                 case SIGNATURE:
                     // JFG - In the real world, we're going to calculate this
                     // instead of getting it from a file
-                    /*
-                     * if ((isInstructionForcing(g_lastInstruction)) || (TRUE
-                     * == iConfiguredKey[ck])) { iRet2 = ERR_SCM_INVALARG;
-                     * break; } iRet2 = setSignature(roa, value);
-                     * iConfiguredKey[ck] = cTRUE;
-                     */
 
                     break;
                 case AS_ID:
@@ -1765,19 +1648,14 @@ static int confInterpret(
                     break;
                 case CONFIG_KEY_MAX:
                 default:
-                    // printf("Unknown key on line %d\n", iLineCount);
                     iROAState = ERR_SCM_INVALARG;
                     break;
                 }
 
                 if (iRet2 < 0)
                 {
-                    // printf("Unparseable value or unexpected key on line
-                    // %d\n", iLineCount);
                     iROAState = iRet2;
                 }
-                // JFG - Debugging code
-                // printf("The value of key %s(%d) is %s\n", key, ck, value);
             }
         }
     }
@@ -1785,7 +1663,6 @@ static int confInterpret(
     // If we didn't finish an IP address block (uh-oh!)
     if (isInstructionForcing(g_lastInstruction) == cTRUE)
     {
-        // printf("Unfinished IP block before line %d\n", iLineCount);
         iROAState = ERR_SCM_INVALIPB;
     }
 
@@ -1794,11 +1671,8 @@ static int confInterpret(
     {
         if (cFALSE == iConfiguredKey[ck])
         {
-            if (                // (SID == ck) ||
-                   // (SIGNATURE == ck) ||
-                   (AS_ID == ck) || (KEYFILE == ck) || (IPFAM == ck))
+            if ((AS_ID == ck) || (KEYFILE == ck) || (IPFAM == ck))
             {
-                // printf("Missing required key %s\n", configKeyStrings[ck]);
                 iROAState = ERR_SCM_INVALARG;
             }
         }
@@ -1807,17 +1681,6 @@ static int confInterpret(
     iRet = fclose(fp);
     if (iROAState < 0)
         return iROAState;
-    /*
-     * if ((iRet =
-     * vsize_casn(&roa->content.signedData.encapContentInfo.eContent.self)) <
-     * 0) { // printf("Error sizing hashable string\n"); return
-     * ERR_SCM_HSSIZE; } buf = (uchar *)calloc(1, iRet); iRet =
-     * read_casn(&roa->content.signedData.encapContentInfo.eContent.self,
-     * buf); if (iRet < 0) { // printf("Error reading hashable string\n");
-     * iROAState = ERR_SCM_HSREAD; } if ((iRet2=setSignature(roa, buf, iRet,
-     * keyfileName)) < 0) { // printf("Error creating signature\n"); iROAState
-     * = iRet2; } free(buf);
-     */
     const char *ap = signCMS(roa, keyfileName, 0);
     if (ap)
         iROAState = ERR_SCM_INVALSIG;

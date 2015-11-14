@@ -60,10 +60,6 @@ void disconnectscm(
     if (conp == NULL)
         return;
     freehstack(conp->hstmtp);
-    /*
-     * if ( conp->hstmt != NULL ) { SQLFreeHandle(SQL_HANDLE_STMT,
-     * conp->hstmt); conp->hstmt = NULL; }
-     */
     if (conp->connected > 0)
     {
         SQLDisconnect(conp->hdbc);
@@ -86,14 +82,6 @@ void disconnectscm(
     }
     free((void *)conp);
 }
-
-/*
- * ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt); if ( !
- * SQLOK(ret) ) { if ( errmsg != NULL && emlen > 0 ) heer((void *)conp->hdbc,
- * SQL_HANDLE_DBC, errmsg, emlen); disconnectscm(conp); return(NULL); } ret =
- * SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN, (SQLPOINTER)SQL_NOSCAN_ON,
- * SQL_IS_UINTEGER);
- */
 
 SQLRETURN newhstmt(
     scmcon *conp)
@@ -869,8 +857,6 @@ int searchscm(
         sprintf(&stmt[strlen(stmt)], " order by %s ", orderp);
 
     (void)strcat(stmt, ";");
-    // Print SQL statement for debugging.
-    // fprintf(stderr, "%s\n", stmt);
 
     // execute the select statement
     rc = newhstmt(conp);

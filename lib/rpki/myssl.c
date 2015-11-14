@@ -2444,14 +2444,6 @@ static int rescert_crldp_chk(
         if (ex_nid == NID_crl_distribution_points)
         {
             crldp_flag++;
-#if 0                           // MCR removed this test
-            if (ct == TA_CERT)
-            {
-                LOG(LOG_ERR, "[crldp] crldp found in self-signed cert");
-                ret = ERR_SCM_CRLDPTA;
-                goto skip;
-            }
-#endif
             if (X509_EXTENSION_get_critical(ex))
             {
                 LOG(LOG_ERR, "[crldp] marked critical, violation");

@@ -39,69 +39,6 @@ static void free_keyring(
     keyring->filename = keyring->label = keyring->password = (char *)0;
 }
 
-#ifdef DUMP_THEM
-
-static struct casn *get_subject_name(
-    struct Name *subjp)
-{
-    struct RelativeDistinguishedName *rdnp =
-        (struct RelativeDistinguishedName *)member_casn(&subjp->rDNSequence.
-                                                        self, 0);
-    struct AttributeValueAssertion *avap =
-        (struct AttributeValueAssertion *)member_casn(&rdnp->self, 0);
-    struct casn *casnp = (struct casn *)&avap->value.commonName;
-    return casnp;
-}
-
-static void dump_test_cert(
-    struct done_cert *done_certp,
-    int orig)
-{
-    char locbuf[20],
-        namebuf[20];
-    int fd,
-        size;
-    char *buf;
-    struct Certificate *certp;
-    struct casn *casnp;
-    if (orig)
-    {
-        certp = done_certp->origcertp;
-        size = dump_size(&certp->self);
-        buf = (char *)calloc(1, size + 2);
-        size = dump_casn(&certp->self, buf);
-        casnp = get_subject_name(&certp->toBeSigned.subject);
-        fd = read_casn(casnp, (uchar *) namebuf);
-        namebuf[fd] = 0;
-        sprintf(locbuf, "o%s.raw", namebuf);
-        fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
-        write(fd, buf, size);
-        close(fd);
-    }
-    size = dump_size(&done_certp->paracertp->self);
-    buf = (char *)calloc(1, size + 2);
-    size = dump_casn(&done_certp->paracertp->self, buf);
-    casnp = get_subject_name(&done_certp->paracertp->toBeSigned.subject);
-    fd = read_casn(casnp, (uchar *) namebuf);
-    namebuf[fd] = 0;
-    sprintf(locbuf, "p%s.raw", namebuf);
-    fd = open(locbuf, (O_CREAT | O_WRONLY | O_TRUNC), 0777);
-    write(fd, buf, size);
-    close(fd);
-}
-
-static void dump_test_certs(
-    int orig)
-{
-    int num;
-    for (num = 0; num < done_certs.numcerts; num++)
-    {
-        dump_test_cert(&done_certs.done_certp[num], orig);
-    }
-}
-
-#endif
-
 static int add_done_cert(
     struct done_cert *tmp_done_certp)
 {
@@ -470,10 +407,6 @@ int get_CAcert(
                 *done_certpp = done_certp;
             }
         }
-        /*
-         * free(cert_answersp->cert_ansrp); cert_answersp->num_ansrs = 0;
-         * cert_answersp->cert_ansrp = NULL;
-         */
         if (ansr < 0)
             return ansr;
         i = 1;
@@ -891,37 +824,8 @@ static void print_range(
     char *title,
     struct ipranges *rangesp)
 {
-    #if 0
-    int i, j;
-
-    fprintf(stderr, "%s\n", title);
-
-    for (i = 0; i < rangesp->numranges; i++)
-    {
-        struct iprange *iprangep = &rangesp->iprangep[i];
-
-        fprintf(stderr, "%d ", iprangep->typ);
-
-        int lth;
-        if (iprangep->typ == 4)
-            lth = 4;
-        else
-            lth = 16;
-
-        for (j = 0; j < lth; j++)
-            fprintf(stderr, "0x%02x ", iprangep->lolim[j]);
-        fprintf(stderr, "\n ");
-
-        for (j = 0; j < lth; j++)
-            fprintf(stderr, "0x%02x ", iprangep->hilim[j]);
-        fprintf(stderr, "\n");
-    }
-
-    fprintf(stderr, "\n");
-    #else
     (void)title;
     (void)rangesp;
-    #endif
 }
 
 static void copy_text(
@@ -1238,10 +1142,6 @@ static void remake_cert_ranges(
             make_ASnum(asNumOrRangep, certrangep);
         }
     }
-    /*
-     * locbufp = (char *)calloc(1, dump_size(&paracertp->self) + 2);
-     * dump_casn(&paracertp->self, locbufp); fprintf(stderr, locbufp);
-     */
 }
 
 /*
@@ -1398,9 +1298,6 @@ static int search_downward(
             else
             {
                 add_done_cert(&done_cert);
-#ifdef DUMP_THEM
-                dump_test_cert(&done_cert, 1);
-#endif
             }
         }
         if (ansr > 0)
@@ -1515,9 +1412,6 @@ static int process_control_block(
             return ansr;
         done_certp->perf |= (!run) ? (WASEXPANDED | WASEXPANDEDTHISBLK) :
             (WASPERFORATED | WASPERFORATEDTHISBLK);
-#ifdef DUMP_THEM
-        dump_test_cert(done_certp, 1);
-#endif
         // step 2
         if (!diff_casn(&done_certp->origcertp->toBeSigned.issuer.self,
                        &done_certp->origcertp->toBeSigned.subject.self))
@@ -1643,10 +1537,6 @@ static int process_control_blocks(
         strcpy(skibuf, nextskibuf);
     }
     while (ansr);
-#ifdef DUMP_THEM
-    dump_test_certs(1);
-    a diagnostic tool
-#endif
     return 0;
 }
 

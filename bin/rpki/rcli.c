@@ -367,18 +367,6 @@ static char *afterwhite(
     return (run);
 }
 
-/*******************
-static char *splitOnWhite(char *ptr) {
-  char *run = ptr;
-  while (*run && ! isspace((int)(unsigned char)*run)) run++;
-  if (! *run) return run;
-  *run = 0;
-  run++;
-  while (isspace((int)(unsigned char)*run)) run++;
-  return run;
-}
-********************/
-
 static char *hdir = NULL;
 
 static int aur(
@@ -403,7 +391,6 @@ static int aur(
         free((void *)outfull);
         return sta;
     }
-    // trusted = strstr(outdir, "TRUST") != NULL;
     if (sta < 0)
         return (sta);
     switch (what)
@@ -620,7 +607,7 @@ static int sockline(
         case 'a':
         case 'A':              /* add */
             LOG(LOG_INFO, "AUR add request: %s", valu);
-            sta = aur(scmp, conp, 'a', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -629,7 +616,7 @@ static int sockline(
         case 'u':
         case 'U':              /* update */
             LOG(LOG_INFO, "AUR update request: %s", valu);
-            sta = aur(scmp, conp, 'u', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -638,7 +625,7 @@ static int sockline(
         case 'r':
         case 'R':              /* remove */
             LOG(LOG_INFO, "AUR remove request: %s", valu);
-            sta = aur(scmp, conp, 'r', valu);   // , NULL);
+            sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -694,7 +681,6 @@ static int fileline(
     scmcon *conp,
     FILE *s)
 {
-    // char *left = NULL;
     char ptr[1024];
     char *valu;
     char c;
@@ -739,7 +725,7 @@ static int fileline(
         case 'a':
         case 'A':              /* add */
             LOG(LOG_INFO, "AUR add request: %s", valu);
-            sta = aur(scmp, conp, 'a', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -748,7 +734,7 @@ static int fileline(
         case 'u':
         case 'U':              /* update */
             LOG(LOG_INFO, "AUR update request: %s", valu);
-            sta = aur(scmp, conp, 'u', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -757,7 +743,7 @@ static int fileline(
         case 'r':
         case 'R':              /* remove */
             LOG(LOG_INFO, "AUR remove request: %s", valu);
-            sta = aur(scmp, conp, 'r', valu);   // , NULL);
+            sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -794,7 +780,6 @@ static int fileline(
             break;
         case 'y':
         case 'Y':              /* synchronize */
-            // (void)write(s, "Y", 1);
             break;
         case 0:
             break;
