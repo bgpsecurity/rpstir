@@ -186,6 +186,6 @@
     } while (0)
 
 extern char *err2string(
-    int errr);
+    int err);
 
 #endif
