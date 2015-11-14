@@ -933,8 +933,8 @@ static int checkit(
  *
  * @param[out] stap
  *     Error code.  On error, the value at this location is set to a
- *     non-zero value.  Otherwise, it is set to 0.  This parameter
- *     MUST NOT be NULL.
+ *     non-zero value.  Otherwise, it is set to 0.  This parameter may
+ *     be NULL.
  * @return
  *     NULL on error, non-NULL otherwise.
  */
@@ -952,14 +952,20 @@ static X509 *readCertFromFile(
     bcert = BIO_new(BIO_s_file());
     if (bcert == NULL)
     {
-        *stap = ERR_SCM_NOMEM;
+        if (stap)
+        {
+            *stap = ERR_SCM_NOMEM;
+        }
         return (NULL);
     }
     x509sta = BIO_read_filename(bcert, ofullname);
     if (x509sta <= 0)
     {
         BIO_free_all(bcert);
-        *stap = ERR_SCM_X509;
+        if (stap)
+        {
+            *stap = ERR_SCM_X509;
+        }
         return (NULL);
     }
     // read the cert based on the input type
@@ -968,10 +974,17 @@ static X509 *readCertFromFile(
     else
         px = PEM_read_bio_X509_AUX(bcert, NULL, NULL, NULL);
     BIO_free_all(bcert);
-    if (px == NULL)
-        *stap = ERR_SCM_BADCERT;
-    else
-        *stap = 0;
+    if (stap)
+    {
+        if (px == NULL)
+        {
+            *stap = ERR_SCM_BADCERT;
+        }
+        else
+        {
+            *stap = 0;
+        }
+    }
     return (px);
 }
 
@@ -1088,7 +1101,7 @@ struct cert_answers *find_parent_cert(
  * @param[out] stap
  *     Error code.  On success the value at this location might be set
  *     to 0 or might be left alone.  On error it is set to a non-zero
- *     value.  This parameter MUST NOT be NULL.
+ *     value.  This parameter may be NULL.
  * @param[out] pathname
  *     If non-NULL, the full pathname of the matching certificate will
  *     be written to the buffer at this location.  The buffer must
