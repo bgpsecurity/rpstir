@@ -536,7 +536,7 @@ int insertscm(
     char *quoted = NULL;
     int sta;
     int leen = 128;
-    int wsta = (-1);
+    int wsta = ERR_SCM_UNSPECIFIED;
     int i;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
@@ -1129,7 +1129,7 @@ static int socvaluefunc(
         memcpy(s->context, s->vec[0].valptr, sizeof(unsigned int));
         return (0);
     }
-    return (-1);
+    return ERR_SCM_UNSPECIFIED;
 }
 
 int searchorcreatescm(
@@ -1198,7 +1198,7 @@ int deletescm(
     char *stmt = NULL;
     int leen = 128;
     int sta = 0;
-    int wsta = (-1);
+    int wsta = ERR_SCM_UNSPECIFIED;
     int i;
 
     // validate arguments
@@ -1281,7 +1281,7 @@ int setflagsscm(
 {
     char *stmt;
     int leen = 128;
-    int wsta = (-1);
+    int wsta = ERR_SCM_UNSPECIFIED;
     int sta;
     int i;
 

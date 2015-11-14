@@ -599,7 +599,7 @@ int roaGenerateFilter(
     iAS_ID = roaAS_ID(r);
     sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
     if (sta < 0 || sta >= (int)sizeof(cAS_ID))
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
 
     cSID = roaSKI(r);
     if (NULL == cSID)

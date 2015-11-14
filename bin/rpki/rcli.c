@@ -118,7 +118,7 @@ static int deleteop(
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
         LOG(LOG_ERR, "Internal error in deleteop()");
-        return (-1);
+        return ERR_SCM_UNSPECIFIED;
     }
     // drop the database, destroying all tables in the process
     sta = deletedbscm(conp, scmp->db);
@@ -145,7 +145,7 @@ static int createop(
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
         LOG(LOG_ERR, "Internal error in createop()");
-        return (-1);
+        return ERR_SCM_UNSPECIFIED;
     }
     // step 1: create the database itself
     sta = createdbscm(conp, scmp->db, scmp->dbuser);
@@ -181,7 +181,7 @@ static int create2op(
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
         LOG(LOG_ERR, "Internal error in create2op()");
-        return (-1);
+        return ERR_SCM_UNSPECIFIED;
     }
     if (topdir == NULL || topdir[0] == 0)
     {
@@ -483,12 +483,12 @@ static int sock1line(
     left2 = (char *)calloc(leen + rd + 1, sizeof(char));
     if (left2 == NULL)
     {
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     }
     (void)strncpy(left2, left, leen);
     sta = recv(s, left2 + leen, rd, MSG_WAITALL);
     if (sta <= 0)               // 0 indicates orderly connection shutdown
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     left2[leen + sta] = 0;
     // free((void *)left);
     left = left2;
@@ -1239,7 +1239,7 @@ int main(
                         LOG(LOG_ERR,
                                 "%d failed attempts to create socket. Aborting.",
                                 max_makesock_attempts);
-                        sta = -1;
+                        sta = ERR_SCM_UNSPECIFIED;
                         break;
                     }
                 }

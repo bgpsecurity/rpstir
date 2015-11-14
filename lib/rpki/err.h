@@ -14,6 +14,7 @@
  */
 #define ERROR_CODES(f)                                                  \
     f(ERR_SCM_NOERR, "No error") /* this entry must be first */         \
+    f(ERR_SCM_UNSPECIFIED, "Unspecified error")                         \
     f(ERR_SCM_COFILE, "Cannot open file")                               \
     f(ERR_SCM_NOMEM, "Out of memory")                                   \
     f(ERR_SCM_INVALARG, "Invalid argument")                             \
@@ -245,7 +246,7 @@ typedef enum {
     do {                                                                \
         if (test) {                                                     \
             (void)fprintf(stderr, __VA_ARGS__);                         \
-            return -1;                                                  \
+            return ERR_SCM_UNSPECIFIED;                                 \
         }                                                               \
     } while (0)
 

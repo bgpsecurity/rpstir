@@ -753,7 +753,7 @@ static int parse_control_section(
         {
             cc = nextword(cc);
             if (!trueOrFalse(cc))
-                ansr = -1;
+                ansr = ERR_SCM_UNSPECIFIED;
             else if (*cc == 'T')
                 *locflagsp |= TREEGROWTH;
         }
@@ -761,7 +761,7 @@ static int parse_control_section(
         {
             cc = nextword(cc);
             if (!trueOrFalse(cc))
-                ansr = -1;
+                ansr = ERR_SCM_UNSPECIFIED;
             else if (*cc == 'T')
                 *locflagsp |= RESOURCE_NOUNION;
         }
@@ -769,7 +769,7 @@ static int parse_control_section(
         {
             cc = nextword(cc);
             if (!trueOrFalse(cc))
-                ansr = -1;
+                ansr = ERR_SCM_UNSPECIFIED;
             else if (*cc == 'T')
                 *locflagsp |= INTERSECTION_ALWAYS;
         }
@@ -788,7 +788,7 @@ static int parse_control_section(
             }
         }
     }
-    if (ansr == -1)
+    if (ansr == ERR_SCM_UNSPECIFIED)
     {
         xsnprintf(errbuf, sizeof(errbuf), "No/not TRUE or FALSE in %s.",
                   skibuf);

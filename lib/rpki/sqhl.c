@@ -683,7 +683,7 @@ static int set_sigval(
     char *item2,
     int valu)
 {
-    int sta = -1;
+    int sta = ERR_SCM_UNSPECIFIED;
 
     switch (typ)
     {
@@ -2424,7 +2424,7 @@ static int invalidateChildCert(
     {
         /** @bug ignores error code without explanation */
         if (countvalidparents(conp, data->issuer, data->aki) > 0)
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         sta = updateValidFlags(conp, theCertTable, data->id, data->flags, 0);
         if (sta < 0)
             return sta;

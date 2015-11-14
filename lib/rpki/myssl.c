@@ -3376,7 +3376,7 @@ static int rescert_name_chk(
         // RFC 6487 limits the total number of attributes, not the sequence
         // length explicitly
         LOG(LOG_ERR, "RDNSeq contains >2 RelativeDistinguishedName");
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     }
     for (sequence_idx = 0; sequence_idx < sequence_length; ++sequence_idx)
     {
@@ -3389,7 +3389,7 @@ static int rescert_name_chk(
             // length explicitly
             LOG(LOG_ERR,
                     "RelativeDistinguishedName contains >2 Attribute Value Assertions");
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         }
         for (set_idx = 0; set_idx < set_length; ++set_idx)
         {
@@ -3401,7 +3401,7 @@ static int rescert_name_chk(
                 if (commonName)
                 {
                     LOG(LOG_ERR, "multiple CommonNames");
-                    return -1;
+                    return ERR_SCM_UNSPECIFIED;
                 }
                 commonName = true;
                 if (vsize_casn(&avap->value.commonName.printableString) <= 0)
@@ -3409,7 +3409,7 @@ static int rescert_name_chk(
                     if (strict_profile_checks)
                     {
                         LOG(LOG_ERR, "CommonName not printableString");
-                        return -1;
+                        return ERR_SCM_UNSPECIFIED;
                     }
                     else
                     {
@@ -3422,7 +3422,7 @@ static int rescert_name_chk(
                 if (serialNumber)
                 {
                     LOG(LOG_ERR, "multiple SerialNumbers");
-                    return -1;
+                    return ERR_SCM_UNSPECIFIED;
                 }
                 serialNumber = true;
             }
@@ -3430,7 +3430,7 @@ static int rescert_name_chk(
             {
                 LOG(LOG_ERR,
                         "AttributeValueAssertion contains an OID that is neither id_commonName nor id_serialNumber");
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             }
         }
     }
@@ -3438,7 +3438,7 @@ static int rescert_name_chk(
     if (!commonName)
     {
         LOG(LOG_ERR, "no CommonName present");
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     }
 
     return 0;

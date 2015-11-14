@@ -115,7 +115,7 @@ static int add_paracert2DB(
         cert_answersp = find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
         if (!cert_answersp || cert_answersp->num_ansrs < 0)
             /** @bug should return cert_answersp->num_ansrs */
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         int i = 0;
         for (cert_ansrp = &cert_answersp->cert_ansrp[0];
              i < cert_answersp->num_ansrs; i++, cert_ansrp++)
@@ -124,7 +124,7 @@ static int add_paracert2DB(
                 break;
         }
         if (i >= cert_answersp->num_ansrs)
-            ansr = -1;
+            ansr = ERR_SCM_UNSPECIFIED;
     }
     if (ansr >= 0)
     {
@@ -358,7 +358,7 @@ int get_CAcert(
         struct cert_answers *cert_answersp =
             find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
         if (!cert_answersp && cert_answersp->num_ansrs < 0)
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         struct cert_ansr *cert_ansrp,
            *this_cert_ansrp;
         ansr = cert_answersp->num_ansrs;
@@ -388,13 +388,13 @@ int get_CAcert(
         {
             xsnprintf(errbuf, sizeof(errbuf),
                       "No CA certificate found for SKI %s\n", ski);
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         }
         else if (j > 2 || (j == 2 && !have_para))
         {
             xsnprintf(errbuf, sizeof(errbuf),
                       "Found %d certificates for SKI %s\n", j, ski);
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         }
         get_casn_file(&certp->self, this_cert_ansrp->fullname, 0);
         struct Certificate *paracertp =
@@ -625,7 +625,7 @@ static int expand(
         if (ansr < 0)
         {
             if (flag)
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             certrangep = inject_range(certrangesp, ++lastcert);
             certrangep->typ = rulerangep->typ;
             memcpy(certrangep->lolim, rulerangep->lolim, lth);
@@ -639,7 +639,7 @@ static int expand(
         else if (!ansr)
         {
             if (flag)
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             memcpy(certrangep->lolim, rulerangep->lolim, lth);
             if (memcmp(certrangep->hilim, rulerangep->hilim, lth) >= 0)
                 rulerangep = next_range(rulerangesp, rulerangep);
@@ -657,14 +657,14 @@ static int expand(
             if (memcmp(certrangep->lolim, rulerangep->lolim, lth) > 0)
             {
                 if (flag)
-                    return -1;
+                    return ERR_SCM_UNSPECIFIED;
                 memcpy(certrangep->lolim, rulerangep->lolim, lth);
                 did++;
             }
             if (memcmp(rulerangep->hilim, certrangep->hilim, lth) > 0)
             {
                 if (flag)
-                    return -1;
+                    return ERR_SCM_UNSPECIFIED;
                 memcpy(certrangep->hilim, rulerangep->hilim, lth);
                 rulerangep = next_range(rulerangesp, rulerangep);
                 did++;
@@ -681,7 +681,7 @@ static int expand(
         else if ((ansr = touches(certrangep, rulerangep, lth)) >= 0)
         {
             if (flag)
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             memcpy(certrangep->hilim, rulerangep->hilim, lth);
             lastcert = certrangep - certrangesp->iprangep;
             certrangep = next_range(certrangesp, certrangep);
@@ -1315,7 +1315,7 @@ static int process_trust_anchors(
     struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
     if (cert_answersp->num_ansrs < 0)
         /** @bug should return cert_answersp->num_ansrs */
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     int ansr = 0;
     int numkids = cert_answersp->num_ansrs;
     int numkid;

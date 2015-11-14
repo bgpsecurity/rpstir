@@ -114,7 +114,7 @@ int splitdf(
     char *work;
     char *outd = NULL;
     char *outf = NULL;
-    int wsta = -1;
+    int wsta = ERR_SCM_UNSPECIFIED;
 
     if (fname == NULL || fname[0] == 0)
         return (ERR_SCM_INVALARG);
