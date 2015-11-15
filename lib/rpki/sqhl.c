@@ -551,15 +551,15 @@ static int verify_callback(
  * @return
  *     One of the SIGVAL_ constants indicating what happened.
  */
-
-static int get_cert_sigval(
+static sigval_state
+get_cert_sigval(
     scmcon *conp,
     char *subj,
     char *ski)
 {
     static scmsrcha *sigsrch = NULL;
     unsigned int *svalp;
-    int sval;
+    sigval_state sval;
     err_code sta = 0;
 
     if (theSCMP != NULL)
@@ -579,19 +579,20 @@ static int get_cert_sigval(
     svalp = (unsigned int *)(sigsrch->vec[0].valptr);
     if (svalp == NULL)
         return SIGVAL_UNKNOWN;
-    sval = *(int *)svalp;
+    sval = *svalp;
     if (sval < SIGVAL_UNKNOWN || sval > SIGVAL_INVALID)
         return SIGVAL_UNKNOWN;
     return sval;
 }
 
-static int get_roa_sigval(
+static sigval_state
+get_roa_sigval(
     scmcon *conp,
     char *ski)
 {
     static scmsrcha *sigsrch = NULL;
     unsigned int *svalp;
-    int sval;
+    sigval_state sval;
     err_code sta = 0;
 
     if (theSCMP != NULL)
@@ -610,13 +611,14 @@ static int get_roa_sigval(
     svalp = (unsigned int *)(sigsrch->vec[0].valptr);
     if (svalp == NULL)
         return SIGVAL_UNKNOWN;
-    sval = *(int *)svalp;
+    sval = *svalp;
     if (sval < SIGVAL_UNKNOWN || sval > SIGVAL_INVALID)
         return SIGVAL_UNKNOWN;
     return sval;
 }
 
-static int get_sigval(
+static sigval_state
+get_sigval(
     scmcon *conp,
     int typ,
     char *item1,
@@ -645,7 +647,7 @@ set_cert_sigval(
     scmcon *conp,
     char *subj,
     char *ski,
-    int valu)
+    sigval_state valu)
 {
     char stmt[520];
     err_code sta;
@@ -667,7 +669,7 @@ static err_code
 set_roa_sigval(
     scmcon *conp,
     char *ski,
-    int valu)
+    sigval_state valu)
 {
     char stmt[520];
     err_code sta;
@@ -689,7 +691,7 @@ set_sigval(
     int typ,
     char *item1,
     char *item2,
-    int valu)
+    sigval_state valu)
 {
     err_code sta = ERR_SCM_UNSPECIFIED;
 
@@ -735,7 +737,7 @@ static int local_verify(
 {
     int x509sta = 0;
     err_code sta = 0;
-    int sigval = SIGVAL_UNKNOWN;
+    sigval_state sigval = SIGVAL_UNKNOWN;
     int mok;
     char *subj = NULL;
     char *ski = NULL;
@@ -1614,7 +1616,7 @@ verify_roa(
 {
     unsigned char *blob = NULL;
     X509 *cert;
-    int sigval;
+    sigval_state sigval;
     err_code sta;
     char fn[PATH_MAX];
 
