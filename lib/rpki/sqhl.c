@@ -2035,7 +2035,7 @@ static int verifyChildCert(
         sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
         {
-            LOG(LOG_ERR, "Child cert %s had bad signature", pathname);
+            LOG(LOG_ERR, "Child cert %s is not valid", pathname);
             deletebylid(conp, theCertTable, data->id);
             return sta;
         }
