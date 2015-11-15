@@ -103,7 +103,7 @@ typedef struct _cfx_validator {
 } cfx_validator;
 
 extern void freecf(
-    cert_fields *);
+    cert_fields *cf);
 
 /**
  * @brief

@@ -161,8 +161,8 @@ set_asn_lth(
 /* s1 is target */
 int
 wdcmp(
-    char *,
-    char *);
+    char *s1,
+    char *s2);
 
 int
 write_out(

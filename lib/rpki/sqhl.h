@@ -323,9 +323,9 @@ extern struct cert_answers *find_cert_by_aKI(
  *
  */
 extern struct cert_answers *find_parent_cert(
-    char *,
-    char *,
-    scmcon *);
+    char *ski,
+    char *subject,
+    scmcon *conp);
 
 extern struct cert_answers *find_trust_anchors(
     scm *sscmp,
