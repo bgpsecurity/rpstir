@@ -885,6 +885,7 @@ int searchscm(
             pophstmt(conp);
             return (ERR_SCM_SQL);
         }
+        /** @bug ignores error code without explanation */
         sta = (*cnter)(conp, srch, nrows);
         if (sta < 0 && (what & SCM_SRCH_BREAK_CERR))
         {
@@ -1154,6 +1155,7 @@ int searchorcreatescm(
         return (ERR_SCM_INVALARG);
     *idp = (unsigned int)(-1);
     *(unsigned int *)(srch->context) = (unsigned int)(-1);
+    /** @bug ignores error code without explanation */
     sta = searchscm(conp, tabp, srch, NULL, socvaluefunc,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta == 0)

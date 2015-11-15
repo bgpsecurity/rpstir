@@ -295,6 +295,7 @@ static int doQuery(
         while (name != NULL)
         {
             field2 = findField(name);
+            /** @bug ignores error code without explanation */
             addcolsrchscm(&srch, name, field2->sqlType, field2->maxSize);
             if (field->flags & Q_REQ_JOIN)
                 srchFlags = srchFlags | SCM_SRCH_DO_JOIN;
@@ -318,9 +319,11 @@ static int doQuery(
                 ski = "ski";
             }
             field2 = findField(ski);
+            /** @bug ignores error code without explanation */
             addcolsrchscm(&srch, ski, field2->sqlType, field2->maxSize);
         }
         else if (isCert)
+            /** @bug ignores error code without explanation */
             addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
     }
 

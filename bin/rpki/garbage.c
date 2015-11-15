@@ -116,6 +116,7 @@ static int countCurrentCRLs(
     if (cntSrch == NULL)
     {
         cntSrch = newsrchscm(NULL, 1, 0, 1);
+        /** @bug ignores error code without explanation */
         addcolsrchscm(cntSrch, "local_id", SQL_C_ULONG, 8);
     }
     theIssuer = (char *)s->vec[0].valptr;
@@ -242,7 +243,9 @@ int main(
     srch.nused = 0;
     srch.vald = 0;
     srch.wherestr = NULL;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
     status = searchscm(connect, metaTable, &srch, NULL, handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -254,6 +257,7 @@ int main(
     }
 
     // check for expired certs
+    /** @bug ignores error code without explanation */
     certificate_validity(scmp, connect);
 
     // check for revoked certs
@@ -274,7 +278,9 @@ int main(
     srch.vald = 0;
     xsnprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
     srch.wherestr = msg;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
     countHandler = handleIfStale;
     status = searchscm(connect, crlTable, &srch, NULL, countCurrentCRLs,
@@ -293,7 +299,9 @@ int main(
     // are referenced by both stale and non-stale manifests, set to not stale
     srch.nused = 0;
     srch.vald = 0;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "fileslen", SQL_C_ULONG, sizeof(unsigned int));
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
@@ -306,9 +314,13 @@ int main(
     }
     for (i = 0; i < numStaleManFiles; i++)
     {
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, certTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, crlTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, gbrTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
@@ -325,9 +337,13 @@ int main(
     }
     for (i = 0; i < numStaleManFiles; i++)
     {
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, certTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, crlTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, gbrTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
@@ -341,8 +357,11 @@ int main(
     msg[0] = 0;
     addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
     srch.wherestr = msg;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, 512);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
     countHandler = handleIfCurrent;
     status = searchscm(connect, certTable, &srch, NULL, countCurrentCRLs,

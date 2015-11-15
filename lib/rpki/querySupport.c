@@ -104,9 +104,12 @@ initSearch(
     validTable = findtablescm(scmp, "certificate");
     validSrch = newsrchscm(NULL, 3, 0, 1);
     QueryField *field = findField("aki");
+    /** @bug ignores error code without explanation */
     addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
+    /** @bug ignores error code without explanation */
     char *now = LocalTimeToDBTime(NULL);
     field = findField("issuer");
+    /** @bug ignores error code without explanation */
     addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
     validWhereStr = validSrch->wherestr;
     validWhereStr[0] = 0;
@@ -143,6 +146,7 @@ initSearch(
     {
         anySrch = newsrchscm(NULL, 1, 0, 1);
         field = findField("flags");
+        /** @bug ignores error code without explanation */
         addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
     }
 }
@@ -197,6 +201,7 @@ int checkValidity(
             strncpy(prevSKI, nextSKI, 128);
         }
         parentsFound = 0;
+        /** @bug ignores error code without explanation */
         searchscm(connect, validTable, validSrch, NULL,
                   registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (parentsFound > 1)
@@ -211,6 +216,7 @@ int checkValidity(
                 return 0;
             xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                       whereInsertPtr + 5);
+            /** @bug ignores error code without explanation */
             searchscm(connect, validTable, anySrch, NULL, registerParent,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
             if (parentsFound > 1)

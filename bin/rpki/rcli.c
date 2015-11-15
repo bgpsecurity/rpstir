@@ -89,6 +89,7 @@ static int restoreState(
         if (stmt == NULL)
             return (ERR_SCM_NOMEM);
         xsnprintf(stmt, leen, "delete from %s;", name);
+        /** @bug ignores error code without explanation */
         sta = statementscm_no_data(conp, stmt);
         xsnprintf(stmt, leen, "load data infile 'backup_%s' into table %s;",
                   name, name);
@@ -400,6 +401,7 @@ static int aur(
         sta = delete_object(scmp, conp, outfile, outdir, outfull, 0);
         break;
     case 'u':
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, outfile, outdir, outfull, 0);
         sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
         break;
@@ -652,10 +654,12 @@ static int sockline(
             break;
         case 's':
         case 'S':              /* save */
+            /** @bug ignores error code without explanation */
             (void)saveState(conp, scmp);
             break;
         case 'v':
         case 'V':              /* restore */
+            /** @bug ignores error code without explanation */
             (void)restoreState(conp, scmp);
             break;
         case 'y':
@@ -770,10 +774,12 @@ static int fileline(
             break;
         case 's':
         case 'S':              /* save */
+            /** @bug ignores error code without explanation */
             (void)saveState(conp, scmp);
             break;
         case 'v':
         case 'V':              /* restore */
+            /** @bug ignores error code without explanation */
             (void)restoreState(conp, scmp);
             break;
         case 'y':
@@ -1241,6 +1247,7 @@ int main(
                 {
                     makesock_failures = 0;
                     FLUSH_LOG();
+                    /** @bug ignores error code without explanation */
                     sta = sockline(scmp, realconp, s);
                     LOG(LOG_INFO, "Socket connection closed");
                     FLUSH_LOG();
@@ -1293,6 +1300,7 @@ int main(
             LOG(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta),
                     sta);
     }
+    /** @bug ignores error code without explanation */
     (void)ranlast(scmp, realconp, "RSYNC");
     sqcleanup();
     if (realconp != NULL)

@@ -733,9 +733,11 @@ static int local_verify(
     char *ski = NULL;
 
     // first, get the subject and the SKI
+    /** @bug ignores error code without explanation */
     subj = X509_to_subject(cert, &sta, &x509sta);
     if (subj != NULL)
     {
+        /** @bug ignores error code without explanation */
         ski = X509_to_ski(cert, &sta, &x509sta);
         if (ski != NULL)
         {
@@ -764,6 +766,7 @@ static int local_verify(
     mok = X509_verify(cert, pkey);
     if (mok)
     {
+        /** @bug ignores error code without explanation */
         set_sigval(thecon, OT_CER, subj, ski, SIGVAL_VALID);
     }
     if (subj != NULL)
@@ -987,6 +990,11 @@ static int addCert2List(
         cert_answers.cert_ansrp =
             (struct cert_ansr *)calloc(1, sizeof(struct cert_ansr));
     else
+        /**
+         * @bug
+         *     ignores error code without explanation (num_ansrs might
+         *     be negative)
+         */
         cert_answers.cert_ansrp =
             (struct cert_ansr *)realloc(cert_answers.cert_ansrp,
                                         sizeof(struct cert_ansr) *
@@ -1109,6 +1117,11 @@ static X509 *parent_cert(
     struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
     int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
     if (!cert_answersp || cert_answersp->num_ansrs <= 0)
+        /**
+         * @bug
+         *     ignores error code without explanation (num_ansrs might
+         *     be negative)
+         */
         return NULL;
     if (cert_answersp->num_ansrs == 1)
     {
@@ -1364,6 +1377,12 @@ static int verify_cert(
     else
     {
         int flags;
+        /**
+         * @bug
+         *     parent_cert()'s error code is not checked, so this
+         *     logic does not distinguish an error from a parentless
+         *     cert
+         */
         parent =
             parent_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
         while (parent != NULL)
@@ -1377,6 +1396,12 @@ static int verify_cert(
             else
             {
                 sk_X509_push(sk_untrusted, parent);
+                /**
+                 * @bug
+                 *     parent_cert()'s error code is not checked, so
+                 *     this logic does not distinguish an error from a
+                 *     parentless cert
+                 */
                 parent = parent_cert(conp, parentAKI, parentIssuer, &sta, NULL,
                                      &flags);
             }
@@ -1547,6 +1572,7 @@ static int verify_roa(
     sta = roaValidate(r);
     if (sta < 0)
         return (sta);
+    /** @bug ignores error code without explanation */
     cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
     if (cert == NULL)
     {
@@ -1666,20 +1692,25 @@ static int verifyChildCRL(
                     &x, &sta, &crlsta, goodoids);
     if (cf == NULL)
         return sta;
+    /** @bug ignores x509sta error code without explanation */
+    /** @bug ignores chainOK without explanation */
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
     id = *((unsigned int *)(s->vec[2].valptr));
     // if invalid, delete it
     if (sta < 0)
     {
+        /** @bug ignores error code without explanation */
         deletebylid(conp, theCRLTable, id);
         return sta;
     }
     // otherwise, validate it and do its revocations
+    /** @bug ignores error code without explanation */
     sta = updateValidFlags(conp, theCRLTable, id,
                            *((unsigned int *)(s->vec[3].valptr)), 1);
     for (i = 0; i < cf->snlen; i++)
     {
+        /** @bug ignores error code without explanation */
         revoke_cert_by_serial(theSCMP, conp, cf->fields[CRF_FIELD_ISSUER],
                               cf->fields[CRF_FIELD_AKI],
                               &((uint8_t *)cf->snlist)[SER_NUM_MAX_SZ * i]);
@@ -1724,10 +1755,12 @@ static int verifyChildROA(
     // if invalid, delete it
     if (sta < 0)
     {
+        /** @bug ignores error code without explanation */
         deletebylid(conp, theROATable, id);
         return sta;
     }
     // otherwise, validate it
+    /** @bug ignores error code without explanation */
     sta = updateValidFlags(conp, theROATable, id,
                            *((unsigned int *)(s->vec[3].valptr)), 1);
     return 0;
@@ -1844,6 +1877,7 @@ static int updateManifestObjs(
         addFlagTest(updateManSrch->wherestr, SCM_FLAG_ONMAN, 0, 1);
         updateManLid = 0;
         memset(updateManHash, 0, sizeof(updateManHash));
+        /** @bug ignores error code without explanation */
         searchscm(conp, tabp, updateManSrch, NULL, handleUpdateMan,
                   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
         if (!updateManLid)
@@ -1898,6 +1932,7 @@ static int updateManifestObjs(
                           tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
                 free((void *)h);
             }
+            /** @bug ignores error code without explanation */
             statementscm_no_data(conp, flagStmt);
         }
         else
@@ -1909,12 +1944,14 @@ static int updateManifestObjs(
             {
                 xsnprintf(updateManSrch2->wherestr, WHERESTR_SIZE,
                           "local_id=\"%d\"", updateManLid);
+                /** @bug ignores error code without explanation */
                 searchscm(conp, tabp, updateManSrch2, NULL,
                           revoke_cert_and_children, SCM_SRCH_DOVALUE_ALWAYS,
                           NULL);
             }
             else
             {
+                /** @bug ignores error code without explanation */
                 deletebylid(conp, tabp, updateManLid);
             }
         }
@@ -1935,6 +1972,7 @@ static int verifyChildManifest(
     struct CMS cms;
     char outfull[PATH_MAX];
     UNREFERENCED_PARAMETER(idx);
+    /** @bug ignores error code without explanation */
     sta = updateValidFlags(conp, theManifestTable,
                            *((unsigned int *)(s->vec[0].valptr)),
                            *((unsigned int *)(s->vec[1].valptr)), 1);
@@ -1950,6 +1988,7 @@ static int verifyChildManifest(
     }
     struct Manifest *manifest =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
+    /** @bug ignores error code without explanation */
     sta = updateManifestObjs(conp, manifest);
     delete_casn(&cms.self);
     return 0;
@@ -1969,6 +2008,7 @@ static int verifyChildGhostbusters(
 {
     (void)idx;
 
+    /** @bug ignores error code without explanation */
     updateValidFlags(conp, theGBRTable,
                      *((unsigned int *)(s->vec[2].valptr)),
                      *((unsigned int *)(s->vec[3].valptr)), 1);
@@ -2023,16 +2063,20 @@ static int verifyChildCert(
     if (doVerify)
     {
         xsnprintf(pathname, PATH_MAX, "%s/%s", data->dirname, data->filename);
+        /** @bug ignores error code without explanation */
         x = readCertFromFile(pathname, &sta);
         if (x == NULL)
             return ERR_SCM_X509;
+        /** @bug ignores chainOK without explanation */
         sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
         {
             LOG(LOG_ERR, "Child cert %s is not valid", pathname);
+            /** @bug ignores error code without explanation */
             deletebylid(conp, theCertTable, data->id);
             return sta;
         }
+        /** @bug ignores error code without explanation */
         updateValidFlags(conp, theCertTable, data->id, data->flags, 1);
     }
 
@@ -2049,17 +2093,20 @@ static int verifyChildCert(
     xsnprintf(crlSrch->wherestr, WHERESTR_SIZE,
               "aki=\"%s\" and issuer=\"%s\"", data->ski, data->subject);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
+    /** @bug ignores error code without explanation */
     sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated GBRs */
     xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    /** @bug ignores error code without explanation */
     searchscm(conp, theGBRTable, crlSrch, NULL, verifyChildGhostbusters,
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated ROA */
     xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
+    /** @bug ignores error code without explanation */
     sta = searchscm(conp, theROATable, crlSrch, NULL, verifyChildROA,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
@@ -2074,6 +2121,7 @@ static int verifyChildCert(
         ADDCOL(manSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
     }
     xsnprintf(manSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
+    /** @bug ignores error code without explanation */
     sta = searchscm(conp, theManifestTable, manSrch, NULL, verifyChildManifest,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     return 0;
@@ -2188,8 +2236,10 @@ static int invalidate_roa(
     lid = *(unsigned int *)(s->vec[0].valptr);
     flags = *(unsigned int *)(s->vec[2].valptr);
     (void)strncpy(ski, (char *)(s->vec[1].valptr), 512);
+    /** @bug ignores error code without explanation */
     if (countvalidparents(conp, NULL, ski) > 0)
         return (0);
+    /** @bug ignores error code without explanation */
     updateValidFlags(conp, theROATable, lid, flags, 0);
     return 0;
 }
@@ -2208,11 +2258,13 @@ static int invalidate_gbr(
     (void)idx;
 
     strncpy(ski, (char *)(s->vec[1].valptr), sizeof(ski));
+    /** @bug ignores error code without explanation */
     if (countvalidparents(conp, NULL, ski) > 0)
     {
         return 0;
     }
 
+    /** @bug ignores error code without explanation */
     updateValidFlags(conp, theGBRTable, *(unsigned int *)(s->vec[0].valptr),
                      *(unsigned int *)(s->vec[2].valptr), 0);
 
@@ -2233,11 +2285,13 @@ static int invalidate_mft(
     (void)idx;
 
     strncpy(ski, (char *)(s->vec[1].valptr), sizeof(ski));
+    /** @bug ignores error code without explanation */
     if (countvalidparents(conp, NULL, ski) > 0)
     {
         return 0;
     }
 
+    /** @bug ignores error code without explanation */
     updateValidFlags(conp, theManifestTable,
                      *(unsigned int *)(s->vec[0].valptr),
                      *(unsigned int *)(s->vec[2].valptr), 0);
@@ -2274,11 +2328,13 @@ static int invalidate_crl(
 
     strncpy(aki, (char *)(s->vec[1].valptr), sizeof(aki));
     strncpy(issuer, (char *)(s->vec[2].valptr), sizeof(issuer));
+    /** @bug ignores error code without explanation */
     if (countvalidparents(conp, issuer, aki) > 0)
     {
         return 0;
     }
 
+    /** @bug ignores error code without explanation */
     updateValidFlags(conp, theCRLTable,
                      *(unsigned int *)(s->vec[0].valptr),
                      *(unsigned int *)(s->vec[3].valptr), 0);
@@ -2301,6 +2357,7 @@ static int invalidateChildCert(
 
     if (doUpdate)
     {
+        /** @bug ignores error code without explanation */
         if (countvalidparents(conp, data->issuer, data->aki) > 0)
             return -1;
         sta = updateValidFlags(conp, theCertTable, data->id, data->flags, 0);
@@ -2336,17 +2393,21 @@ static int invalidateChildCert(
     addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
 
 
+    /** @bug ignores error code without explanation */
     searchscm(conp, theROATable, roaSrch, NULL, invalidate_roa,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     // reuse roaSrch for GBRs because the columns are the same
+    /** @bug ignores error code without explanation */
     searchscm(conp, theGBRTable, roaSrch, NULL, invalidate_gbr,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     // reuse roaSrch for MFTs because the columns are the same
+    /** @bug ignores error code without explanation */
     searchscm(conp, theManifestTable, roaSrch, NULL, invalidate_mft,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
+    /** @bug ignores error code without explanation */
     searchscm(conp, theCRLTable, invalidateCRLSrch, NULL, invalidate_crl,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
@@ -2464,9 +2525,11 @@ static int verifyOrNotChildren(
         currPropData->size--;
         idx = currPropData->size;
         if (doVerify)
+            /** @bug ignores error code without explanation */
             doIt =
                 verifyChildCert(conp, &currPropData->data[idx], !isRoot) == 0;
         else
+            /** @bug ignores error code without explanation */
             doIt =
                 invalidateChildCert(conp, &currPropData->data[idx],
                                     !isRoot) == 0;
@@ -2492,6 +2555,7 @@ static int verifyOrNotChildren(
             free(currPropData->data[idx].issuer);
         }
         if (doIt)
+            /** @bug ignores error code without explanation */
             searchscm(conp, theCertTable, childrenSrch, NULL, registerChild,
                       SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
         isRoot = 0;
@@ -2548,12 +2612,14 @@ int addStateToFlags(
     addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     initTables(scmp);
     validManPath[0] = 0;
+    /** @bug ignores error code without explanation */
     searchscm(conp, theManifestTable, validManSrch, NULL, handleValidMan,
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (!validManPath[0])
         return 0;
 
     CMS(&cms, 0);
+    /** @bug ignores error code without explanation */
     sta = get_casn_file(&cms.self, validManPath, 0);
     struct Manifest *manifest =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
@@ -2752,6 +2818,8 @@ int add_cert(
     int sta = 0;
 
     initTables(scmp);
+    /** @bug ignores error code without explanation if cf && x */
+    /** @bug ignores x509sta without explanation */
     cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
     if (cf == NULL || x == NULL)
     {
@@ -2817,6 +2885,7 @@ int add_crl(
     }
     cf->dirid = id;
     // first verify the CRL
+    /** @bug ignores x509sta error code without explanation */
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
     // then add the CRL
@@ -2944,6 +3013,7 @@ static int extractAndAddCert(
     memset(pathname, 0, sizeof(pathname));
     strcpy(certname, outfile);
     strcat(certname, ".cer");
+    /** @bug ignores error code without explanation */
     char *cc = retrieve_tdir(scmp, conp, &sta);
     // find or add the directory
     struct stat statbuf;
@@ -2980,6 +3050,7 @@ static int extractAndAddCert(
     else if (stat(pathname, &statbuf) < 0)
         mkdir(pathname, 0777);
     unsigned int dir_id;
+    /** @bug ignores error code without explanation */
     sta = findorcreatedir(scmp, conp, pathname, &dir_id);
     strcat(strcat(pathname, "/"), certname);
     if (certfilenamep)
@@ -3345,6 +3416,7 @@ int add_roa(
     // clean up
     free(prefixes);
     if (sta != 0 && cert_added)
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, certfilename, outdir, outfull,
                             (unsigned int)0);
     delete_casn(&roa.self);
@@ -3470,6 +3542,7 @@ int add_manifest(
     if (sta < 0)
     {
         if (cert_added)
+            /** @bug ignores error code without explanation */
             (void)delete_object(scmp, conp, certfilename, outdir,
                                 outfull, (unsigned int)0);
         delete_casn(&cms.self);
@@ -3531,6 +3604,7 @@ int add_manifest(
     while (0);
     // clean up
     if (sta < 0 && cert_added)
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, certfilename,
                             outdir, outfull, (unsigned int)0);
     delete_casn(&(cms.self));
@@ -3594,6 +3668,7 @@ int add_ghostbusters(
     sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id_old);
     if (sta < 0)
     {
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
         delete_casn(&cms.self);
         return sta;
@@ -3605,6 +3680,7 @@ int add_ghostbusters(
         // there was an integer overflow
         LOG(LOG_ERR,
             "There are too many ghostbusters records in the database.");
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
         delete_casn(&cms.self);
         return ERR_SCM_INTERNAL;
@@ -3650,6 +3726,7 @@ int add_ghostbusters(
     sta = insertscm(conp, theGBRTable, &aone);
     if (sta < 0)
     {
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, certfilename, outdir, outfull, 0);
         delete_casn(&cms.self);
         return sta;
@@ -3960,6 +4037,11 @@ static int revoke_cert_and_children(
         struct cert_answers *cert_answersp;
         struct cert_ansr *cert_ansrp;
         cert_answersp = find_cert_by_aKI(ski, (char *)0, theSCMP, conp);
+        /**
+         * @bug
+         *     ignores error code without explanation (num_ansrs might
+         *     be negative)
+         */
         if (cert_answersp && cert_answersp->num_ansrs)
         {
             int i;
@@ -3971,6 +4053,7 @@ static int revoke_cert_and_children(
                 {               // if so, clear them
                     flags = (cert_ansrp->flags &
                              ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
+                    /** @bug ignores error code without explanation */
                     set_cert_flag(conp, cert_ansrp->local_id, flags);
                 }
             }
@@ -4109,6 +4192,7 @@ int delete_object(
         memset(noutfile, 0, PATH_MAX);
         memset(noutdir, 0, PATH_MAX);
         memset(noutfull, 0, PATH_MAX);
+        /** @bug ignores error code without explanation */
         char *c = retrieve_tdir(scmp, conp, &sta);
         int lth = strlen(c);    // lth of tdir
         strcat(strcpy(noutfull, c), "/EEcertificates");

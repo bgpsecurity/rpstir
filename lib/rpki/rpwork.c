@@ -94,8 +94,10 @@ static int add_paracert2DB(
     struct cert_answers *cert_answersp;
     struct cert_ansr *cert_ansrp;
     unsigned int dbid;
+    /** @bug ignores error code without explanation */
     ansr = findorcreatedir(locscmp, locconp, Xrpdir, &dbid);
     sprintf(fullname, "%s/%s", Xrpdir, done_certp->filename);
+    /** @bug ignores error code without explanation */
     ansr = delete_object(locscmp, locconp, done_certp->filename, Xrpdir,
                          fullname, dbid);
     if ((ansr = put_casn_file(&done_certp->paracertp->self, fullname, 0)) < 0)
@@ -525,6 +527,11 @@ static void save_cert_answers(
     int numkid;
     int numkids = from_cert_answersp->num_ansrs;
     to_cert_answersp->num_ansrs = numkids;
+    /**
+     * @bug
+     *     ignores error code without explanation (numkids might be
+     *     negative)
+     */
     to_cert_answersp->cert_ansrp =
         (struct cert_ansr *)calloc(numkids, sizeof(struct cert_ansr));
     for (numkid = 0; numkid < numkids; numkid++)
@@ -907,6 +914,7 @@ static int conflict_test(
         // "subtract" new fromranges from old
 
         // diff shows where it occurred
+        /** @bug ignores error code without explanation */
         perf_A_from_B(&fromranges, &savranges);
         // find where
         int jj;
@@ -1235,6 +1243,7 @@ static int search_downward(
         find_cert_by_aKI((char *)0, pSKI, locscmp, locconp);
     numkids = cert_answersp->num_ansrs;
     if (numkids <= 0)
+        /** @bug ignores error code without explanation */
         return 0;
     childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
     Certificate(childcertp, (ushort)0);
@@ -1346,8 +1355,10 @@ static int process_trust_anchors(
             format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
             fill_done_cert(&done_cert, cSKI, cert_ansrp->filename, childcertp,
                            cert_ansrp->local_id, cert_ansrp->flags);
+            /** @bug ignores error code without explanation */
             sign_cert(keyring, done_cert.paracertp);
             add_done_cert(&done_cert);
+            /** @bug ignores error code without explanation */
             search_downward(keyring, done_cert.origcertp);
         }
     }
@@ -1384,6 +1395,12 @@ static int process_control_block(
         if (((done_certp->perf & WASPERFORATED) && !run) ||
             ((done_certp->perf & WASEXPANDED) && run))
         {
+            /**
+             * @bug
+             *     ignores error code without explanation?  (unclear
+             *     without return value documentation for
+             *     conflict_test())
+             */
             if (conflict_test(run, done_certp))
             {
                 // trim CR
@@ -1413,6 +1430,7 @@ static int process_control_block(
     }
     // oldcert is at a self-signed cert
     // for all ss certs
+    /** @bug ignores error code without explanation */
     search_downward(keyring, done_certp->origcertp);
     return 0;
 }
@@ -1508,6 +1526,7 @@ static int process_control_blocks(
         int err;
 
         err = process_control_block(keyring, done_certp);
+        /** @bug ignores error code without explanation */
         process_trust_anchors(keyring);
         clear_ipranges(&ruleranges);
         if (err < 0)
