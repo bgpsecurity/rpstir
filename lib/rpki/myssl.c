@@ -822,13 +822,13 @@ cf_get_ipb(
 }
 
 static cfx_validator xvalidators[] = {
-    {cf_get_ski, CF_FIELD_SKI, NID_subject_key_identifier, 1, 0},
-    {cf_get_aki, CF_FIELD_AKI, NID_authority_key_identifier, 0, 0},
-    {cf_get_sia, CF_FIELD_SIA, NID_sinfo_access, 0, 0},
-    {cf_get_aia, CF_FIELD_AIA, NID_info_access, 0, 0},
-    {cf_get_crldp, CF_FIELD_CRLDP, NID_crl_distribution_points, 0, 0},
-    {cf_get_ipb, 0, NID_sbgp_ipAddrBlock, 0, 1},
-    {cf_get_flags, 0, NID_basic_constraints, 0, 0}
+    {&cf_get_ski, CF_FIELD_SKI, NID_subject_key_identifier, 1, 0},
+    {&cf_get_aki, CF_FIELD_AKI, NID_authority_key_identifier, 0, 0},
+    {&cf_get_sia, CF_FIELD_SIA, NID_sinfo_access, 0, 0},
+    {&cf_get_aia, CF_FIELD_AIA, NID_info_access, 0, 0},
+    {&cf_get_crldp, CF_FIELD_CRLDP, NID_crl_distribution_points, 0, 0},
+    {&cf_get_ipb, 0, NID_sbgp_ipAddrBlock, 0, 1},
+    {&cf_get_flags, 0, NID_basic_constraints, 0, 0}
 };
 
 /*
@@ -851,12 +851,12 @@ static cfx_validator *cfx_find(
 
 static cf_validator validators[] = {
     {NULL, 0, 0},               /* filename handled already */
-    {cf_get_subject, CF_FIELD_SUBJECT, 1},
-    {cf_get_issuer, CF_FIELD_ISSUER, 1},
-    {cf_get_sn, CF_FIELD_SN, 1},
-    {cf_get_from, CF_FIELD_FROM, 1},
-    {cf_get_to, CF_FIELD_TO, 1},
-    {cf_get_sig, CF_FIELD_SIGNATURE, 1},
+    {&cf_get_subject, CF_FIELD_SUBJECT, 1},
+    {&cf_get_issuer, CF_FIELD_ISSUER, 1},
+    {&cf_get_sn, CF_FIELD_SN, 1},
+    {&cf_get_from, CF_FIELD_FROM, 1},
+    {&cf_get_to, CF_FIELD_TO, 1},
+    {&cf_get_sig, CF_FIELD_SIGNATURE, 1},
     {NULL, 0, 0}                /* terminator */
 };
 
@@ -1269,10 +1269,10 @@ crf_get_sig(
 
 static crf_validator crvalidators[] = {
     {NULL, 0, 0},               /* filename handled already */
-    {crf_get_issuer, CRF_FIELD_ISSUER, 1},
-    {crf_get_last, CRF_FIELD_LAST, 0},
-    {crf_get_next, CRF_FIELD_NEXT, 1},
-    {crf_get_sig, CRF_FIELD_SIGNATURE, 1},
+    {&crf_get_issuer, CRF_FIELD_ISSUER, 1},
+    {&crf_get_last, CRF_FIELD_LAST, 0},
+    {&crf_get_next, CRF_FIELD_NEXT, 1},
+    {&crf_get_sig, CRF_FIELD_SIGNATURE, 1},
     {NULL, 0, 0}                /* terminator */
 };
 
@@ -1372,8 +1372,8 @@ crf_get_aki(
 }
 
 static crfx_validator crxvalidators[] = {
-    {crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 1},
-    {crf_get_aki, CRF_FIELD_AKI, NID_authority_key_identifier, 1}
+    {&crf_get_crlno, CRF_FIELD_SN, NID_crl_number, 1},
+    {&crf_get_aki, CRF_FIELD_AKI, NID_authority_key_identifier, 1}
 };
 
 /*

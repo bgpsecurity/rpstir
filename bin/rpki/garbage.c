@@ -259,7 +259,7 @@ int main(
     addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
-    status = searchscm(connect, metaTable, &srch, NULL, handleTimestamps,
+    status = searchscm(connect, metaTable, &srch, NULL, &handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0)
     {
@@ -273,7 +273,7 @@ int main(
     certificate_validity(scmp, connect);
 
     // check for revoked certs
-    status = iterate_crl(scmp, connect, revoke_cert_by_serial);
+    status = iterate_crl(scmp, connect, &revoke_cert_by_serial);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error checking for revoked certificates: %s\n",
@@ -294,8 +294,8 @@ int main(
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
-    countHandler = handleIfStale;
-    status = searchscm(connect, crlTable, &srch, NULL, countCurrentCRLs,
+    countHandler = &handleIfStale;
+    status = searchscm(connect, crlTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(srch1[0].valptr);
     free(srch1[1].valptr);
@@ -316,7 +316,7 @@ int main(
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "fileslen", SQL_C_ULONG, sizeof(unsigned int));
     numStaleManFiles = 0;
-    status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
+    status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
@@ -339,7 +339,7 @@ int main(
     srch.vald = 0;
     xsnprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
-    status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
+    status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
@@ -375,8 +375,8 @@ int main(
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
-    countHandler = handleIfCurrent;
-    status = searchscm(connect, certTable, &srch, NULL, countCurrentCRLs,
+    countHandler = &handleIfCurrent;
+    status = searchscm(connect, certTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(srch1[0].valptr);
     free(srch1[1].valptr);

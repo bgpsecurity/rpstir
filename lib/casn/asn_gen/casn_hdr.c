@@ -211,7 +211,7 @@ print_hdr(
              */
         case IN_ITEM:
         case SUB_ITEM:
-            if (read_item(-1, print_hdr) < 0)
+            if (read_item(-1, &print_hdr) < 0)
                 return;
             if ((*token == ',' || *token == '}') &&     /* end of item */
                 !hdr_item(dup_ansr, numdefineds))

@@ -17,7 +17,7 @@ cryptInit_once_routine(
 C_CHECK_RETVAL \
 C_RET cryptInit_wrapper()
 {
-    int ret = pthread_once(&cryptInit_called, cryptInit_once_routine);
+    int ret = pthread_once(&cryptInit_called, &cryptInit_once_routine);
     if (ret != 0)
     {
         return CRYPT_ERROR_FAILED;

@@ -222,7 +222,7 @@ char *retrieve_tdir(
     srch.wherestr = NULL;
     srch.context = &blah;
     sta = searchscm(conp, theMetaTable, &srch, NULL,
-                    ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                    &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
     {
         free((void *)oot);
@@ -278,7 +278,7 @@ dupsigscm(
     srch.wherestr = NULL;
     srch.context = &blah;
     sta = searchscm(conp, tabp, &srch, NULL,
-                    ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                    &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     switch (sta)
     {
     case 0:                    /* found a duplicate sig */
@@ -574,7 +574,7 @@ get_cert_sigval(
     }
     xsnprintf(sigsrch->wherestr, WHERESTR_SIZE,
               "ski=\"%s\" and subject=\"%s\"", ski, subj);
-    sta = searchscm(conp, theCertTable, sigsrch, NULL, ok,
+    sta = searchscm(conp, theCertTable, sigsrch, NULL, &ok,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
         return SIGVAL_UNKNOWN;
@@ -606,7 +606,7 @@ get_roa_sigval(
                SIGVAL_UNKNOWN);
     }
     xsnprintf(sigsrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", ski);
-    sta = searchscm(conp, theROATable, sigsrch, NULL, ok,
+    sta = searchscm(conp, theROATable, sigsrch, NULL, &ok,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
         return SIGVAL_UNKNOWN;
@@ -926,7 +926,7 @@ checkit(
         X509_STORE_CTX_set_purpose(csc, purpose);
     old_vfunc = ctx->verify;
     thecon = conp;
-    csc->verify = our_verify;
+    csc->verify = &our_verify;
     i = X509_verify_cert(csc);
     csc->verify = old_vfunc;
     old_vfunc = NULL;
@@ -1092,7 +1092,7 @@ struct cert_answers *find_parent_cert(
     if (cert_answers.cert_ansrp)
         free(cert_answers.cert_ansrp);
     cert_answers.cert_ansrp = NULL;
-    sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
+    sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
         cert_answers.num_ansrs = sta;
@@ -1227,7 +1227,7 @@ struct cert_answers *find_cert_by_aKI(
     if (cert_answers.cert_ansrp)
         free(cert_answers.cert_ansrp);
     cert_answers.cert_ansrp = NULL;
-    sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
+    sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
         cert_answers.num_ansrs = sta;
@@ -1251,7 +1251,7 @@ struct cert_answers *find_trust_anchors(
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
     /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
-    sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
+    sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
         cert_answers.num_ansrs = sta;
@@ -1344,7 +1344,7 @@ cert_revoked(
     {
         return ERR_SCM_NOMEM;
     }
-    sta = searchscm(conp, theCRLTable, revokedSrch, NULL, revokedHandler,
+    sta = searchscm(conp, theCRLTable, revokedSrch, NULL, &revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(revokedSN);
     revokedSN = NULL;
@@ -1958,7 +1958,7 @@ updateManifestObjs(
         updateManLid = 0;
         memset(updateManHash, 0, sizeof(updateManHash));
         /** @bug ignores error code without explanation */
-        searchscm(conp, tabp, updateManSrch, NULL, handleUpdateMan,
+        searchscm(conp, tabp, updateManSrch, NULL, &handleUpdateMan,
                   SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
         if (!updateManLid)
             continue;
@@ -2040,7 +2040,7 @@ updateManifestObjs(
                           "local_id=\"%d\"", updateManLid);
                 /** @bug ignores error code without explanation */
                 searchscm(conp, tabp, updateManSrch2, NULL,
-                          revoke_cert_and_children, SCM_SRCH_DOVALUE_ALWAYS,
+                          &revoke_cert_and_children, SCM_SRCH_DOVALUE_ALWAYS,
                           NULL);
             }
             else
@@ -2192,20 +2192,20 @@ verifyChildCert(
               "aki=\"%s\" and issuer=\"%s\"", data->ski, data->subject);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     /** @bug ignores error code without explanation */
-    sta = searchscm(conp, theCRLTable, crlSrch, NULL, verifyChildCRL,
+    sta = searchscm(conp, theCRLTable, crlSrch, NULL, &verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated GBRs */
     xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     /** @bug ignores error code without explanation */
-    searchscm(conp, theGBRTable, crlSrch, NULL, verifyChildGhostbusters,
+    searchscm(conp, theGBRTable, crlSrch, NULL, &verifyChildGhostbusters,
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated ROA */
     xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
     /** @bug ignores error code without explanation */
-    sta = searchscm(conp, theROATable, crlSrch, NULL, verifyChildROA,
+    sta = searchscm(conp, theROATable, crlSrch, NULL, &verifyChildROA,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated Manifest */
@@ -2220,7 +2220,7 @@ verifyChildCert(
     }
     xsnprintf(manSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
     /** @bug ignores error code without explanation */
-    sta = searchscm(conp, theManifestTable, manSrch, NULL, verifyChildManifest,
+    sta = searchscm(conp, theManifestTable, manSrch, NULL, &verifyChildManifest,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     return 0;
 }
@@ -2311,7 +2311,7 @@ static int countvalidparents(
     srch.wherestr = &ws[0];
     mymcf.did = 0;
     srch.context = (void *)&mymcf;
-    sta = searchscm(conp, theCertTable, &srch, NULL, cparents,
+    sta = searchscm(conp, theCertTable, &srch, NULL, &cparents,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
         return (sta);
@@ -2507,21 +2507,21 @@ invalidateChildCert(
 
 
     /** @bug ignores error code without explanation */
-    searchscm(conp, theROATable, roaSrch, NULL, invalidate_roa,
+    searchscm(conp, theROATable, roaSrch, NULL, &invalidate_roa,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     // reuse roaSrch for GBRs because the columns are the same
     /** @bug ignores error code without explanation */
-    searchscm(conp, theGBRTable, roaSrch, NULL, invalidate_gbr,
+    searchscm(conp, theGBRTable, roaSrch, NULL, &invalidate_gbr,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     // reuse roaSrch for MFTs because the columns are the same
     /** @bug ignores error code without explanation */
-    searchscm(conp, theManifestTable, roaSrch, NULL, invalidate_mft,
+    searchscm(conp, theManifestTable, roaSrch, NULL, &invalidate_mft,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     /** @bug ignores error code without explanation */
-    searchscm(conp, theCRLTable, invalidateCRLSrch, NULL, invalidate_crl,
+    searchscm(conp, theCRLTable, invalidateCRLSrch, NULL, &invalidate_crl,
               SCM_SRCH_DOVALUE_ALWAYS, NULL);
 
     return 0;
@@ -2698,7 +2698,7 @@ verifyOrNotChildren(
         }
         if (doIt)
             /** @bug ignores error code without explanation */
-            searchscm(conp, theCertTable, childrenSrch, NULL, registerChild,
+            searchscm(conp, theCertTable, childrenSrch, NULL, &registerChild,
                       SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
         isRoot = 0;
     }
@@ -2758,7 +2758,7 @@ addStateToFlags(
     initTables(scmp);
     validManPath[0] = 0;
     /** @bug ignores error code without explanation */
-    searchscm(conp, theManifestTable, validManSrch, NULL, handleValidMan,
+    searchscm(conp, theManifestTable, validManSrch, NULL, &handleValidMan,
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (!validManPath[0])
         return 0;
@@ -4140,7 +4140,7 @@ iterate_crl(
     crli.tabp = theCRLTable;
     crli.cfunc = cfunc;
     srch.context = (void *)&crli;
-    sta = searchscm(conp, theCRLTable, &srch, NULL, crliterator,
+    sta = searchscm(conp, theCRLTable, &srch, NULL, &crliterator,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     return (sta);
 }
@@ -4295,7 +4295,7 @@ delete_object(
         srch.wherestr = NULL;
         srch.context = &blah;
         sta =
-            searchscm(conp, theDirTable, &srch, NULL, ok,
+            searchscm(conp, theDirTable, &srch, NULL, &ok,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (sta < 0)
             return (sta);
@@ -4327,7 +4327,7 @@ delete_object(
         fillInColumns(srch2, &lid, ski, subject, &flags, &srch);
         srch.where = &dwhere;
         srch.context = &mymcf;
-        sta = searchscm(conp, thetab, &srch, NULL, revoke_cert_and_children,
+        sta = searchscm(conp, thetab, &srch, NULL, &revoke_cert_and_children,
                         SCM_SRCH_DOVALUE_ALWAYS, NULL);
         break;
     case OT_CRL:
@@ -4439,7 +4439,7 @@ revoke_cert_by_serial(
     srch.where = &where;
     srch.wherestr = NULL;
     srch.context = &mymcf;
-    sta = searchscm(conp, theCertTable, &srch, NULL, revoke_cert_and_children,
+    sta = searchscm(conp, theCertTable, &srch, NULL, &revoke_cert_and_children,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(sno);
     sno = NULL;
@@ -4623,7 +4623,7 @@ certificate_validity(
     mymcf.toplevel = 0;
     srch.context = (void *)&mymcf;
     sta = searchscm(conp, theCertTable, &srch, NULL,
-                    certmaybeok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                    &certmaybeok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free((void *)vok);
     if (sta < 0 && sta != ERR_SCM_NODATA)
         retsta = sta;
@@ -4632,14 +4632,14 @@ certificate_validity(
     // ?????????????? no need to call this here; instead ??????????
     // ?????????????? check when first put in ????????????
     sta = searchscm(conp, theCertTable, &srch, NULL,
-                    certtoonew, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                    &certtoonew, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free((void *)vf);
     if (sta < 0 && sta != ERR_SCM_NODATA && retsta == 0)
         retsta = sta;
     // search for certificates that are too old
     srch.wherestr = vt;
     sta = searchscm(conp, theCertTable, &srch, NULL,
-                    certtooold, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                    &certtooold, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free((void *)vt);
     if (sta < 0 && sta != ERR_SCM_NODATA && retsta == 0)
         retsta = sta;

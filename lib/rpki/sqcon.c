@@ -1174,7 +1174,7 @@ searchorcreatescm(
     *idp = (unsigned int)(-1);
     *(unsigned int *)(srch->context) = (unsigned int)(-1);
     /** @bug ignores error code without explanation */
-    sta = searchscm(conp, tabp, srch, NULL, socvaluefunc,
+    sta = searchscm(conp, tabp, srch, NULL, &socvaluefunc,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta == 0)
     {

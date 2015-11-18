@@ -333,8 +333,8 @@ doQuery(
     /*
      * do query
      */
-    status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
-                       orderp);
+    status = searchscm(connection, table, &srch, NULL, &handleResults,
+                       srchFlags, orderp);
     for (i = 0; i < srch.nused; i++)
     {
         free(srch.vec[i].colname);

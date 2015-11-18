@@ -205,7 +205,7 @@ int checkValidity(
         parentsFound = 0;
         /** @bug ignores error code without explanation */
         searchscm(connect, validTable, validSrch, NULL,
-                  registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                  &registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (parentsFound > 1)
         {
             LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
@@ -219,7 +219,7 @@ int checkValidity(
             xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                       whereInsertPtr + 5);
             /** @bug ignores error code without explanation */
-            searchscm(connect, validTable, anySrch, NULL, registerParent,
+            searchscm(connect, validTable, anySrch, NULL, &registerParent,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
             if (parentsFound > 1)
                 LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
@@ -479,7 +479,7 @@ display_ip_addrs(
         roaPrefixTable,
         &srch,
         NULL,
-        display_ip_addrs_valuefunc,
+        &display_ip_addrs_valuefunc,
         SCM_SRCH_DOVALUE_ANN | SCM_SRCH_BREAK_VERR,
         order);
     if (sta == ERR_SCM_TRUNCATED)
@@ -614,7 +614,7 @@ static QueryField fields[] = {
         Q_FOR_GBR | Q_REQ_JOIN,
         -1, 0,
         "dirname", "filename",
-        "Pathname", pathnameDisplay,
+        "Pathname", &pathnameDisplay,
     },
     {
         "dirname",
@@ -680,7 +680,7 @@ static QueryField fields[] = {
         "local_id",
         NULL,
         "IP Addresses",
-        display_ip_addrs,
+        &display_ip_addrs,
     },
     {
         "asn",
@@ -784,7 +784,7 @@ static QueryField fields[] = {
         Q_JUST_DISPLAY | Q_FOR_CRL,
         -1, 0,
         "snlen", "snlist",
-        "Serial#s", displaySNList,
+        "Serial#s", &displaySNList,
     },
     {
         "flags",
@@ -793,7 +793,7 @@ static QueryField fields[] = {
         | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
         SQL_C_ULONG, 8,
         NULL, NULL,
-        "Flags Set", displayFlags,
+        "Flags Set", &displayFlags,
     }
 };
 
