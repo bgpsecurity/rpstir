@@ -71,8 +71,8 @@ typedef struct _scmsrcha        /* used for a search (select) */
  * @brief
  *     callback function signature for a count of search results
  */
-typedef err_code (
-    *sqlcountfunc)(
+typedef err_code
+sqlcountfunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt);
@@ -81,8 +81,8 @@ typedef err_code (
  * @brief
  *     callback function signature for a single search result
  */
-typedef err_code (
-    *sqlvaluefunc)(
+typedef err_code
+sqlvaluefunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t idx);
@@ -276,8 +276,8 @@ searchscm(
     scmcon *conp,
     scmtab *tabp,
     scmsrcha *srch,
-    sqlcountfunc cnter,
-    sqlvaluefunc valer,
+    sqlcountfunc *cnter,
+    sqlvaluefunc *valer,
     int what,
     char *orderp);
 

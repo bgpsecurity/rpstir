@@ -69,7 +69,7 @@ void config_message(
        function can be used to validate input.
 */
 typedef _Bool
-(*config_value_converter)(
+config_value_converter(
     const struct config_context *context,
     void *usr_arg,
     const char *input,
@@ -81,17 +81,19 @@ typedef _Bool
    @return
        a malloc() allocated string, or NULL on error
 */
-typedef char *(*config_value_converter_inverse)(
+typedef char *
+config_value_converter_inverse(
     void *usr_arg,
     void *input);
 
 /** Deep free data for a config item. */
-typedef void (*config_value_free) (
+typedef void
+config_value_free(
     void *data);
 
 /** Check an array of values for inter-value consistency/correctness. */
 typedef _Bool
-(*config_array_validator)(
+config_array_validator(
     const struct config_context *context,
     void *usr_arg,
     void const *const *input,

@@ -64,7 +64,8 @@ static char *nextSKI,
  * @brief
  *     callback to indicate that a parent was found
  */
-static err_code
+static sqlvaluefunc registerParent;
+err_code
 registerParent(
     scmcon *conp,
     scmsrcha *s,
@@ -234,7 +235,9 @@ int checkValidity(
  * @brief
  *     combines dirname and filename into a pathname
  */
-static int pathnameDisplay(
+static displayfunc pathnameDisplay;
+int
+pathnameDisplay(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -252,7 +255,9 @@ static int pathnameDisplay(
  * @brief
  *     create space-separated string of serial numbers
  */
-static int displaySNList(
+static displayfunc displaySNList;
+int
+displaySNList(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -310,7 +315,8 @@ struct display_ip_addrs_context
  *     searchscm() callback for display_ip_addrs(), called for each
  *     prefix in a ROA
  */
-static err_code
+static sqlvaluefunc display_ip_addrs_valuefunc;
+err_code
 display_ip_addrs_valuefunc(
     scmcon *conp,
     scmsrcha *s,
@@ -382,7 +388,9 @@ display_ip_addrs_valuefunc(
  *     displayfunc to convert the list of prefixes in a ROA into a
  *     string, @p returnStr
  */
-static int display_ip_addrs(
+static displayfunc display_ip_addrs;
+int
+display_ip_addrs(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -550,7 +558,9 @@ void setIsManifest(
  * @brief
  *     create list of all flags set to true
  */
-static int displayFlags(
+static displayfunc displayFlags;
+int
+displayFlags(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,

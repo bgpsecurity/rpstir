@@ -733,8 +733,8 @@ searchscm(
     scmcon *conp,
     scmtab *tabp,
     scmsrcha *srch,
-    sqlcountfunc cnter,
-    sqlvaluefunc valer,
+    sqlcountfunc *cnter,
+    sqlvaluefunc *valer,
     int what,
     char *orderp)
 {
@@ -1129,7 +1129,8 @@ addcolsrchscm(
  * @brief
  *     value function callback for searchorcreatescm()
  */
-static err_code
+static sqlvaluefunc socvaluefunc;
+err_code
 socvaluefunc(
     scmcon *conp,
     scmsrcha *s,

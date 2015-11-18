@@ -311,7 +311,9 @@ static char *addgn(
     return (optr);
 }
 
-static char *cf_get_subject(
+static cf_get cf_get_subject;
+char *
+cf_get_subject(
     X509 *x,
     err_code *stap,
     int *x509stap)
@@ -349,7 +351,9 @@ char *X509_to_subject(
     return cf_get_subject(x, stap, x509stap);
 }
 
-static char *cf_get_issuer(
+static cf_get cf_get_issuer;
+char *
+cf_get_issuer(
     X509 *x,
     err_code *stap,
     int *x509stap)
@@ -375,7 +379,9 @@ static char *cf_get_issuer(
     return (dptr);
 }
 
-static char *cf_get_sn(
+static cf_get cf_get_sn;
+char *
+cf_get_sn(
     X509 *x,
     err_code *stap,
     int *x509stap)
@@ -442,7 +448,9 @@ static char *cf_get_sn(
     return (dptr);
 }
 
-static char *cf_get_from(
+static cf_get cf_get_from;
+char *
+cf_get_from(
     X509 *x,
     err_code *stap,
     int *x509stap)
@@ -482,7 +490,9 @@ static char *cf_get_from(
     return (dptr);
 }
 
-static char *cf_get_to(
+static cf_get cf_get_to;
+char *
+cf_get_to(
     X509 *x,
     err_code *stap,
     int *x509stap)
@@ -520,7 +530,9 @@ static char *cf_get_to(
     return (dptr);
 }
 
-static char *cf_get_sig(
+static cf_get cf_get_sig;
+char *
+cf_get_sig(
     X509 *x,
     err_code *stap,
     int *x509stap)
@@ -544,7 +556,9 @@ static char *cf_get_sig(
     return (dptr);
 }
 
-static void cf_get_ski(
+static cfx_get cf_get_ski;
+void
+cf_get_ski(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -582,7 +596,9 @@ static void cf_get_ski(
     cf->fields[CF_FIELD_SKI] = dptr;
 }
 
-static void cf_get_aki(
+static cfx_get cf_get_aki;
+void
+cf_get_aki(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -622,7 +638,9 @@ static void cf_get_aki(
     cf->fields[CF_FIELD_AKI] = dptr;
 }
 
-static void cf_get_sia(
+static cfx_get cf_get_sia;
+void
+cf_get_sia(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -656,7 +674,9 @@ static void cf_get_sia(
     cf->fields[CF_FIELD_SIA] = ptr;
 }
 
-static void cf_get_aia(
+static cfx_get cf_get_aia;
+void
+cf_get_aia(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -690,7 +710,9 @@ static void cf_get_aia(
     cf->fields[CF_FIELD_AIA] = ptr;
 }
 
-static void cf_get_crldp(
+static cfx_get cf_get_crldp;
+void
+cf_get_crldp(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -734,7 +756,9 @@ static void cf_get_crldp(
     cf->fields[CF_FIELD_CRLDP] = ptr;
 }
 
-static void cf_get_flags(
+static cfx_get cf_get_flags;
+void
+cf_get_flags(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -763,7 +787,9 @@ static void cf_get_flags(
  * IPAddressBlock in the ASN.1 of the certificate and places them into the
  * corresponding cf fields.
  */
-static void cf_get_ipb(
+static cfx_get cf_get_ipb;
+void
+cf_get_ipb(
     const X509V3_EXT_METHOD *meth,
     void *ex,
     cert_fields *cf,
@@ -1107,7 +1133,9 @@ char *X509_to_ski(
     return (dptr);
 }
 
-static char *crf_get_issuer(
+static crf_get crf_get_issuer;
+char *
+crf_get_issuer(
     X509_CRL *x,
     err_code *stap,
     int *crlstap)
@@ -1133,7 +1161,9 @@ static char *crf_get_issuer(
     return (dptr);
 }
 
-static char *crf_get_last(
+static crf_get crf_get_last;
+char *
+crf_get_last(
     X509_CRL *x,
     err_code *stap,
     int *crlstap)
@@ -1171,7 +1201,9 @@ static char *crf_get_last(
     return (dptr);
 }
 
-static char *crf_get_next(
+static crf_get crf_get_next;
+char *
+crf_get_next(
     X509_CRL *x,
     err_code *stap,
     int *crlstap)
@@ -1209,7 +1241,9 @@ static char *crf_get_next(
     return (dptr);
 }
 
-static char *crf_get_sig(
+static crf_get crf_get_sig;
+char *
+crf_get_sig(
     X509_CRL *x,
     err_code *stap,
     int *crlstap)
@@ -1242,7 +1276,9 @@ static crf_validator crvalidators[] = {
     {NULL, 0, 0}                /* terminator */
 };
 
-static void crf_get_crlno(
+static crfx_get crf_get_crlno;
+void
+crf_get_crlno(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,
@@ -1293,7 +1329,9 @@ static void crf_get_crlno(
     cf->fields[CRF_FIELD_SN] = dptr;
 }
 
-static void crf_get_aki(
+static crfx_get crf_get_aki;
+void
+crf_get_aki(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,

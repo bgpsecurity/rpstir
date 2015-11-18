@@ -72,7 +72,8 @@ struct {
  * @brief
  *     callback function for searchscm() that prints the output
  */
-static err_code
+static sqlvaluefunc handleResults;
+err_code
 handleResults(
     scmcon *conp,
     scmsrcha *s,

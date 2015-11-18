@@ -67,8 +67,8 @@ typedef struct _cert_fields {
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef char *(
-    *cf_get)(
+typedef char *
+cf_get(
     X509 *x,
     err_code *stap,
     int *x509stap);
@@ -79,8 +79,8 @@ typedef char *(
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef void (
-    *cfx_get)(
+typedef void
+cfx_get(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
@@ -97,7 +97,7 @@ typedef void (
  */
 
 typedef struct _cf_validator {
-    cf_get get_func;
+    cf_get *get_func;
     int fieldno;
     int need;
 } cf_validator;
@@ -110,7 +110,7 @@ typedef struct _cf_validator {
  */
 
 typedef struct _cfx_validator {
-    cfx_get get_func;
+    cfx_get *get_func;
     int fieldno;
     int tag;
     int need;
@@ -272,8 +272,8 @@ typedef struct _crl_fields {
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef char *(
-    *crf_get)(
+typedef char *
+crf_get(
     X509_CRL *x,
     err_code *stap,
     int *crlstap);
@@ -284,8 +284,8 @@ typedef char *(
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef void (
-    *crfx_get)(
+typedef void
+crfx_get(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,
@@ -300,7 +300,7 @@ typedef void (
  */
 
 typedef struct _crf_validator {
-    crf_get get_func;
+    crf_get *get_func;
     int fieldno;
     int need;
 } crf_validator;
@@ -313,7 +313,7 @@ typedef struct _crf_validator {
  */
 
 typedef struct _crfx_validator {
-    crfx_get get_func;
+    crfx_get *get_func;
     int fieldno;
     int tag;
     int need;

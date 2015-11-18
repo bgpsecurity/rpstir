@@ -158,7 +158,8 @@ findorcreatedir(
     return (sta);
 }
 
-static err_code
+static sqlvaluefunc ok;
+err_code
 ok(
     scmcon *conp,
     scmsrcha *s,
@@ -715,15 +716,15 @@ set_sigval(
  * A verification function type
  */
 
-typedef int (
-    *vfunc)(
+typedef int
+vfunc(
     X509_STORE_CTX *);
 
 /*
  * Global variables used by the verification callback
  */
 
-static vfunc old_vfunc = NULL;
+static vfunc *old_vfunc = NULL;
 static scmcon *thecon = NULL;
 
 /*
@@ -791,8 +792,9 @@ static int local_verify(
  * Our own internal verifier, replacing the internal_verify function in
  * openSSL (x509_vfy.c). It returns 1 on success and 0 on failure.
  */
-
-static int our_verify(
+static vfunc our_verify;
+int
+our_verify(
     X509_STORE_CTX *ctx)
 {
     int mok;
@@ -1004,7 +1006,8 @@ static scmsrcha *certSrch = NULL;
 
 struct cert_answers cert_answers;
 
-static err_code
+static sqlvaluefunc addCert2List;
+err_code
 addCert2List(
     scmcon *conp,
     scmsrcha *s,
@@ -1270,7 +1273,8 @@ static uint8_t *revokedSN = NULL;
  * @brief
  *     callback function for cert_revoked()
  */
-static err_code
+static sqlvaluefunc revokedHandler;
+err_code
 revokedHandler(
     scmcon *conp,
     scmsrcha *s,
@@ -1733,7 +1737,8 @@ static int make_goodoids(
  * @brief
  *     callback function for verifyChildCert()
  */
-static err_code
+static sqlvaluefunc verifyChildCRL;
+err_code
 verifyChildCRL(
     scmcon *conp,
     scmsrcha *s,
@@ -1794,7 +1799,8 @@ verifyChildCRL(
  * @brief
  *     callback function for verifyChildCert()
  */
-static err_code
+static sqlvaluefunc verifyChildROA;
+err_code
 verifyChildROA(
     scmcon *conp,
     scmsrcha *s,
@@ -1867,13 +1873,10 @@ static char updateManHash[HASHSIZE];
  * check to see if any of its children (certificate children or ROA children)
  * also need to be deleted.
  */
-static err_code
-revoke_cert_and_children(
-    scmcon *conp,
-    scmsrcha *s,
-    ssize_t idx);
+static sqlvaluefunc revoke_cert_and_children;
 
-static err_code
+static sqlvaluefunc handleUpdateMan;
+err_code
 handleUpdateMan(
     scmcon *conp,
     scmsrcha *s,
@@ -2054,7 +2057,8 @@ updateManifestObjs(
  * @brief
  *     callback function for verifyChildCert()
  */
-static err_code
+static sqlvaluefunc verifyChildManifest;
+err_code
 verifyChildManifest(
     scmcon *conp,
     scmsrcha *s,
@@ -2092,7 +2096,8 @@ verifyChildManifest(
  * This is used, for example, to mark GBRs as valid when their EE
  * certs become valid.
  */
-static err_code
+static sqlvaluefunc verifyChildGhostbusters;
+err_code
 verifyChildGhostbusters(
     scmcon *conp,
     scmsrcha *s,
@@ -2231,7 +2236,8 @@ typedef struct _mcf {
  *     returns the number of valid certificates that have subject=IS
  *     and ski=AK, or a negative error code on failure.
  */
-static err_code
+static sqlvaluefunc cparents;
+err_code
 cparents(
     scmcon *conp,
     scmsrcha *s,
@@ -2321,7 +2327,8 @@ static scmsrcha *invalidateCRLSrch = NULL;
  * @brief
  *     callback function for invalidateChildCert()
  */
-static err_code
+static sqlvaluefunc invalidate_roa;
+err_code
 invalidate_roa(
     scmcon *conp,
     scmsrcha *s,
@@ -2347,7 +2354,8 @@ invalidate_roa(
  * @brief
  *     callback function for invalidateChildCert()
  */
-static err_code
+static sqlvaluefunc invalidate_gbr;
+err_code
 invalidate_gbr(
     scmcon *conp,
     scmsrcha *s,
@@ -2375,7 +2383,8 @@ invalidate_gbr(
  * @brief
  *     callback function for invalidateChildCert()
  */
-static err_code
+static sqlvaluefunc invalidate_mft;
+err_code
 invalidate_mft(
     scmcon *conp,
     scmsrcha *s,
@@ -2417,7 +2426,8 @@ invalidate_mft(
  * @brief
  *     callback function for invalidateChildCert()
  */
-static err_code
+static sqlvaluefunc invalidate_crl;
+err_code
 invalidate_crl(
     scmcon *conp,
     scmsrcha *s,
@@ -2539,7 +2549,8 @@ PropDataList *prevPropData = NULL;
  * @brief
  *     callback function for verifyOrNotChildren()
  */
-static err_code
+static sqlvaluefunc registerChild;
+err_code
 registerChild(
     scmcon *conp,
     scmsrcha *s,
@@ -2703,7 +2714,8 @@ verifyOrNotChildren(
 static scmsrcha *validManSrch = NULL;
 static char validManPath[PATH_MAX];
 
-static err_code
+static sqlvaluefunc handleValidMan;
+err_code
 handleValidMan(
     scmcon *conp,
     scmsrcha *s,
@@ -3964,7 +3976,8 @@ add_object(
  * @return
  *     On failure it returns a negative error code.  On success it returns 0.
  */
-static err_code
+static sqlvaluefunc crliterator;
+err_code
 crliterator(
     scmcon *conp,
     scmsrcha *s,
@@ -4049,7 +4062,7 @@ err_code
 iterate_crl(
     scm *scmp,
     scmcon *conp,
-    crlfunc cfunc)
+    crlfunc *cfunc)
 {
     unsigned int snlen = 0;
     unsigned int sninuse = 0;
@@ -4465,7 +4478,8 @@ deletebylid(
  *     callback for certificates that are may have been NOTYET but are
  *     now actually valid.  Mark them as such.
  */
-static err_code
+static sqlvaluefunc certmaybeok;
+err_code
 certmaybeok(
     scmcon *conp,
     scmsrcha *s,
@@ -4501,7 +4515,8 @@ certmaybeok(
  *
  * Mark them as NOTYET in the flags field.
  */
-static err_code
+static sqlvaluefunc certtoonew;
+err_code
 certtoonew(
     scmcon *conp,
     scmsrcha *s,
@@ -4535,7 +4550,8 @@ certtoonew(
  *
  * Delete them (and their children) unless they have been reparented.
  */
-static err_code
+static sqlvaluefunc certtooold;
+err_code
 certtooold(
     scmcon *conp,
     scmsrcha *s,

@@ -213,7 +213,7 @@ the columns to be deleted is specified using the same structure as in
 insertscm(), above.
 
 2.1.14 err_code searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
-                          sqlcountfunc cnter, sqlvaluefunc valer,
+                          sqlcountfunc *cnter, sqlvaluefunc *valer,
                           int what, char *orderp)
 
 This function performs an SQL SELECT operation on the database table
@@ -281,7 +281,7 @@ If the user desires to only obtain a count of the number of rows that
 matched the search criteria, then the "cnter" callback function should be
 specified. The signature for this function is:
 
-     err_code (*sqlcountfunc)(scmcon *conp, scmsrcha *s, int cnt);
+     err_code sqlcountfunc(scmcon *conp, scmsrcha *s, int cnt);
 
 It is called with the connection parameter "conp", the search parameter "s"
 (with the matching results filled in, of course) and also a total count
@@ -296,7 +296,7 @@ the callback function "valer" should be specified. This function will then
 be called for each row that matches the search criteria. The signature for
 this callback function is:
 
-    err_code (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
+    err_code sqlvaluefunc(scmcon *conp, scmsrcha *s, int idx);
 
 The first two arguments are the same as with the count callback function.
 The third argument is a 0-based index indicating which row of the total
@@ -425,7 +425,7 @@ added.  mtab and dirname may not be NULL. If the operation succeeds then 0 is
 returned, and the directory id of the directory is returned in "idp". If the
 operation fails then a negative error code, defined in err.h, is returned.
 
-2.2.4 err_code iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
+2.2.4 err_code iterate_crl(scm *scmp, scmcon *conp, crlfunc *cfunc)
 
 This function is used to iterate over all CRLs in the database and perform
 the revocations implied by their issuer/aki/serial-number lists. "scmp" and
@@ -433,8 +433,8 @@ the revocations implied by their issuer/aki/serial-number lists. "scmp" and
 function that is called to process each individual revocation. The function
 signature for this callback is:
 
-    typedef err_code (*crlfunc)(scm *scmp, scmcon *conp, char *issuer,
-                                char *aki, unsigned long long sn)
+    typedef err_code crlfunc(scm *scmp, scmcon *conp, char *issuer,
+                             char *aki, unsigned long long sn)
 
 In almost every case, the global function revoke_cert_by_serial()
 should be used as the "cfunc" argument to iterate_crl.

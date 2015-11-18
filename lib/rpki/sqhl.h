@@ -74,8 +74,8 @@ typedef enum {
  * Data types
  */
 
-typedef err_code (
-    *crlfunc)(
+typedef err_code
+crlfunc(
     scm *scmp,
     scmcon *conp,
     char *issuer,
@@ -86,7 +86,7 @@ typedef struct _crlinfo {
     scm *scmp;
     scmcon *conp;
     scmtab *tabp;
-    crlfunc cfunc;
+    crlfunc *cfunc;
 } crlinfo;
 
 struct goodoid {
@@ -270,7 +270,7 @@ err_code
 iterate_crl(
     scm *scmp,
     scmcon *conp,
-    crlfunc cfunc);
+    crlfunc *cfunc);
 
 /**
  * @brief
@@ -286,13 +286,7 @@ iterate_crl(
  *     1 if it deleted something, 0 if it deleted nothing and a
  *     negative error code on failure.
  */
-err_code
-revoke_cert_by_serial(
-    scm *scmp,
-    scmcon *conp,
-    char *issuer,
-    char *aki,
-    uint8_t *sn);
+crlfunc revoke_cert_by_serial;
 
 /**
  * @brief

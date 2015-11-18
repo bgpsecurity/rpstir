@@ -25,7 +25,7 @@ static char *prevTimestamp,
 static char *theIssuer,
    *theAKI;                     // for passing to callback
 static unsigned int theID;      // for passing to callback
-static sqlcountfunc countHandler;       // used by countCurrentCRLs
+static sqlcountfunc *countHandler;       // used by countCurrentCRLs
 static scmtab *certTable,
    *crlTable,
    *gbrTable,
@@ -36,7 +36,8 @@ static scmtab *certTable,
  * @brief
  *     callback function for searchscm() that records the timestamps
  */
-static err_code
+static sqlvaluefunc handleTimestamps;
+err_code
 handleTimestamps(
     scmcon *conp,
     scmsrcha *s,
@@ -55,7 +56,8 @@ handleTimestamps(
  *
  * check if count == 0, and if so then do the setting of certs' flags
  */
-static err_code
+static sqlcountfunc handleIfStale;
+err_code
 handleIfStale(
     scmcon *conp,
     scmsrcha *s,
@@ -85,7 +87,8 @@ handleIfStale(
  *
  * check if count > 0, and if so then remove unknown flag from cert
  */
-static err_code
+static sqlcountfunc handleIfCurrent;
+err_code
 handleIfCurrent(
     scmcon *conp,
     scmsrcha *s,
@@ -110,7 +113,8 @@ handleIfCurrent(
  */
 static scmsrcha *cntSrch = NULL;
 
-static err_code
+static sqlvaluefunc countCurrentCRLs;
+err_code
 countCurrentCRLs(
     scmcon *conp,
     scmsrcha *s,
@@ -165,7 +169,8 @@ handleStaleMan2(
     return statementscm_no_data(conp, staleManStmt);
 }
 
-static err_code
+static sqlvaluefunc handleStaleMan;
+err_code
 handleStaleMan(
     scmcon *conp,
     scmsrcha *s,
