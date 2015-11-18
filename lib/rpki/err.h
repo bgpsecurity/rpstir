@@ -260,4 +260,12 @@ const char *
 err2string(
     err_code err);
 
+/**
+ * @brief
+ *     get the name of an error given its error code
+ */
+const char *
+err2name(
+    err_code err);
+
 #endif
