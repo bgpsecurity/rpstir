@@ -4414,11 +4414,11 @@ void *roa_parent(
     scm *scmp,
     scmcon *conp,
     char *ski,
-    char **fn,
+    char *fn,
     int *stap)
 {
     initTables(scmp);
-    return parent_cert(conp, ski, NULL, stap, fn, NULL);
+    return parent_cert(conp, ski, NULL, stap, &fn, NULL);
 }
 
 /*

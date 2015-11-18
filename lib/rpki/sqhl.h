@@ -408,13 +408,9 @@ extern char *retrieve_tdir(
  * @param[in] ski
  *     SKI of the ROA
  * @param[out] fn
- *     If non-NULL, this points to a pointer identifying the start of
- *     a buffer.  The full pathname of the parent certificate will be
- *     written to this buffer.  The buffer must have size at least @c
- *     PATH_MAX.  The value at this location is never changed.  This
- *     may be NULL.  WARNING:  This function does NOT allocate the
- *     buffer and return its location; the buffer must be provided by
- *     the caller.
+ *     If non-NULL, the full pathname of the parent certificate will
+ *     be written to the buffer at this location.  The buffer must
+ *     have size at least @c PATH_MAX.  This may be NULL.
  * @return
  *     an X509 * on success, NULL on error
  */
@@ -422,7 +418,7 @@ extern void *roa_parent(
     scm *scmp,
     scmcon *conp,
     char *ski,
-    char **fn,
+    char *fn,
     int *stap);
 
 extern void startSyslog(

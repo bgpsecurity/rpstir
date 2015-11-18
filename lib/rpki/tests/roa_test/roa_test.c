@@ -90,7 +90,6 @@ int main(
     char *filename_cnf = NULL;
     char *ski;
     char fn[PATH_MAX];
-    char *fnp = &fn[0];
     int sta = 0;
 
     CMS(&roa, (ushort) 0);
@@ -149,7 +148,7 @@ int main(
         freescm(scmp);
         return -4;
     }
-    cert = (X509 *)roa_parent(scmp, conp, ski, &fnp, &sta);
+    cert = (X509 *)roa_parent(scmp, conp, ski, fn, &sta);
     disconnectscm(conp);
     freescm(scmp);
     free(ski);

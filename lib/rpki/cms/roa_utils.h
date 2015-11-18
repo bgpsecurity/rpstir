@@ -334,7 +334,7 @@ int ghostbustersValidate(
  *     if (sta == 0) {
  *         ski = (char *)roaSKI(r);
  *         if (ski != NULL) {
- *             cert = roa_parent(scmp, conp, ski, &fn, &sta);
+ *             cert = roa_parent(scmp, conp, ski, fn, &sta);
  *             if (cert != NULL && sta == 0) {
  *                 blob = read cert from file (fn);
  *                 valid = roaValidate2(r, blob);
