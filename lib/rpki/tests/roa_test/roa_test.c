@@ -5,6 +5,8 @@
 #include "rpki/sqhl.h"
 #include "rpki/err.h"
 
+#include <limits.h>
+
 static unsigned char *myreadfile(
     char *fn,
     int *stap)
@@ -87,7 +89,7 @@ int main(
     char errmsg[1024];
     char *filename_cnf = NULL;
     char *ski;
-    char *fn = NULL;
+    char fn[PATH_MAX];
     int sta = 0;
 
     CMS(&roa, (ushort) 0);
