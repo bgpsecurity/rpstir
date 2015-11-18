@@ -1436,7 +1436,7 @@ static int verify_crl(
     sta = X509_CRL_verify(x, pkey);
     X509_free(parent);
     EVP_PKEY_free(pkey);
-    return (sta <= 0) ? ERR_SCM_NOTVALID : 0;
+    return (sta != 1) ? ERR_SCM_NOTVALID : 0;
 }
 
 /**
