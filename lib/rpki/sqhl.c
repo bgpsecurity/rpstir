@@ -1081,13 +1081,9 @@ struct cert_answers *find_parent_cert(
  *     to 0 or might be left alone.  On error it is set to a non-zero
  *     value.  This parameter MUST NOT be NULL.
  * @param[out] pathname
- *     If non-NULL, this points to a pointer identifying the start of
- *     a buffer.  The full pathname of the matching certificate will
- *     be written to this buffer.  The buffer must have size at least
- *     @c PATH_MAX.  The value at this location is never changed.
- *     This may be NULL.  WARNING:  This function does NOT allocate
- *     the buffer and return its location; the buffer must be provided
- *     by the caller.
+ *     If non-NULL, the full pathname of the matching certificate will
+ *     be written to the buffer at this location.  The buffer must
+ *     have size at least @c PATH_MAX.  This may be NULL.
  * @return
  *     NULL on error or if there is no match, otherwise it returns the
  *     matching cert.
@@ -1104,7 +1100,7 @@ static X509 *parent_cert(
     char *ski,
     char *subject,
     int *stap,
-    char **pathname,
+    char *pathname,
     int *flagsp)
 {
     char ofullname[PATH_MAX];   /* full pathname */
@@ -1142,7 +1138,7 @@ static X509 *parent_cert(
         return NULL;
     xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
     if (pathname != NULL)
-        strncpy(*pathname, ofullname, PATH_MAX);
+        strncpy(pathname, ofullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
     return readCertFromFile(ofullname, stap);
@@ -1539,7 +1535,6 @@ static int verify_roa(
     X509 *cert;
     int sta;
     char fn[PATH_MAX];
-    char *fn2;
 
     // first, see if the ROA is already validated and in the DB
     sta = get_sigval(conp, OT_ROA, ski, NULL);
@@ -1552,8 +1547,7 @@ static int verify_roa(
     sta = roaValidate(r);
     if (sta < 0)
         return (sta);
-    fn2 = fn;
-    cert = parent_cert(conp, ski, NULL, &sta, &fn2, NULL);
+    cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
     if (cert == NULL)
     {
         *chainOK = 0;
@@ -4418,7 +4412,7 @@ void *roa_parent(
     int *stap)
 {
     initTables(scmp);
-    return parent_cert(conp, ski, NULL, stap, &fn, NULL);
+    return parent_cert(conp, ski, NULL, stap, fn, NULL);
 }
 
 /*
