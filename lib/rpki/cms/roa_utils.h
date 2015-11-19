@@ -326,7 +326,7 @@ int ghostbustersValidate(
  *     X509 *cert;
  *     uchar *blob;
  *     char *ski;
- *     char *fn;
+ *     char fn[PATH_MAX];
  *     int valid = -1;
  *     int sta;
  *
