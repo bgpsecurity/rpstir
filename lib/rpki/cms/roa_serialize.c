@@ -1548,8 +1548,7 @@ static int confInterpret(
                 continue;
             if ('[' == line[0])
                 continue;
-            iRet2 = sscanf(line, "%s%*[ \t]%*[=]%*[ \t]%s", key, value);
-            if (2 != iRet2)
+            if (2 != sscanf(line, "%s%*[ \t]%*[=]%*[ \t]%s", key, value))
             {
                 iROAState = ERR_SCM_INVALARG;
             }
@@ -1557,8 +1556,7 @@ static int confInterpret(
             {
                 for (ck = KEYVERSION; ck < CONFIG_KEY_MAX; ck++)
                 {
-                    iRet2 = strcmp(configKeyStrings[ck], key);
-                    if (0 == iRet2)
+                    if (0 == strcmp(configKeyStrings[ck], key))
                         break;
                 }
 
