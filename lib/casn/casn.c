@@ -142,13 +142,13 @@ int
 _clear_error(
     struct casn *);
 
-int
+static int
 _csize(
     struct casn *casnp,
     uchar *from,
     long lth);
 
-int
+static int
 _encodesize(
     struct casn *casnp,
     uchar *to,
@@ -164,25 +164,25 @@ _fill_upward(
     struct casn *casnp,
     int val);
 
-int
+static int
 _readsize(
     struct casn *casnp,
     uchar *to,
     int mode);
 
-int
+static int
 _readvsize(
     struct casn *casnp,
     uchar *to,
     int mode);
 
-int
+static int
 _mark_definees(
     struct casn *casnp,
     uchar *wherep,
     int index);
 
-int
+static int
 _match_casn(
     struct casn *casnp,
     uchar *from,
@@ -192,18 +192,18 @@ _match_casn(
     struct casn *of_casnp,
     int *had_indedfp);
 
-int
+static int
 _num_casns(
     struct casn *casnp);
 
-int
+static int
 _set_all_lths(
     uchar *top,
     uchar *tag_endp,
     uchar *val_endp,
     int mode);
 
-int
+static int
 _set_casn_lth(
     uchar *s,
     uchar *e,
@@ -233,7 +233,7 @@ _clear_casn(
     struct casn *,
     ushort);
 
-void *
+static void *
 _clear_of(
     struct casn *casnp);
 
@@ -245,16 +245,16 @@ void *
 _free_it(
     void *);
 
-void
+static void
 _stuff_num(
     int count);
 
-void
+static void
 _stuff_ofs(
     struct casn *casnp,
     int num_ofs);
 
-void
+static void
 _stuff_string(
     struct casn *casnp);
 
@@ -271,7 +271,7 @@ _find_filled_or_chosen(
     struct casn *casnp,
     int *errp);
 
-struct casn *
+static struct casn *
 _find_flag(
     struct casn *casnp,
     int flag);

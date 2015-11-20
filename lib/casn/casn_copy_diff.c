@@ -83,13 +83,13 @@ _fill_upward(
     struct casn *casnp,
     int val);
 
-int
+static int
 _copy_casn(
     struct casn *to_casnp,
     struct casn *fr_casnp,
     int level);
 
-int
+static int
 _diff_casn(
     struct casn *casnp1,
     struct casn *casnp2,

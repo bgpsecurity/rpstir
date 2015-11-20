@@ -20,26 +20,26 @@
 Function: Transfers the contents of asn_area to output.  Note the setting of
 asn_area.next to zero to force putout to go elsewhere
 **/
-void
+static void
 dump_asn(
     );
 
-void
+static void
 putasn(
     uchar);
 
-void
+static void
 putout(
     uchar);
 
 char buf[512];
 char *hash_start;
 
-char *
+static char *
 cvt_int(
     char *);
 
-char *
+static char *
 cvt_obj_id(
     char *,
     char *);
@@ -54,7 +54,7 @@ cvt_obj_id(
  *     Convert byte pairs to a byte
  *     Write the byte to output
  */
-char *
+static char *
 cvt_out(
     char *);
 
@@ -122,13 +122,13 @@ cvt_out(
  *    IF have any vararea, write it to output
  *    IF -r switch is set, put length in proper field
  */
-char *
+static char *
 do_it(
     char *,
     int,
     int);
 
-char *
+static char *
 getbuf(
     char *,
     int);
@@ -149,7 +149,7 @@ int aflag;
 int req;
 int linenum;
 
-int
+static int
 adj_asn(
     int);
 
@@ -159,17 +159,17 @@ set_asn_lth(
     uchar *);
 
 /* s1 is target */
-int
+static int
 wdcmp(
     char *s1,
     char *s2);
 
-int
+static int
 write_out(
     char *,
     int);
 
-int
+static int
 write_varfld(
     struct varfld *);
 

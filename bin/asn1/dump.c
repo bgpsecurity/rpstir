@@ -48,17 +48,17 @@ dump_asn1(
     int,
     long);
 
-char ibuf[BSIZE];
-char obuf[80] = "     0  ";
-char *fname;
-char hex[] = "0123456789ABCDEF";
+static char ibuf[BSIZE];
+static char obuf[80] = "     0  ";
+static char *fname;
+static char hex[] = "0123456789ABCDEF";
 
-char *
+static char *
 hexit(
     char *,
     unsigned char);
 
-long
+static long
 getd(
     char **b,
     int lev);

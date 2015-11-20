@@ -1215,7 +1215,8 @@ static int setIPAddr(
 // min/max qualifiers
 #ifdef IP_RANGES_ALLOWED
 
-int setIPAddrMin(
+static int
+setIPAddrMin(
     struct CMS *roa,
     unsigned char *ipaddrminstring)
 {
@@ -1336,7 +1337,8 @@ int setIPAddrMin(
     return sta;
 }
 
-int setIPAddrMax(
+static int
+setIPAddrMax(
     struct CMS *roa,
     unsigned char *ipaddrmaxstring)
 {

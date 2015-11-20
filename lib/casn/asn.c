@@ -15,7 +15,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-uchar
+static uchar
 asn_typ(
     uchar **);
 
@@ -23,7 +23,7 @@ uchar *
 asn_set(
     struct asn *);
 
-int
+static int
 count_sub_asns(
     uchar **);
 
