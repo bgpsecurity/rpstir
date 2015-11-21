@@ -2710,7 +2710,7 @@ int addStateToFlags(
 
     CMS(&cms, 0);
     /** @bug ignores error code without explanation */
-    sta = get_casn_file(&cms.self, validManPath, 0);
+    get_casn_file(&cms.self, validManPath, 0);
     struct Manifest *manifest =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
     simple_constructor(&ccasn, (ushort)0, ASN_IA5_STRING);
@@ -3550,8 +3550,7 @@ int add_manifest(
 
     CMS(&cms, 0);
     initTables(scmp);
-    sta = get_casn_file(&cms.self, outfull, 0);
-    if (sta < 0)
+    if (get_casn_file(&cms.self, outfull, 0) < 0)
     {
         LOG(LOG_ERR, "invalid manifest %s", outfull);
         delete_casn(&cms.self);
@@ -3586,6 +3585,7 @@ int add_manifest(
     char ski[60];
     do
     {                           // once through
+        int read_len;
         // read this_upd and next_upd
         if (vsize_casn(&manifest->thisUpdate) + 1 > (int)sizeof(asn_time))
         {
@@ -3593,8 +3593,8 @@ int add_manifest(
             sta = ERR_SCM_INVALDT;
             break;
         }
-        sta = read_casn(&manifest->thisUpdate, (unsigned char *)asn_time);
-        if (sta < 0)
+        read_len = read_casn(&manifest->thisUpdate, (unsigned char *)asn_time);
+        if (read_len < 0)
         {
             LOG(LOG_ERR, "Could not read time for thisUpdate");
             sta = ERR_SCM_INVALDT;
@@ -3602,7 +3602,7 @@ int add_manifest(
         }
         else
         {
-            asn_time[sta] = '\0';
+            asn_time[read_len] = '\0';
         }
         thisUpdate = ASNTimeToDBTime(asn_time, &sta, 1);
         if (sta < 0)
@@ -3614,8 +3614,8 @@ int add_manifest(
             sta = ERR_SCM_INVALDT;
             break;
         }
-        sta = read_casn(&manifest->nextUpdate, (unsigned char *)asn_time);
-        if (sta < 0)
+        read_len = read_casn(&manifest->nextUpdate, (unsigned char *)asn_time);
+        if (read_len < 0)
         {
             LOG(LOG_ERR, "Could not read time for nextUpdate");
             sta = ERR_SCM_INVALDT;
@@ -3623,7 +3623,7 @@ int add_manifest(
         }
         else
         {
-            asn_time[sta] = '\0';
+            asn_time[read_len] = '\0';
         }
         nextUpdate = ASNTimeToDBTime(asn_time, &sta, 1);
         if (sta < 0)
@@ -3736,8 +3736,7 @@ int add_ghostbusters(
     CMS(&cms, 0);
     initTables(scmp);
 
-    sta = get_casn_file(&cms.self, outfull, 0);
-    if (sta < 0)
+    if (get_casn_file(&cms.self, outfull, 0) < 0)
     {
         LOG(LOG_ERR, "invalid ghostbusters %s", outfull);
         delete_casn(&cms.self);
