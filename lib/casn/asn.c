@@ -15,9 +15,12 @@
 #include <string.h>
 #include <stdarg.h>
 
-uchar asn_typ(
-    uchar **),
-   *asn_set(
+uchar
+asn_typ(
+    uchar **);
+
+uchar *
+asn_set(
     struct asn *);
 
 struct typnames typnames[] = {
@@ -65,8 +68,8 @@ uchar *asn_set(
      struct asn *asnp;
 {
     uchar *from = asnp->stringp;
-    int ansr = -1,
-        lth;
+    int ansr = -1;
+    int lth;
     asn_typ(&from);
     if (((lth = *from++) & ASN_INDEF))
     {
@@ -85,8 +88,8 @@ uchar *asn_set(
 uchar asn_typ(
     uchar **s)
 {
-    uchar typ,
-       *from = *s;
+    uchar typ;
+    uchar *from = *s;
     if (((typ = *from++) & ASN_XT_TAG) == ASN_XT_TAG)
     {
         while ((*from & ASN_INDEF))
@@ -167,8 +170,8 @@ Procedure:
    Return count
 **/
     int count = 0;
-    uchar *c = *from,
-        *e = (uchar *)0;
+    uchar *c = *from;
+    uchar *e = (uchar *)0;
     struct asn asn;
     memset(&asn, 0, sizeof(asn));
     do                          /* step 1 */
@@ -218,9 +221,9 @@ int decode_asn(
 {
     struct asn *curr_asnp;
     uchar typ;
-    int ansr,
-        did,
-        indef;                  /* step 1 */
+    int ansr;
+    int did;
+    int indef;                  /* step 1 */
     for (did = 0, curr_asnp = *asnpp;
          !nbytes || nbytes > (ulong)did;
          curr_asnp++)
@@ -337,8 +340,8 @@ int set_asn_lth(
     uchar *e)
 {
     uchar *c;
-    ulong lth,
-        tmp;
+    ulong lth;
+    ulong tmp;
     int bwd;
     asn_typ(&s);
     if ((bwd = (int)*s++) & ASN_INDEF)

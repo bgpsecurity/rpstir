@@ -49,8 +49,8 @@ void addQueryFlagTests(
  */
 static scmtab *roaPrefixTable = NULL;
 static scmtab *validTable = NULL;
-static scmsrcha *validSrch = NULL,
-    *anySrch = NULL;
+static scmsrcha *validSrch = NULL;
+static scmsrcha *anySrch = NULL;
 char *validWhereStr;
 static char *whereInsertPtr;
 static int parentsFound;

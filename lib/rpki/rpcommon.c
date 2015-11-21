@@ -205,9 +205,9 @@ static int next_cmd(
      *    Overwrite the last space with line end codes
      *    Return success
      */
-    char locbuf[2 * SKIBUFSIZ],
-       *eip = &locbuf[sizeof(locbuf) - 1],      // last allowed char
-        *eop = &outbufp[siz - 3];       // last allowed char
+    char locbuf[2 * SKIBUFSIZ];
+    char *eip = &locbuf[sizeof(locbuf) - 1];      // last allowed char
+    char *eop = &outbufp[siz - 3];       // last allowed char
     do                          // step1
     {
         *eip = 'x';             // a test character
@@ -436,11 +436,11 @@ int sort_resources(
     struct iprange *iprangesp,
     int numranges)
 {
-    struct iprange *rp0,
-       *rp1,
-        spare;
-    int did,
-        i;
+    struct iprange *rp0;
+    struct iprange *rp1;
+    struct iprange spare;
+    int did;
+    int i;
     for (did = 0, i = 1; i < numranges;)
     {
         rp0 = &iprangesp[i - 1];
@@ -669,8 +669,8 @@ static int parse_topcert(
     FILE *SKI,
     const char *SKI_filename)
 {
-    int ansr = 0,
-        val = next_cmd(skibuf, siz, SKI);
+    int ansr = 0;
+    int val = next_cmd(skibuf, siz, SKI);
     char *c = NULL;
     if (val <= 0 || strncmp(skibuf, "TOPLEVELCERTIFICATE ", 20))
     {
@@ -731,10 +731,10 @@ static int parse_control_section(
     FILE *SKI,
     int *locflagsp)
 {
-    int ansr = 0,
-        val = 0;
-    char *c = skibuf,
-        *cc;
+    int ansr = 0;
+    int val = 0;
+    char *c = skibuf;
+    char *cc;
     while (c && !ansr && !strncmp(skibuf, "CONTROL ", 8))
     {
         if ((c = strchr(skibuf, (int)'\n')))
@@ -844,10 +844,10 @@ static int parse_tag_section(
     int siz,
     FILE *SKI)
 {
-    int ansr = 0,
-        val = 0;
-    char *c,
-       *cc;
+    int ansr = 0;
+    int val = 0;
+    char *c;
+    char *cc;
     while (!ansr && !strncmp(skibuf, "TAG", 3))
     {
         if ((c = strchr(skibuf, (int)'\n')))
@@ -911,8 +911,8 @@ int parse_SKI_blocks(
      *    Free all and return error
      */
     Certificate(&myrootcert, (ushort)0);
-    char *c,
-       *cc;
+    char *c;
+    char *cc;
     // step 1
     int ansr = 0;
     int val = 0;

@@ -51,12 +51,12 @@ const char *signCMS(
     bool sigKeyContext_initialized = false;
     CRYPT_CONTEXT sigKeyContext;
     CRYPT_KEYSET cryptKeyset;
-    int signatureLength,
-        tbs_lth;
+    int signatureLength;
+    int tbs_lth;
     char *msg = (char *)0;
-    uchar *tbsp,
-       *signature,
-        hash[40];
+    uchar *tbsp;
+    uchar *signature;
+    uchar hash[40];
     struct casn *sidp;
     struct Attribute *attrp;
     struct AttrTableDefined *attrtdp;

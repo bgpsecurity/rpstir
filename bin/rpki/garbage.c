@@ -193,8 +193,8 @@ int main(
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
     unsigned long blah = 0;
-    int status,
-        i;
+    int status;
+    int i;
 
     // initialize
     (void)argc;

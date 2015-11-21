@@ -17,85 +17,87 @@ Remarks:
 #endif
 #include <stdarg.h>
 
-static void print_define_tables(
+static void
+print_define_tables(
     FILE *);
 
-static void print_if_include(
+static void
+print_if_include(
     FILE *,
     char *);
 
-int array,
-    classcount,
-    modflag,
-    genflag,
-    dosflag,
-    did_tables,
-    explicit1 = 3,
-    flags,
-    pre_proc_pass,
-    i_namesize,
-    i_pathsize,                 /* current sizes of i_names & i_paths */
-    made_change,
-    option,
-    state = PRE_GLOBAL,
-    vflag = 0;                  /* verbosity */
+int array;
+int classcount;
+int modflag;
+int genflag;
+int dosflag;
+int did_tables;
+int explicit1 = 3;
+int flags;
+int pre_proc_pass;
+int i_namesize;
+int i_pathsize;                 /* current sizes of i_names & i_paths */
+int made_change;
+int option;
+int state = PRE_GLOBAL;
+int vflag = 0;                  /* verbosity */
 
 short subtype;
 
-long curr_line,
-    min,
-    max,
-    tag,
-    type,
-    tablepos,
-    real_start,
-    curr_pos,
-    table_start_line,
-    integer_val;
+long curr_line;
+long min;
+long max;
+long tag;
+long type;
+long tablepos;
+long real_start;
+long curr_pos;
+long table_start_line;
+long integer_val;
 
 FILE *outstr;
 
-static char linebuf[2048],      /* used by get_token() */
-   *nch = linebuf,              /* used by peek_token(), too */
-    terminators[] = "\
+static char linebuf[2048];      /* used by get_token() */
+static char *nch = linebuf;     /* used by peek_token(), too */
+static char terminators[] = "\
 nnnnnnnnnyyyyynnnnnnnnnnnnnnnnnn\
 ynnnnnynyynnynnnnnnnnnnnnnyynynn\
 ynnnnnnnnnnnnnnnnnnnnnnnnnnynynn\
 nnnnnnnnnnnnnnnnnnnnnnnnnnnyyynn";
 
-char fname[80],
-    token[ASN_BSIZE],
-    itemname[ASN_BSIZE],
-    classname[ASN_BSIZE],
-    prevname[ASN_BSIZE],
-    path[16],
-    subclass[ASN_BSIZE],
-    defaultname[32],
-    numstring[ASN_BSIZE],
-    defined_by[ASN_BSIZE],
-    definer[ASN_BSIZE],
-    tablename[32],
-    inclass[ASN_BSIZE],
-   *source = NULL,
-    lo_end[ASN_BSIZE],
-    hi_end[ASN_BSIZE],
-    curr_file[80],
-    *def_constraintp = NULL,
-    *sub_val = NULL,
-    absent_w[] = "ABSENT",
-    algid_w[] = "AlgorithmIdentifier",
-    all_w[] = "ALL",
-    any_w[] = "ANY",
-    application_w[] = "APPLICATION",
-    array_w[] = "array",
-    begin_w[] = "BEGIN",
-    bit_w[] = "BIT",
-    bmpstring_w[] = "BMPString",
-    boolean_w[] = "BOOLEAN",
-    /*
-     * see comment in asn_gen.h about BUILT_IN_IDS
-     */
-    built_ins[] = "TYPE-IDENTIFIER ::= CLASS {\n\
+char fname[80];
+char token[ASN_BSIZE];
+char itemname[ASN_BSIZE];
+char classname[ASN_BSIZE];
+char prevname[ASN_BSIZE];
+char path[16];
+char subclass[ASN_BSIZE];
+char defaultname[32];
+char numstring[ASN_BSIZE];
+char defined_by[ASN_BSIZE];
+char definer[ASN_BSIZE];
+char tablename[32];
+char inclass[ASN_BSIZE];
+char *source = NULL;
+char lo_end[ASN_BSIZE];
+char hi_end[ASN_BSIZE];
+char curr_file[80];
+char *def_constraintp = NULL;
+char *sub_val = NULL;
+char absent_w[] = "ABSENT";
+char algid_w[] = "AlgorithmIdentifier";
+char all_w[] = "ALL";
+char any_w[] = "ANY";
+char application_w[] = "APPLICATION";
+char array_w[] = "array";
+char begin_w[] = "BEGIN";
+char bit_w[] = "BIT";
+char bmpstring_w[] = "BMPString";
+char boolean_w[] = "BOOLEAN";
+/*
+ * see comment in asn_gen.h about BUILT_IN_IDS
+ */
+char built_ins[] = "TYPE-IDENTIFIER ::= CLASS {\n\
 &id OBJECT IDENTIFIER UNIQUE, &Type }\n\
 WITH SYNTAX { &Type IDENTIFIED BY &id }\n\
 ccitt OBJECT IDENTIFIER ::= {0}\n\
@@ -105,82 +107,82 @@ joint-iso-ccitt OBJECT IDENTIFIER ::= {2}\n\
 joint-iso-itu-t OBJECT IDENTIFIER ::= {2}\n\
 standard OBJECT IDENTIFIER ::= {0}\n\
 member-body OBJECT IDENTIFIER ::= {2}\n\
-identified-organization OBJECT IDENTIFIER ::= {3}\n",
-    *built_inp = built_ins,
-    by_w[] = "BY",
-    choice_w[] = "CHOICE",
-    class_w[] = "CLASS",
-    colon_ch[] = ":",
-    component_w[] = "COMPONENT",
-    components_w[] = "COMPONENTS",
-    constrained_w[] = "CONSTRAINED",
-    default_w[] = "DEFAULT",
-    defined_w[] = "DEFINED",
-    definitions_w[] = "DEFINITIONS",
-    either_w[] = "EITHER",
-    empty_w[] = "EMPTY",
-    encrypted_w[] = "ENCRYPTED",
-    end_w[] = "END",
-    enumerated_w[] = "ENUMERATED",
-    equal_ch[] = "=",
-    explicit_w[] = "EXPLICIT",
-    exports_w[] = "EXPORTS",
-    few_w[] = "few",
-    false_w[] = "FALSE",
-    from_w[] = "FROM",
-    function_w[] = "FUNCTION",
-    generalizedtime_w[] = "GeneralizedTime",
-    generalstring_w[] = "GeneralString",
-    graphicstring_w[] = "GraphicString",
-    ia5string_w[] = "IA5String",
-    casn_w[] = "casn",
-    identifier_w[] = "IDENTIFIER",
-    if_include[] = "#ifndef _%s\n#include \"%s\"\n#endif\n",
-    implicit_w[] = "IMPLICIT",
-    imports_w[] = "IMPORTS",
-    in_w[] = "IN",
-    instance_w[] = "INSTANCE",
-    integer_w[] = "INTEGER",
-    many_w[] = "many",
-    min_w[] = "MIN",
-    max_w[] = "MAX",
-    none_w[] = "NONE",
-    notasn1_w[] = "NOTASN1",
-    null_ptr_w[] = "(AsnObj)null",
-    null_w[] = "NULL",
-    numericstring_w[] = "NumericString",
-    object_w[] = "OBJECT",
-    octet_w[] = "OCTET",
-    of_w[] = "OF",
-    optional_w[] = "OPTIONAL",
-    present_w[] = "PRESENT",
-    printablestring_w[] = "PrintableString",
-    private_w[] = "PRIVATE",
-    real_w[] = "REAL",
-    relOID_w[] = "RELATIVE_OID",
-    self_w[] = "self",
-    sequence_w[] = "SEQUENCE",
-    set_w[] = "SET",
-    signed_w[] = "SIGNED",
-    size_w[] = "SIZE",
-    string_w[] = "STRING",
-    syntax_w[] = "SYNTAX",
-    t61string_w[] = "T61String",
-    table_w[] = "TABLE",
-    tags_w[] = "TAGS",
-    teletexstring_w[] = "TeletexString",
-    true_w[] = "TRUE",
-    type_identifier_w[] = "TYPE_IDENTIFIER",
-    union_w[] = "UNION",
-    unique_w[] = "UNIQUE",
-    universal_w[] = "UNIVERSAL",
-    universalstring_w[] = "UniversalString",
-    utctime_w[] = "UTCTime",
-    utf8string_w[] = "UTF8String",
-    videotexstring_w[] = "VideotexString",
-    visiblestring_w[] = "VisibleString",
-    with_w[] = "WITH",
-    *reserved_words[] = { absent_w, any_w, application_w, begin_w, bit_w,
+identified-organization OBJECT IDENTIFIER ::= {3}\n";
+char *built_inp = built_ins;
+char by_w[] = "BY";
+char choice_w[] = "CHOICE";
+char class_w[] = "CLASS";
+char colon_ch[] = ":";
+char component_w[] = "COMPONENT";
+char components_w[] = "COMPONENTS";
+char constrained_w[] = "CONSTRAINED";
+char default_w[] = "DEFAULT";
+char defined_w[] = "DEFINED";
+char definitions_w[] = "DEFINITIONS";
+char either_w[] = "EITHER";
+char empty_w[] = "EMPTY";
+char encrypted_w[] = "ENCRYPTED";
+char end_w[] = "END";
+char enumerated_w[] = "ENUMERATED";
+char equal_ch[] = "=";
+char explicit_w[] = "EXPLICIT";
+char exports_w[] = "EXPORTS";
+char few_w[] = "few";
+char false_w[] = "FALSE";
+char from_w[] = "FROM";
+char function_w[] = "FUNCTION";
+char generalizedtime_w[] = "GeneralizedTime";
+char generalstring_w[] = "GeneralString";
+char graphicstring_w[] = "GraphicString";
+char ia5string_w[] = "IA5String";
+char casn_w[] = "casn";
+char identifier_w[] = "IDENTIFIER";
+char if_include[] = "#ifndef _%s\n#include \"%s\"\n#endif\n";
+char implicit_w[] = "IMPLICIT";
+char imports_w[] = "IMPORTS";
+char in_w[] = "IN";
+char instance_w[] = "INSTANCE";
+char integer_w[] = "INTEGER";
+char many_w[] = "many";
+char min_w[] = "MIN";
+char max_w[] = "MAX";
+char none_w[] = "NONE";
+char notasn1_w[] = "NOTASN1";
+char null_ptr_w[] = "(AsnObj)null";
+char null_w[] = "NULL";
+char numericstring_w[] = "NumericString";
+char object_w[] = "OBJECT";
+char octet_w[] = "OCTET";
+char of_w[] = "OF";
+char optional_w[] = "OPTIONAL";
+char present_w[] = "PRESENT";
+char printablestring_w[] = "PrintableString";
+char private_w[] = "PRIVATE";
+char real_w[] = "REAL";
+char relOID_w[] = "RELATIVE_OID";
+char self_w[] = "self";
+char sequence_w[] = "SEQUENCE";
+char set_w[] = "SET";
+char signed_w[] = "SIGNED";
+char size_w[] = "SIZE";
+char string_w[] = "STRING";
+char syntax_w[] = "SYNTAX";
+char t61string_w[] = "T61String";
+char table_w[] = "TABLE";
+char tags_w[] = "TAGS";
+char teletexstring_w[] = "TeletexString";
+char true_w[] = "TRUE";
+char type_identifier_w[] = "TYPE_IDENTIFIER";
+char union_w[] = "UNION";
+char unique_w[] = "UNIQUE";
+char universal_w[] = "UNIVERSAL";
+char universalstring_w[] = "UniversalString";
+char utctime_w[] = "UTCTime";
+char utf8string_w[] = "UTF8String";
+char videotexstring_w[] = "VideotexString";
+char visiblestring_w[] = "VisibleString";
+char with_w[] = "WITH";
+char *reserved_words[] = { absent_w, any_w, application_w, begin_w, bit_w,
     bmpstring_w, boolean_w, by_w, choice_w, class_w, component_w,
     components_w, constrained_w, default_w, defined_w, definitions_w,
     either_w, empty_w, end_w, enumerated_w, explicit_w, exports_w,
@@ -197,12 +199,20 @@ identified-organization OBJECT IDENTIFIER ::= {3}\n",
     union_w, unique_w, universal_w, universalstring_w, utctime_w,
     utf8string_w,
     videotexstring_w, visiblestring_w, with_w, 0
-},
-    *i_names = NULL, *i_paths = NULL, *mktemp(char *);
+};
+char *i_names = NULL;
+char *i_paths = NULL;
 
-void clear_globals(
-)  ,
-    print_tables(
+char *
+mktemp(
+    char *);
+
+void
+clear_globals(
+    );
+
+void
+print_tables(
     );
 
 struct tag_table tag_table[] = {
@@ -285,31 +295,31 @@ int main(
     char *argv[])
 {
     FILE *tmpstr;
-    char *b,
-       *c,
-      **p,
-        locbuf[80],
-        pprocname[80],
-       *sfx;
+    char *b;
+    char *c;
+    char **p;
+    char locbuf[80];
+    char pprocname[80];
+    char *sfx;
     char sourcebuf[80];
     size_t did;
-    int fd,
-        do_flag,
-        tflag,
-        uflag,
-        lflag;
-    time_t last,
-        now,
-        start,
-        time(
-    time_t *);
-    struct name_table *ntbp,
-       *entbp;
+    int fd;
+    int do_flag;
+    int tflag;
+    int uflag;
+    int lflag;
+    time_t last;
+    time_t now;
+    time_t start;
+    time_t time(
+        time_t *);
+    struct name_table *ntbp;
+    struct name_table *entbp;
     struct parent *parentp;
-    struct ub_table *ubp,
-       *eubp;
-    struct id_table *idp,
-       *eidp;
+    struct ub_table *ubp;
+    struct ub_table *eubp;
+    struct id_table *idp;
+    struct id_table *eidp;
 
     (void)argc;
 

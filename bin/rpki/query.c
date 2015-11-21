@@ -182,11 +182,11 @@ static int doQuery(
     char errMsg[1024];
     int srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
     unsigned long blah = 0;
-    int i,
-        j,
-        status;
-    QueryField *field,
-       *field2;
+    int i;
+    int j;
+    int status;
+    QueryField *field;
+    QueryField *field2;
     char *name;
     int maxW = MAX_CONDS * 20;
 
@@ -447,11 +447,11 @@ int main(
     int argc,
     char **argv)
 {
-    char *displays[MAX_VALS],
-       *clauses[MAX_CONDS],
-       *orderp = NULL;
-    int i,
-        status;
+    char *displays[MAX_VALS];
+    char *clauses[MAX_CONDS];
+    char *orderp = NULL;
+    int i;
+    int status;
     int numDisplays = 0;
     int numClauses = 0;
 

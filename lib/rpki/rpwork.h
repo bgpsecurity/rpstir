@@ -37,11 +37,11 @@
 #define SKIBUFSIZ    128
 
 struct cert_ansr {
-    char dirname[PATH_MAX],
-        filename[PATH_MAX],
-        fullname[PATH_MAX],
-        aki[120],
-        issuer[PATH_MAX];
+    char dirname[PATH_MAX];
+    char filename[PATH_MAX];
+    char fullname[PATH_MAX];
+    char aki[120];
+    char issuer[PATH_MAX];
     unsigned int flags;
     unsigned int local_id;
 };
@@ -53,10 +53,10 @@ struct cert_answers {
 
 struct iprange {
     int typ;
-    uchar lolim[18],
-        hilim[18];
-    ulong loASnum,
-        hiASnum;
+    uchar lolim[18];
+    uchar hilim[18];
+    ulong loASnum;
+    ulong hiASnum;
     char *text;
 };
 
@@ -69,11 +69,11 @@ struct ipranges {
 struct done_cert {
     char ski[64];
     int perf;
-    ulong origID,
-        origflags;
+    ulong origID;
+    ulong origflags;
     char filename[PATH_MAX];
-    struct Certificate *origcertp,
-       *paracertp;
+    struct Certificate *origcertp;
+    struct Certificate *paracertp;
 };
 
 struct done_certs {
@@ -93,78 +93,117 @@ struct keyring {
     char *password;
 };
 
-void cvt_asn(
+void
+cvt_asn(
     struct iprange *torangep,
-    struct IPAddressOrRangeA *asnp),
-    cvt_asnum(
+    struct IPAddressOrRangeA *asnp);
+
+void
+cvt_asnum(
     struct iprange *certrangep,
-    struct ASNumberOrRangeA *asNumberOrRangeA),
-    mk_certranges(
+    struct ASNumberOrRangeA *asNumberOrRangeA);
+
+void
+mk_certranges(
     struct ipranges *,
-    struct Certificate *),
-    decrement_iprange(
+    struct Certificate *);
+
+void
+decrement_iprange(
     uchar *lim,
-    int lth),
-    increment_iprange(
+    int lth);
+
+void
+increment_iprange(
     uchar *lim,
-    int lth),
-    clear_ipranges(
+    int lth);
+
+void
+clear_ipranges(
     struct ipranges *);
 
-struct iprange *eject_range(
+struct iprange *
+eject_range(
     struct ipranges *,
-    int),
-   *inject_range(
+    int);
+
+struct iprange *
+inject_range(
     struct ipranges *,
-    int),
-   *next_range(
+    int);
+
+struct iprange *
+next_range(
     struct ipranges *,
     struct iprange *);
 
-extern void free_ipranges(
+void
+free_ipranges(
     struct ipranges *);
 
-char *nextword(
-    char *),
-    myrootfullname[PATH_MAX];
+char *
+nextword(
+    char *);
 
-int parse_SKI_blocks(
+char myrootfullname[PATH_MAX];
+
+int
+parse_SKI_blocks(
     struct keyring *,
     FILE *,
     const char *,
     char *,
     int,
-    int *),
-    get_CAcert(
+    int *);
+
+int
+get_CAcert(
     char *,
-    struct done_cert **),
-    getSKIBlock(
+    struct done_cert **);
+
+int
+getSKIBlock(
     FILE *,
     char *,
-    int),
-    check_date(
+    int);
+
+int
+check_date(
     char *datep,
     struct casn *casnp,
-    int64_t *datenump),
-    check_dates(
-    char *datesp),
-    check_jetring(
-    char *),
-    sort_resources(
+    int64_t *datenump);
+
+int
+check_dates(
+    char *datesp);
+
+int
+check_jetring(
+    char *);
+
+int
+sort_resources(
     struct iprange *,
-    int),
-    touches(
+    int);
+
+int
+touches(
     struct iprange *,
     struct iprange *,
     int);
 
-extern int diff_ipaddr(
+int
+diff_ipaddr(
     struct iprange *,
-    struct iprange *),
-    overlap(
+    struct iprange *);
+
+int
+overlap(
     struct iprange *lop,
-    struct iprange *hip),
-    txt2loc(
+    struct iprange *hip);
+
+int
+txt2loc(
     int,
     char *,
     struct iprange *);

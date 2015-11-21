@@ -16,75 +16,94 @@
 #define MSG_OPEN "Can't open %s"
 #define MSG_OVERFLOW "Area %s overflowed"
 
-void dump_asn(
+void
+dump_asn(
     );
 
-void putasn(
+void
+putasn(
     uchar);
 
-void putout(
+void
+putout(
     uchar);
 
-char buf[512],
-   *hash_start,
-   *cvt_int(char *),
+char buf[512];
+char *hash_start;
 
-   *cvt_obj_id(
+char *
+cvt_int(
+    char *);
+
+char *
+cvt_obj_id(
     char *,
-    char *),
-   *cvt_out(
-    char *),
-   *do_it(
+    char *);
+
+char *
+cvt_out(
+    char *);
+
+char *
+do_it(
     char *,
     int,
-    int),
-   *getbuf(
+    int);
+
+char *
+getbuf(
     char *,
     int);
 
 struct varfld {
-    ushort offset,              /* offset of field in vararea */
-        lth;                    /* length of variable-length field.  If field
+    ushort offset;              /* offset of field in vararea */
+    ushort lth;                 /* length of variable-length field.  If field
                                  * is not present, lth is zero */
 } varfld;
 
-int bytes,
-    dflag,
-    aflag,
-    req,
-    linenum,
-    adj_asn(
-    int),
-    set_asn_lth(
+int bytes;
+int dflag;
+int aflag;
+int req;
+int linenum;
+
+int
+adj_asn(
+    int);
+
+int
+set_asn_lth(
     uchar *,
-    uchar *),
-    wdcmp(
+    uchar *);
+
+int
+wdcmp(
     char *,
-    char *),
-    write_out(
+    char *);
+
+int
+write_out(
     char *,
-    int),
-    write_varfld(
+    int);
+
+int
+write_varfld(
     struct varfld *);
 
 struct name_tab {
     char *name;
-    unsigned chunk,
-        limit;
+    unsigned chunk;
+    unsigned limit;
     char *area;                 /* pointer to a general name area */
-    unsigned size,              /* size of the area */
-        next;                   /* offset to next free part of area */
-} genarea =
-{
-"genarea", 1024, 0x4000, NULL, 0, 0},       /* for varareas */
+    unsigned size;              /* size of the area */
+    unsigned next;              /* offset to next free part of area */
+};
 
-    out_area =
-{
-"out_area", 1024, 0x20000, NULL, 0, 0},     /* for all output, to avoid having to do
-                                 * lseek() with -r option */
-    asn_area =
-{
-"asn_area", 1024, 0x20000, NULL, 0, 0};
+/* for varareas */
+struct name_tab genarea = {"genarea", 1024, 0x4000, NULL, 0, 0};
+/* for all output, to avoid having to do lseek() with -r option */
+struct name_tab out_area = {"out_area", 1024, 0x20000, NULL, 0, 0};
+struct name_tab asn_area = {"asn_area", 1024, 0x20000, NULL, 0, 0};
 
 extern struct typnames typnames[];      /* in asn.c */
 

@@ -181,8 +181,8 @@ void cconstruct(
      */
     char *c;
     int /* did, */ classgeneration;
-    struct name_table *ntbp,
-       *ptbp;
+    struct name_table *ntbp;
+    struct name_table *ptbp;
     long parenttype = -1;
     if (state != SUB_ITEM)
         end_definition();

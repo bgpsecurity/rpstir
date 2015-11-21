@@ -964,8 +964,8 @@ static X509 *readCertFromFile(
 {
     X509 *px = NULL;
     BIO *bcert = NULL;
-    int typ,
-        x509sta;
+    int typ;
+    int x509sta;
 
     // open the file
     typ = infer_filetype(ofullname);
@@ -1043,11 +1043,11 @@ static int addCert2List(
 // static variables for efficiency, so only need to set up query once
 
 static scmsrcha *parentSrch = NULL;
-static char *parentDir,
-   *parentFile;
+static char *parentDir;
+static char *parentFile;
 static unsigned int *parentFlags;
-static char *parentAKI,
-   *parentIssuer;
+static char *parentAKI;
+static char *parentIssuer;
 
 struct cert_answers *find_parent_cert(
     char *ski,
@@ -1321,8 +1321,8 @@ static int verify_cert(
     X509_LOOKUP *lookup = NULL;
     X509_PURPOSE *xptmp = NULL;
     X509 *parent = NULL;
-    int purpose,
-        i;
+    int purpose;
+    int i;
     int sta = 0;
 
     // create X509 store
@@ -1630,11 +1630,11 @@ static int verifyChildCRL(
     X509_CRL *x = NULL;
     int crlsta = 0;
     int sta = 0;
-    unsigned int i,
-        id;
-    int typ,
-        chainOK,
-        x509sta;
+    unsigned int i;
+    unsigned int id;
+    int typ;
+    int chainOK;
+    int x509sta;
     char pathname[PATH_MAX];
 
     UNREFERENCED_PARAMETER(idx);
@@ -1682,9 +1682,9 @@ static int verifyChildROA(
     ssize_t idx)
 {
     struct CMS roa;
-    int typ,
-        chainOK,
-        sta;
+    int typ;
+    int chainOK;
+    int sta;
     char pathname[PATH_MAX];
     char *skii;
     unsigned int id;
@@ -1973,9 +1973,9 @@ static int verifyChildCert(
     int doVerify)
 {
     X509 *x = NULL;
-    int x509sta,
-        sta,
-        chainOK;
+    int x509sta;
+    int sta;
+    int chainOK;
     char pathname[PATH_MAX];
 
     if (doVerify)
@@ -2373,9 +2373,9 @@ static int verifyOrNotChildren(
     int doVerify)
 {
     int isRoot = 1;
-    int doIt,
-        idx,
-        sta;
+    int doIt;
+    int idx;
+    int sta;
 
     prevPropData = currPropData;
     currPropData = doVerify ? &vPropData : &iPropData;
@@ -2475,8 +2475,8 @@ int addStateToFlags(
     scm *scmp,
     scmcon *conp)
 {
-    int sta,
-        fd;
+    int sta;
+    int fd;
     struct CMS cms;
     struct casn ccasn;
     struct FileAndHash *fahp = NULL;
@@ -2586,8 +2586,8 @@ static int add_cert_2(
     cf->dirid = id;
     struct Certificate cert;
     Certificate(&cert, (ushort)0);
-    struct Extension *ski_extp,
-       *aki_extp;
+    struct Extension *ski_extp;
+    struct Extension *aki_extp;
     int locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0)
         locerr = ERR_SCM_BADCERT;
@@ -2743,8 +2743,8 @@ int add_crl(
     int crlsta = 0;
     int sta = 0;
     unsigned int i;
-    int chainOK,
-        x509sta;
+    int chainOK;
+    int x509sta;
     struct CertificateRevocationList crl;
 
     if (!goodoids[0].lth)
@@ -2860,8 +2860,8 @@ static int extractAndAddCert(
 {
     cert_fields *cf = NULL;
     unsigned int cert_id;
-    char certname[PATH_MAX],
-        pathname[PATH_MAX];
+    char certname[PATH_MAX];
+    char pathname[PATH_MAX];
     int sta = 0;
     struct Certificate *certp;
     certp = (struct Certificate *)member_casn(&cmsp->content.signedData.
@@ -3226,16 +3226,16 @@ int add_roa(
     int typ)
 {
     struct CMS roa;             // note: roaFromFile constructs this
-    char ski[60],
-       *sig = NULL,
-        certfilename[PATH_MAX];
+    char ski[60];
+    char *sig = NULL;
+    char certfilename[PATH_MAX];
     size_t prefixes_length = 0;
     struct roa_prefix *prefixes = NULL;
     unsigned char *bsig = NULL;
-    int sta,
-        chainOK,
-        bsiglen = 0,
-        cert_added = 0;
+    int sta;
+    int chainOK;
+    int bsiglen = 0;
+    int cert_added = 0;
     uint32_t asid;
     unsigned int flags = 0;
 
@@ -3323,13 +3323,13 @@ int add_manifest(
     int utrust,
     int typ)
 {
-    int sta,
-        cert_added = 0,
-        stale;
+    int sta;
+    int cert_added = 0;
+    int stale;
     struct CMS cms;
-    char *thisUpdate,
-       *nextUpdate,
-        certfilename[PATH_MAX];
+    char *thisUpdate;
+    char *nextUpdate;
+    char certfilename[PATH_MAX];
     char asn_time[16];          // DER GenTime: strlen("YYYYMMDDhhmmssZ") ==
                                 // 15
     unsigned int man_id = 0;
@@ -3640,8 +3640,8 @@ int add_object(
     char *outfull,
     int utrust)                 // , char *manState)
 {
-    unsigned int id = 0,
-        obj_id = 0;
+    unsigned int id = 0;
+    unsigned int obj_id = 0;
     int typ;
     int sta;
 
@@ -4000,8 +4000,8 @@ int delete_object(
     unsigned int lid;
     unsigned int flags;
     scmsrcha srch;
-    scmsrch srch1,
-        srch2[5];
+    scmsrch srch1;
+    scmsrch srch2[5];
     scmkva where;
     scmkva dwhere;
     scmkv one;
@@ -4110,9 +4110,9 @@ int delete_object(
         || typ == OT_MAN_PEM || typ == OT_GBR)
     {
         unsigned int ndir_id;
-        char noutfile[PATH_MAX],
-            noutdir[PATH_MAX],
-            noutfull[PATH_MAX];
+        char noutfile[PATH_MAX];
+        char noutdir[PATH_MAX];
+        char noutfull[PATH_MAX];
         memset(noutfile, 0, PATH_MAX);
         memset(noutdir, 0, PATH_MAX);
         memset(noutfull, 0, PATH_MAX);

@@ -42,20 +42,20 @@ int asn1dump(
     int buflen,
     FILE *outf)
 {
-    struct asn *asnbase,
-       *asnp;
+    struct asn *asnbase;
+    struct asn *asnp;
     struct typnames *tpnmp;
-    int ansr,
-        j,
-        k,
-        row,
-        make_asn_table(
+    int ansr;
+    int j;
+    int k;
+    int row;
+    int make_asn_table(
         );
-    unsigned char typ,
-        tag,
-       *b,
-       *ctmp,
-       *asn_set(
+    unsigned char typ;
+    unsigned char tag;
+    unsigned char *b;
+    unsigned char *ctmp;
+    unsigned char *asn_set(
         );
     char *indef_msg = " /* indefinite length */\n";
 

@@ -368,11 +368,11 @@ long _dumpread(
     char *c = to;
     int printable;
     long type = (casnp->type == ASN_ANY) ? casnp->tag : casnp->type;
-    long ansr = 0,
-        i,
-        j,
-        count = 80 - offset - 2,        // # of printable spaces less "" or 0x
-        lth;
+    long ansr = 0;
+    long i;
+    long j;
+    long count = 80 - offset - 2;        // # of printable spaces less "" or 0x
+    long lth;
 
     lth = casnp->lth;
     if (type == ASN_IA5_STRING || type == ASN_OCTETSTRING)

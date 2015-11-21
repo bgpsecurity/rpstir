@@ -11,22 +11,31 @@ Remarks:
 
 #include "asn_gen.h"
 
-static void print_end(
+static void
+print_end(
     int,
-    int),
-    print_hdr(
-    ),
-    print_item(
+    int);
+
+static void
+print_hdr(
+    );
+
+static void
+print_item(
     char *,
     char *,
     long,
     int);
 
-static int thisdefined,
-    hdr_def(
+static int thisdefined;
+
+static int
+hdr_def(
     int *,
-    int *),
-    hdr_item(
+    int *);
+
+static int
+hdr_item(
     int,
     int);
 
@@ -167,7 +176,8 @@ Procedure:
     }
 }
 
-static void print_hdr(
+static void
+print_hdr(
     )
 {
     /*
@@ -182,8 +192,8 @@ static void print_hdr(
      * end of an item)) AND making header item returns 0, return Default: Exit
      * with fatal message
      */
-    int dup_ansr,
-        numdefineds;
+    int dup_ansr;
+    int numdefineds;
     for (end_item(); get_token(0, token);)
     {
         switch (state)

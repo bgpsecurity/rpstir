@@ -432,9 +432,9 @@ static int validateIPContents(
         rfam[8];
     struct ROAIPAddress *roaAddrp;
     struct ROAIPAddressFamily *roaipfamp;
-    int i,
-        err = 0,
-        num = 0;
+    int i;
+    int err = 0;
+    int num = 0;
 
     if ((i = num_items(&ipAddrBlockp->self)) == 0 || i > 2)
         return ERR_SCM_INVALFAM;
@@ -478,12 +478,12 @@ static int cmsValidate(
 {
     // validates general CMS things common to ROAs and manifests
 
-    int num_certs,
-        ret = 0,
-        tbs_lth;
+    int num_certs;
+    int ret = 0;
+    int tbs_lth;
     struct SignerInfo *sigInfop;
-    uchar digestbuf[40],
-        hashbuf[40];
+    uchar digestbuf[40];
+    uchar hashbuf[40];
     uchar *tbsp;
 
     // check that roa->content->version == 3
@@ -834,9 +834,9 @@ static int check_mft_filenames(
 {
     struct FileAndHash *fahp;
     char file[NAME_MAX];
-    int file_length,
-        i,
-        filenum = 0;
+    int file_length;
+    int i;
+    int filenum = 0;
     for (fahp = (struct FileAndHash *)member_casn(&fileListp->self, 0);
          fahp != NULL;
          fahp = (struct FileAndHash *)next_of(&fahp->self), filenum++)
@@ -875,10 +875,10 @@ static int check_mft_duplicate_filenames(
     struct FileAndHash *fahp;
     char **filenames;
     int ret = 0;
-    int file_length,
-        total,
-        i,
-        j;
+    int file_length;
+    int total;
+    int i;
+    int j;
     total = num_items(&manp->fileList.self);
     if (total == 0)
         return 0;
@@ -1326,16 +1326,16 @@ int roaValidate2(
 {
     int iRes;
     int sta;
-    long ii,
-        ij;
+    long ii;
+    long ij;
     struct Extension *extp;
     char *oidp;
-    uchar cmin[MINMAXBUFSIZE],
-        cmax[MINMAXBUFSIZE],
-        rmin[MINMAXBUFSIZE],
-        rmax[MINMAXBUFSIZE];
-    uchar rfam[8],
-        cfam[8];
+    uchar cmin[MINMAXBUFSIZE];
+    uchar cmax[MINMAXBUFSIZE];
+    uchar rmin[MINMAXBUFSIZE];
+    uchar rmax[MINMAXBUFSIZE];
+    uchar rfam[8];
+    uchar cfam[8];
     int all_extns = 0;
 
     // roaValidate() is an independent function; the caller must call it

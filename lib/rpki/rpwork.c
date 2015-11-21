@@ -18,9 +18,9 @@ struct ipranges ruleranges = IPRANGES_EMPTY_INITIALIZER;
 struct ipranges lessranges = IPRANGES_EMPTY_INITIALIZER;
 struct ipranges fromranges = IPRANGES_EMPTY_INITIALIZER;
 char errbuf[160] = "";
-char currskibuf[SKIBUFSIZ] = "",
-    nextskibuf[SKIBUFSIZ] = "",
-    skibuf[SKIBUFSIZ] = "";
+char currskibuf[SKIBUFSIZ] = "";
+char nextskibuf[SKIBUFSIZ] = "";
+char skibuf[SKIBUFSIZ] = "";
 
 char *Xaia = NULL;
 char *Xcrldp = NULL;
@@ -151,8 +151,8 @@ static int add_paracert2DB(
     struct done_cert *done_certp)
 {
     int ansr;
-    char fullname[PATH_MAX],
-        ski[80];
+    char fullname[PATH_MAX];
+    char ski[80];
     ulong flags;
     struct cert_answers *cert_answersp;
     struct cert_ansr *cert_ansrp;
@@ -340,8 +340,8 @@ static struct Certificate *mk_paracert(
         write_objid(&adp->accessMethod, id_ad_caIssuers);
         write_casn(&adp->accessLocation.url, (uchar *) Xaia, strlen(Xaia));
     }
-    struct Extension *skiExtp,  // root's ski
-       *akiExtp;                // new cert's aki
+    struct Extension *skiExtp;  // root's ski
+    struct Extension *akiExtp;  // new cert's aki
     if (!(skiExtp = find_extension(&myrootcert.toBeSigned.extensions,
                                    id_subjectKeyIdentifier, 0)))
     {
@@ -485,8 +485,8 @@ static int sign_cert(
     CRYPT_KEYSET cryptKeyset;
     uchar hash[40];
     uchar *signature = NULL;
-    int ansr = 0,
-        signatureLength;
+    int ansr = 0;
+    int signatureLength;
     char *msg;
     uchar *signstring = NULL;
     int sign_lth;
@@ -582,8 +582,8 @@ static void save_cert_answers(
     struct cert_answers *to_cert_answersp,
     struct cert_answers *from_cert_answersp)
 {
-    int numkid,
-        numkids = from_cert_answersp->num_ansrs;
+    int numkid;
+    int numkids = from_cert_answersp->num_ansrs;
     to_cert_answersp->num_ansrs = numkids;
     to_cert_answersp->cert_ansrp =
         (struct cert_ansr *)calloc(numkids, sizeof(struct cert_ansr));
@@ -657,11 +657,11 @@ static int expand(
      *        ELSE get next C
      */
     int did = 0;
-    struct iprange *certrangep = &certrangesp->iprangep[numcertrange],
-        *rulerangep = &rulerangesp->iprangep[numrulerange];
+    struct iprange *certrangep = &certrangesp->iprangep[numcertrange];
+    struct iprange *rulerangep = &rulerangesp->iprangep[numrulerange];
     int lth = rulerangep->typ == IPv6 ? 16 : 4;
-    int flag = 0,
-        lastcert = numcertrange - 1;
+    int flag = 0;
+    int lastcert = numcertrange - 1;
     if ((locflags & RESOURCE_NOUNION))
         flag = 1;
     while (rulerangep)          // step 1
@@ -779,11 +779,11 @@ static int perforate(
      *             Get next R
      *   Return index of last rule
      */
-    struct iprange *certrangep = &certrangesp->iprangep[numcertrange],
-        *rulerangep = &rulerangesp->iprangep[numrulerange];
-    int did = 0,
-        typ = certrangep->typ,
-        lth = (typ == IPv6) ? 16 : 4;
+    struct iprange *certrangep = &certrangesp->iprangep[numcertrange];
+    struct iprange *rulerangep = &rulerangesp->iprangep[numrulerange];
+    int did = 0;
+    int typ = certrangep->typ;
+    int lth = (typ == IPv6) ? 16 : 4;
     // step 1
     while (certrangep && rulerangep)
     {
@@ -844,11 +844,11 @@ static int perf_A_from_B(
     struct ipranges *lessp,
     struct ipranges *fromp)
 {
-    int ansr,
-        typ = IPv4,
-        lessnum = 0,
-        fromnum = 0,
-        changes = 0;
+    int ansr;
+    int typ = IPv4;
+    int lessnum = 0;
+    int fromnum = 0;
+    int changes = 0;
     if ((ansr = perforate(lessp, lessnum, fromp, fromnum, &changes)) < 0)
         return ansr;
     for (lessnum = 0; lessnum < lessp->numranges - 1 &&
@@ -981,8 +981,8 @@ static int conflict_test(
     // save the present fromranges
     for (j = 0; j < fromranges.numranges; j++)
     {
-        struct iprange *siprangep,
-           *fiprangep;
+        struct iprange *siprangep;
+        struct iprange *fiprangep;
         inject_range(&savranges, j);
         siprangep = &savranges.iprangep[j];
         fiprangep = &fromranges.iprangep[j];
@@ -1000,8 +1000,8 @@ static int conflict_test(
         perf_A_from_B(&fromranges, &savranges); // diff shows where it
                                                 // occurred
         // find where
-        int jj,
-            k = 0;
+        int jj;
+        int k = 0;
         *skibuf = 0;
         struct iprange *savp;
         for (jj = 0; jj < savranges.numranges; jj++)
@@ -1242,11 +1242,11 @@ static int modify_paracert(
      * 3. Enlarge or perforate paracertificate's AS numbers
      *    Return count of changes made. if any
      */
-    int numcertrange = 0,
-        numrulerange = 0,
-        typ,
-        changes = 0,
-        did = 0;
+    int numcertrange = 0;
+    int numrulerange = 0;
+    int typ;
+    int changes = 0;
+    int did = 0;
     // start at beginning of SKI list and IPv4 family in certificate
     struct iprange *rulerangep = ruleranges.iprangep;   // beginning of SKI
                                                         // list
@@ -1315,12 +1315,12 @@ static int search_downward(
     struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, 0);
     struct Certificate *childcertp;
-    int ansr,
-        numkid,
-        numkids;
-    char pSKI[64],
-        cAKI[64],
-        cSKI[64];
+    int ansr;
+    int numkid;
+    int numkids;
+    char pSKI[64];
+    char cAKI[64];
+    char cSKI[64];
     format_aKI(pSKI, &extp->extnValue.subjectKeyIdentifier);
 
     // Get list of children having pSKI as their AKI
@@ -1396,9 +1396,9 @@ static int process_trust_anchors(
     struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
     if (cert_answersp->num_ansrs < 0)
         return -1;
-    int ansr = 0,
-        numkids = cert_answersp->num_ansrs,
-        numkid;
+    int ansr = 0;
+    int numkids = cert_answersp->num_ansrs;
+    int numkid;
     struct Certificate *childcertp;
     childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
     Certificate(childcertp, (ushort) 0);
@@ -1535,8 +1535,8 @@ static int process_control_blocks(
     int ansr = 1;
     do
     {
-        char *cc,
-           *skip;
+        char *cc;
+        char *skip;
         for (skip = &skibuf[4]; *skip == ' '; skip++);
         for (cc = skip; *cc == ':' || (*cc >= '0' && *cc <= '9') ||
              ((*cc | 0x20) >= 'a' && (*cc | 0x20) <= 'f'); cc++);

@@ -20,15 +20,20 @@ Cambridge, Ma. 02138
 
 #define ASN_READ 1              // modes for encode & read
 
-extern int _utctime_to_ulong(
+int
+_utctime_to_ulong(
     int64_t *valp,
     char *fromp,
     int lth);
-extern int _gentime_to_ulong(
+
+int
+_gentime_to_ulong(
     int64_t *valp,
     char *fromp,
     int lth);
-extern int _dump_tag(
+
+int
+_dump_tag(
     int tag,
     char *to,
     int offset,
@@ -105,128 +110,199 @@ char char_table[] = "\
                             u  r  6      A              i
                             m  t  1      5              s */
 
-int casn_error(
+int
+casn_error(
     int,
-    char *),
-    _calc_lth(
+    char *);
+
+int
+_calc_lth(
     uchar **cpp,
-    uchar ftag),
-    _calc_lth_lth(
-    int),
-    _casn_obj_err(
+    uchar ftag);
+
+int
+_calc_lth_lth(
+    int);
+
+int
+_casn_obj_err(
     struct casn *,
-    int),
-    _check_enum(
-    struct casn **casnpp),
-    _check_filled(
+    int);
+
+int
+_check_enum(
+    struct casn **casnpp);
+
+int
+_check_filled(
     struct casn *casnp,
-    int mode),
-    _clear_error(
-    struct casn *),
-    _csize(
+    int mode);
+
+int
+_clear_error(
+    struct casn *);
+
+int
+_csize(
     struct casn *casnp,
     uchar *from,
-    long lth),
-    _encodesize(
+    long lth);
+
+int
+_encodesize(
     struct casn *casnp,
     uchar *to,
-    int mode),
-    _encode_tag_lth(
+    int mode);
+
+int
+_encode_tag_lth(
     uchar *to,
-    struct casn **casnpp),
-    _fill_upward(
+    struct casn **casnpp);
+
+int
+_fill_upward(
     struct casn *casnp,
-    int val),
-    _readsize(
+    int val);
+
+int
+_readsize(
     struct casn *casnp,
     uchar *to,
-    int mode),
-    _readvsize(
+    int mode);
+
+int
+_readvsize(
     struct casn *casnp,
     uchar *to,
-    int mode),
-    _mark_definees(
+    int mode);
+
+int
+_mark_definees(
     struct casn *casnp,
     uchar *wherep,
-    int index),
-    _match_casn(
+    int index);
+
+int
+_match_casn(
     struct casn *casnp,
     uchar *from,
     int nbytes,
     ushort ff,
     ushort level,
     struct casn *of_casnp,
-    int *had_indedfp),
-    _num_casns(
-    struct casn *casnp),
-    _set_all_lths(
+    int *had_indedfp);
+
+int
+_num_casns(
+    struct casn *casnp);
+
+int
+_set_all_lths(
     uchar *top,
     uchar *tag_endp,
     uchar *val_endp,
-    int mode),
-    _set_casn_lth(
+    int mode);
+
+int
+_set_casn_lth(
     uchar *s,
     uchar *e,
-    int mode),
-    _table_op(
-    struct casn *casnp),
-    _write_casn(
+    int mode);
+
+int
+_table_op(
+    struct casn *casnp);
+
+int
+_write_casn(
     struct casn *casnp,
     uchar *c,
-    int lth),
-    _write_enum(
-    struct casn *casnp),
-    _write_objid(
+    int lth);
+
+int
+_write_enum(
+    struct casn *casnp);
+
+int
+_write_objid(
     struct casn *casnp,
     const char *from);
 
-void _clear_casn(
+void
+_clear_casn(
     struct casn *,
-    ushort),
-   *_clear_of(
+    ushort);
+
+void *
+_clear_of(
     struct casn *casnp);
 
-long _get_tag(
+long
+_get_tag(
     uchar **tagpp);
 
-void *_free_it(
-    void *),
-    _stuff_num(
-    int count),
-    _stuff_ofs(
+void *
+_free_it(
+    void *);
+
+void
+_stuff_num(
+    int count);
+
+void
+_stuff_ofs(
     struct casn *casnp,
-    int num_ofs),
-    _stuff_string(
+    int num_ofs);
+
+void
+_stuff_string(
     struct casn *casnp);
 
-struct casn *_find_chosen(
-    struct casn *casnp),
-   *_find_filled(
-    struct casn *casnp),
-   *_find_filled_or_chosen(
+struct casn *
+_find_chosen(
+    struct casn *casnp);
+
+struct casn *
+_find_filled(
+    struct casn *casnp);
+
+struct casn *
+_find_filled_or_chosen(
     struct casn *casnp,
-    int *errp),
-   *_find_flag(
+    int *errp);
+
+struct casn *
+_find_flag(
     struct casn *casnp,
-    int flag),
-   *_find_tag(
+    int flag);
+
+struct casn *
+_find_tag(
     struct casn *casnp,
-    ulong tag),
-   *_go_up(
-    struct casn *),
-   *_dup_casn(
-    struct casn *casnp),
-   *_skip_casn(
+    ulong tag);
+
+struct casn *
+_go_up(
+    struct casn *);
+
+struct casn *
+_dup_casn(
+    struct casn *casnp);
+
+struct casn *
+_skip_casn(
     struct casn *casnp,
     int num);
 
-void clear_casn(
+void
+clear_casn(
     struct casn *casnp)
 {
     _clear_casn(casnp, ~(ASN_FILLED_FLAG | ASN_CHOSEN_FLAG));
 }
 
-int decode_casn(
+int
+decode_casn(
     struct casn *casnp,
     uchar *from)
 {
@@ -243,7 +319,8 @@ int decode_casn(
     return decode_casn_lth(casnp, from, lth);
 }
 
-int decode_casn_lth(
+int
+decode_casn_lth(
     struct casn *casnp,
     uchar *from,
     int lth)
@@ -263,7 +340,8 @@ int decode_casn_lth(
     return ansr;
 }
 
-void delete_casn(
+void
+delete_casn(
     struct casn *casnp)
 {
 /**
@@ -334,7 +412,8 @@ Procedure:
     casnp->lth = 0;
 }
 
-struct casn *dup_casn(
+struct casn *
+dup_casn(
     struct casn *casnp)
 {
     if (!(casnp->flags & ASN_POINTER_FLAG))
@@ -342,7 +421,8 @@ struct casn *dup_casn(
     return _dup_casn(casnp);
 }
 
-int eject_casn(
+int
+eject_casn(
     struct casn *casnp,
     int num)
 {
@@ -413,7 +493,8 @@ int eject_casn(
     return num;
 }
 
-int eject_all_casn(
+int
+eject_all_casn(
     struct casn *casnp)
 {
     int num = 0;
@@ -431,7 +512,8 @@ int eject_all_casn(
     return eject_casn(casnp, 0);
 }
 
-int encode_casn(
+int
+encode_casn(
     struct casn *casnp,
     uchar *to)
 {
@@ -443,7 +525,8 @@ int encode_casn(
     return _encodesize(casnp, to, ASN_READ);
 }
 
-struct casn *inject_casn(
+struct casn *
+inject_casn(
     struct casn *casnp,
     int num)
 {
@@ -527,7 +610,8 @@ struct casn *inject_casn(
     return tcasnp;
 }
 
-struct casn *member_casn(
+struct casn *
+member_casn(
     struct casn *casnp,
     int index)
 {
@@ -562,7 +646,8 @@ struct casn *member_casn(
     return tcasnp;
 }
 
-struct casn *next_of(
+struct casn *
+next_of(
     struct casn *casnp)
 {
     int err = 0;
@@ -582,7 +667,8 @@ struct casn *next_of(
     return (struct casn *)0;
 }
 
-int num_items(
+int
+num_items(
     struct casn *casnp)
 {
     int num;
@@ -595,14 +681,16 @@ int num_items(
     return num;
 }
 
-int read_casn(
+int
+read_casn(
     struct casn *casnp,
     uchar *to)
 {
     return _readvsize(casnp, to, ASN_READ);
 }
 
-void simple_constructor(
+void
+simple_constructor(
     struct casn *casnp,
     ushort level,
     int type)
@@ -610,7 +698,8 @@ void simple_constructor(
     tagged_constructor(casnp, level, type, type);
 }
 
-int size_casn(
+int
+size_casn(
     struct casn *casnp)
 {
     uchar buf[4];
@@ -622,7 +711,8 @@ int size_casn(
     return _encodesize(casnp, buf, 0);
 }
 
-void tagged_constructor(
+void
+tagged_constructor(
     struct casn *casnp,
     ushort level,
     int type,
@@ -634,7 +724,8 @@ void tagged_constructor(
     casnp->tag = tag;
 }
 
-int tag_casn(
+int
+tag_casn(
     struct casn *casnp)
 {
     int val,
@@ -649,7 +740,8 @@ int tag_casn(
     return val;
 }
 
-int vsize_casn(
+int
+vsize_casn(
     struct casn *casnp)
 {
     uchar buf[4];
@@ -657,7 +749,8 @@ int vsize_casn(
     return _readvsize(casnp, buf, 0);
 }
 
-int write_casn(
+int
+write_casn(
     struct casn *casnp,
     uchar *c,
     int lth)
@@ -692,7 +785,8 @@ int write_casn(
     return _write_casn(casnp, c, lth);
 }
 
-int _calc_lth(
+int
+_calc_lth(
     uchar **cpp,
     uchar ftag)
 {
@@ -721,7 +815,8 @@ int _calc_lth(
     return lth;
 }
 
-int _calc_lth_lth(
+int
+_calc_lth_lth(
     lth)
      int lth;
 {
@@ -732,7 +827,8 @@ int _calc_lth_lth(
     return fwd;
 }
 
-int _casn_obj_err(
+int
+_casn_obj_err(
     struct casn *casnp,
     int num)
 {
@@ -746,7 +842,8 @@ int _casn_obj_err(
     return -1;
 }
 
-int _check_enum(
+int
+_check_enum(
     struct casn **casnpp)
 {
     struct casn *tcasnp;
@@ -764,7 +861,8 @@ int _check_enum(
 // 1 if filled, 0 if not (or none)
 // Mode 1 (== ASN_READ)
 // return error (< 0) if it was mandatory and not filled
-int _check_filled(
+int
+_check_filled(
     struct casn *casnp,
     int mode)
 {
@@ -783,7 +881,8 @@ int _check_filled(
     return 0;
 }
 
-void _clear_casn(
+void
+_clear_casn(
     struct casn *casnp,
     ushort mask)
 {
@@ -825,7 +924,8 @@ Procedure:
         casnp->tag = ASN_ANY;
 }
 
-int _clear_error(
+int
+_clear_error(
     struct casn *casnp)
 {
     casn_err_struct.asn_map_string = _free_it(casn_err_struct.asn_map_string);
@@ -835,7 +935,8 @@ int _clear_error(
     return 1;
 }
 
-void *_clear_of(
+void *
+_clear_of(
     struct casn *casnp)
 {
 /**
@@ -863,7 +964,8 @@ Procedure
     return _free_it(casnp);
 }
 
-int _csize(
+int
+_csize(
     struct casn *casnp,
     uchar *from,
     long lth)
@@ -891,7 +993,8 @@ int _csize(
     return lth;
 }
 
-struct casn *_dup_casn(
+struct casn *
+_dup_casn(
     struct casn *casnp)
 {
     int err = 0;
@@ -910,7 +1013,8 @@ struct casn *_dup_casn(
     return casnp->ptr;
 }
 
-int _encode_tag_lth(
+int
+_encode_tag_lth(
     uchar *to,
     struct casn **casnpp)
 {
@@ -960,7 +1064,8 @@ int _encode_tag_lth(
     return c - to;
 }
 
-int _encodesize(
+int
+_encodesize(
     struct casn *casnp,
     uchar *to,
     int mode)
@@ -1035,7 +1140,8 @@ int _encodesize(
     return lth;
 }
 
-int _fill_upward(
+int
+_fill_upward(
     struct casn *casnp,
     int val)
 {
@@ -1059,7 +1165,8 @@ int _fill_upward(
     return 0;
 }
 
-struct casn *_find_tag(
+struct casn *
+_find_tag(
     struct casn *casnp,
     ulong tag)
 {
@@ -1076,19 +1183,22 @@ struct casn *_find_tag(
     return casnp;
 }
 
-struct casn *_find_chosen(
+struct casn *
+_find_chosen(
     struct casn *casnp)
 {
     return _find_flag(casnp, ASN_CHOSEN_FLAG);
 }
 
-struct casn *_find_filled(
+struct casn *
+_find_filled(
     struct casn *casnp)
 {
     return _find_flag(casnp, ASN_FILLED_FLAG);
 }
 
-struct casn *_find_filled_or_chosen(
+struct casn *
+_find_filled_or_chosen(
     struct casn *casnp,
     int *errp)
 {
@@ -1102,7 +1212,8 @@ struct casn *_find_filled_or_chosen(
     return casnp;
 }
 
-struct casn *_find_flag(
+struct casn *
+_find_flag(
     struct casn *casnp,
     int flag)
 {
@@ -1111,7 +1222,8 @@ struct casn *_find_flag(
     return casnp;
 }
 
-void *_free_it(
+void *
+_free_it(
     void *itp)
 {
     if (itp)
@@ -1119,7 +1231,8 @@ void *_free_it(
     return (void *)0;
 }
 
-long _count_crumbs_size(
+long
+_count_crumbs_size(
     uchar *fromp)
 {
     uchar *c;
@@ -1134,7 +1247,8 @@ long _count_crumbs_size(
     return ansr;
 }
 
-long _gather_crumbs(
+long
+_gather_crumbs(
     uchar **topp,
     uchar **frompp)
 {
@@ -1159,7 +1273,8 @@ long _gather_crumbs(
     return tot_lth;
 }
 
-long _get_tag(
+long
+_get_tag(
     uchar **tagpp)
 {
     uchar *c = *tagpp;
@@ -1183,7 +1298,8 @@ long _get_tag(
     return ansr;
 }
 
-struct casn *_go_up(
+struct casn *
+_go_up(
     struct casn *casnp)
 {
     int lev;
@@ -1195,7 +1311,8 @@ struct casn *_go_up(
     return casnp;
 }
 
-int _mark_definees(
+int
+_mark_definees(
     struct casn *casnp,
     uchar *wherep,
     int index)
@@ -1238,7 +1355,8 @@ int _mark_definees(
     return 1;
 }
 
-int _match_casn(
+int
+_match_casn(
     struct casn *casnp,
     uchar *from,
     int nbytes,
@@ -1329,28 +1447,28 @@ Procedure:
             ELSE IF have no more struct casns, return error
    Return count of bytes processed
 **/
-    struct casn *curr_casnp,
-       *ch_casnp,
-       *sav_casnp,
-       *set_casnp,
-       *tcasnp;
-    int ansr,
-        did,
-        num,
-        lth,
-        explicit_extra,
-        break_out,
-        num_ofs,
-        indefs = 0,
-        has_indef,
-        skip_match;
-    uchar *b,
-       *c,
-        ftag = 0;
+    struct casn *curr_casnp;
+    struct casn *ch_casnp;
+    struct casn *sav_casnp;
+    struct casn *set_casnp;
+    struct casn *tcasnp;
+    int ansr;
+    int did;
+    int num;
+    int lth;
+    int explicit_extra;
+    int break_out;
+    int num_ofs;
+    int indefs = 0;
+    int has_indef;
+    int skip_match;
+    uchar *b;
+    uchar *c;
+    uchar ftag = 0;
     long tag;
-    ushort flags,
-        level,
-        send_flag;
+    ushort flags;
+    ushort level;
+    ushort send_flag;
     // step 1
     set_casnp = (struct casn *)0;
     if ((pflags & ASN_SET_FLAG))
@@ -1678,7 +1796,8 @@ Procedure:
     return did;
 }
 
-int _num_casns(
+int
+_num_casns(
     struct casn *casnp)
 {
     int ansr;
@@ -1695,7 +1814,8 @@ int _num_casns(
 }
 
 
-void _put_asn_lth(
+void
+_put_asn_lth(
     uchar *start,
     int lth)
 {
@@ -1709,7 +1829,8 @@ void _put_asn_lth(
     }
 }
 
-char *_putd(
+char *
+_putd(
     char *to,
     long val)
 {
@@ -1721,7 +1842,8 @@ char *_putd(
     return to;
 }
 
-int _readsize(
+int
+_readsize(
     struct casn *casnp,
     uchar *to,
     int mode)
@@ -1966,7 +2088,8 @@ int _readsize(
     return lth;
 }
 
-static int check_filled_default(
+static int
+check_filled_default(
     struct casn *casnp)
 {
     if ((casnp->flags & ASN_DEFAULT_FLAG))
@@ -1983,7 +2106,8 @@ static int check_filled_default(
     return 0;
 }
 
-int _readvsize(
+int
+_readvsize(
     struct casn *casnp,
     uchar *to,
     int mode)
@@ -2016,7 +2140,8 @@ int _readvsize(
     return ansr;
 }
 
-int _set_all_lths(
+int
+_set_all_lths(
     uchar *top,
     uchar *tag_endp,
     uchar *val_endp,
@@ -2036,7 +2161,8 @@ int _set_all_lths(
     return lth;
 }
 
-int _set_casn_lth(
+int
+_set_casn_lth(
     uchar *s,
     uchar *e,
     int mode)
@@ -2067,7 +2193,8 @@ int _set_casn_lth(
     return fwd;
 }
 
-struct casn *_skip_casn(
+struct casn *
+_skip_casn(
     struct casn *casnp,
     int num)
 {
@@ -2105,7 +2232,8 @@ struct casn *_skip_casn(
     return tcasnp;
 }
 
-void _stuff_num(
+void
+_stuff_num(
     int count)
 {
     char *a,
@@ -2128,7 +2256,8 @@ void _stuff_num(
     casn_err_struct.asn_map_string = a;
 }
 
-void _stuff_ofs(
+void
+_stuff_ofs(
     struct casn *casnp,
     int num_ofs)
 {
@@ -2138,7 +2267,8 @@ void _stuff_ofs(
         _stuff_string(casnp);
 }
 
-void _stuff_string(
+void
+_stuff_string(
     struct casn *casnp)
 {
     struct casn *tcasnp,
@@ -2207,7 +2337,8 @@ void _stuff_string(
     }
 }
 
-int _table_op(
+int
+_table_op(
     struct casn *casnp)
 {
     struct casn *tcasnp,
@@ -2241,7 +2372,8 @@ int _table_op(
     return 1;
 }
 
-int _write_casn(
+int
+_write_casn(
     struct casn *casnp,
     uchar *c,
     int lth)
@@ -2356,7 +2488,8 @@ int _write_casn(
     return casnp->lth;
 }
 
-int _write_enum(
+int
+_write_enum(
     struct casn *casnp)
 {
     struct casn *tcasnp;
@@ -2367,7 +2500,8 @@ int _write_enum(
     return _write_casn(tcasnp, casnp->startp, casnp->lth);
 }
 
-int _write_objid(
+int
+_write_objid(
     struct casn *casnp,
     const char *from)
 {

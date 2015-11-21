@@ -11,21 +11,27 @@ Remarks:
 
 #include "asn_gen.h"
 
-static void massage_table(
-    struct name_table *),
-    mk_table_child(
+static void
+massage_table(
+    struct name_table *);
+static void
+mk_table_child(
     int,
     long,
-    int),
-    set_false(
+    int);
+static void
+set_false(
     struct name_table *,
-    struct name_table *),
-    sort_defineds(
-    struct name_table *),
-    tab_def(
+    struct name_table *);
+static void
+sort_defineds(
+    struct name_table *);
+static void
+tab_def(
     int,
-    struct name_table *),
-    tab_item(
+    struct name_table *);
+static void
+tab_item(
     int,
     int);
 
@@ -47,8 +53,8 @@ void tabulate(
      * (indicating the end of an item) Tabulate the item Default: Exit with
      * fatal message
      */
-    int parent,
-        in_choice;
+    int parent;
+    int in_choice;
     struct name_table *ptbp;
     option = 0;
     if (state != SUB_ITEM)
@@ -563,17 +569,17 @@ Procedure:
 	IF it is a basic TABLE
             Set table's tag to parent's and parent's position to table's
 **/
-    struct name_table *ptbp,
-       *ctbp,
-       *lftbp;
-    int curr_parent,
-        generation,
-        last,
-        lth;
+    struct name_table *ptbp;
+    struct name_table *ctbp;
+    struct name_table *lftbp;
+    int curr_parent;
+    int generation;
+    int last;
+    int lth;
     char *func = "massage_table";
-    struct parent *pparentp,
-       *cparentp,
-       *childp;
+    struct parent *pparentp;
+    struct parent *cparentp;
+    struct parent *childp;
     /*
      * step 1
      */
@@ -907,10 +913,10 @@ static void copy_parent(
 static void sort_defineds(
     struct name_table *ntbp)
 {
-    struct parent tparent,
-       *parentp,
-       *nparentp,
-       *pparentp;
+    struct parent tparent;
+    struct parent *parentp;
+    struct parent *nparentp;
+    struct parent *pparentp;
     do
     {
         for (nparentp = (parentp = &ntbp->parent)->next;

@@ -11,35 +11,49 @@ Remarks:
 
 #include "asn_gen.h"
 
-static void do_components(
-    void (*func)()),
-    do_defined(
-    ),
-    get_min_max(
-    char *,
-    long *,
-    long *,
-    int),
-    get_def_paren(
-    char *buf),
-    get_paren(
-    char *,
-    long *,
-    long *,
-    int),
-    get_size(
+static void
+do_components(
+    void (*func)());
+
+static void
+do_defined(
+    );
+
+static void
+get_min_max(
     char *,
     long *,
     long *,
     int);
 
-static struct alt_subclass *append_subclasses(
+static void
+get_def_paren(
+    char *buf);
+
+static void
+get_paren(
+    char *,
+    long *,
+    long *,
+    int);
+
+static void
+get_size(
+    char *,
+    long *,
+    long *,
+    int);
+
+static struct alt_subclass *
+append_subclasses(
     char *);
 
-static long get_tag(
+static long
+get_tag(
     char *);
 
-static char *cvt_size(
+static char *
+cvt_size(
     long *,
     char *,
     int);
@@ -595,7 +609,8 @@ static char *cvt_size(
     return c;
 }
 
-static void do_components(
+void
+do_components(
     void (*func)())
 {
 /**

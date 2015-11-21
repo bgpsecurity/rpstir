@@ -46,8 +46,8 @@ static int saveState(
     int i;
     int sta = 0;
     int leen;
-    char *name,
-       *stmt;
+    char *name;
+    char *stmt;
 
     for (i = 0; sta == 0 && i < scmp->ntables; i++)
     {
@@ -78,8 +78,8 @@ static int restoreState(
     int i;
     int sta = 0;
     int leen;
-    char *name,
-       *stmt;
+    char *name;
+    char *stmt;
 
     for (i = 0; sta == 0 && i < scmp->ntables; i++)
     {
@@ -388,10 +388,10 @@ static int aur(
     char *valu)
 {
     char *outdir;
-    char *outfile,
-       *outfull;
-    int sta,
-        trusted = 0;
+    char *outfile;
+    char *outfull;
+    int sta;
+    int trusted = 0;
 
     sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
     if (sta != 0)

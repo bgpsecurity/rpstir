@@ -303,19 +303,19 @@ Procedure:
         Fill in the last macro_item
 4.      IF there's a constraint, add that to the macro
 **/
-    int count,
-        braces,
-        mac_size,
-        parens,
-        got_def;
-    size_t lth,
-        size;
+    int count;
+    int braces;
+    int mac_size;
+    int parens;
+    int got_def;
+    size_t lth;
+    size_t size;
     struct macro_table *mtbp;
-    char *macbuf,
-       *c,
-      **argpp,
-       *b,
-       *d;
+    char *macbuf;
+    char *c;
+    char **argpp;
+    char *b;
+    char *d;
     struct macro_item *mitp;
     /*
      * step 1
@@ -1059,9 +1059,9 @@ Procedure:
 	Copy into token "OBJECT IDENTIFIER TABLE" followed by the table name
 3. Set the syntax entry's table pointer
 **/
-    char *c,
-        locbuf[128],
-        tbname[64];
+    char *c;
+    char locbuf[128];
+    char tbname[64];
     ulong tmp;
     struct with_syntax *wsxp = &ctbp->with_syntax;
     struct table_out *tbop;
@@ -1554,13 +1554,13 @@ Procedure:
 2. Return the id_string
 **/
     struct id_table *pidp;
-    char *id_string,
-       *eid_string,
-       *val_string,
-        locbuf[80],
-        locname[80];
-    size_t lth,
-        tmp;
+    char *id_string;
+    char *eid_string;
+    char *val_string;
+    char locbuf[80];
+    char locname[80];
+    size_t lth;
+    size_t tmp;
     for (id_string = 0, cat(locname, name); *token != '}';)
     {
         if (*token <= '9')

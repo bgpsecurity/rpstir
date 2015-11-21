@@ -2002,8 +2002,8 @@ static int rescert_basic_constraints_chk(
     X509 *x,
     int ct)
 {
-    int i,
-        basic_flag = 0;
+    int i;
+    int basic_flag = 0;
     int ex_nid;
     int ret = 0;
     X509_EXTENSION *ex = NULL;
@@ -2647,8 +2647,8 @@ static int rescert_aia_chk(
     X509 *x,
     int ct)
 {
-    int info_flag = 0,
-        uri_flag = 0;
+    int info_flag = 0;
+    int uri_flag = 0;
     int i;
     int ex_nid;
     int ret = 0;
@@ -3271,8 +3271,8 @@ static int rescert_ip_asnum_chk(
     struct Certificate *certp,
     int ct)
 {
-    int have_ip_resources,
-        have_as_resources;
+    int have_ip_resources;
+    int have_as_resources;
     ASIdentifiers *as_ext;
     IPAddrBlocks *ip_ext;
 

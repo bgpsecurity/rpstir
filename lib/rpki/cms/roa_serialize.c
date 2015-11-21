@@ -1835,13 +1835,13 @@ int roaFromFile(
     int doval,
     struct CMS *rp)
 {
-    int iReturn,
-        fd;
+    int iReturn;
+    int fd;
     off_t iSize;
     ssize_t amt_read;
     int buf_tmp_size;
-    unsigned char *buf,
-       *buf_tmp;
+    unsigned char *buf;
+    unsigned char *buf_tmp;
     struct stat sb;
 
     if (NULL == fname)
@@ -1920,12 +1920,12 @@ int roaToFile(
     int fmt)
 {
     int fd = 0;
-    int iReturn = 0,
-        written;
-    int iSizeDER,
-        iSizePEM = 0;
-    unsigned char *buf_der,
-       *buf_pem = NULL;
+    int iReturn = 0;
+    int written;
+    int iSizeDER;
+    int iSizePEM = 0;
+    unsigned char *buf_der;
+    unsigned char *buf_pem = NULL;
 
     // Parameter validity checks
     if (NULL == fname)
