@@ -208,13 +208,13 @@ static int check_cert(
                 readvsize_casn(&extp->extnValue.subjectKeyIdentifier, &ski);
 #ifndef ANYSKI
             if (ski_lth != tmp || memcmp(khash, ski, ski_lth))
-                err = ERR_SCM_INVALSKI;
+                err = -1;
 #endif
                     tmp2 += ski_lth;    /* dummy statement to make compiler
                                          * happy */
             free(ski);
             if (err < 0)
-                return err;
+                return ERR_SCM_INVALSKI;
             err = 0;
         }
     }
