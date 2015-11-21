@@ -1906,6 +1906,7 @@ static int updateManifestObjs(
     for (fahp = (struct FileAndHash *)member_casn(&manifest->fileList.self, 0);
          fahp != NULL; fahp = (struct FileAndHash *)next_of(&fahp->self))
     {
+        int hashlen;
         if (vsize_casn(&fahp->file) + 1 > (int)sizeof(file))
         {
             return ERR_SCM_BADMFTFILENAME;
@@ -1953,13 +1954,13 @@ static int updateManifestObjs(
                  *     there are many ways bhash could end up NULL; is
                  *     this really the most appropriate error code?
                  */
-                sta = ERR_SCM_BADMFTDBHASH;
+                hashlen = ERR_SCM_BADMFTDBHASH;
             else
             {
                 bhashlen /= 2;
                 memcpy(bytehash, bhash, bhashlen);
                 free((void *)bhash);
-                sta =
+                hashlen =
                     check_fileAndHash(fahp, fd, bytehash, bhashlen,
                                       HASHSIZE / 2);
             }
@@ -1968,10 +1969,10 @@ static int updateManifestObjs(
         {
             gothash = 0;
             memset(bytehash, 0, sizeof(bytehash));
-            sta = check_fileAndHash(fahp, fd, bytehash, 0, HASHSIZE / 2);
+            hashlen = check_fileAndHash(fahp, fd, bytehash, 0, HASHSIZE / 2);
         }
         (void)close(fd);
-        if (sta >= 0)
+        if (hashlen >= 0)
         {
             // if hash okay, set ONMAN flag and optionally the hash if we just
             // computed it
@@ -1981,7 +1982,7 @@ static int updateManifestObjs(
                           tabp->tabname, SCM_FLAG_ONMAN, updateManLid);
             else
             {
-                char *h = hexify(sta, bytehash, HEXIFY_NO);
+                char *h = hexify(hashlen, bytehash, HEXIFY_NO);
                 xsnprintf(flagStmt, sizeof(flagStmt),
                           "update %s set flags=flags+%d, hash=\"%s\""
                           " where local_id=%d;",
