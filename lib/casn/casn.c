@@ -817,8 +817,7 @@ _calc_lth(
 
 int
 _calc_lth_lth(
-    lth)
-     int lth;
+    int lth)
 {
     int fwd;
     if (lth < 128)

@@ -64,8 +64,7 @@ int set_asn_lth(
     uchar *);
 
 uchar *asn_set(
-    asnp)
-     struct asn *asnp;
+    struct asn *asnp)
 {
     uchar *from = asnp->stringp;
     int ansr = -1;
@@ -101,12 +100,9 @@ uchar asn_typ(
 }
 
 uchar *asn_typ_lth(
-    asnp,
-    typ,
-    new)
-     struct asn *asnp;
-     uchar *typ;
-     int new;
+    struct asn *asnp,
+    uchar *typ,
+    int new)
 {
     uchar *from = asnp->stringp;
     int ansr = -1;
@@ -208,16 +204,11 @@ Procedure:
 }
 
 int decode_asn(
-    asnpp,
-    easnp,
-    from,
-    nbytes,
-    level)
-     struct asn **asnpp,
-         *easnp;
-     uchar *from;
-     ulong nbytes;
-     ushort level;
+    struct asn **asnpp,
+    struct asn *easnp,
+    uchar *from,
+    ulong nbytes,
+    ushort level)
 {
     struct asn *curr_asnp;
     uchar typ;
@@ -317,10 +308,8 @@ int make_asn_table(
 }
 
 int put_asn_lth(
-    to,
-    lth)
-     uchar *to;
-     ulong lth;
+    uchar *to,
+    ulong lth)
 {
     uchar *c = to;
     ulong tmp = 0;
