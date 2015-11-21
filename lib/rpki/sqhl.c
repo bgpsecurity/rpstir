@@ -29,8 +29,8 @@
 
 #define ADDCOL(a, b, c, d, e, f)                                        \
     do {                                                                \
-        e = addcolsrchscm(a, b, c, d);                                  \
-        if (e < 0) return f;                                            \
+        e = addcolsrchscm((a), (b), (c), (d));                          \
+        if ((e) < 0) return (f);                                        \
     } while (0)
 
 /*
