@@ -1,6 +1,8 @@
 #ifndef LIB_RPKI_ERR_H
 #define LIB_RPKI_ERR_H
 
+#include "util/logging.h"
+
 #include <stdio.h>
 
 /*
@@ -245,7 +247,7 @@ typedef enum {
 #define checkErr(test, ...)                                             \
     do {                                                                \
         if (test) {                                                     \
-            (void)fprintf(stderr, __VA_ARGS__);                         \
+            LOG(LOG_ERR, __VA_ARGS__);                                  \
             return ERR_SCM_UNSPECIFIED;                                 \
         }                                                               \
     } while (0)
