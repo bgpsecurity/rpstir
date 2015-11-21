@@ -18,7 +18,7 @@ print_end(
 
 static void
 print_hdr(
-    );
+    void);
 
 static void
 print_item(
@@ -178,7 +178,7 @@ Procedure:
 
 static void
 print_hdr(
-    )
+    void)
 {
     /*
      * Function: Creates class definitions for the things defined an ASN.1

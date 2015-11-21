@@ -22,7 +22,7 @@ asn_area.next to zero to force putout to go elsewhere
 **/
 static void
 dump_asn(
-    );
+    void);
 
 static void
 putasn(
@@ -620,7 +620,7 @@ char *cvt_out(
 }
 
 void dump_asn(
-    )
+    void)
 {
     char *c,
        *e;

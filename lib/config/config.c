@@ -282,7 +282,7 @@ static const struct config_option config_options[] = {
 
 
 bool my_config_load(
-    )
+    void)
 {
     const char * user_home = getenv("HOME");
     if (user_home == NULL)

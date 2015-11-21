@@ -341,7 +341,7 @@ static int doQuery(
  * show what options the user has for fields for display and filtering
  */
 static int listOptions(
-    )
+    void)
 {
     int i,
         j;

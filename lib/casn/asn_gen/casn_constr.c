@@ -165,7 +165,7 @@ static char simple_opener[] = "void %s(struct %s *mine, ushort level)\n\
 struct tagq *lasttagqp = (struct tagq *)0;
 
 void cconstruct(
-    )
+    void)
 {
     /*
      * Function: Creates constructors for the things defined an ASN.1 file.

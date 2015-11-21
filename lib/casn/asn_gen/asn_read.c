@@ -13,7 +13,7 @@ Remarks:
 
 static void
 do_components(
-    void (*func)());
+    void (*func)(void));
 
 static void
 do_defined(
@@ -241,7 +241,7 @@ Procedure:
 
 int read_item(
     int parent,
-    void (*func)())
+    void (*func)(void))
 {
 /**
 Function: General function to read an item and fill in appropriate global
@@ -611,7 +611,7 @@ static char *cvt_size(
 
 void
 do_components(
-    void (*func)())
+    void (*func)(void))
 {
 /**
 Function: Handles COMPONENTS OF in an item

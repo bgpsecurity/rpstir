@@ -36,7 +36,7 @@ tab_item(
     int);
 
 void tabulate(
-    )
+    void)
 {
     /*
      * Function: Fills name_tab with info about the input file

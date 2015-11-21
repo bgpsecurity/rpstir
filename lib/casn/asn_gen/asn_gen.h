@@ -465,7 +465,7 @@ read_global(
 int
 read_item(
     int,
-    void (*func)());
+    void (*func)(void));
 
 int
 set_name_option(
@@ -564,7 +564,7 @@ collect_id_type(
 
 void
 cconstruct(
-    );
+    void);
 
 void
 cdo_hdr(
@@ -677,7 +677,7 @@ syntax(
 
 void
 tabulate(
-    );
+    void);
 
 void
 test_paren(

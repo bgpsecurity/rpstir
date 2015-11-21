@@ -1617,7 +1617,7 @@ int set_cert_flag(
 static struct goodoid goodoids[3];
 
 static int make_goodoids(
-    )
+    void)
 {
     struct casn casn;
     simple_constructor(&casn, (ushort) 0, ASN_OBJ_ID);
