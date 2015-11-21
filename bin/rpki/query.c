@@ -100,7 +100,7 @@ handleResults(
         QueryField *field = globalFields[display];
         if (field->displayer != NULL)
         {
-            result += field->displayer(
+            result += (*field->displayer)(
                 scmp, conp, s, result, resultStr);
         }
         else if (s->vec[result].avalsize != SQL_NULL_DATA)

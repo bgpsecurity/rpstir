@@ -958,7 +958,7 @@ searchscm(
                 docall++;
             if (docall > 0)
             {
-                sta = (valer)(conp, srch, ridx);
+                sta = (*valer)(conp, srch, ridx);
                 if ((sta < 0) && (what & SCM_SRCH_BREAK_VERR))
                     break;
             }
