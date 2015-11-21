@@ -4189,7 +4189,7 @@ static void fillInColumns(
     srch->vald = 0;
 }
 
-static err_code
+err_code
 revoke_cert_and_children(
     scmcon *conp,
     scmsrcha *s,

@@ -176,7 +176,7 @@ Procedure:
     }
 }
 
-static void
+void
 print_hdr(
     void)
 {
