@@ -999,6 +999,7 @@ static int addCert2List(
             (struct cert_ansr *)realloc(cert_answers.cert_ansrp,
                                         sizeof(struct cert_ansr) *
                                         (cert_answers.num_ansrs + 1));
+    /** @bug possible null pointer dereference if realloc() failed */
     struct cert_ansr *this_ansrp =
         &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
     memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
@@ -1144,10 +1145,17 @@ static X509 *parent_cert(
             cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (!parentAKI || !parentIssuer)
             return NULL;
+        /** @bug parentAKI is not a buffer of known length */
         strcpy(parentAKI, cert_ansrp->aki);
+        /** @bug parentIssuer is not a buffer of known length */
         strcpy(parentIssuer, cert_ansrp->issuer);
     }
     else
+        /**
+         * @bug
+         *     what if there are many matches (e.g., cert renewal,
+         *     evil twin)?
+         */
         return NULL;
     xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
     if (pathname != NULL)
@@ -1211,6 +1219,7 @@ struct cert_answers *find_trust_anchors(
     sta = 0;
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
+    /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
     sta = searchscm(conp, theCertTable, certSrch, NULL, addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
@@ -1450,10 +1459,27 @@ static int verify_crl(
     X509 *parent;
     EVP_PKEY *pkey;
 
+    /**
+     * @bug
+     *     I'm pretty sure sta and x509sta were accidentally switched
+     *     (sta should be used where x509sta is used and vice-versa)
+     *     based on their names and the fact that returning
+     *     parent_cert()'s return status doesn't make much sense.  If
+     *     so, fix it (including handling parent_cert()'s error code)
+     *     and update the documentation above.
+     */
     parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
+        /**
+         * @bug
+         *     Isn't it wrong to return success if no parent was
+         *     found?  If so, fix it and update the return value
+         *     documentation above.  If not, update the documentation
+         *     above to clarify the semantics of this function and its
+         *     return value.
+         */
         return 0;
     }
     *chainOK = 1;
@@ -1577,11 +1603,20 @@ static int verify_roa(
     if (cert == NULL)
     {
         *chainOK = 0;
+        /**
+         * @bug
+         *     Isn't it wrong to return success if the chain isn't OK?
+         *     If so, fix it and update the return value documentation
+         *     above.  If not, update the documentation above to
+         *     clarify the semantics of this function and its return
+         *     value.
+         */
         return 0;
     }
     *chainOK = 1;
     // read the ASN.1 blob from the file
     blob = readfile(fn, &sta);
+    /** @bug what if blob is NULL and sta is non-negative? */
     if (blob != NULL)
     {
         sta = roaValidate2(r);
@@ -1897,6 +1932,11 @@ static int updateManifestObjs(
             bhashlen = strlen(updateManHash);
             bhash = unhexify(bhashlen, updateManHash);
             if (bhash == NULL)
+                /**
+                 * @bug
+                 *     there are many ways bhash could end up NULL; is
+                 *     this really the most appropriate error code?
+                 */
                 sta = ERR_SCM_BADMFTDBHASH;
             else
             {
@@ -1937,6 +1977,15 @@ static int updateManifestObjs(
         }
         else
         {
+            /**
+             * @bug
+             *     There are many ways check_fileAndHash() could fail,
+             *     and perhaps not all of them mean that the file's
+             *     hash is bad (e.g., maybe there was a crypto library
+             *     problem).  Thus, deleting the object and
+             *     invalidating its children might not be the correct
+             *     action to take.
+             */
             LOG(LOG_ERR, "Hash not ok on file %s", file);
             // if hash not okay, delete object, and if cert, invalidate
             // children
@@ -2543,6 +2592,32 @@ static int verifyOrNotChildren(
                       "aki=\"%s\" and ski<>\"%s\" and issuer=\"%s\"",
                       currPropData->data[idx].ski, currPropData->data[idx].ski,
                       escaped);
+            /**
+             * @bug
+             *     This WHERE clause addition skips children that are
+             *     not valid (doVerify) or valid (!doVerify), and thus
+             *     their descendants are not processed.  While it's OK
+             *     to skip descendants that are already valid
+             *     (doVerify) or invalid (!doVerify), each invalid
+             *     (doVerify) or valid (!doVerify) descendant must be
+             *     processed to handle cases like this doVerify
+             *     example:
+             *
+             *     @verbatim
+             *         already valid cert   newly validated cert
+             *         with resources X,Y   with resources X,Y,Z
+             *                 |                     |
+             *                 +----------+----------+
+             *                            |
+             *                    already valid cert
+             *                 with inherited resources
+             *                            |
+             *                            |
+             *                       invalid cert
+             *                    with resources Y,Z
+             *                 that should now be valid
+             *     @endverbatim
+             */
             addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOCHAIN, doVerify, 1);
         }
         if (!isRoot)
@@ -2930,6 +3005,7 @@ static int hexify_ski(
         return ERR_SCM_NOSKI;
     int size = vsize_casn(&extp->self);
     uchar *tmp = calloc(1, size);
+    /** @bug should check to see if tmp is NULL */
     read_casn(&extp->extnValue.self, tmp);      // read contents of outer
                                                 // OCTET STRING
     struct casn theCASN;
@@ -3368,6 +3444,13 @@ int add_roa(
     }
     do
     {                           /* do-once */
+        /**
+         * @bug
+         *     extractAndAddCert() returns 0 if things are sorta-OK
+         *     and 1 if things are definitely OK.  If it's OK to treat
+         *     these two cases identically then there should be an
+         *     explanatory comment.
+         */
         if ((sta = extractAndAddCert(&roa, scmp, conp, outdir,
                                      utrust, typ, outfile, ski,
                                      certfilename)) < 0)
@@ -3397,6 +3480,7 @@ int add_roa(
         ssize_t prefixes_ret = roaGetPrefixes(&roa, &prefixes);
         if (prefixes_ret < 0)
         {
+            /** @bug sta is still 0 here; is that intentional? */
             break;
         }
         prefixes_length = prefixes_ret;

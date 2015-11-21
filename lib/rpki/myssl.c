@@ -1624,6 +1624,7 @@ crl_fields *crl2fields(
             if (crxvalidators[ui].need > 0 &&
                 cf->fields[crxvalidators[ui].fieldno] == NULL)
             {
+                /** @bug shouldn't xvalidators be crxvalidators? */
                 LOG(LOG_ERR, "Missing CF_FIELD %d",
                         xvalidators[ui].fieldno);
                 *stap = ERR_SCM_MISSEXT;

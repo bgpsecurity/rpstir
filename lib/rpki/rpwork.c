@@ -106,6 +106,7 @@ static int add_paracert2DB(
                     0, OT_CER, &dbid, 1);
     if (ansr >= 0)
     {
+        /** @bug should the SCM_FLAG_VALIDATED flag be set here? */
         flags = done_certp->origflags & ~(SCM_FLAG_NOCHAIN);
         struct Extension *extp = find_extension(
             &done_certp->paracertp->toBeSigned.extensions,
@@ -113,6 +114,7 @@ static int add_paracert2DB(
         format_aKI(ski, &extp->extnValue.subjectKeyIdentifier);
         cert_answersp = find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
         if (!cert_answersp || cert_answersp->num_ansrs < 0)
+            /** @bug should return cert_answersp->num_ansrs */
             return -1;
         int i = 0;
         for (cert_ansrp = &cert_answersp->cert_ansrp[0];
@@ -136,6 +138,7 @@ static int add_paracert2DB(
         return 1;
     }
     else
+        /** @bug should print error string, not number */
         LOG(LOG_ERR, "Adding %s to DB failed with error %d",
                 fullname, -ansr);
     return ansr;
@@ -536,6 +539,7 @@ static void save_cert_answers(
         (struct cert_ansr *)calloc(numkids, sizeof(struct cert_ansr));
     for (numkid = 0; numkid < numkids; numkid++)
     {
+        /** @bug possible null pointer dereference if calloc() failed */
         to_cert_answersp->cert_ansrp[numkid] =
             from_cert_answersp->cert_ansrp[numkid];
     }
@@ -1255,6 +1259,7 @@ static int search_downward(
         struct cert_ansr *cert_ansrp = &mycert_answers.cert_ansrp[numkid];
         if ((ansr =
              get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) < 0)
+            /** @bug memory leak in mycert_answers.cert_ansrp */
             return ERR_SCM_COFILE;
         extp = find_extension(&childcertp->toBeSigned.extensions,
                               id_authKeyId, 0);
@@ -1309,6 +1314,7 @@ static int process_trust_anchors(
 {
     struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
     if (cert_answersp->num_ansrs < 0)
+        /** @bug should return cert_answersp->num_ansrs */
         return -1;
     int ansr = 0;
     int numkids = cert_answersp->num_ansrs;
