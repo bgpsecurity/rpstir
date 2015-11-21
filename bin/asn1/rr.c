@@ -7,6 +7,7 @@
 #include <sys/file.h>
 #include <stdio.h>
 #include "casn/asn.h"
+#include "casn/casn_private.h"
 #include "util/logging.h"
 
 #define MSG_OK "RR finished OK. Wrote %d bytes"
@@ -152,11 +153,6 @@ int linenum;
 static int
 adj_asn(
     int);
-
-int
-set_asn_lth(
-    uchar *,
-    uchar *);
 
 /* s1 is target */
 static int

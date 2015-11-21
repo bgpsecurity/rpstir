@@ -14,31 +14,12 @@ Cambridge, Ma. 02138
 *****************************************************************************/
 
 #include "casn.h"
+#include "casn_private.h"
 
 #include <stdio.h>
 #include "util/logging.h"
 
 #define ASN_READ 1              // modes for encode & read
-
-int
-_utctime_to_ulong(
-    int64_t *valp,
-    char *fromp,
-    int lth);
-
-int
-_gentime_to_ulong(
-    int64_t *valp,
-    char *fromp,
-    int lth);
-
-int
-_dump_tag(
-    int tag,
-    char *to,
-    int offset,
-    ushort flags,
-    int mode);
 
 static struct casn_errors {
     int num;
@@ -110,38 +91,6 @@ char char_table[] = "\
                             u  r  6      A              i
                             m  t  1      5              s */
 
-int
-casn_error(
-    int,
-    char *);
-
-int
-_calc_lth(
-    uchar **cpp,
-    uchar ftag);
-
-int
-_calc_lth_lth(
-    int);
-
-int
-_casn_obj_err(
-    struct casn *,
-    int);
-
-int
-_check_enum(
-    struct casn **casnpp);
-
-int
-_check_filled(
-    struct casn *casnp,
-    int mode);
-
-int
-_clear_error(
-    struct casn *);
-
 static int
 _csize(
     struct casn *casnp,
@@ -153,16 +102,6 @@ _encodesize(
     struct casn *casnp,
     uchar *to,
     int mode);
-
-int
-_encode_tag_lth(
-    uchar *to,
-    struct casn **casnpp);
-
-int
-_fill_upward(
-    struct casn *casnp,
-    int val);
 
 static int
 _readsize(
@@ -209,41 +148,9 @@ _set_casn_lth(
     uchar *e,
     int mode);
 
-int
-_table_op(
-    struct casn *casnp);
-
-int
-_write_casn(
-    struct casn *casnp,
-    uchar *c,
-    int lth);
-
-int
-_write_enum(
-    struct casn *casnp);
-
-int
-_write_objid(
-    struct casn *casnp,
-    const char *from);
-
-void
-_clear_casn(
-    struct casn *,
-    ushort);
-
 static void *
 _clear_of(
     struct casn *casnp);
-
-long
-_get_tag(
-    uchar **tagpp);
-
-void *
-_free_it(
-    void *);
 
 static void
 _stuff_num(
@@ -258,41 +165,10 @@ static void
 _stuff_string(
     struct casn *casnp);
 
-struct casn *
-_find_chosen(
-    struct casn *casnp);
-
-struct casn *
-_find_filled(
-    struct casn *casnp);
-
-struct casn *
-_find_filled_or_chosen(
-    struct casn *casnp,
-    int *errp);
-
 static struct casn *
 _find_flag(
     struct casn *casnp,
     int flag);
-
-struct casn *
-_find_tag(
-    struct casn *casnp,
-    ulong tag);
-
-struct casn *
-_go_up(
-    struct casn *);
-
-struct casn *
-_dup_casn(
-    struct casn *casnp);
-
-struct casn *
-_skip_casn(
-    struct casn *casnp,
-    int num);
 
 void
 clear_casn(

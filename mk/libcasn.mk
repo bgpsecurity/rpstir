@@ -51,6 +51,7 @@ lib_casn_libcasn_a_SOURCES = \
 	lib/casn/casn_num.c \
 	lib/casn/casn_objid.c \
 	lib/casn/casn_other.c \
+	lib/casn/casn_private.h \
 	lib/casn/casn_real.c \
 	lib/casn/casn_time.c
 

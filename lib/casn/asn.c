@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "asn.h"
+#include "casn_private.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -62,10 +63,6 @@ struct typnames typnames[] = {
     {0, "oth"},
     {0, 0},
 };
-
-int set_asn_lth(
-    uchar *,
-    uchar *);
 
 uchar *asn_set(
     struct asn *asnp)
