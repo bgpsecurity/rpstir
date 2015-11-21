@@ -2049,7 +2049,8 @@ static int verifyChildManifest(
     {
         delete_casn(&cms.self);
         LOG(LOG_ERR, "invalid manifest filename %s", outfull);
-        return sta;
+        /** @bug use a better error code */
+        return ERR_SCM_UNSPECIFIED;
     }
     struct Manifest *manifest =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
@@ -3040,6 +3041,9 @@ static int hexify_ski(
     }
     *str = 0;
     free(tmp);
+    if (size < 0)
+        /** @bug use a better error code */
+        return ERR_SCM_UNSPECIFIED;
     return size;
 }
 

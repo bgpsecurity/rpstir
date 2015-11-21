@@ -101,7 +101,8 @@ static int add_paracert2DB(
     ansr = delete_object(locscmp, locconp, done_certp->filename, Xrpdir,
                          fullname, dbid);
     if ((ansr = put_casn_file(&done_certp->paracertp->self, fullname, 0)) < 0)
-        return ansr;
+        /** @bug use a better error code */
+        return ERR_SCM_UNSPECIFIED;
     ansr = add_cert(locscmp, locconp, done_certp->filename, fullname, XrpdirId,
                     0, OT_CER, &dbid, 1);
     if (ansr >= 0)
