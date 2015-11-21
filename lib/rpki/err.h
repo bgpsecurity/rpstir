@@ -4,6 +4,7 @@
 #include "util/logging.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 /*
  * Error codes
@@ -249,6 +250,30 @@ typedef enum {
         if (test) {                                                     \
             LOG(LOG_ERR, __VA_ARGS__);                                  \
             return ERR_SCM_UNSPECIFIED;                                 \
+        }                                                               \
+    } while (0)
+
+/**
+ * @brief
+ *     log a message and abort if @p test is non-0
+ *
+ * @param[in] test
+ *     An expression of type @c err_code to check.  If non-zero,
+ *     abort() is called.
+ */
+#define assertOK(test)                                                  \
+    do {                                                                \
+        err_code assertOK_test = (test);                                \
+        if (assertOK_test) {                                            \
+            LOG(LOG_CRIT,                                               \
+                "unexpected error at %s:%i: %s %s",                     \
+                __FILE__,                                               \
+                __LINE__,                                               \
+                err2name(assertOK_test),                                \
+                err2string(assertOK_test));                             \
+            LOG(LOG_CRIT, "failed expression: %s", #test);              \
+            FLUSH_LOG();                                                \
+            abort();                                                    \
         }                                                               \
     } while (0)
 
