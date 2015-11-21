@@ -177,10 +177,10 @@
 /*
  * macro that prints an error string and call return if a condition is true
  */
-#define checkErr(test, printArgs...)                                    \
+#define checkErr(test, ...)                                             \
     do {                                                                \
         if (test) {                                                     \
-            (void)fprintf(stderr, printArgs);                           \
+            (void)fprintf(stderr, __VA_ARGS__);                         \
             return -1;                                                  \
         }                                                               \
     } while (0)
