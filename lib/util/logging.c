@@ -13,3 +13,7 @@ const char *LOG_LEVEL_TEXT[8] = {
     "INFO",
     "DEBUG"                     /* 7 */
 };
+
+int log_facility = LOG_USER;
+
+const char *log_ident = NULL;
