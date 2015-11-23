@@ -660,11 +660,12 @@ int getmaxidscm(
 {
     char stmt[160];
     int sta;
+    SQLRETURN sqlsta;
 
     if (scmp == NULL || conp == NULL || conp->connected == 0 || ival == NULL)
         return (ERR_SCM_INVALARG);
-    sta = newhstmt(conp);
-    if (!SQLOK(sta))
+    sqlsta = newhstmt(conp);
+    if (!SQLOK(sqlsta))
         return ERR_SCM_SQL;
     xsnprintf(stmt, sizeof(stmt),
               "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
