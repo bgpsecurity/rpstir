@@ -186,21 +186,21 @@ static int create2op(
     if (topdir == NULL || topdir[0] == 0)
     {
         LOG(LOG_ERR, "Must specify a top level repository directory");
-        return (-2);
+        return ERR_SCM_INVALARG;
     }
     // step 1: locate the metadata table
     mtab = findtablescm(scmp, "METADATA");
     if (mtab == NULL)
     {
         LOG(LOG_ERR, "Cannot find METADATA table");
-        return (-3);
+        return ERR_SCM_NOSUCHTAB;
     }
     // step 2: translate "topdir" into an absolute path
     tdir = r2adir(topdir);
     if (tdir == NULL)
     {
         LOG(LOG_ERR, "Invalid directory: %s", topdir);
-        return (-4);
+        return ERR_SCM_NOTADIR;
     }
     // step 3: init the metadata table
     one.column = "rootdir";
