@@ -486,7 +486,7 @@ will be returned and stap will be set to a negative error code defined in err.h.
 Note that is this function succeeds it returns allocated memory that must be
 freed by the caller.
 
-2.3.2 cert_fields *cert2fields(char *fname, char *fullname, int typ,
+2.3.2 cert_fields *cert2fields(char *fname, char *fullname, object_type typ,
                                X509 **xp, err_code *stap, int *x509stap)
 
 This function is used to tear apart an X509 certificate, obtained either from
@@ -520,7 +520,7 @@ members of cert_fields should be opaque to the user and not used.
 This function is used to free all the memory allocated by a call to the
 cert2fields() function.
 
-2.3.4 crl_fields *crl2fields(char *fname, char *fullname, int typ,
+2.3.4 crl_fields *crl2fields(char *fname, char *fullname, object_type typ,
                              X509_CRL **xp, err_code *stap, int *crlstap)
 
 This function does for CRLs what cert2fields() does for certificates. It

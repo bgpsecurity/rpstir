@@ -2,6 +2,7 @@
 #define LIB_RPKI_MYSSL_H
 
 #include "err.h"
+#include "sqhl.h"
 
 #include <openssl/err.h>
 #include <openssl/x509.h>
@@ -230,7 +231,7 @@ crl_profile_chk(
 extern cert_fields *cert2fields(
     char *fname,
     char *fullname,
-    int typ,
+    object_type typ,
     X509 **xp,
     err_code *stap,
     int *x509stap);
@@ -357,7 +358,7 @@ extern void freecrf(
 extern crl_fields *crl2fields(
     char *fname,
     char *fullname,
-    int typ,
+    object_type typ,
     X509_CRL **xp,
     err_code *stap,
     int *crlstap,

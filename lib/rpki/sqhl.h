@@ -169,7 +169,8 @@ delete_object(
  *       - `.man.pem`, `.mft.pem`, `.mnf.pem`: ::OT_MAN_PEM
  *       - all others: ::OT_UNKNOWN.
  */
-extern int infer_filetype(
+object_type
+infer_filetype(
     const char *fname);
 
 /*
@@ -186,7 +187,7 @@ add_cert(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ,
+    object_type typ,
     unsigned int *cert_id,
     int constraining);
 
@@ -202,7 +203,7 @@ add_crl(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 err_code
 add_roa(
@@ -213,7 +214,7 @@ add_roa(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 /*
  * Add a manifest to the database
@@ -227,7 +228,7 @@ add_manifest(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 /*
     Add a ghostbusters record to the database
@@ -241,7 +242,7 @@ add_ghostbusters(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 extern int add_rta(
     scm *scmp,

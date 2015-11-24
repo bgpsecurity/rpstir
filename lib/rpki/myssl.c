@@ -837,7 +837,7 @@ static cf_validator validators[] = {
 cert_fields *cert2fields(
     char *fname,
     char *fullname,
-    int typ,
+    object_type typ,
     X509 **xp,
     err_code *stap,
     int *x509stap)
@@ -1359,7 +1359,7 @@ static crfx_validator *crfx_find(
 crl_fields *crl2fields(
     char *fname,
     char *fullname,
-    int typ,
+    object_type typ,
     X509_CRL **xp,
     err_code *stap,
     int *crlstap,

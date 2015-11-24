@@ -307,13 +307,14 @@ ends_with(
     return (0 == strncmp(str + lenstr - lensfx, sfx, lensfx));
 }
 
-int infer_filetype(
+object_type
+infer_filetype(
     const char *fname)
 {
     struct {
         const char *const sfx;
         const size_t lensfx;
-        const int typ;
+        const object_type typ;
     } *rulep, rules[] = {
         {".cer", 4, OT_CER},
         {".crl", 4, OT_CRL},
@@ -620,7 +621,7 @@ get_roa_sigval(
 static sigval_state
 get_sigval(
     scmcon *conp,
-    int typ,
+    object_type typ,
     char *item1,
     char *item2)
 {
@@ -688,7 +689,7 @@ set_roa_sigval(
 static err_code
 set_sigval(
     scmcon *conp,
-    int typ,
+    object_type typ,
     char *item1,
     char *item2,
     sigval_state valu)
@@ -955,7 +956,7 @@ static X509 *readCertFromFile(
 {
     X509 *px = NULL;
     BIO *bcert = NULL;
-    int typ;
+    object_type typ;
     int x509sta;
 
     // open the file
@@ -1744,7 +1745,7 @@ verifyChildCRL(
     err_code sta = 0;
     unsigned int i;
     unsigned int id;
-    int typ;
+    object_type typ;
     int chainOK;
     err_code x509sta;
     char pathname[PATH_MAX];
@@ -1800,7 +1801,7 @@ verifyChildROA(
     ssize_t idx)
 {
     struct CMS roa;
-    int typ;
+    object_type typ;
     int chainOK;
     err_code sta;
     char pathname[PATH_MAX];
@@ -2942,7 +2943,7 @@ add_cert(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ,
+    object_type typ,
     unsigned int *cert_id,
     int constraining)
 {
@@ -2978,7 +2979,7 @@ add_crl(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ)
+    object_type typ)
 {
     crl_fields *cf;
     X509_CRL *x = NULL;
@@ -3110,7 +3111,7 @@ extractAndAddCert(
     scmcon *conp,
     char *outdir,
     int utrust,
-    int typ,
+    object_type typ,
     char *outfile,
     char *skip,
     char *certfilenamep)
@@ -3484,7 +3485,7 @@ add_roa(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ)
+    object_type typ)
 {
     struct CMS roa;             // note: roaFromFile constructs this
     char ski[60];
@@ -3588,7 +3589,7 @@ add_manifest(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ)
+    object_type typ)
 {
     err_code sta;
     int cert_added = 0;
@@ -3777,7 +3778,7 @@ add_ghostbusters(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ)
+    object_type typ)
 {
     err_code sta;
     struct CMS cms;
@@ -3902,7 +3903,7 @@ add_object(
 {
     unsigned int id = 0;
     unsigned int obj_id = 0;
-    int typ;
+    object_type typ;
     err_code sta;
 
     useParacerts = 0;
@@ -4243,7 +4244,7 @@ delete_object(
     scmkv one;
     scmkv dtwo[2];
     scmtab *thetab;
-    int typ;
+    object_type typ;
     err_code sta;
     char ski[512];
     char subject[512];
