@@ -12,40 +12,44 @@
  * @brief
  *     Object types
  */
+typedef enum {
+    OT_UNKNOWN = 0,
 
-#define OT_UNKNOWN      0
-/** @brief DER encoded certificate */
-#define OT_CER          1
-/** @brief DER encoded CRL */
-#define OT_CRL          2
-/** @brief DER encoded ROA */
-#define OT_ROA          3
-/** @brief manifests are only DER for now */
-#define OT_MAN          4
-#define OT_GBR          5
-/** @brief highest-valued DER type */
-#define OT_MAXBASIC     5
+    /** @brief DER encoded certificate */
+    OT_CER,
+    /** @brief DER encoded CRL */
+    OT_CRL,
+    /** @brief DER encoded ROA */
+    OT_ROA,
+    /** @brief manifests are only DER for now */
+    OT_MAN,
+    OT_GBR,
 
-/**
- * @brief
- *     difference between DER and PEM equivalent types
- *
- * The types that are less than ::OT_PEM_OFFSET are DER types and
- * the types that are greater than or equal to ::OT_PEM_OFFSET are
- * PEM types.  The PEM types are exactly ::OT_PEM_OFFSET greater
- * than their corresponding DER types (e.g., `OT_CRL_PEM == OT_CRL
- * + OT_PEM_OFFSET`).
- */
-#define OT_PEM_OFFSET   128
+    OT_MAXBASIC_PLUS_ONE,
+    /** @brief highest-valued DER type */
+    OT_MAXBASIC = OT_MAXBASIC_PLUS_ONE - 1,
+    /**
+     * @brief
+     *     difference between DER and PEM equivalent types
+     *
+     * The types that are less than ::OT_PEM_OFFSET are DER types and
+     * the types that are greater than or equal to ::OT_PEM_OFFSET are
+     * PEM types.  The PEM types are exactly ::OT_PEM_OFFSET greater
+     * than their corresponding DER types (e.g., `OT_CRL_PEM == OT_CRL
+     * + OT_PEM_OFFSET`).
+     */
+    OT_PEM_OFFSET,
 
-/** @brief PEM encoded certificate */
-#define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET)
-/** @brief PEM encoded CRL */
-#define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET)
-/** @brief PEM encoded ROA */
-#define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET)
-/** @brief PEM encoded manifest */
-#define OT_MAN_PEM      (OT_MAN+OT_PEM_OFFSET)
+    /** @brief PEM encoded certificate */
+    OT_CER_PEM,
+    /** @brief PEM encoded CRL */
+    OT_CRL_PEM,
+    /** @brief PEM encoded ROA */
+    OT_ROA_PEM,
+    /** @brief PEM encoded manifest */
+    OT_MAN_PEM,
+
+} object_type;
 
 /*
  * Certificate types
@@ -148,7 +152,7 @@ extern int delete_object(
  *     File pathname.  This MUST NOT be NULL.
  *
  * @return
- *     An object type code depending on the filename suffix:
+ *     A value from ::object_type depending on the filename suffix:
  *       - `.cer`: ::OT_CER
  *       - `.crl`: ::OT_CRL
  *       - `.roa`: ::OT_ROA
