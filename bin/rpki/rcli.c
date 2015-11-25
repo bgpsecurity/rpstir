@@ -473,7 +473,7 @@ static int sock1line(
         leen = strlen(left);
     sta = ioctl(s, FIONREAD, &rd);
     if (sta < 0)
-        return sta;
+        return ERR_SCM_UNSPECIFIED;
     /*
      * Blocking mode, by A. Chi, 3/18/11.  Even if no data is available yet,
      * block until we can read at least one byte.
