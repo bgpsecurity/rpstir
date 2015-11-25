@@ -407,11 +407,9 @@ int get_CAcert(
             struct done_cert done_cert;
             fill_done_cert(&done_cert, ski, this_cert_ansrp->filename, certp,
                            this_cert_ansrp->local_id, this_cert_ansrp->flags);
-            if ((ansr = add_done_cert(&done_cert)) >= 0)
-            {
-                done_certp = &done_certs.done_certp[ansr];
-                *done_certpp = done_certp;
-            }
+            ansr = add_done_cert(&done_cert);
+            done_certp = &done_certs.done_certp[ansr];
+            *done_certpp = done_certp;
         }
         if (ansr < 0)
             return ansr;
