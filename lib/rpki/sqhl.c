@@ -2033,19 +2033,17 @@ static int verifyChildManifest(
     scmsrcha *s,
     ssize_t idx)
 {
-    int sta;
     struct CMS cms;
     char outfull[PATH_MAX];
     UNREFERENCED_PARAMETER(idx);
     /** @bug ignores error code without explanation */
-    sta = updateValidFlags(conp, theManifestTable,
-                           *((unsigned int *)(s->vec[0].valptr)),
-                           *((unsigned int *)(s->vec[1].valptr)), 1);
+    updateValidFlags(conp, theManifestTable,
+                     *((unsigned int *)(s->vec[0].valptr)),
+                     *((unsigned int *)(s->vec[1].valptr)), 1);
     CMS(&cms, 0);
     xsnprintf(outfull, PATH_MAX, "%s/%s", (char *)(s->vec[2].valptr),
               (char *)(s->vec[3].valptr));
-    sta = get_casn_file(&cms.self, outfull, 0);
-    if (sta < 0)
+    if (get_casn_file(&cms.self, outfull, 0) < 0)
     {
         delete_casn(&cms.self);
         LOG(LOG_ERR, "invalid manifest filename %s", outfull);
@@ -2055,7 +2053,7 @@ static int verifyChildManifest(
     struct Manifest *manifest =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
     /** @bug ignores error code without explanation */
-    sta = updateManifestObjs(conp, manifest);
+    updateManifestObjs(conp, manifest);
     delete_casn(&cms.self);
     return 0;
 }

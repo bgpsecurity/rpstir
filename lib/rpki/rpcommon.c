@@ -620,7 +620,6 @@ int getSKIBlock(
     char *skibuf,
     int siz)
 {
-    int ansr = ERR_SCM_BADSKIBLOCK;
     int val;
     if ((val = next_cmd(skibuf, siz, SKI)) < 0)
         xsnprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
@@ -645,9 +644,9 @@ int getSKIBlock(
         xsnprintf(errbuf, sizeof(errbuf), "Empty SKI block ");
     else
     {
-        ansr = 1;
+        return 1;
     }
-    return ansr;
+    return ERR_SCM_BADSKIBLOCK;
 }
 
 static int parse_privatekey(
@@ -925,7 +924,7 @@ int parse_SKI_blocks(
     // step 1
     int ansr = 0;
     int val = 0;
-    if ((ansr = next_cmd(skibuf, siz, SKI)) <= 0)
+    if (next_cmd(skibuf, siz, SKI) <= 0)
     {
         ansr = ERR_SCM_BADSKIFILE;
         xsnprintf(errbuf, sizeof(errbuf), "No private key material");

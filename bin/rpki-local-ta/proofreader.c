@@ -92,7 +92,6 @@ int main(
         fatal("Can't open %s", argv[1]);
     FILE *tmpstr;
     char *f = "xproof.tmp";
-    int ansr;
     int i = 0;
     struct keyring keyring = { NULL, NULL, NULL };
 
@@ -107,7 +106,7 @@ int main(
     if (!(tmpstr = fopen(f, "w+")))
         fatal("Can't open %s", f);
 
-    if ((ansr = parse_SKI_blocks(&keyring, str, argv[1], inbuf, sizeof(inbuf), &i)) < 0)
+    if (parse_SKI_blocks(&keyring, str, argv[1], inbuf, sizeof(inbuf), &i) < 0)
         fatal("Invalid line: %s", errbuf);
     fseek(str, (long)0, 0);
     *inbuf = 0;

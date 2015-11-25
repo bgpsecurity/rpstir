@@ -100,7 +100,7 @@ static int add_paracert2DB(
     /** @bug ignores error code without explanation */
     ansr = delete_object(locscmp, locconp, done_certp->filename, Xrpdir,
                          fullname, dbid);
-    if ((ansr = put_casn_file(&done_certp->paracertp->self, fullname, 0)) < 0)
+    if (put_casn_file(&done_certp->paracertp->self, fullname, 0) < 0)
         /** @bug use a better error code */
         return ERR_SCM_UNSPECIFIED;
     ansr = add_cert(locscmp, locconp, done_certp->filename, fullname, XrpdirId,
@@ -350,21 +350,19 @@ int get_CAcert(
     if (ski && (done_certp = have_already(ski)))
     {
         *done_certpp = done_certp;
-        i = 0;
+        return 0;
     }
     else
     {
         // no, get it from DB as certp
-        int ansr;
         struct cert_answers *cert_answersp =
             find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
         if (!cert_answersp && cert_answersp->num_ansrs < 0)
             return ERR_SCM_UNSPECIFIED;
         struct cert_ansr *cert_ansrp,
            *this_cert_ansrp;
-        ansr = cert_answersp->num_ansrs;
-        if (ansr < 0)
-            return ansr;
+        if (cert_answersp->num_ansrs < 0)
+            return cert_answersp->num_ansrs;
         i = j = 0;
         int have_para = 0;
         for (cert_ansrp = &cert_answersp->cert_ansrp[0];
@@ -379,8 +377,7 @@ int get_CAcert(
             certp =
                 (struct Certificate *)calloc(1, sizeof(struct Certificate));
             Certificate(certp, (ushort) 0);
-            if ((ansr =
-                 get_casn_file(&certp->self, cert_ansrp->fullname, 0)) < 0)
+            if (get_casn_file(&certp->self, cert_ansrp->fullname, 0) < 0)
                 return ERR_SCM_COFILE;
             this_cert_ansrp = cert_ansrp;
             j++;
@@ -401,21 +398,18 @@ int get_CAcert(
         struct Certificate *paracertp =
             mk_paracert(certp, this_cert_ansrp->flags);
         if (!paracertp)
-            ansr = ERR_SCM_BADSKIFILE;
+            return ERR_SCM_BADSKIFILE;
         else
         {
             struct done_cert done_cert;
             fill_done_cert(&done_cert, ski, this_cert_ansrp->filename, certp,
                            this_cert_ansrp->local_id, this_cert_ansrp->flags);
-            ansr = add_done_cert(&done_cert);
+            int ansr = add_done_cert(&done_cert);
             done_certp = &done_certs.done_certp[ansr];
             *done_certpp = done_certp;
         }
-        if (ansr < 0)
-            return ansr;
-        i = 1;
+        return 1;
     }
-    return i;
 }
 
 static int sign_cert(
@@ -515,11 +509,11 @@ static int sign_cert(
         free(signature);
     if (ansr)
     {
-        ansr = ERR_SCM_SIGNINGERR;
         xsnprintf(errbuf, sizeof(errbuf), "Error %s\n", msg);
         fflush(stderr);
+        return ERR_SCM_SIGNINGERR;
     }
-    return ansr;
+    return 0;
 }
 
 static void save_cert_answers(
@@ -1256,8 +1250,7 @@ static int search_downward(
     for (numkid = 0; numkid < numkids; numkid++)
     {
         struct cert_ansr *cert_ansrp = &mycert_answers.cert_ansrp[numkid];
-        if ((ansr =
-             get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) < 0)
+        if (get_casn_file(&childcertp->self, cert_ansrp->fullname, 0) < 0)
             /** @bug memory leak in mycert_answers.cert_ansrp */
             return ERR_SCM_COFILE;
         extp = find_extension(&childcertp->toBeSigned.extensions,
@@ -1549,7 +1542,7 @@ static int process_control_blocks(
         strcpy(currskibuf, nextskibuf);
         strcpy(skibuf, nextskibuf);
     }
-    while (ansr);
+    while (1);
     return 0;
 }
 
