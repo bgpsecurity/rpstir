@@ -19,4 +19,4 @@ etc/rpstir.conf: $(srcdir)/etc/rpstir.conf.in
 
 dist_pkgdata_DATA += etc/version-server-ca.pem
 
-dist_doc_DATA += README
+dist_doc_DATA += README.md
