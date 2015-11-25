@@ -1,6 +1,6 @@
-@PACKAGE_LONGNAME@
+Relying Party Security Technology for Internet Routing
 Installation and Usage Manual
-Version @PACKAGE_VERSION@
+Version 0.11
 
 ===============================================================================
 Table of Contents
@@ -18,11 +18,11 @@ Table of Contents
       2.1.7 netcat
       2.1.8 cURL
       2.1.9 Syslog
-    2.2 @PACKAGE_NAME_UC@ Software
+    2.2 RPSTIR Software
       2.2.1 Unpack the Source Code
       2.2.2 Configure
       2.2.3 Build the Executables
-    2.3 @PACKAGE_NAME_UC@ User Account
+    2.3 RPSTIR User Account
       2.3.1 Self-Test Configuration File
     2.4 SSH Subsystem (optional)
     2.5 Self Test
@@ -33,12 +33,12 @@ Table of Contents
 3. Running the RPKI Software
     3.1 Normal Operation
       3.1.1 Note About Cron Jobs
-      3.1.2 @PACKAGE_NAME@-synchronize
-      3.1.3 @PACKAGE_NAME@-rpki-rtr-daemon
-      3.1.4 @PACKAGE_NAME@-rpki-rtr-update
+      3.1.2 rpstir-synchronize
+      3.1.3 rpstir-rpki-rtr-daemon
+      3.1.4 rpstir-rpki-rtr-update
     3.2 Results and Analysis
-      3.2.1 Validation Report (@PACKAGE_NAME@-results)
-      3.2.2 Query Client (@PACKAGE_NAME@-query)
+      3.2.1 Validation Report (rpstir-results)
+      3.2.2 Query Client (rpstir-query)
       3.2.3 Log Files
     3.3 Warning
 Appendix A. Troubleshooting
@@ -72,13 +72,13 @@ The RPKI software is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.  After reading this section,
 you will know:
     . How to install and configure the prerequisites.
-    . How to build the @PACKAGE_NAME@ software.
+    . How to build the rpstir software.
     . How to set up a user with the correct environment.
     . How to validate the installation.
 We assume that you can operate your system's package manager, as well
 as build packages from source and do minor edits on Makefiles.
 
-Note that @PACKAGE_NAME@'s 64-bit support is in beta. It will probably work as
+Note that rpstir's 64-bit support is in beta. It will probably work as
 expected, but there may be bugs that are not present on 32-bit systems.
 
 
@@ -87,18 +87,18 @@ expected, but there may be bugs that are not present on 32-bit systems.
 When installing prerequisites from your operating system's package
 manager, you may need to look for a -dev or -devel version of each
 package. These versions generally contain header files that are needed
-to build @PACKAGE_NAME@.
+to build rpstir.
 
 2.1.0 Version Requirements
-      OpenSSL (Section 2.1.2) at least @MIN_OPENSSL_VERSION@
-      MySQL (Section 2.1.3) at least @MIN_MYSQL_VERSION@
-      ODBC mySql Connector (Section 2.1.3) at least @MIN_MYSQL_ODBC_VERSION@
-      rsync (Section 2.1.5) at least @MIN_RSYNC_VERSION@ 
-      Python (Section 2.1.6) at least @MIN_PYTHON_VERSION@ 
+      OpenSSL (Section 2.1.2) at least 1.0.1g
+      MySQL (Section 2.1.3) at least 5.1
+      ODBC mySql Connector (Section 2.1.3) at least 3.51
+      rsync (Section 2.1.5) at least 2.6.9 
+      Python (Section 2.1.6) at least 2.7 
 
 2.1.1 User Account
 
-You must establish a user account from which you can build and run @PACKAGE_NAME@.
+You must establish a user account from which you can build and run rpstir.
 While the full environment setup is detailed in section 2.3, the basic user
 should be created now so that you can set and test environment variables.  It
 is not necessary, but recommended that the user is the only user in their
@@ -106,13 +106,13 @@ primary group.
 
 For the rest of this document, commands starting with `$' should be run as
 this user and commands starting with `#' should be run as root. If neither is
-specified, the command should be run as @PACKAGE_NAME@'s user.
+specified, the command should be run as rpstir's user.
 
 2.1.2 OpenSSL
 
 You must build OpenSSL from source in order to enable support for
 RFC3779 X.509v3 extensions.  Download the latest source code (at least
-version @MIN_OPENSSL_VERSION@) from http://www.openssl.org.  We recommend the default
+version 1.0.1g) from http://www.openssl.org.  We recommend the default
 installation target directory /usr/local/ssl.  As of version 1.0.1e,
 the steps were:
 
@@ -135,29 +135,29 @@ file or another file that's automatically loaded by the shell.
 Install unixODBC from your operating system's package manager or
 http://www.unixodbc.org/.  iODBC is also supported, but unixodbc is
 recommended.  Install the MySQL database server, client, and client
-libraries, at least version @MIN_MYSQL_VERSION@, from the package manager or
+libraries, at least version 5.1, from the package manager or
 http://mysql.org.  Install the MySQL Connector/ODBC driver, at least
-version @MIN_MYSQL_ODBC_VERSION@, from the package manager or mysql.org.
+version 3.51, from the package manager or mysql.org.
 
 Configure MySQL.  First, secure the initial MySQL accounts, which
 includes setting a root password (see MySQL 5.1 manual, section
-2.13.2).  Then set up a database user and database(s) for @PACKAGE_NAME@.
+2.13.2).  Then set up a database user and database(s) for rpstir.
 If you want to run the self-tests, it is recommended to create a separate
 database for testing than for production use.  If you don't want to run the
 self-tests, only one database is needed.  For example, the following creates
-a root password, then sets up a user with username "@PACKAGE_NAME@", password "bbn",
-and access to the databases named "@PACKAGE_NAME@" and "@PACKAGE_NAME@_test":
+a root password, then sets up a user with username "rpstir", password "bbn",
+and access to the databases named "rpstir" and "rpstir_test":
 
     $ mysql -u root
     mysql> SELECT Host, User FROM mysql.user;  /* view all accounts */
     mysql> SET PASSWORD FOR 'root'@'127.0.0.1' = PASSWORD('rootpass');
     mysql> SET PASSWORD FOR 'root'@'localhost' = PASSWORD('rootpass');
     mysql> SET PASSWORD FOR 'root'@'<myhostname>' = PASSWORD('rootpass');
-    mysql> CREATE USER '@PACKAGE_NAME@'@'localhost' IDENTIFIED BY 'bbn';
-    mysql> CREATE DATABASE @PACKAGE_NAME@;
-    mysql> GRANT ALL PRIVILEGES ON @PACKAGE_NAME@.* TO '@PACKAGE_NAME@'@'localhost';
-    mysql> CREATE DATABASE @PACKAGE_NAME@_test;
-    mysql> GRANT ALL PRIVILEGES ON @PACKAGE_NAME@_test.* TO '@PACKAGE_NAME@'@'localhost';
+    mysql> CREATE USER 'rpstir'@'localhost' IDENTIFIED BY 'bbn';
+    mysql> CREATE DATABASE rpstir;
+    mysql> GRANT ALL PRIVILEGES ON rpstir.* TO 'rpstir'@'localhost';
+    mysql> CREATE DATABASE rpstir_test;
+    mysql> GRANT ALL PRIVILEGES ON rpstir_test.* TO 'rpstir'@'localhost';
 
 Configure the Connector/ODBC driver.  First, locate your system ODBC
 drivers and data sources configuration files.  For example:
@@ -190,7 +190,7 @@ ForceTrace      = Yes
 
 Then edit odbc.ini to set up a couple of system data sources.  This is
 slightly confusing: the user, password, and database name are actually
-ignored because they will be overridden by @PACKAGE_NAME@.  However,
+ignored because they will be overridden by rpstir.  However,
 depending on whether your database user has a password, in future steps
 below you will need to remember to set your DatabaseDSN configuration
 option to choose the DSN that is expecting a password (e.g. "myodbc")
@@ -266,14 +266,14 @@ and Linux. We do not currently think that this is cause for concern.
 
 2.1.5 rsync
 
-Your rsync should be at least version @MIN_RSYNC_VERSION@, as earlier versions do
+Your rsync should be at least version 2.6.9, as earlier versions do
 not necessarily support the necessary flags.  Check your version with
 rsync --version, and install from rsync.samba.org.  We recommend the
 latest version due to security and bug fixes.
 
 2.1.6 Python
 
-Install python, at least version @MIN_PYTHON_VERSION@.  Python is likely available in
+Install python, at least version 2.7.  Python is likely available in
 your operating system's package manager and is also available at
 http://python.org/download/.
 
@@ -299,22 +299,22 @@ if the system crashes, consider configuring your syslog daemon to not
 synchronize log files after each log message.
 
 
-2.2 @PACKAGE_NAME_UC@ Software
+2.2 RPSTIR Software
 
-@PACKAGE_NAME_UC@ is distributed as source code that should be built
+RPSTIR is distributed as source code that should be built
 using the GNU build tools on Linux/Unix.
 
 2.2.1 Unpack the Source Code
 
-@PACKAGE_NAME_UC@ will have been delivered to you as a gzip-ed tarball
-named @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz.  Extract the file using:
+RPSTIR will have been delivered to you as a gzip-ed tarball
+named rpstir-0.11.tar.gz.  Extract the file using:
 
-    $ tar xvzpf @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
+    $ tar xvzpf rpstir-0.11.tar.gz
     
-This will create a directory named @PACKAGE_TARNAME@-@PACKAGE_VERSION@ which
+This will create a directory named rpstir-0.11 which
 will contain various subdirectories.
 
-Alternatively, you can get @PACKAGE_NAME@ from git if you want the latest version
+Alternatively, you can get rpstir from git if you want the latest version
 (which may or may not be particularly stable). In addition to the above
 prerequisites, you'll need to install git (http://git-scm.com/), automake
 (http://www.gnu.org/software/automake/), and autoconf
@@ -326,7 +326,7 @@ prerequisites, you'll need to install git (http://git-scm.com/), automake
 
 2.2.2 Configure
 
-@PACKAGE_NAME_UC@ uses autoconf to generate its Makefiles.  On many systems,
+RPSTIR uses autoconf to generate its Makefiles.  On many systems,
 it will suffice to run ./configure. However, the following options may be
 useful.
 
@@ -362,9 +362,9 @@ Once the configure script has generated all of the Makefiles, build
 the executables by issuing "make" in the top-level source directory.
 
 
-2.3 @PACKAGE_NAME_UC@ User Account
+2.3 RPSTIR User Account
 
-Establish a user account from which to run @PACKAGE_NAME@.  This
+Establish a user account from which to run rpstir.  This
 provides a place to put the configuration file and prevent other users
 from reading sensitive information in it. It also provides a place,
 ~/.ssh/authorized_keys, to put all the RPKI-RTR clients' public keys to
@@ -375,18 +375,18 @@ user's $PATH.
 
 2.3.1 Self-Test Configuration File
 
-@PACKAGE_NAME_UC@ uses two different configuration files, one for normal
+RPSTIR uses two different configuration files, one for normal
 operations and one for the self tests.  This step sets up the configuration
 file for the self-tests only.  If you don't plan to run the self-tests, you
 can skip this section.
 
-Copy etc/test.conf to ~/.@PACKAGE_NAME@.test.conf and make it readable only by
+Copy etc/test.conf to ~/.rpstir.test.conf and make it readable only by
 the owner because it will contain a database password:
 
-   $ cp etc/test.conf ~/.@PACKAGE_NAME@.test.conf
-   $ chmod 600 ~/.@PACKAGE_NAME@.test.conf
+   $ cp etc/test.conf ~/.rpstir.test.conf
+   $ chmod 600 ~/.rpstir.test.conf
 
-Open ~/.@PACKAGE_NAME@.test.conf in an editor, read the comments, and edit the
+Open ~/.rpstir.test.conf in an editor, read the comments, and edit the
 file as directed by the comments.
 
 NOTE: This file has database options that are homologous to options in the
@@ -399,7 +399,7 @@ database for testing than for production use.
 2.4 SSH Subsystem (optional)
 
 If you plan to use the rpki-rtr server as an SSH subsystem, you will need
-to run @PACKAGE_NAME@-rpki-rtr-daemon and set up an ssh subsystem
+to run rpstir-rpki-rtr-daemon and set up an ssh subsystem
 to connect to rtrd on localhost.  The netcat program, nc(1), is
 recommended for the ssh subsystem.  There are different versions of
 netcat, so read its manpage for caveats before setting it up as
@@ -433,96 +433,96 @@ by running the command:
 
 2.6 Installation
 
-As root, run "make install" to install @PACKAGE_NAME@ on the system.
+As root, run "make install" to install rpstir on the system.
 
    # make install
 
 By default this will install various binaries to /usr/local/bin, which should
 be in the $PATH environment variable.  Additional binaries, which should only
-be used internally or by experts, are in /usr/local/libexec/@PACKAGE_NAME@.
+be used internally or by experts, are in /usr/local/libexec/rpstir.
 Documentation, example configuration, and example trust anchor locators are
-installed in /usr/local/share/doc/@PACKAGE_NAME@.  Some internal data is
-installed to /usr/local/share/@PACKAGE_NAME@.  In the next step, you'll manually
+installed in /usr/local/share/doc/rpstir.  Some internal data is
+installed to /usr/local/share/rpstir.  In the next step, you'll manually
 create cache and log directories.
 
 
 2.7 Post-Installation Procedures
 
-If this is the first time you've installed @PACKAGE_NAME@ (i.e. if this is not
+If this is the first time you've installed rpstir (i.e. if this is not
 an upgrade), there are some initialization steps.
 
 First, create the system-wide configuration directory and file.  The
-system-wide configuration directory is /usr/local/etc/@PACKAGE_NAME@ by default.
-If you changed the value of ${sysconfdir}, use ${sysconfdir}/@PACKAGE_NAME@
+system-wide configuration directory is /usr/local/etc/rpstir by default.
+If you changed the value of ${sysconfdir}, use ${sysconfdir}/rpstir
 instead.  Files in the configuration directory should be readable only by the
-@PACKAGE_NAME@ user and root.  After creating the directory, create a file
-@PACKAGE_NAME@.conf in it.  There's a sample file that's in
-/usr/local/share/doc/@PACKAGE_NAME@/examples/@PACKAGE_NAME@.conf by default that you can use as
+rpstir user and root.  After creating the directory, create a file
+rpstir.conf in it.  There's a sample file that's in
+/usr/local/share/doc/rpstir/examples/rpstir.conf by default that you can use as
 a starting point.  Assuming everything is in default locations and the user you
-created in step 2.1.1 is @PACKAGE_NAME@ with group @PACKAGE_NAME@:
+created in step 2.1.1 is rpstir with group rpstir:
 
-   # mkdir /usr/local/etc/@PACKAGE_NAME@
-   # cp /usr/local/share/doc/@PACKAGE_NAME@/examples/@PACKAGE_NAME@.conf /usr/local/etc/@PACKAGE_NAME@/
-   # chown root:@PACKAGE_NAME@ /usr/local/etc/@PACKAGE_NAME@ /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
-   # chmod 750 /usr/local/etc/@PACKAGE_NAME@
-   # chmod 640 /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+   # mkdir /usr/local/etc/rpstir
+   # cp /usr/local/share/doc/rpstir/examples/rpstir.conf /usr/local/etc/rpstir/
+   # chown root:rpstir /usr/local/etc/rpstir /usr/local/etc/rpstir/rpstir.conf
+   # chmod 750 /usr/local/etc/rpstir
+   # chmod 640 /usr/local/etc/rpstir/rpstir.conf
 
 Then open the configuration file you just created in an editor, read the
 comments, and edit the file as directed by the comments.
 
-   # vi /usr/local/etc/@PACKAGE_NAME@/@PACKAGE_NAME@.conf
+   # vi /usr/local/etc/rpstir/rpstir.conf
 
 Later on, if you want to test configuration changes before changing the
 system-wide configuration, you can make a new configuration file and use it
-temporarily by setting $@CONFIG_ENV_VAR@, for example:
+temporarily by setting $RPSTIR_CONFIG, for example:
 
-   $ @CONFIG_ENV_VAR@=path/to/foo.conf path/to/executable
+   $ RPSTIR_CONFIG=path/to/foo.conf path/to/executable
 
 In the configuration file you just created, find the parameters RPKICacheDir
-and LogDir.  Both of these directories, and ${localstatedir}/lib/@PACKAGE_NAME@,
+and LogDir.  Both of these directories, and ${localstatedir}/lib/rpstir,
 should be created and the user from step 2.1.1 should have full access to these
 directories.  For example, if the directories are set to their defaults and the
-username is @PACKAGE_NAME@ in group @PACKAGE_NAME@:
+username is rpstir in group rpstir:
 
    # mkdir -p \
-       /usr/local/var/cache/@PACKAGE_NAME@ \
-       /usr/local/var/lib/@PACKAGE_NAME@ \
-       /usr/local/var/log/@PACKAGE_NAME@
-   # chown @PACKAGE_NAME@:@PACKAGE_NAME@ \
-       /usr/local/var/cache/@PACKAGE_NAME@ \
-       /usr/local/var/lib/@PACKAGE_NAME@ \
-       /usr/local/var/log/@PACKAGE_NAME@
+       /usr/local/var/cache/rpstir \
+       /usr/local/var/lib/rpstir \
+       /usr/local/var/log/rpstir
+   # chown rpstir:rpstir \
+       /usr/local/var/cache/rpstir \
+       /usr/local/var/lib/rpstir \
+       /usr/local/var/log/rpstir
    # chmod 700 \
-       /usr/local/var/cache/@PACKAGE_NAME@ \
-       /usr/local/var/lib/@PACKAGE_NAME@ \
-       /usr/local/var/log/@PACKAGE_NAME@
+       /usr/local/var/cache/rpstir \
+       /usr/local/var/lib/rpstir \
+       /usr/local/var/log/rpstir
 
-Then run @PACKAGE_NAME@-initialize to set up the database:
+Then run rpstir-initialize to set up the database:
 
-   $ @PACKAGE_NAME@-initialize -f # WARNING: This will delete any old data you
+   $ rpstir-initialize -f # WARNING: This will delete any old data you
                                   #          have in the configured database.
                                   #          Do not do this if you're upgrading
                                   #          and want to save your old data.
 
 2.8 Upgrading
 
-Consider backing up your configuration and data before upgrading @PACKAGE_NAME@.
+Consider backing up your configuration and data before upgrading rpstir.
 
-To upgrade @PACKAGE_NAME@, first upgrade the dependencies to the versions in
-section 2.1.0. Then compile (section 2.2) and install (section 2.6) @PACKAGE_NAME@.
-Run @PACKAGE_NAME@-upgrade with the version number of the previous release. For
+To upgrade rpstir, first upgrade the dependencies to the versions in
+section 2.1.0. Then compile (section 2.2) and install (section 2.6) rpstir.
+Run rpstir-upgrade with the version number of the previous release. For
 example, to upgrade from version 0.7, run:
 
-   $ @PACKAGE_NAME@-upgrade 0.7
+   $ rpstir-upgrade 0.7
 
 2.9 Firewall
 
-As part of @PACKAGE_NAME@'s normal operation, it fetches RPKI objects over rsync.
-Many of these objects contain links to additional RPKI objects, which @PACKAGE_NAME@
-then attempts to fetch, recursively. If you plan to make the results of @PACKAGE_NAME@'s
+As part of rpstir's normal operation, it fetches RPKI objects over rsync.
+Many of these objects contain links to additional RPKI objects, which rpstir
+then attempts to fetch, recursively. If you plan to make the results of rpstir's
 validation public and if your local network (or localhost) contains any
 confidential data available over rsync, you may want to set up a firewall to
-prevent @PACKAGE_NAME@ from downloading any data it shouldn't.
+prevent rpstir from downloading any data it shouldn't.
 
 ===============================================================================
 
@@ -530,60 +530,60 @@ prevent @PACKAGE_NAME@ from downloading any data it shouldn't.
 
 3.1 Normal Operation
 
-This section describes when and how to run each component of @PACKAGE_NAME@ as
+This section describes when and how to run each component of rpstir as
 part of a relying party's normal operations. Cron jobs and init scripts are
 not included in this release, but this section should give the user enough
 information to create cron jobs or init scripts as appropriate.
 
 3.1.1 Note About Cron Jobs
 
-If you create cron jobs for @PACKAGE_NAME@, it is strongly recommended that you
+If you create cron jobs for rpstir, it is strongly recommended that you
 pick random numbers for the fixed parts of the cron job. For example, if you
-want to run @PACKAGE_NAME@ once per hour, pick a random number between 0 and 59
-to use as the minute that @PACKAGE_NAME@ runs on every hour. Likewise, if you
+want to run rpstir once per hour, pick a random number between 0 and 59
+to use as the minute that rpstir runs on every hour. Likewise, if you
 want to run once per day, pick a random minute between 0 and 59 and a random
 hour between 0 and 23. This should help spread out the load on the public
 RPKI servers.
 
-3.1.2 @PACKAGE_NAME@-synchronize
+3.1.2 rpstir-synchronize
 
-@PACKAGE_NAME@-synchronize synchronizes the local cache with the global RPKI,
+rpstir-synchronize synchronizes the local cache with the global RPKI,
 or anything else pointed to by the configured trust anchor locators.  It should
 be run regularly, for example by a cron job.  The amount of time it takes to
 complete one run can vary, so experimentation is suggested before picking the
 frequency to run it.
 
-3.1.3 @PACKAGE_NAME@-rpki-rtr-daemon
+3.1.3 rpstir-rpki-rtr-daemon
 
-@PACKAGE_NAME@-rpki-rtr-daemon is @PACKAGE_NAME@'s rpki-rtr [rfc6810]
+rpstir-rpki-rtr-daemon is rpstir's rpki-rtr [rfc6810]
 server.  If you plan to run an rpki-rtr server, this should be started on boot,
 e.g. from an init script or from rc.local. This program does not daemonize, but
 something like start-stop-daemon can be used.
 
-3.1.4 @PACKAGE_NAME@-rpki-rtr-update
+3.1.4 rpstir-rpki-rtr-update
 
-After @PACKAGE_NAME@-synchronize finishes, @PACKAGE_NAME@-rpki-rtr-update can
+After rpstir-synchronize finishes, rpstir-rpki-rtr-update can
 update the rpki-rtr cache. If you plan to use the rpki-rtr server, you should
-call @PACKAGE_NAME@-rpki-rtr-update after each successful call to
-@PACKAGE_NAME@-synchronize. For example, the cron job command could be:
+call rpstir-rpki-rtr-update after each successful call to
+rpstir-synchronize. For example, the cron job command could be:
 
-   @PACKAGE_NAME@-synchronize && @PACKAGE_NAME@-rpki-rtr-update
+   rpstir-synchronize && rpstir-rpki-rtr-update
 
 
 3.2 Results and Analysis
 
 This section describes some of your options for getting more information about
-@PACKAGE_NAME@'s operations (see previous section) or the state of the RPKI.
+rpstir's operations (see previous section) or the state of the RPKI.
 
-3.2.1 Validation Report (@PACKAGE_NAME@-results)
+3.2.1 Validation Report (rpstir-results)
 
-If you want an overview of @PACKAGE_NAME@'s cached view of the RPKI, you can
+If you want an overview of rpstir's cached view of the RPKI, you can
 use
 
-   @PACKAGE_NAME@-results
+   rpstir-results
 
 This should have some non-zero values for the validated objects if the 
-@PACKAGE_NAME@-synchronize ran successfully.
+rpstir-synchronize ran successfully.
 
 At a basic level, every object is in one of three states: fully
 validated to a trust anchor, unknown, and definitely invalid.  Valid
@@ -591,7 +591,7 @@ objects are inserted in the database; unknown objects are potentially
 valid, so they are kept in the database; definitely invalid objects
 are not entered into the database.
 
-The validation report generator (@PACKAGE_NAME@-results) searches the local cache
+The validation report generator (rpstir-results) searches the local cache
 and the database and summarizes the three categories as counts.  In
 verbose mode, it also shows full paths to all invalid/unknown
 certifcates, thereby allowing the user to determine the offending
@@ -599,9 +599,9 @@ rsync publication URI.
 
 To see a list of options, run
 
-   $ @PACKAGE_NAME@-results --help
+   $ rpstir-results --help
 
-3.2.2 Query Client (@PACKAGE_NAME@-query)
+3.2.2 Query Client (rpstir-query)
 
 This is the way to pull specific information out of the database and
 local repository.  There are two basic modes.
@@ -629,35 +629,35 @@ edit the config file created in step 2.3.1.
 The informational query provides the user with a means to see what is
 in the database without directly executing MySQL commands.  The basic
 informational query has the form
-@PACKAGE_NAME@-query -t <type> -d <field> [-d <field> ... -d <field>]
+rpstir-query -t <type> -d <field> [-d <field> ... -d <field>]
 where type is either cert, crl, roa or manifest, and the fields are
 all the fields of the objects to display.  There are different
 possible fields for each object type. The full list of possibilities
-is obtained with the command "@PACKAGE_NAME@-query -l <type>".  Most of these
+is obtained with the command "rpstir-query -l <type>".  Most of these
 fields also provide the capability for filtering the results based on
 a simple comparison.  To do such filtering, add as many "-f
 <field>.<op>.<value>" arguments to the command line as desired, where
 op is one of (eq, ne, lt, gt, le, ge) and value is unquoted and
 contains # characters to replaces spaces.  Additional arguments are
-given if you type @PACKAGE_NAME@-query without any arguments.
+given if you type rpstir-query without any arguments.
 
     Examples:
 
-    $ @PACKAGE_NAME@-query -t cert -d pathname      # display paths of valid certs
-    $ @PACKAGE_NAME@-query -t cert -d pathname -d flags # display path+flags of valid certs
-    $ @PACKAGE_NAME@-query -t cert -d pathname -i   # display paths of valid/unknown certs
-    $ @PACKAGE_NAME@-query -t crl -d all            # display all fields of valid CRLs
-    $ @PACKAGE_NAME@-query -t roa -d pathname -d flags # display path+flags of valid roas
-    $ @PACKAGE_NAME@-query -t man -d all -i # display all fields of valid/unknown manifests
-    $ @PACKAGE_NAME@-query -t man -d all -f filename.eq.foo.mft # find all manifests named "foo.mft"
+    $ rpstir-query -t cert -d pathname      # display paths of valid certs
+    $ rpstir-query -t cert -d pathname -d flags # display path+flags of valid certs
+    $ rpstir-query -t cert -d pathname -i   # display paths of valid/unknown certs
+    $ rpstir-query -t crl -d all            # display all fields of valid CRLs
+    $ rpstir-query -t roa -d pathname -d flags # display path+flags of valid roas
+    $ rpstir-query -t man -d all -i # display all fields of valid/unknown manifests
+    $ rpstir-query -t man -d all -f filename.eq.foo.mft # find all manifests named "foo.mft"
 
 3.2.3 Log Files
 
-@PACKAGE_NAME_UC@ logs most things to syslog, so you can check your system logs
+RPSTIR logs most things to syslog, so you can check your system logs
 for more information.  These are most likely in /var/log/syslog,
 /var/log/messages, or another file in /var/log.  There are also some additional
 logs (e.g., rsync's logs) in the directory specified by the LogDir configuration
-parameter, which is /usr/local/var/log/@PACKAGE_NAME@ by default.
+parameter, which is /usr/local/var/log/rpstir by default.
 
 
 3.3 Warning
