@@ -1455,7 +1455,7 @@ static int process_control_blocks(
     FILE *SKI)
 {
     struct done_cert *done_certp;
-    int ansr = 1;
+    int ansr;
     do
     {
         char *cc;
