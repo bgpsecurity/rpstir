@@ -350,7 +350,6 @@ int get_CAcert(
     if (ski && (done_certp = have_already(ski)))
     {
         *done_certpp = done_certp;
-        return 0;
     }
     else
     {
@@ -408,8 +407,8 @@ int get_CAcert(
             done_certp = &done_certs.done_certp[ansr];
             *done_certpp = done_certp;
         }
-        return 1;
     }
+    return 0;
 }
 
 static int sign_cert(
