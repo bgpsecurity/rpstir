@@ -286,7 +286,6 @@ fi
 
 AC_CONFIG_FILES([
     Makefile
-    README
 ])
 
 AC_CONFIG_LINKS([lib/rpki-asn1/casn.h:lib/casn/casn.h])
