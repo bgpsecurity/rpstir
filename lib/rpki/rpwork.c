@@ -356,7 +356,7 @@ int get_CAcert(
         // no, get it from DB as certp
         struct cert_answers *cert_answersp =
             find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
-        if (!cert_answersp && cert_answersp->num_ansrs < 0)
+        if (!cert_answersp)
             return ERR_SCM_UNSPECIFIED;
         struct cert_ansr *cert_ansrp,
            *this_cert_ansrp;
