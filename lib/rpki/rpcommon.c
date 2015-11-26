@@ -644,7 +644,7 @@ int getSKIBlock(
         xsnprintf(errbuf, sizeof(errbuf), "Empty SKI block ");
     else
     {
-        return 1;
+        return 0;
     }
     return ERR_SCM_BADSKIBLOCK;
 }
