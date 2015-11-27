@@ -37,11 +37,6 @@ _find_filled_or_chosen(
     int *errp);
 
 struct casn *
-_find_flag(
-    struct casn *casnp,
-    int flag);
-
-struct casn *
 _find_tag(
     struct casn *casnp,
     ulong tag);
