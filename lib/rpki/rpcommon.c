@@ -206,11 +206,15 @@ static int next_cmd(
      *    Return success
      */
     char locbuf[2 * SKIBUFSIZ];
-    char *eip = &locbuf[sizeof(locbuf) - 1];      // last allowed char
-    char *eop = &outbufp[siz - 3];       // last allowed char
-    do                          // step1
+    // last allowed char
+    char *eip = &locbuf[sizeof(locbuf) - 1];
+    // last allowed char
+    char *eop = &outbufp[siz - 3];
+    // step1
+    do
     {
-        *eip = 'x';             // a test character
+        // a test character
+        *eip = 'x';
         if (!fgets(locbuf, sizeof(locbuf), SKI))
             return 0;
         if (*eip != 'x' || locbuf[0] <= ' ')
@@ -226,7 +230,8 @@ static int next_cmd(
             *op++ = *ip++;
         while (*ip && *ip <= ' ')
             ip++;
-        if (*ip > ' ' && op >= eop)     // No room for more
+        if (*ip > ' ' && op >= eop)
+            // No room for more
             return -1;
         *op++ = ' ';
     }
@@ -445,12 +450,14 @@ int sort_resources(
     {
         rp0 = &iprangesp[i - 1];
         rp1 = &iprangesp[i];
-        if (diff_ipaddr(rp0, rp1) > 0)  // swap them
+        if (diff_ipaddr(rp0, rp1) > 0)
         {
+            // swap them
             memcpy(&spare, rp0, sizeof(struct iprange));
             memcpy(rp0, rp1, sizeof(struct iprange));
             memcpy(rp1, &spare, sizeof(struct iprange));
-            i = 1;              // go back to start
+            i = 1;
+            // go back to start
             did++;
         }
         else
@@ -489,7 +496,8 @@ static struct AddressesOrRangesInIPAddressChoiceA *find_IP(
          ipFamp = (struct IPAddressFamilyA *)next_of(&ipFamp->self))
     {
         read_casn(&ipFamp->addressFamily, fambuf);
-        if (fambuf[1] == loctyp)        // OK the cert has some
+        if (fambuf[1] == loctyp)
+            // OK the cert has some
             return &ipFamp->ipAddressChoice.addressesOrRanges;
     }
     return (struct AddressesOrRangesInIPAddressChoiceA *)0;
@@ -681,7 +689,8 @@ static int parse_topcert(
             xsnprintf(errbuf, sizeof(errbuf), "No top level certificate.");
     }
     else
-    {                           // get root cert
+    {
+        // get root cert
         if ((c = strchr(skibuf, (int)'\n')))
             *c = 0;
         for (c = &skibuf[20]; *c == ' '; c++);

@@ -134,9 +134,13 @@ getbuf(
     int);
 
 struct varfld {
-    ushort offset;              /* offset of field in vararea */
-    ushort lth;                 /* length of variable-length field.  If field
-                                 * is not present, lth is zero */
+    /* offset of field in vararea */
+    ushort offset;
+    /*
+     * length of variable-length field.  If field is not present, lth
+     * is zero
+     */
+    ushort lth;
 } varfld;
 
 int bytes;
@@ -173,9 +177,12 @@ struct name_tab {
     char *name;
     unsigned chunk;
     unsigned limit;
-    char *area;                 /* pointer to a general name area */
-    unsigned size;              /* size of the area */
-    unsigned next;              /* offset to next free part of area */
+    /* pointer to a general name area */
+    char *area;
+    /* size of the area */
+    unsigned size;
+    /* offset to next free part of area */
+    unsigned next;
 };
 
 /* for varareas */
@@ -184,7 +191,8 @@ struct name_tab genarea = {"genarea", 1024, 0x4000, NULL, 0, 0};
 struct name_tab out_area = {"out_area", 1024, 0x20000, NULL, 0, 0};
 struct name_tab asn_area = {"asn_area", 1024, 0x20000, NULL, 0, 0};
 
-extern struct typnames typnames[];      /* in asn.c */
+/* in asn.c */
+extern struct typnames typnames[];
 
 /*
  * 1. Scan argvs to see if -r flag is set
@@ -262,7 +270,8 @@ char *do_it(
        *edot;
     int val,
         start = -1;
-    char comment[4];            /* contains up to 3 chars, 2 entry & 1 exit */
+    /* contains up to 3 chars, 2 entry & 1 exit */
+    char comment[4];
     ushort lth;
     struct typnames *tpnmp = (struct typnames *)0;
     *(edot = dot_buf) = 0;
@@ -270,7 +279,8 @@ char *do_it(
     if (level)
         while (*c > ' ')
             c++;
-    for (lmarg = (char *)0; 1;) /* step 1 */
+    /* step 1 */
+    for (lmarg = (char *)0; 1;)
     {
         while (*c && *c <= ' ')
             c++;
@@ -298,13 +308,16 @@ char *do_it(
                 }
             }
         }
-        if (!comment[0])        /* step 2 */
+        /* step 2 */
+        if (!comment[0])
         {
             if (aflag && *c == '(')
             {
                 while (*c != ')')
-                    c++;        // skip lth field
-                for (c++; *c == ' '; c++);      // go to next char
+                    // skip lth field
+                    c++;
+                // go to next char
+                for (c++; *c == ' '; c++);
             }
             if (*c >= '0' && *c <= '9')
             {
@@ -423,7 +436,8 @@ char *do_it(
                 }
             }
         }
-        else if (!comment[1])   /* step 3 */
+        /* step 3 */
+        else if (!comment[1])
         {
             if ((comment[0] == '/' && (*c == '*' || *c == '/')) ||
                 (comment[0] == '-' && *c == '-'))
@@ -443,7 +457,8 @@ char *do_it(
     if (edot > dot_buf)
         cvt_obj_id(dot_buf, edot);
     if (asn_area.next)
-        dump_asn();             /* step 4 */
+        /* step 4 */
+        dump_asn();
     if (genarea.area)
     {
         if (genarea.next & 1)
@@ -531,7 +546,8 @@ char *cvt_obj_id(
         locbuf[20],
        *e = &locbuf[sizeof(locbuf)];
     long val,
-        tmp;                    /* do first field */
+        tmp;
+    /* do first field */
     for (val = 0; from < to && *from != '.'; val = (val * 10) + *from++ - '0');
     val *= 40;
     for (from++, tmp = 0; from < to && *from != '.'; tmp = (tmp * 10) + *from++
@@ -541,7 +557,8 @@ char *cvt_obj_id(
         *(--b) = (uchar) (val & 0x7F) | ((tmp != val) ? 0x80 : 0);
     while (b < e)
         putout(*b++);
-    for (from++; from < to; from++)     /* now do next fields */
+    /* now do next fields */
+    for (from++; from < to; from++)
     {
         for (val = 0; from < to && *from != '.';
              val = (val * 10) + *from++ - '0');

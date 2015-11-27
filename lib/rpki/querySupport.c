@@ -188,7 +188,8 @@ int checkValidity(
                 parentsFound);
         }
         else if (parentsFound == 0)
-        {                       // no parent cert
+        {
+            // no parent cert
             if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
                 return 0;
             xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",

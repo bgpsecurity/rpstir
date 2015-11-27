@@ -238,7 +238,8 @@ static struct Certificate *mk_paracert(
     {
         if (*Xvalidity_dates == 'C')
         {
-        }                       // do nothing
+            // do nothing
+        }
         else if (*Xvalidity_dates == 'R')
             copy_casn(&paracertp->toBeSigned.validity.self,
                       &myrootcert.toBeSigned.validity.self);
@@ -260,7 +261,8 @@ static struct Certificate *mk_paracert(
        *textp;
     if (!Xcrldp || (*Xcrldp == 'C' && !Xcrldp[1]))
     {
-    }                           // do nothing
+        // do nothing
+    }
     else if ((*Xcrldp == 'R' && !Xcrldp[1]))
     {
         fextp = find_extension(&myrootcert.toBeSigned.extensions,
@@ -312,8 +314,9 @@ static struct Certificate *mk_paracert(
                                    id_certificatePolicies, 0);
             copy_casn(&textp->self, &fextp->self);
         }
-        else                    // D or specified one
+        else
         {
+            // D or specified one
             clear_casn(&textp->extnValue.self);
             write_objid(&textp->extnID, id_certificatePolicies);
             struct PolicyInformation *polInfop =
@@ -340,8 +343,10 @@ static struct Certificate *mk_paracert(
         write_objid(&adp->accessMethod, id_ad_caIssuers);
         write_casn(&adp->accessLocation.url, (uchar *) Xaia, strlen(Xaia));
     }
-    struct Extension *skiExtp;  // root's ski
-    struct Extension *akiExtp;  // new cert's aki
+    // root's ski
+    struct Extension *skiExtp;
+    // new cert's aki
+    struct Extension *akiExtp;
     if (!(skiExtp = find_extension(&myrootcert.toBeSigned.extensions,
                                    id_subjectKeyIdentifier, 0)))
     {
@@ -404,8 +409,9 @@ int get_CAcert(
         *done_certpp = done_certp;
         i = 0;
     }
-    else                        // no, get it from DB as certp
+    else
     {
+        // no, get it from DB as certp
         int ansr;
         struct cert_answers *cert_answersp =
             find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
@@ -420,7 +426,8 @@ int get_CAcert(
         int have_para = 0;
         for (cert_ansrp = &cert_answersp->cert_ansrp[0];
              i < cert_answersp->num_ansrs; i++, cert_ansrp++)
-        {                       // if it's a paracert, note that and skip it
+        {
+            // if it's a paracert, note that and skip it
             if (!strcmp(cert_ansrp->dirname, Xrpdir))
             {
                 have_para++;
@@ -664,12 +671,14 @@ static int expand(
     int lastcert = numcertrange - 1;
     if ((locflags & RESOURCE_NOUNION))
         flag = 1;
-    while (rulerangep)          // step 1
+    // step 1
+    while (rulerangep)
     {
         int ansr = -1;
         if (certrangep)
             ansr = touches(rulerangep, certrangep, lth);
-        if (ansr < 0)           // step 2
+        // step 2
+        if (ansr < 0)
         {
             if (flag)
                 return -1;
@@ -682,7 +691,8 @@ static int expand(
             if (!rulerangep)
                 continue;
         }
-        else if (!ansr)         // step 3
+        // step 3
+        else if (!ansr)
         {
             if (flag)
                 return -1;
@@ -691,7 +701,8 @@ static int expand(
                 rulerangep = next_range(rulerangesp, rulerangep);
             did++;
         }
-        else                    // ansr > 0 step 4
+        // ansr > 0 step 4
+        else
         {
             if (touches(certrangep, rulerangep, lth) < 0)
             {
@@ -748,7 +759,8 @@ static int perforate(
     struct ipranges *certrangesp,
     int numcertrange,
     int *changesp)
-{                               // result = certranges - ruleranges
+{
+    // result = certranges - ruleranges
     /*
      * Procedure:
      *    Starting at first rule (one guaranteed) and first cert field of this
@@ -801,13 +813,15 @@ static int perforate(
         if (memcmp(certrangep->lolim, rulerangep->lolim, lth) < 0)
         {
             if (memcmp(certrangep->hilim, rulerangep->hilim, lth) <= 0)
-            {                   // C-hi <= R-hi
+            {
+                // C-hi <= R-hi
                 memcpy(certrangep->hilim, rulerangep->lolim, lth);
                 decrement_iprange(certrangep->hilim, lth);
                 certrangep = next_range(certrangesp, certrangep);
             }
-            else                // C-hi > R-hi
+            else
             {
+                // C-hi > R-hi
                 certrangep = inject_range(certrangesp,
                                           certrangep - certrangesp->iprangep);
                 memcpy(certrangep->lolim, certrangep[1].lolim, lth);
@@ -823,12 +837,14 @@ static int perforate(
         }
         // step 3
         else
-        {                       // C-lo >= R-lo
+        {
+            // C-lo >= R-lo
             if (memcmp(certrangep->hilim, rulerangep->hilim, lth) <= 0)
                 certrangep = eject_range(certrangesp, certrangep -
                                          certrangesp->iprangep);
             else
-            {                   // C-hi > R-hi
+            {
+                // C-hi > R-hi
                 memcpy(certrangep->lolim, rulerangep->hilim, lth);
                 increment_iprange(certrangep->lolim, lth);
                 rulerangep = next_range(rulerangesp, rulerangep);
@@ -995,10 +1011,12 @@ static int conflict_test(
     print_range("From", &fromranges);
     if (ansr < 0)
         return ansr;
-    if (fromranges.numranges > 1)       // "subtract" new fromranges from old
+    if (fromranges.numranges > 1)
     {
-        perf_A_from_B(&fromranges, &savranges); // diff shows where it
-                                                // occurred
+        // "subtract" new fromranges from old
+
+        // diff shows where it occurred
+        perf_A_from_B(&fromranges, &savranges);
         // find where
         int jj;
         int k = 0;
@@ -1138,7 +1156,8 @@ static void remake_cert_ranges(
             // at the end of extensions
             extp = (struct Extension *)inject_casn(&extsp->self,
                                                    num_items(&extsp->self));
-        }                       // rewrite objid because step 1 cleared it
+        }
+        // rewrite objid because step 1 cleared it
         write_objid(&extp->extnID, id_pe_ipAddrBlock);
         ipAddrBlockp = &extp->extnValue.ipAddressBlock;
         ipfamp = (struct IPAddressFamilyA *)inject_casn(&ipAddrBlockp->self,
@@ -1204,7 +1223,8 @@ static void remake_cert_ranges(
             // at the end of extensions
             extp = (struct Extension *)inject_casn(&extsp->self,
                                                    num_items(&extsp->self));
-        }                       // rewrite objid because step 1 cleared it
+        }
+        // rewrite objid because step 1 cleared it
         write_objid(&extp->extnID, id_pe_autonomousSysNum);
         struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp =
             &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges;
@@ -1248,8 +1268,8 @@ static int modify_paracert(
     int changes = 0;
     int did = 0;
     // start at beginning of SKI list and IPv4 family in certificate
-    struct iprange *rulerangep = ruleranges.iprangep;   // beginning of SKI
-                                                        // list
+    // beginning of SKI list
+    struct iprange *rulerangep = ruleranges.iprangep;
     // step 1
     if (!(locflags & RESOURCE_NOUNION) || run)
     {
@@ -1367,8 +1387,9 @@ static int search_downward(
         // step 2
         ansr = modify_paracert(keyring, 1, done_certp->paracertp);
         done_certp->perf |= (WASPERFORATED | WASPERFORATEDTHISBLK);
-        if (have == 0)          // it is a temporary done_cert
+        if (have == 0)
         {
+            // it is a temporary done_cert
             if (ansr <= 0)
             {
                 delete_casn(&done_cert.origcertp->self);
@@ -1413,10 +1434,12 @@ static int process_trust_anchors(
         int i;
         struct done_cert *done_certp = &done_certs.done_certp[0];
         for (i = 0; i < done_certs.numcerts; i++, done_certp++)
-        {                       // break if we have seen it
+        {
+            // break if we have seen it
             if (done_certp->origID == cert_ansrp->local_id)
                 break;
-        }                       // then break if we found it
+        }
+        // then break if we found it
         if (i < done_certs.numcerts)
             break;
         // or if it is the LTA
@@ -1479,7 +1502,8 @@ static int process_control_block(
         {
             if (conflict_test(run, done_certp))
             {
-                currskibuf[strlen(currskibuf) - 1] = 0; // trim CR
+                // trim CR
+                currskibuf[strlen(currskibuf) - 1] = 0;
                 xsnprintf(errbuf, sizeof(errbuf), "in block %s at %s",
                           currskibuf, skibuf);
                 *skibuf = 0;
@@ -1573,9 +1597,10 @@ static int process_control_blocks(
             else
                 xsnprintf(errbuf, sizeof(errbuf), "Invalid prefix/range %s",
                           skibuf);
-            return ansr;        // with error message in errbuf BADSKIBLOCK
-        }                       // otherwise skibuf has another SKI line or
-                                // NULL
+            // with error message in errbuf BADSKIBLOCK
+            return ansr;
+        }
+        // otherwise skibuf has another SKI line or NULL
 
         if ((locflags & RESOURCE_NOUNION))
         {

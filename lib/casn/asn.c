@@ -214,7 +214,8 @@ int decode_asn(
     uchar typ;
     int ansr;
     int did;
-    int indef;                  /* step 1 */
+    int indef;
+    /* step 1 */
     for (did = 0, curr_asnp = *asnpp;
          !nbytes || nbytes > (ulong)did;
          curr_asnp++)
