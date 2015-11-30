@@ -1233,7 +1233,7 @@ static int search_downward(
     struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, 0);
     struct Certificate *childcertp;
-    int ansr;
+    int ansr = 0;
     int numkid;
     int numkids;
     char pSKI[64];
@@ -1253,7 +1253,7 @@ static int search_downward(
     struct cert_answers mycert_answers;
     save_cert_answers(&mycert_answers, cert_answersp);
     // step 1
-    for (ansr = numkid = 0; numkid < numkids && ansr >= 0; numkid++)
+    for (numkid = 0; numkid < numkids; numkid++)
     {
         struct cert_ansr *cert_ansrp = &mycert_answers.cert_ansrp[numkid];
         if ((ansr =
@@ -1302,6 +1302,8 @@ static int search_downward(
         }
         if (ansr > 0)
             ansr = search_downward(keyring, done_certp->origcertp);
+        if (ansr < 0)
+            break;
     }
     free(mycert_answers.cert_ansrp);
     delete_casn(&childcertp->self);
