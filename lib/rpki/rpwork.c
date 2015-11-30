@@ -136,7 +136,7 @@ static int add_paracert2DB(
                                   done_certp->origflags)))
             return ansr;
         LOG(LOG_INFO, "Added %s to DB", fullname);
-        return 1;
+        return 0;
     }
     else
         /** @bug should print error string, not number */
