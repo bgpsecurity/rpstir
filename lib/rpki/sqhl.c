@@ -1056,8 +1056,8 @@ static char *parentAKI;
 static char *parentIssuer;
 
 struct cert_answers *find_parent_cert(
-    char *ski,
-    char *subject,
+    const char *ski,
+    const char *subject,
     scmcon *conp)
 {
     err_code sta;

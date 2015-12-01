@@ -57,8 +57,8 @@ static scmcon *connection = NULL;
 
 
 struct {
-    char *objectName;
-    char *tableName;
+    const char *objectName;
+    const char *tableName;
 } tableNames[] = {
     {"cert", "certificate"},
     {"roa", "roa"},
@@ -158,8 +158,9 @@ handleResults(
 /*
  * caller which table to search
  */
-static char *tableName(
-    char *objType)
+static const char *
+tableName(
+    const char *objType)
 {
     size_t i;
     for (i = 0; i < countof(tableNames); ++i)

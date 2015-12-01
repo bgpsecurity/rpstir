@@ -51,7 +51,7 @@ dump_asn1(
 static char ibuf[BSIZE];
 static char obuf[80] = "     0  ";
 static char *fname;
-static char hex[] = "0123456789ABCDEF";
+static const char hex[] = "0123456789ABCDEF";
 
 static char *
 hexit(
