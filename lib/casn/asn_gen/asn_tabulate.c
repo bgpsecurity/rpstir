@@ -104,7 +104,7 @@ void tabulate(
         case IN_ITEM:          /* got '{' */
             if (*token == ':' || *token == '{')
                 syntax(classname);
-            if (read_item(parent, 0) < 0)
+            if (read_item(parent, NULL) < 0)
                 return;
             if (*token == ',' || *token == '}') /* end of item */
                 tab_item(parent, in_choice);
@@ -441,7 +441,7 @@ Procedure:
                 cat(itemname, token);
                 *itemname = 0;
                 parent = ntbp - (struct name_table *)name_area.area;
-                read_item(parent, 0);
+                read_item(parent, NULL);
                 ntbp = &((struct name_table *)name_area.area)
                     [add_child(testname, parent, numitems, -1, 0)];
                 ntbp->pos = tell_pos(streams.str);
