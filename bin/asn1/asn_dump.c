@@ -50,13 +50,15 @@ int asn1dump(
     int k;
     int row;
     int make_asn_table(
-        );
+        struct asn **asnbase,
+        unsigned char *c,
+        unsigned long lth);
     unsigned char typ;
     unsigned char tag;
     unsigned char *b;
     unsigned char *ctmp;
     unsigned char *asn_set(
-        );
+        struct asn *asnp);
     char *indef_msg = " /* indefinite length */\n";
 
     if (OIDTABLE != NULL)

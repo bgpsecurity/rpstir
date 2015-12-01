@@ -56,7 +56,8 @@ hexit(
 
 long
 getd(
-    );
+    char **b,
+    int lev);
 
 int aflag;
 
@@ -324,7 +325,7 @@ void dump_asn1(
     uchar *area;
     uchar *c;
     uchar *asn_set(
-        );
+        struct asn *asnp);
     struct stat tstat;
     if (pos < 0)
         FATAL(MSG_INVAL);
