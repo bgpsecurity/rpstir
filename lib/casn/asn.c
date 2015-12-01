@@ -23,6 +23,10 @@ uchar *
 asn_set(
     struct asn *);
 
+int
+count_sub_asns(
+    uchar **);
+
 struct typnames typnames[] = {
     {ASN_BOOLEAN, "boo"},       /* 1 */
     {ASN_INTEGER, "int"},       /* 2 */
@@ -108,8 +112,6 @@ Procedure: Calls the recursive version
 int count_asns(
     unsigned char *from)
 {
-    int count_sub_asns(
-        uchar **);
     return (1 + count_sub_asns(&from));
 }
 

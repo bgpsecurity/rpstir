@@ -25,6 +25,16 @@ Cambridge, Ma. 02140
 
 extern int aflag;
 
+int
+make_asn_table(
+    struct asn **asnbase,
+    unsigned char *c,
+    unsigned long lth);
+
+unsigned char *
+asn_set(
+    struct asn *asnp);
+
 static int putform(
     FILE *,
     unsigned char *,
@@ -49,16 +59,10 @@ int asn1dump(
     int j;
     int k;
     int row;
-    int make_asn_table(
-        struct asn **asnbase,
-        unsigned char *c,
-        unsigned long lth);
     unsigned char typ;
     unsigned char tag;
     unsigned char *b;
     unsigned char *ctmp;
-    unsigned char *asn_set(
-        struct asn *asnp);
     char *indef_msg = " /* indefinite length */\n";
 
     if (OIDTABLE != NULL)

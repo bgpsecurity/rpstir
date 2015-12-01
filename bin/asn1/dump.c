@@ -39,6 +39,10 @@ asn1dump(
     int,
     FILE *);
 
+uchar *
+asn_set(
+    struct asn *asnp);
+
 static void
 dump_asn1(
     int,
@@ -324,8 +328,6 @@ void dump_asn1(
     struct asn asn;
     uchar *area;
     uchar *c;
-    uchar *asn_set(
-        struct asn *asnp);
     struct stat tstat;
     if (pos < 0)
         FATAL(MSG_INVAL);
