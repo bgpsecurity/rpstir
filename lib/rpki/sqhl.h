@@ -100,10 +100,7 @@ extern int delete_object(
  *     Infer the object type based on which file extensions are present.
  *
  * The following can be present: .cer, .crl and .roa; .pem can also be
- * present.  If there is no suffix, then also check to see if the
- * filename is of the form HHHHHHHH.N, where "HHHHHHHH" is eight hex
- * digits, and .N is an integer suffix.  In this case, it is a cert.
- * If nothing can be determined then return unknown.
+ * present.  If nothing can be determined then return unknown.
  *
  * @return
  *     On success this function returns one of the types defined in
