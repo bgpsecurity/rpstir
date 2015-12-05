@@ -300,7 +300,7 @@ int infer_filetype(
     int pem = 0;
     int typ = 0;
 
-    if (fname == NULL || fname[0] == 0)
+    if (fname == NULL)
         return (ERR_SCM_INVALARG);
 
     if (strstr(fname, ".pem") != NULL)

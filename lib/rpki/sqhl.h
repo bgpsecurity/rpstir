@@ -104,7 +104,7 @@ extern int delete_object(
  * then return unknown.
  *
  * @param[in] fname
- *     File pathname.  This MUST be a non-empty string.
+ *     File pathname.  This MUST NOT be NULL.
  *
  * @return
  *     On success this function returns one of the types defined in
