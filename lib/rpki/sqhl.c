@@ -3652,8 +3652,6 @@ int add_object(
         return (sta);
     // determine its filetype
     typ = infer_filetype(outfull);
-    if (typ < 0)
-        return (typ);
     // find or add the directory
     sta = findorcreatedir(scmp, conp, outdir, &id);
     if (sta < 0)
@@ -4018,8 +4016,6 @@ int delete_object(
         return (ERR_SCM_INVALARG);
     // determine its filetype
     typ = infer_filetype(outfile);
-    if (typ < 0)
-        return (typ);
     // find the directory
     if (scmp)
         initTables(scmp);       // may be null if tables have been initiated
