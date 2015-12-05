@@ -103,6 +103,9 @@ extern int delete_object(
  * and .gbr; .pem can also be present.  If nothing can be determined
  * then return unknown.
  *
+ * @param[in] fname
+ *     File pathname.  This MUST be a non-empty string.
+ *
  * @return
  *     On success this function returns one of the types defined in
  *     sqhl.h; on failure it returns a negative error code.
