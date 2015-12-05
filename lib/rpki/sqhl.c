@@ -295,7 +295,7 @@ static int dupsigscm(
 }
 
 int infer_filetype(
-    char *fname)
+    const char *fname)
 {
     int pem = 0;
     int typ = 0;

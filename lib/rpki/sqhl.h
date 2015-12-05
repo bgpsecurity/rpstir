@@ -111,7 +111,7 @@ extern int delete_object(
  *     sqhl.h; on failure it returns a negative error code.
  */
 extern int infer_filetype(
-    char *fname);
+    const char *fname);
 
 extern int add_cert(
     scm * scmp,
