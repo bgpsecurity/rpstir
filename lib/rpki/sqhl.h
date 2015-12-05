@@ -99,8 +99,9 @@ extern int delete_object(
  * @brief
  *     Infer the object type based on which file extensions are present.
  *
- * The following can be present: .cer, .crl and .roa; .pem can also be
- * present.  If nothing can be determined then return unknown.
+ * The following can be present: .cer, .crl, .roa, .man, .mft, .mnf,
+ * and .gbr; .pem can also be present.  If nothing can be determined
+ * then return unknown.
  *
  * @return
  *     On success this function returns one of the types defined in
