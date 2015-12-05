@@ -99,16 +99,21 @@ extern int delete_object(
  * @brief
  *     Infer the object type based on which file extensions are present.
  *
- * The following can be present: .cer, .crl, .roa, .man, .mft, .mnf,
- * and .gbr; .pem can also be present.  If nothing can be determined
- * then return unknown.
- *
  * @param[in] fname
  *     File pathname.  This MUST NOT be NULL.
  *
  * @return
- *     On success this function returns one of the types defined in
- *     sqhl.h; on failure it returns a negative error code.
+ *     An object type code depending on the filename suffix:
+ *       - `.cer`: ::OT_CER
+ *       - `.crl`: ::OT_CRL
+ *       - `.roa`: ::OT_ROA
+ *       - `.man`, `.mft`, `.mnf`: ::OT_MAN
+ *       - `.gbr`: ::OT_GBR
+ *       - `.cer.pem`: ::OT_CER_PEM
+ *       - `.crl.pem`: ::OT_CRL_PEM
+ *       - `.roa.pem`: ::OT_ROA_PEM
+ *       - `.man.pem`, `.mft.pem`, `.mnf.pem`: ::OT_MAN_PEM
+ *       - all others: ::OT_UNKNOWN.
  */
 extern int infer_filetype(
     const char *fname);
