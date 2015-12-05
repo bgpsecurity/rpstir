@@ -94,8 +94,10 @@ extern int delete_object(
     char *outdir,
     char *outfull,
     unsigned int dir_id);
+
 extern int infer_filetype(
     char *fname);
+
 extern int add_cert(
     scm * scmp,
     scmcon * conp,
