@@ -907,18 +907,29 @@ checkit(
     int purpose,
     ENGINE *e)
 {
+    LOG(LOG_DEBUG, "checkit(conp=%p, ctx=%p, x=%p"
+        ", uchain=%p, tchain=%p, purpose=%d, e=%p)",
+        conp, ctx, x, uchain, tchain, purpose, e);
+
     X509_STORE_CTX *csc;
     int i;
+    err_code sta = 0;
 
     UNREFERENCED_PARAMETER(e);
     csc = X509_STORE_CTX_new();
     if (csc == NULL)
-        return (ERR_SCM_STORECTX);
+    {
+        LOG(LOG_DEBUG, "X509_STORE_CTX_new() returned NULL");
+        sta = ERR_SCM_STORECTX;
+        goto done;
+    }
     X509_STORE_set_flags(ctx, 0);
     if (!X509_STORE_CTX_init(csc, ctx, x, uchain))
     {
+        LOG(LOG_DEBUG, "X509_STORE_CTX_init() returned 0");
         X509_STORE_CTX_free(csc);
-        return (ERR_SCM_STOREINIT);
+        sta = ERR_SCM_STOREINIT;
+        goto done;
     }
     if (tchain != NULL)
         X509_STORE_CTX_trusted_stack(csc, tchain);
@@ -932,10 +943,14 @@ checkit(
     old_vfunc = NULL;
     thecon = NULL;
     X509_STORE_CTX_free(csc);
-    if (i)
-        return (0);             /* verified ok */
-    else
-        return (ERR_SCM_NOTVALID);
+    if (!i)
+    {
+        sta = ERR_SCM_NOTVALID;
+    }
+done:
+    LOG(LOG_DEBUG, "checkit() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -1060,6 +1075,9 @@ struct cert_answers *find_parent_cert(
     const char *subject,
     scmcon *conp)
 {
+    LOG(LOG_DEBUG, "find_parent_cert(ski=\"%s\", subject=\"%s\", conp=%p)",
+        ski, subject, conp);
+
     err_code sta;
     if (certSrch == NULL)
     {
@@ -1094,8 +1112,20 @@ struct cert_answers *find_parent_cert(
     cert_answers.cert_ansrp = NULL;
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+    LOG(LOG_DEBUG, "searchscm() returned %s: %s",
+        err2name(sta), err2string(sta));
     if (sta < 0)
+    {
         cert_answers.num_ansrs = sta;
+        LOG(LOG_DEBUG, "find_parent_cert() returning %s: %s",
+            err2name(sta), err2string(sta));
+    }
+    else
+    {
+        LOG(LOG_DEBUG, "find_parent_cert() returning %i answers",
+            cert_answers.num_ansrs);
+    }
+
     return &cert_answers;
 }
 
@@ -1139,30 +1169,68 @@ static X509 *parent_cert(
     char *pathname,
     int *flagsp)
 {
+    LOG(LOG_DEBUG, "parent_cert(conp=%p, ski=%s, subject=%s, stap=%p"
+        ", pathname=%s, flagsp=%p)",
+        conp, ski, subject, stap, pathname, flagsp);
+
     char ofullname[PATH_MAX];   /* full pathname */
+    X509 *ret = NULL;
+    err_code sta = 0;
 
     struct cert_answers *cert_answersp = find_parent_cert(ski, subject, conp);
     struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
     int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
     if (!cert_answersp || cert_answersp->num_ansrs <= 0)
+    {
+        if (!cert_answersp)
+        {
+            LOG(LOG_DEBUG, "cert_answersp is NULL");
+        }
+        else
+        {
+            LOG(LOG_DEBUG, "cert_answersp->num_ansrs is %s: %s",
+                err2name(cert_answersp->num_ansrs),
+                err2string(cert_answersp->num_ansrs));
+        }
         /**
          * @bug
          *     ignores error code without explanation (num_ansrs might
          *     be negative)
          */
-        goto no_parent;
+        goto done;
+    }
+    LOG(LOG_DEBUG, "got %i answers", cert_answersp->num_ansrs);
+    if (LOG_DEBUG <= LOG_LEVEL)
+    {
+        for (int i = 0; i < cert_answersp->num_ansrs; ++i)
+        {
+            struct cert_ansr *ansr = &cert_answersp->cert_ansrp[i];
+            LOG(LOG_DEBUG, "  answer %i:", i);
+            LOG(LOG_DEBUG, "    dirname=\"%s\"", ansr->dirname);
+            LOG(LOG_DEBUG, "    filename=\"%s\"", ansr->filename);
+            LOG(LOG_DEBUG, "    fullname=\"%s\"", ansr->fullname);
+            LOG(LOG_DEBUG, "    aki=\"%s\"", ansr->aki);
+            LOG(LOG_DEBUG, "    issuer=\"%s\"", ansr->issuer);
+            LOG(LOG_DEBUG, "    flags=0x%x", ansr->flags);
+            LOG(LOG_DEBUG, "    local_id=%u", ansr->local_id);
+        }
+    }
     if (cert_answersp->num_ansrs == 1)
     {
         cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (cert_ansrp->flags & (SCM_FLAG_ISTARGET | SCM_FLAG_HASPARACERT))
-            goto no_parent;
+        {
+            goto done;
+        }
     }
     else if (cert_answersp->num_ansrs == 2)
     {
         // do they conflict?
         if (((cert_answersp->cert_ansrp[0].flags & ff) &
              (cert_ansrp->flags & ff)))
-            goto no_parent;
+        {
+            goto done;
+        }
         // if using paracerts, choose the paracert
 
         if ((useParacerts &&
@@ -1171,29 +1239,37 @@ static X509 *parent_cert(
              !(cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT)))
             cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (!parentAKI || !parentIssuer)
-            goto no_parent;
+        {
+            goto done;
+        }
         /** @bug parentAKI is not a buffer of known length */
         strcpy(parentAKI, cert_ansrp->aki);
         /** @bug parentIssuer is not a buffer of known length */
         strcpy(parentIssuer, cert_ansrp->issuer);
     }
     else
+    {
         /**
          * @bug
          *     what if there are many matches (e.g., cert renewal,
          *     evil twin)?
          */
-        goto no_parent;
+        goto done;
+    }
     xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(pathname, ofullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
-    return readCertFromFile(ofullname, stap);
-no_parent:
+    ret = readCertFromFile(ofullname, &sta);
+done:
+    LOG(LOG_DEBUG, "parent_cert() returning %s: %s",
+        err2name(sta), err2string(sta));
     if (stap)
-        *stap = 0;
-    return NULL;
+    {
+        *stap = sta;
+    }
+    return ret;
 }
 
 struct cert_answers *find_cert_by_aKI(
@@ -1364,6 +1440,10 @@ verify_cert(
     char *parentSubject,
     int *chainOK)
 {
+    LOG(LOG_DEBUG, "verify_cert(conp=%p, x=%p, isTrusted=%d, parentSKI=\"%s\""
+        ", parentSubject=\"%s\", chainOK=%p)",
+        conp, x, isTrusted, parentSKI, parentSubject, chainOK);
+
     STACK_OF(X509) *sk_trusted = NULL;
     STACK_OF(X509) *sk_untrusted = NULL;
     X509_VERIFY_PARAM *vpm = NULL;
@@ -1378,7 +1458,11 @@ verify_cert(
     // create X509 store
     cert_ctx = X509_STORE_new();
     if (cert_ctx == NULL)
-        return (ERR_SCM_CERTCTX);
+    {
+        LOG(LOG_DEBUG, "X509_STORE_new() returned NULL");
+        sta = ERR_SCM_CERTCTX;
+        goto done;
+    }
     // set the verify callback
     X509_STORE_set_verify_cb_func(cert_ctx, verify_callback);
     // initialize the purpose
@@ -1398,17 +1482,21 @@ verify_cert(
     sk_trusted = sk_X509_new_null();
     if (sk_trusted == NULL)
     {
+        LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_trusted) returned NULL");
         X509_STORE_free(cert_ctx);
         X509_VERIFY_PARAM_free(vpm);
-        return (ERR_SCM_X509STACK);
+        sta = ERR_SCM_X509STACK;
+        goto done;
     }
     sk_untrusted = sk_X509_new_null();
     if (sk_untrusted == NULL)
     {
+        LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_untrusted) returned NULL");
         sk_X509_free(sk_trusted);
         X509_STORE_free(cert_ctx);
         X509_VERIFY_PARAM_free(vpm);
-        return (ERR_SCM_X509STACK);
+        sta = ERR_SCM_X509STACK;
+        goto done;
     }
     // if the certificate has already been flagged as trusted
     // just push it on the trusted stack and verify it
@@ -1429,6 +1517,12 @@ verify_cert(
          */
         parent =
             parent_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
+        LOG(LOG_DEBUG, "parent_cert() (for SKI/subject) error code is %s: %s",
+            err2name(sta), err2string(sta));
+        if (!parent)
+        {
+            LOG(LOG_DEBUG, "parent_cert() returned NULL");
+        }
         while (parent != NULL)
         {
             if (flags & SCM_FLAG_TRUSTED)
@@ -1448,18 +1542,31 @@ verify_cert(
                  */
                 parent = parent_cert(conp, parentAKI, parentIssuer, &sta, NULL,
                                      &flags);
+                LOG(LOG_DEBUG, "parent_cert() (for AKI/issuer) error code is"
+                    " %s: %s", err2name(sta), err2string(sta));
+                if (!parent)
+                {
+                    LOG(LOG_DEBUG, "parent_cert() returned NULL");
+                }
             }
         }
     }
     sta = 0;
     if (*chainOK)
+    {
         sta =
             checkit(conp, cert_ctx, x, sk_untrusted, sk_trusted, purpose,
                     NULL);
+        LOG(LOG_DEBUG, "checkit() returned %s: %s",
+            err2name(sta), err2string(sta));
+    }
     sk_X509_pop_free(sk_untrusted, X509_free);
     sk_X509_pop_free(sk_trusted, X509_free);
     X509_STORE_free(cert_ctx);
     X509_VERIFY_PARAM_free(vpm);
+done:
+    LOG(LOG_DEBUG, "verify_cert() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 
@@ -2153,6 +2260,10 @@ verifyChildCert(
     PropData *data,
     int doVerify)
 {
+    LOG(LOG_DEBUG, "verifyChildCert(conp=%p"
+        ", data=%p{.ski=\"%s\", .subject=\"%s\"}, doVerify=%i)",
+        conp, data, data->ski, data->subject, doVerify);
+
     X509 *x = NULL;
     err_code sta;
     int chainOK;
@@ -2164,7 +2275,10 @@ verifyChildCert(
         /** @bug ignores error code without explanation */
         x = readCertFromFile(pathname, &sta);
         if (x == NULL)
-            return ERR_SCM_X509;
+        {
+            sta = ERR_SCM_X509;
+            goto done;
+        }
         /** @bug ignores chainOK without explanation */
         sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
@@ -2172,7 +2286,7 @@ verifyChildCert(
             LOG(LOG_ERR, "Child cert %s is not valid", pathname);
             /** @bug ignores error code without explanation */
             deletebylid(conp, theCertTable, data->id);
-            return sta;
+            goto done;
         }
         /** @bug ignores error code without explanation */
         updateValidFlags(conp, theCertTable, data->id, data->flags, 1);
@@ -2222,7 +2336,11 @@ verifyChildCert(
     /** @bug ignores error code without explanation */
     sta = searchscm(conp, theManifestTable, manSrch, NULL, &verifyChildManifest,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
-    return 0;
+    sta = 0;
+done:
+    LOG(LOG_DEBUG, "verifyChildCert() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 typedef struct _mcf {
@@ -2556,6 +2674,9 @@ registerChild(
     scmsrcha *s,
     ssize_t idx)
 {
+    LOG(LOG_DEBUG, "registerChild(conp=%p, scmsrcha=%p, idx=%zi)",
+        conp, s, idx);
+
     PropData *propData;
 
     UNREFERENCED_PARAMETER(s);
@@ -2585,7 +2706,11 @@ registerChild(
     propData[currPropData->size].aki = strdup(s->vec[6].valptr);
     propData[currPropData->size].issuer = strdup(s->vec[7].valptr);
     currPropData->size++;
-    return 0;
+
+    err_code sta = 0;
+    LOG(LOG_DEBUG, "registerChild() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -2602,10 +2727,14 @@ verifyOrNotChildren(
     unsigned int cert_id,
     int doVerify)
 {
+    LOG(LOG_DEBUG, "verifyOrNotChildren(conp=%p, ski=\"%s\", subject=\"%s\""
+        ", aki=\"%s\", issuer=\"%s\", cert_id=%u, doVerify=%i)",
+        conp, ski, subject, aki, issuer, cert_id, doVerify);
+
     int isRoot = 1;
     int doIt;
     int idx;
-    err_code sta;
+    err_code sta = 0;
 
     prevPropData = currPropData;
     currPropData = doVerify ? &vPropData : &iPropData;
@@ -2649,6 +2778,7 @@ verifyOrNotChildren(
             doIt =
                 invalidateChildCert(conp, &currPropData->data[idx],
                                     !isRoot) == 0;
+        LOG(LOG_DEBUG, "doIt=%i", doIt);
         if (doIt)
         {
             char escaped [strlen(currPropData->data[idx].subject)*2+1];
@@ -2703,7 +2833,10 @@ verifyOrNotChildren(
         isRoot = 0;
     }
     currPropData = prevPropData;
-    return 0;
+
+    LOG(LOG_DEBUG, "verifyOrNotChildren() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /*
@@ -2843,6 +2976,10 @@ add_cert_2(
     unsigned int *cert_id,
     char *fullpath)
 {
+    LOG(LOG_DEBUG, "add_cert_2(scmp=%p, conp=%p, cf=%p, x=%p, id=%u"
+        ", utrust=%d, cert_id=%p, fullpath=%s)",
+        scmp, conp, cf, x, id, utrust, cert_id, fullpath);
+
     err_code sta = 0;
     int chainOK;
     int ct = UN_CERT;
@@ -2854,10 +2991,16 @@ add_cert_2(
     struct Extension *aki_extp;
     err_code locerr = 0;
     if (get_casn_file(&cert.self, fullpath, 0) < 0)
+    {
+        LOG(LOG_DEBUG, "get_casn_file() returned an error code");
         locerr = ERR_SCM_BADCERT;
+    }
     else if (!(ski_extp = find_extension(&cert.toBeSigned.extensions,
                                          id_subjectKeyIdentifier, false)))
+    {
+        LOG(LOG_DEBUG, "no SKI extension found");
         locerr = ERR_SCM_NOSKI;
+    }
     if (locerr)
     {
         delete_casn(&cert.self);
@@ -2866,17 +3009,31 @@ add_cert_2(
     }
     if (utrust > 0)
     {
-        if (((aki_extp = find_extension(&cert.toBeSigned.extensions,
-                                        id_authKeyId, false)) &&
-             diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
-                       &aki_extp->extnValue.authKeyId.keyIdentifier)) ||
-            strcmp(cf->fields[CF_FIELD_SUBJECT],
-                   cf->fields[CF_FIELD_ISSUER]) != 0)
+        if ((aki_extp = find_extension(&cert.toBeSigned.extensions,
+                                       id_authKeyId, false)) &&
+            diff_casn(&ski_extp->extnValue.subjectKeyIdentifier,
+                      &aki_extp->extnValue.authKeyId.keyIdentifier))
+        {
+            LOG(LOG_DEBUG, "either no AKI extension found or SKI != AKI");
             locerr = 1;
-        else if (vsize_casn(&cert.signature) < 256 ||
-                 vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.
-                            subjectPublicKey) < 265)
+        }
+        else if (strcmp(cf->fields[CF_FIELD_SUBJECT],
+                        cf->fields[CF_FIELD_ISSUER]) != 0)
+        {
+            LOG(LOG_DEBUG, "subject and issuer don't match");
+            locerr = 1;
+        }
+        else if (vsize_casn(&cert.signature) < 256)
+        {
+            LOG(LOG_DEBUG, "signature too small");
             locerr = ERR_SCM_SMALLKEY;
+        }
+        else if (vsize_casn(&cert.toBeSigned.subjectPublicKeyInfo.
+                            subjectPublicKey) < 265)
+        {
+            LOG(LOG_DEBUG, "key too small");
+            locerr = ERR_SCM_SMALLKEY;
+        }
         if (locerr)
         {
             X509_free(x);
@@ -2895,6 +3052,8 @@ add_cert_2(
     delete_casn(&cert.self);
     if (sta)
     {
+        LOG(LOG_DEBUG, "rescert_profile() returned %s: %s",
+            err2name(sta), err2string(sta));
         goto done1;
     }
     // MCR: new code to check for expiration. Ignore this
@@ -2903,6 +3062,7 @@ add_cert_2(
     {
         if (X509_cmp_time(X509_get_notAfter(x), NULL) < 0)
         {
+            LOG(LOG_DEBUG, "expired");
             sta = ERR_SCM_EXPIRED;
             goto done1;
         }
@@ -2918,12 +3078,16 @@ add_cert_2(
     if ((sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
                            cf->fields[CF_FIELD_ISSUER], &chainOK)))
     {
+        LOG(LOG_DEBUG, "verify_cert() returned %s: %s",
+            err2name(sta), err2string(sta));
         goto done1;
     }
     // check that no crls revoking this cert
     if ((sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
                             cf->fields[CF_FIELD_ISSUER])))
     {
+        LOG(LOG_DEBUG, "cert_revoked() returned %s: %s",
+            err2name(sta), err2string(sta));
         goto done1;
     }
     // actually add the certificate
@@ -2931,10 +3095,14 @@ add_cert_2(
                                cf->fields[CF_FIELD_FILENAME],
                                fullpath, scmp, conp)))
     {
+        LOG(LOG_DEBUG, "addStateToFlags() returned %s: %s",
+            err2name(sta), err2string(sta));
         goto done1;
     }
     if ((sta = add_cert_internal(scmp, conp, cf, cert_id)))
     {
+        LOG(LOG_DEBUG, "add_cert_internal() returned %s: %s",
+            err2name(sta), err2string(sta));
         goto done1;
     }
     // try to validate children of cert
@@ -2946,6 +3114,8 @@ add_cert_2(
                                        cf->fields[CF_FIELD_ISSUER],
                                        *cert_id, 1)))
         {
+            LOG(LOG_DEBUG, "verifyOrNotChildren() returned %s: %s",
+                err2name(sta), err2string(sta));
             goto done1;
         }
     }
@@ -2956,6 +3126,8 @@ done1:
         X509_free(x);
     }
 done2:
+    LOG(LOG_DEBUG, "add_cert_2() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 
@@ -2971,6 +3143,11 @@ add_cert(
     unsigned int *cert_id,
     int constraining)
 {
+    LOG(LOG_DEBUG, "add_cert(scmp=%p, conp=%p, outfile=\"%s\""
+        ", outfull=\"%s\", id=%u, utrust=%d, typ=%d"
+        ", cert_id=%p, constraining=%d)",
+        scmp, conp, outfile, outfull, id, utrust, typ, cert_id, constraining);
+
     cert_fields *cf;
     X509 *x = NULL;
     int x509sta = 0;
@@ -2980,18 +3157,25 @@ add_cert(
     /** @bug ignores error code without explanation if cf && x */
     /** @bug ignores x509sta without explanation */
     cf = cert2fields(outfile, outfull, typ, &x, &sta, &x509sta);
+    LOG(LOG_DEBUG, "cert2fields() returned error code %s: %s",
+        err2name(sta), err2string(sta));
     if (cf == NULL || x == NULL)
     {
         if (cf != NULL)
             freecf(cf);
         if (x != NULL)
             X509_free(x);
-        return (sta);
+        goto done;
     }
     useParacerts = constraining;
     sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
+    LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
+        err2name(sta), err2string(sta));
     freecf(cf);
     cf = NULL;
+done:
+    LOG(LOG_DEBUG, "add_cert() returning %s: %s",
+        err2name(sta), err2string(sta));
     return sta;
 }
 
@@ -3140,6 +3324,11 @@ extractAndAddCert(
     char *skip,
     char *certfilenamep)
 {
+    LOG(LOG_DEBUG, "extractAndAddCert(cmsp=%p, scmp=%p, conp=%p"
+        ", outdir=\"%s\", utrust=%d, typ=%d, outfile=\"%s\""
+        ", skip=\"%s\", certfilenamep=%p)",
+        cmsp, scmp, conp, outdir, utrust, typ, outfile, skip, certfilenamep);
+
     cert_fields *cf = NULL;
     unsigned int cert_id;
     char certname[PATH_MAX];
@@ -3150,12 +3339,21 @@ extractAndAddCert(
     certp = (struct Certificate *)member_casn(&cmsp->content.signedData.
                                               certificates.self, 0);
     if (!certp)
-        return ERR_SCM_BADNUMCERTS;
+    {
+        sta = ERR_SCM_BADNUMCERTS;
+        goto done;
+    }
     if ((certp->self.flags & ASN_INDEF_LTH_FLAG))
-        return ERR_SCM_ASN1_LTH;
+    {
+        sta = ERR_SCM_ASN1_LTH;
+        goto done;
+    }
     // read the embedded cert information, in particular the ski
     if ((hexify_sta = hexify_ski(certp, skip)) < 0)
-        return hexify_sta;
+    {
+        sta = hexify_sta;
+        goto done;
+    }
     // test for forbidden extension
     struct Extension *extp;
     for (extp =
@@ -3164,7 +3362,10 @@ extractAndAddCert(
          extp && diff_objid(&extp->extnID, id_extKeyUsage);
          extp = (struct Extension *)next_of(&extp->self));
     if (extp)
-        return ERR_SCM_BADEXT;
+    {
+        sta = ERR_SCM_BADEXT;
+        goto done;
+    }
     // serialize the Certificate and scan it as an openssl X509 object
     int siz = size_casn(&certp->self);
     unsigned char *buf = calloc(1, siz + 4);
@@ -3177,7 +3378,10 @@ extractAndAddCert(
     free(buf);
     // if deserialization failed, bail
     if (x509p == NULL)
-        return ERR_SCM_X509;
+    {
+        sta = ERR_SCM_X509;
+        goto done;
+    }
     memset(certname, 0, sizeof(certname));
     memset(pathname, 0, sizeof(pathname));
     strcpy(certname, outfile);
@@ -3196,7 +3400,10 @@ extractAndAddCert(
     if (*cc)
     {
         if (strncmp(outdir, pathname, lth))
-            return ERR_SCM_WRITE_EE;
+        {
+            sta = ERR_SCM_WRITE_EE;
+            goto done;
+        }
         cc = &outdir[lth];
         if (*cc == '/')
             strncat(pathname, cc++, 1);
@@ -3262,6 +3469,15 @@ extractAndAddCert(
     x509p = NULL;               /* freed by add_cert_2 */
     freecf(cf);
     cf = NULL;
+done:
+    if (sta > 0) {
+        LOG(LOG_DEBUG, "extractAndAddCert() returning %d", sta);
+    }
+    else
+    {
+        LOG(LOG_DEBUG, "extractAndAddCert() returning %s: %s",
+            err2name(sta), err2string(sta));
+    }
     return sta;
 }
 
@@ -3611,6 +3827,10 @@ add_manifest(
     int utrust,
     object_type typ)
 {
+    LOG(LOG_DEBUG, "add_manifest(scmp=%p, conp=%p, outfile=\"%s\""
+        ", outdir=\"%s\", outfull=\"%s\", id=%u, utrust=%d, typ=%d)",
+        scmp, conp, outfile, outdir, outfull, id, utrust, typ);
+
     err_code sta;
     int cert_added = 0;
     int stale;
@@ -3628,12 +3848,13 @@ add_manifest(
     {
         LOG(LOG_ERR, "invalid manifest %s", outfull);
         delete_casn(&cms.self);
-        return ERR_SCM_INVALASN;
+        sta = ERR_SCM_INVALASN;
+        goto done;
     }
     if ((sta = manifestValidate(&cms, &stale)) < 0)
     {
         delete_casn(&cms.self);
-        return sta;
+        goto done;
     }
     // now, read the data out of the manifest structure
     struct Manifest *manifest =
@@ -3722,7 +3943,7 @@ add_manifest(
             (void)delete_object(scmp, conp, certfilename, outdir,
                                 outfull, (unsigned int)0);
         delete_casn(&cms.self);
-        return sta;
+        goto done;
     }
     // the manifest is valid if the embedded cert is valid (since we already
     // know that the cert validates the manifest)
@@ -3786,6 +4007,9 @@ add_manifest(
     delete_casn(&(cms.self));
     free(thisUpdate);
     free(nextUpdate);
+done:
+    LOG(LOG_DEBUG, "add_manifest() returning %s: %s",
+        err2name(sta), err2string(sta));
     return sta;
 }
 
@@ -3921,6 +4145,10 @@ add_object(
     char *outfull,
     int utrust)
 {
+    LOG(LOG_DEBUG, "add_object(scmp=%p, conp=%p, outfile=\"%s\""
+        ", outdir=\"%s\", outfull=\"%s\", utrust=%d)",
+        scmp, conp, outfile, outdir, outfull, utrust);
+
     unsigned int id = 0;
     unsigned int obj_id = 0;
     object_type typ;
@@ -3929,17 +4157,33 @@ add_object(
     useParacerts = 0;
     if (scmp == NULL || conp == NULL || conp->connected == 0 ||
         outfile == NULL || outdir == NULL || outfull == NULL)
-        return (ERR_SCM_INVALARG);
+    {
+        sta = ERR_SCM_INVALARG;
+        goto done;
+    }
     // make sure it is really a file
+    LOG(LOG_DEBUG, "calling isokfile(\"%s\")", outfull);
     sta = isokfile(outfull);
+    LOG(LOG_DEBUG, "isokfile() returned %s: %s",
+        err2name(sta), err2string(sta));
     if (sta < 0)
-        return (sta);
+    {
+        goto done;
+    }
     // determine its filetype
+    LOG(LOG_DEBUG, "calling infer_filetype(\"%s\")", outfull);
     typ = infer_filetype(outfull);
+    LOG(LOG_DEBUG, "infer_filetype() returned %d", typ);
     // find or add the directory
+    LOG(LOG_DEBUG, "calling findorcreatedir(%p, %p, \"%s\", %p)",
+        scmp, conp, outdir, &id);
     sta = findorcreatedir(scmp, conp, outdir, &id);
+    LOG(LOG_DEBUG, "findorcreatedir() returned %s: %s",
+        err2name(sta), err2string(sta));
     if (sta < 0)
-        return (sta);
+    {
+        goto done;
+    }
     // add the object based on the type
     switch (typ)
     {
@@ -3947,31 +4191,46 @@ add_object(
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN + OT_PEM_OFFSET:
+        LOG(LOG_DEBUG, "calling add_cert(%p, %p, \"%s\", \"%s\", %d, %d, %d, %p, 0)",
+            scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
         sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id,
                        0);
+        LOG(LOG_DEBUG, "add_cert() returned %s: %s",
+            err2name(sta), err2string(sta));
         break;
     case OT_CRL:
     case OT_CRL_PEM:
         sta = add_crl(scmp, conp, outfile, outfull, id, utrust, typ);
+        LOG(LOG_DEBUG, "add_crl() returned %s: %s",
+            err2name(sta), err2string(sta));
         break;
     case OT_ROA:
     case OT_ROA_PEM:
         sta = add_roa(scmp, conp, outfile, outdir, outfull, id, utrust, typ);
+        LOG(LOG_DEBUG, "add_roa() returned %s: %s",
+            err2name(sta), err2string(sta));
         break;
     case OT_MAN:
     case OT_MAN_PEM:
         sta =
             add_manifest(scmp, conp, outfile, outdir, outfull, id, utrust,
                          typ);
+        LOG(LOG_DEBUG, "add_manifest() returned %s: %s",
+            err2name(sta), err2string(sta));
         break;
     case OT_GBR:
         sta = add_ghostbusters(scmp, conp, outfile, outdir, outfull, id,
                                utrust, typ);
+        LOG(LOG_DEBUG, "add_ghostbusters() returned %s: %s",
+            err2name(sta), err2string(sta));
         break;
     default:
         sta = ERR_SCM_INTERNAL;
         break;
     }
+done:
+    LOG(LOG_DEBUG, "add_object() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 
