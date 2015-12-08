@@ -27,21 +27,21 @@ extern int strict_profile_checks;
  * certificate in order to insert it into the DB.
  */
 
-#define CF_FIELD_FILENAME    0
-#define CF_FIELD_SUBJECT     1
-#define CF_FIELD_ISSUER      2
-#define CF_FIELD_SN          3
-#define CF_FIELD_FROM        4
-#define CF_FIELD_TO          5
-#define CF_FIELD_SIGNATURE   6
-
-#define CF_FIELD_SKI         7
-#define CF_FIELD_AKI         8
-#define CF_FIELD_SIA         9
-#define CF_FIELD_AIA        10
-#define CF_FIELD_CRLDP      11
-
-#define CF_NFIELDS          (CF_FIELD_CRLDP+1)
+typedef enum {
+    CF_FIELD_FILENAME,
+    CF_FIELD_SUBJECT,
+    CF_FIELD_ISSUER,
+    CF_FIELD_SN,
+    CF_FIELD_FROM,
+    CF_FIELD_TO,
+    CF_FIELD_SIGNATURE,
+    CF_FIELD_SKI,
+    CF_FIELD_AKI,
+    CF_FIELD_SIA,
+    CF_FIELD_AIA,
+    CF_FIELD_CRLDP,
+    CF_NFIELDS // this must be last
+} cf_field;
 
 #define CRL_MAX_SNUM_LTH    20  // maximum length of cert serial number in CRL
 #define CRL_MAX_CRLNUM_LTH  20
