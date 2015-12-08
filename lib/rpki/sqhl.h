@@ -94,8 +94,30 @@ extern int delete_object(
     char *outdir,
     char *outfull,
     unsigned int dir_id);
+
+/**
+ * @brief
+ *     Infer the object type based on which file extensions are present.
+ *
+ * @param[in] fname
+ *     File pathname.  This MUST NOT be NULL.
+ *
+ * @return
+ *     An object type code depending on the filename suffix:
+ *       - `.cer`: ::OT_CER
+ *       - `.crl`: ::OT_CRL
+ *       - `.roa`: ::OT_ROA
+ *       - `.man`, `.mft`, `.mnf`: ::OT_MAN
+ *       - `.gbr`: ::OT_GBR
+ *       - `.cer.pem`: ::OT_CER_PEM
+ *       - `.crl.pem`: ::OT_CRL_PEM
+ *       - `.roa.pem`: ::OT_ROA_PEM
+ *       - `.man.pem`, `.mft.pem`, `.mnf.pem`: ::OT_MAN_PEM
+ *       - all others: ::OT_UNKNOWN.
+ */
 extern int infer_filetype(
-    char *fname);
+    const char *fname);
+
 extern int add_cert(
     scm * scmp,
     scmcon * conp,

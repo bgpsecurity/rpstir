@@ -294,45 +294,59 @@ static int dupsigscm(
     }
 }
 
-/*
- * Infer the object type based on which file extensions are present. The
- * following can be present: .cer, .crl and .roa; .pem can also be present. If 
- * there is no suffix, then also check to see if the filename is of the form
- * HHHHHHHH.N, where "HHHHHHHH" is eight hex digits, and .N is an integer
- * suffix. In this case, it is a cert. If nothing can be determined then
- * return unknown.
- * 
- * On success this function returns one of the types defined in sqhl.h; on
- * failure it returns a negative error code. 
+/**
+ * @brief
+ *     test whether a string has a particular suffix
  */
+static _Bool
+ends_with(
+    const char *str,
+    size_t lenstr,
+    const char *sfx,
+    size_t lensfx)
+{
+    assert(str);
+    assert(sfx);
+    if (lensfx > lenstr)
+        return 0;
+    return (0 == strncmp(str + lenstr - lensfx, sfx, lensfx));
+}
 
 int infer_filetype(
-    char *fname)
+    const char *fname)
 {
-    int pem = 0;
-    int typ = 0;
+    struct {
+        const char *const sfx;
+        const size_t lensfx;
+        const int typ;
+    } *rulep, rules[] = {
+        {".cer", 4, OT_CER},
+        {".crl", 4, OT_CRL},
+        {".roa", 4, OT_ROA},
+        {".man", 4, OT_MAN},
+        {".mft", 4, OT_MAN},
+        {".mnf", 4, OT_MAN},
+        {".gbr", 4, OT_GBR},
+        {".cer.pem", 8, OT_CER_PEM},
+        {".crl.pem", 8, OT_CRL_PEM},
+        {".roa.pem", 8, OT_ROA_PEM},
+        {".man.pem", 8, OT_MAN_PEM},
+        {".mft.pem", 8, OT_MAN_PEM},
+        {".mnf.pem", 8, OT_MAN_PEM},
+        {NULL, 0, OT_UNKNOWN} // must be last
+    };
 
-    if (fname == NULL || fname[0] == 0)
-        return (ERR_SCM_INVALARG);
+    assert(fname);
 
-    if (strstr(fname, ".pem") != NULL)
-        pem = 1;
-    if (strstr(fname, ".cer") != NULL)
-        typ += OT_CER;
-    if (strstr(fname, ".crl") != NULL)
-        typ += OT_CRL;
-    if (strstr(fname, ".roa") != NULL && !typ)
-        typ += OT_ROA;
-    if ((strstr(fname, ".man") != NULL || strstr(fname, ".mft") != NULL ||
-         strstr(fname, ".mnf") != NULL) && !typ)
-        typ += OT_MAN;
-    if (strstr(fname, ".gbr") != NULL)
-        typ += OT_GBR;
-    if (typ < OT_UNKNOWN || typ > OT_MAXBASIC)
-        return (ERR_SCM_INVALFN);
-    if (pem > 0)
-        typ += OT_PEM_OFFSET;
-    return (typ);
+    size_t lenfname = strlen(fname);
+
+    for (rulep = &rules[0]; rulep->sfx; ++rulep)
+    {
+        if (ends_with(fname, lenfname, rulep->sfx, rulep->lensfx))
+            return rulep->typ;
+    }
+    // return the type in the NULL rule
+    return rulep->typ;
 }
 
 // so that manifest can get id of previous cert
@@ -3638,8 +3652,6 @@ int add_object(
         return (sta);
     // determine its filetype
     typ = infer_filetype(outfull);
-    if (typ < 0)
-        return (typ);
     // find or add the directory
     sta = findorcreatedir(scmp, conp, outdir, &id);
     if (sta < 0)
@@ -4004,8 +4016,6 @@ int delete_object(
         return (ERR_SCM_INVALARG);
     // determine its filetype
     typ = infer_filetype(outfile);
-    if (typ < 0)
-        return (typ);
     // find the directory
     if (scmp)
         initTables(scmp);       // may be null if tables have been initiated
