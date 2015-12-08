@@ -140,9 +140,8 @@ add_paracert2DB(
         return 0;
     }
     else
-        /** @bug should print error string, not number */
-        LOG(LOG_ERR, "Adding %s to DB failed with error %d",
-                fullname, -ansr);
+        LOG(LOG_ERR, "Adding %s to DB failed with %s: %s",
+            fullname, err2name(ansr), err2string(ansr));
     return ansr;
 }
 

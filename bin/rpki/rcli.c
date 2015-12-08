@@ -391,8 +391,8 @@ aur(
     sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
     if (sta != 0)
     {
-        LOG(LOG_ERR, "Error loading file %s/%s: %s", hdir, valu,
-                err2string(sta));
+        LOG(LOG_ERR, "Error loading file %s/%s: %s (%s)",
+            hdir, valu, err2string(sta), err2name(sta));
         free((void *)outdir);
         free((void *)outfile);
         free((void *)outfull);
@@ -617,7 +617,8 @@ sockline(
             LOG(LOG_INFO, "AUR add request: %s", valu);
             sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -626,7 +627,8 @@ sockline(
             LOG(LOG_INFO, "AUR update request: %s", valu);
             sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -635,7 +637,8 @@ sockline(
             LOG(LOG_INFO, "AUR remove request: %s", valu);
             sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -738,7 +741,8 @@ fileline(
             LOG(LOG_INFO, "AUR add request: %s", valu);
             sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -747,7 +751,8 @@ fileline(
             LOG(LOG_INFO, "AUR update request: %s", valu);
             sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -756,7 +761,8 @@ fileline(
             LOG(LOG_INFO, "AUR remove request: %s", valu);
             sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -1120,8 +1126,8 @@ int main(
                 if (sta < 0)
                 {
                     LOG(LOG_ERR,
-                            "Add failed: %s: error %s (%d)",
-                            thefile, err2string(sta), sta);
+                            "Add failed: %s: error %s (%s)",
+                            thefile, err2string(sta), err2name(sta));
                     if (sta == ERR_SCM_SQL)
                     {
                         ne = geterrorscm(realconp);
@@ -1137,7 +1143,7 @@ int main(
             free((void *)outfull);
         }
         else
-            LOG(LOG_ERR, "%s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "%s (%s)", err2string(sta), err2name(sta));
     }
     if (use_filelist > 0 && sta == 0)
     {
@@ -1162,7 +1168,7 @@ int main(
             status = splitdf(NULL, NULL, line, &outdir, &outfile, &outfull);
             if (status != 0)
             {
-                LOG(LOG_ERR, "%s (%d)", err2string(status), status);
+                LOG(LOG_ERR, "%s (%s)", err2string(status), err2name(status));
                 continue;
             }
 
@@ -1181,8 +1187,8 @@ int main(
             }
             else
             {
-                LOG(LOG_ERR, "Add failed: %s: error %s (%d)",
-                    line, err2string(status), status);
+                LOG(LOG_ERR, "Add failed: %s: error %s (%s)",
+                    line, err2string(status), err2name(status));
                 if (status == ERR_SCM_SQL)
                 {
                     ne = geterrorscm(realconp);
@@ -1206,8 +1212,8 @@ int main(
             if (sta < 0)
             {
                 LOG(LOG_ERR,
-                        "Could not delete file %s: error %s (%d)",
-                        thedelfile, err2string(sta), sta);
+                        "Could not delete file %s: error %s (%s)",
+                        thedelfile, err2string(sta), err2name(sta));
                 if (sta == ERR_SCM_SQL)
                 {
                     ne = geterrorscm(realconp);
@@ -1223,7 +1229,7 @@ int main(
             free((void *)outfull);
         }
         else
-            LOG(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "Error: %s (%s)", err2string(sta), err2name(sta));
     }
     if ((do_sockopts + do_fileopts) > 0 && sta == 0)
     {
@@ -1292,8 +1298,8 @@ int main(
                 if (sta > 0)
                     sta = 0;
                 if (sta)
-                    LOG(LOG_ERR, "Error with skifile: %s (%d)",
-                            err2string(sta), sta);
+                    LOG(LOG_ERR, "Error with skifile: %s (%s)",
+                            err2string(sta), err2name(sta));
             }
         } while (perpetual > 0);
         if (protos >= 0)
@@ -1306,8 +1312,8 @@ int main(
         if (sta > 0)
             sta = 0;
         if (sta)
-            LOG(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta),
-                    sta);
+            LOG(LOG_ERR, "Error with skifile: %s (%s)",
+                err2string(sta), err2name(sta));
     }
     /** @bug ignores error code without explanation */
     (void)ranlast(scmp, realconp, "RSYNC");
