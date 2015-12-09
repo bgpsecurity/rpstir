@@ -2915,40 +2915,36 @@ add_cert_2(
     }
     // MCR
     // verify the cert
-    sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
-                      cf->fields[CF_FIELD_ISSUER], &chainOK);
-    if (sta)
+    if ((sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
+                           cf->fields[CF_FIELD_ISSUER], &chainOK)))
     {
         goto done1;
     }
     // check that no crls revoking this cert
-    sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
-                       cf->fields[CF_FIELD_ISSUER]);
-    if (sta)
+    if ((sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
+                            cf->fields[CF_FIELD_ISSUER])))
     {
         goto done1;
     }
     // actually add the certificate
-    sta =
-        addStateToFlags(&cf->flags, chainOK, cf->fields[CF_FIELD_FILENAME],
-                        fullpath, scmp, conp);
-    if (sta)
+    if ((sta = addStateToFlags(&cf->flags, chainOK,
+                               cf->fields[CF_FIELD_FILENAME],
+                               fullpath, scmp, conp)))
     {
         goto done1;
     }
-    sta = add_cert_internal(scmp, conp, cf, cert_id);
-    if (sta)
+    if ((sta = add_cert_internal(scmp, conp, cf, cert_id)))
     {
         goto done1;
     }
     // try to validate children of cert
     if (chainOK)
     {
-        sta = verifyOrNotChildren(conp, cf->fields[CF_FIELD_SKI],
-                                  cf->fields[CF_FIELD_SUBJECT],
-                                  cf->fields[CF_FIELD_AKI],
-                                  cf->fields[CF_FIELD_ISSUER], *cert_id, 1);
-        if (sta)
+        if ((sta = verifyOrNotChildren(conp, cf->fields[CF_FIELD_SKI],
+                                       cf->fields[CF_FIELD_SUBJECT],
+                                       cf->fields[CF_FIELD_AKI],
+                                       cf->fields[CF_FIELD_ISSUER],
+                                       *cert_id, 1)))
         {
             goto done1;
         }
@@ -3583,14 +3579,12 @@ add_roa(
     }
     prefixes_length = prefixes_ret;
 
-    sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
-    if (sta != 0)
+    if ((sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp)))
         goto done;
 
     // add to database
-    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid,
-                           prefixes_length, prefixes, sig, flags);
-    if (sta < 0)
+    if ((sta = add_roa_internal(scmp, conp, outfile, id, ski, asid,
+                                prefixes_length, prefixes, sig, flags)))
         goto done;
 
 done:
