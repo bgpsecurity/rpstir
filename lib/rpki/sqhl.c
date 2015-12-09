@@ -2861,7 +2861,8 @@ add_cert_2(
     if (locerr)
     {
         delete_casn(&cert.self);
-        return locerr;
+        sta = locerr;
+        goto done2;
     }
     if (utrust > 0)
     {
@@ -2880,7 +2881,8 @@ add_cert_2(
         {
             X509_free(x);
             delete_casn(&cert.self);
-            return (locerr < 0) ? locerr : ERR_SCM_NOTSS;
+            sta = (locerr < 0) ? locerr : ERR_SCM_NOTSS;
+            goto done2;
         }
         cf->flags |= SCM_FLAG_TRUSTED;
     }
@@ -2891,59 +2893,73 @@ add_cert_2(
         ct = (cf->flags & SCM_FLAG_CA) ? CA_CERT : EE_CERT;
     sta = rescert_profile_chk(x, &cert, ct);
     delete_casn(&cert.self);
+    if (sta)
+    {
+        goto done1;
+    }
     // MCR: new code to check for expiration. Ignore this
     // check if "allowex" is non-zero
-    if ((sta == 0) && (allowex == 0))
+    if (allowex == 0)
     {
         if (X509_cmp_time(X509_get_notAfter(x), NULL) < 0)
+        {
             sta = ERR_SCM_EXPIRED;
+            goto done1;
+        }
     }
     // Check if cert isn't valid yet, i.e. notBefore is in the future.
-    if (sta == 0)
+    if (X509_cmp_time(X509_get_notBefore(x), NULL) > 0)
     {
-        if (X509_cmp_time(X509_get_notBefore(x), NULL) > 0)
-        {
-            LOG(LOG_WARNING, "Certificate notBefore is in the future");
-            cf->flags |= SCM_FLAG_NOTYET;
-        }
+        LOG(LOG_WARNING, "Certificate notBefore is in the future");
+        cf->flags |= SCM_FLAG_NOTYET;
     }
     // MCR
     // verify the cert
-    if (sta == 0)
+    sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
+                      cf->fields[CF_FIELD_ISSUER], &chainOK);
+    if (sta)
     {
-        sta = verify_cert(conp, x, utrust, cf->fields[CF_FIELD_AKI],
-                          cf->fields[CF_FIELD_ISSUER], &chainOK);
+        goto done1;
     }
     // check that no crls revoking this cert
-    if (sta == 0)
+    sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
+                       cf->fields[CF_FIELD_ISSUER]);
+    if (sta)
     {
-        sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
-                           cf->fields[CF_FIELD_ISSUER]);
+        goto done1;
     }
     // actually add the certificate
-    if (sta == 0)
+    sta =
+        addStateToFlags(&cf->flags, chainOK, cf->fields[CF_FIELD_FILENAME],
+                        fullpath, scmp, conp);
+    if (sta)
     {
-        sta =
-            addStateToFlags(&cf->flags, chainOK, cf->fields[CF_FIELD_FILENAME],
-                            fullpath, scmp, conp);
+        goto done1;
     }
-    if (sta == 0)
+    sta = add_cert_internal(scmp, conp, cf, cert_id);
+    if (sta)
     {
-        sta = add_cert_internal(scmp, conp, cf, cert_id);
+        goto done1;
     }
     // try to validate children of cert
-    if ((sta == 0) && chainOK)
+    if (chainOK)
     {
         sta = verifyOrNotChildren(conp, cf->fields[CF_FIELD_SKI],
                                   cf->fields[CF_FIELD_SUBJECT],
                                   cf->fields[CF_FIELD_AKI],
                                   cf->fields[CF_FIELD_ISSUER], *cert_id, 1);
+        if (sta)
+        {
+            goto done1;
+        }
     }
+done1:
     // if change verify_cert so that not pushing on stack, change this
     if (!(cf->flags & SCM_FLAG_TRUSTED))
     {
         X509_free(x);
     }
+done2:
     return (sta);
 }
 
@@ -3525,61 +3541,59 @@ add_roa(
         delete_casn(&roa.self);
         return (sta);
     }
-    do
-    {                           /* do-once */
-        /**
-         * @bug
-         *     extractAndAddCert() returns 0 if things are sorta-OK
-         *     and 1 if things are definitely OK.  If it's OK to treat
-         *     these two cases identically then there should be an
-         *     explanatory comment.
-         */
-        if ((sta = extractAndAddCert(&roa, scmp, conp, outdir,
-                                     utrust, typ, outfile, ski,
-                                     certfilename)) < 0)
-            break;
-        cert_added = 1;
 
-        asid = roaAS_ID(&roa);  /* it's OK if this comes back zero */
+    /**
+     * @bug
+     *     extractAndAddCert() returns 0 if things are sorta-OK
+     *     and 1 if things are definitely OK.  If it's OK to treat
+     *     these two cases identically then there should be an
+     *     explanatory comment.
+     */
+    if ((sta = extractAndAddCert(&roa, scmp, conp, outdir,
+                                 utrust, typ, outfile, ski,
+                                 certfilename)) < 0)
+        goto done;
+    cert_added = 1;
 
-        // signature NOTE: this does not calloc, only points
-        if ((bsig = roaSignature(&roa, &bsiglen)) == NULL || bsiglen < 0)
-        {
-            sta = ERR_SCM_NOSIG;
-            break;
-        }
+    asid = roaAS_ID(&roa);  /* it's OK if this comes back zero */
 
-        if ((sig = hexify(bsiglen, bsig, HEXIFY_NO)) == NULL)
-        {
-            sta = ERR_SCM_NOMEM;
-            break;
-        }
+    // signature NOTE: this does not calloc, only points
+    if ((bsig = roaSignature(&roa, &bsiglen)) == NULL || bsiglen < 0)
+    {
+        sta = ERR_SCM_NOSIG;
+        goto done;
+    }
 
-        // verify the signature
-        if ((sta = verify_roa(conp, &roa, ski, &chainOK)) != 0)
-            break;
+    if ((sig = hexify(bsiglen, bsig, HEXIFY_NO)) == NULL)
+    {
+        sta = ERR_SCM_NOMEM;
+        goto done;
+    }
 
-        // prefixes
-        ssize_t prefixes_ret = roaGetPrefixes(&roa, &prefixes);
-        if (prefixes_ret < 0)
-        {
-            /** @bug sta is still 0 here; is that intentional? */
-            break;
-        }
-        prefixes_length = prefixes_ret;
+    // verify the signature
+    if ((sta = verify_roa(conp, &roa, ski, &chainOK)) != 0)
+        goto done;
 
-        sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
-        if (sta != 0)
-            break;
+    // prefixes
+    ssize_t prefixes_ret = roaGetPrefixes(&roa, &prefixes);
+    if (prefixes_ret < 0)
+    {
+        /** @bug sta is still 0 here; is that intentional? */
+        goto done;
+    }
+    prefixes_length = prefixes_ret;
 
-        // add to database
-        sta = add_roa_internal(scmp, conp, outfile, id, ski, asid,
-            prefixes_length, prefixes, sig, flags);
-        if (sta < 0)
-            break;
+    sta = addStateToFlags(&flags, chainOK, outfile, outfull, scmp, conp);
+    if (sta != 0)
+        goto done;
 
-    } while (0);
+    // add to database
+    sta = add_roa_internal(scmp, conp, outfile, id, ski, asid,
+                           prefixes_length, prefixes, sig, flags);
+    if (sta < 0)
+        goto done;
 
+done:
     // clean up
     free(prefixes);
     if (sta != 0 && cert_added)
