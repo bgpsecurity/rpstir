@@ -63,7 +63,10 @@ void config_message(
        pointer itself must not be put in *data.  It can be NULL if the
        config file has no value for a non-array option.
    @param[out] data
-       A value of the correct type for the config item.  May be NULL.
+       On successful return, the value at this location will be set to
+       a pointer to a value of the correct type for the config item.
+       @p data MUST NOT be NULL, but the value written to @p data may
+       be NULL.
    @return
        True on success, false on failure.  This means that this
        function can be used to validate input.
