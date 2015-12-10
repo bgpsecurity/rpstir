@@ -33,8 +33,7 @@ void addQueryFlagTests(
     // NOTE: This must be kept in sync with flag_tests_default.
 
     addFlagTest(whereStr, SCM_FLAG_VALIDATED, 1, needAnd);
-    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-        addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(whereStr, SCM_FLAG_NOCHAIN, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
         addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
@@ -53,7 +52,6 @@ void addQueryFlagTests(
 static scmtab *roaPrefixTable = NULL;
 static scmtab *validTable = NULL;
 static scmsrcha *validSrch = NULL;
-static scmsrcha *anySrch = NULL;
 char *validWhereStr;
 static char *whereInsertPtr;
 static int parentsFound;
@@ -115,13 +113,10 @@ initSearch(
     addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
     validWhereStr = validSrch->wherestr;
     validWhereStr[0] = 0;
-    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-        xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
+    xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
     free(now);
-    addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
-                !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
-    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-        addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1, 1);
+    addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
         addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
@@ -143,14 +138,6 @@ initSearch(
     whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
     nextSKI = (char *)validSrch->vec[0].valptr;
     nextSubject = (char *)validSrch->vec[1].valptr;
-
-    if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-    {
-        anySrch = newsrchscm(NULL, 1, 0, 1);
-        field = findField("flags");
-        /** @bug ignores error code without explanation */
-        addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
-    }
 }
 
 int checkValidity(
@@ -214,17 +201,7 @@ int checkValidity(
         else if (parentsFound == 0)
         {
             // no parent cert
-            if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-                return 0;
-            xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
-                      whereInsertPtr + 5);
-            /** @bug ignores error code without explanation */
-            searchscm(connect, validTable, anySrch, NULL, &registerParent,
-                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
-            if (parentsFound > 1)
-                LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
-                    parentsFound);
-            return !parentsFound;
+            return 0;
         }
     }
     return 1;

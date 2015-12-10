@@ -135,11 +135,7 @@ void flag_tests_default(
     flag_tests_empty(tests);
 
     flag_tests_add_tests_by_mask(tests, SCM_FLAG_VALIDATED, true);
-
-    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-    {
-        flag_tests_add_tests_by_mask(tests, SCM_FLAG_NOCHAIN, false);
-    }
+    flag_tests_add_tests_by_mask(tests, SCM_FLAG_NOCHAIN, false);
 
     if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
     {

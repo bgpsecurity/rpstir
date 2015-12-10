@@ -79,14 +79,6 @@ RPKIPort 7345 # Use a different port for statistics than for "normal" use.
 # How long to keep data for rpki-rtr.
 #RpkiRtrRetentionHours 96
 
-# If a ROA at one point had a trust chain back to a trust anchor
-# validating it, but then later lost this trust chain due to a
-# certificate expiring or being revoked by a CRL, then the ROA is
-# in a validation stale state.
-# Specifying no means that all such ROAs are eliminated from the output,
-# while yes treats all such ROAs as equivalent to valid ROAs.
-#RPKIAllowStaleValidationChain no
-
 # If a ROA or any certificate on its trust chain has never been on a
 # valid manifest, then there is reason to consider the ROA suspect.
 # Specifying no means that all such ROAs are eliminated from the output,

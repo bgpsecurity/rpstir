@@ -112,11 +112,11 @@ static const struct config_option config_options[] = {
     {
      "RPKIAllowStaleValidationChain",
      false,
-     config_type_bool_converter, NULL,
+     config_type_deprecated_converter, NULL,
      NULL, NULL,
      free,
      NULL, NULL,
-     "no"},
+     ""},
 
     // CONFIG_RPKI_ALLOW_NO_MANIFEST
     {
