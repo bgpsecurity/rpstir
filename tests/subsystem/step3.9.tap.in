@@ -20,7 +20,6 @@ Filename = R1131.roa
 Filename = R1211.roa  
 Filename = R1321.roa  
 Filename = R1322.roa  
-Filename = R221.roa  
 EOF
 t4s_testcase_diff "roa query output" "${expected}" "${actual}"
 
@@ -35,7 +34,6 @@ Filename = G1131.gbr
 Filename = G1211.gbr  
 Filename = G1321.gbr  
 Filename = G1322.gbr  
-Filename = G221.gbr  
 EOF
 t4s_testcase_diff "gbr query output" "${expected}" "${actual}"
 

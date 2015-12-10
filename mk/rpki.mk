@@ -2207,10 +2207,8 @@ TESTS += tests/subsystem/testcases/makeall.tap
 
 
 EXTRA_DIST += \
-	tests/subsystem/specs.1.2.conf \
 	tests/subsystem/specs.1.3.conf \
 	tests/subsystem/specs.2.6.conf \
-	tests/subsystem/specs.2.8.conf \
 	tests/subsystem/specs.3.3b.conf \
 	tests/subsystem/specs.3.4a.conf \
 	tests/subsystem/specs.3.7.conf \
