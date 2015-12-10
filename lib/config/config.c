@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "configlib/types/bool.h"
+#include "configlib/types/deprecated.h"
 #include "configlib/types/enum.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
