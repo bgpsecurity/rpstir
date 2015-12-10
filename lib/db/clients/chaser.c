@@ -97,47 +97,9 @@ int64_t db_chaser_read_aia(
 {
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_AIA];
-    unsigned int flag_no_chain = SCM_FLAG_NOCHAIN;
-    unsigned int flag_validated = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     int ret;
-
-    MYSQL_BIND bind_in[] = {
-        // flag_no_chain
-        {
-            .buffer_type = MYSQL_TYPE_LONG,
-            .buffer = &flag_no_chain,
-            .is_unsigned = (my_bool) 1,
-            .is_null = (my_bool *) 0,
-        },
-        {
-            .buffer_type = MYSQL_TYPE_LONG,
-            .buffer = &flag_no_chain,
-            .is_unsigned = (my_bool) 1,
-            .is_null = (my_bool *) 0,
-        },
-        {
-            .buffer_type = MYSQL_TYPE_LONG,
-            .buffer = &flag_validated,
-            .is_unsigned = (my_bool) 1,
-            .is_null = (my_bool *) 0,
-        },
-        {
-            .buffer_type = MYSQL_TYPE_LONG,
-            .buffer = &flag_validated,
-            .is_unsigned = (my_bool) 1,
-            .is_null = (my_bool *) 0,
-        },
-    };
-
-    if (mysql_stmt_bind_param(stmt, bind_in))
-    {
-        LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
-        LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
-            mysql_stmt_error(stmt));
-        return -1;
-    }
 
     if (wrap_mysql_stmt_execute(conn, stmt, "mysql_stmt_execute() failed"))
     {
