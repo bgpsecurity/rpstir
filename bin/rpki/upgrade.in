@@ -51,6 +51,37 @@ show_msgs () {
     fi
 }
 
+clear_rpki_rtr_done=false
+clear_rpki_rtr() {
+    ! "${clear_rpki_rtr_done}" || return 0
+
+    log "Clearing rpki-rtr data..."
+    rpki-rtr-clear -f || fatal "Could not clear rpki-rtr data."
+    clear_rpki_rtr_done=true
+
+}
+
+finalize() {
+    if "${clear_rpki_rtr_done}"; then
+        log "Re-initializing rpki-rtr data."
+        rpki-rtr-initialize || fatal "Could not re-initialize rpki-rtr."
+
+        # Don't run rpki-rtr-update here, because it's possible that
+        # the user has tweaked their local cache in some way that
+        # they're not ready to push out to routers yet. In the nominal
+        # case, our not running rpki-rtr-update here isn't a big deal
+        # because it will be run reasonably soon by cron, and the
+        # routers should be configured with multiple cache servers
+        # anyway.
+        add_msg "\
+The rpki-rtr data was cleared and re-initialized, but no updates were
+created.  If you want to start sending data to routers again, run
+%s-rpki-rtr-update." \
+            "@PACKAGE_NAME@"
+    fi
+
+    show_msgs || exit $?
+}
 
 upgrade_from_0_11 () {
     ltam_certs=$(
@@ -77,8 +108,7 @@ EOF
 }
 
 upgrade_from_0_10 () {
-    log "Clearing rpki-rtr data before altering schema."
-    rpki-rtr-clear -f || fatal "Could not clear rpki-rtr data."
+    clear_rpki_rtr
 
     log "Removing all ROAs from the database before altering schema."
     RPKICacheDir=$(try config_get RPKICacheDir) || exit 1
@@ -138,21 +168,6 @@ EOF
     log "Re-adding ROAs with new schema."
     find "${RPKICacheDir}" -type f -name \*.roa -print \
         | rcli -l || fatal "Failed to re-add ROAs."
-
-    log "Re-initializing rpki-rtr data."
-    rpki-rtr-initialize || fatal "Could not re-initialize rpki-rtr."
-
-    # Don't run rpki-rtr-update here, because it's possible that the
-    # user has tweaked their local cache in some way that they're not
-    # ready to push out to routers yet. In the nominal case, our not
-    # running rpki-rtr-update here isn't a big deal because it will
-    # be run reasonably soon by cron, and the routers should be
-    # configured with multiple cache servers anyway.
-    add_msg "\
-The rpki-rtr data was cleared and re-initialized, but no updates were
-created. If you want to start sending data to routers again, run
-%s-rpki-rtr-update." \
-        "@PACKAGE_NAME@"
 
     upgrade_from_0_11
 }
@@ -260,7 +275,7 @@ case "$OLD_VERSION" in
         ;;
 esac
 
-show_msgs || exit $?
+finalize
 
 echo
 echo "Successfully upgraded from $OLD_VERSION to @PACKAGE_VERSION@."
