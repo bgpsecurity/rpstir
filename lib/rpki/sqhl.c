@@ -3011,7 +3011,15 @@ addStateToFlags(
     struct casn ccasn;
     struct FileAndHash *fahp = NULL;
 
-    *flags |= (isValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN);
+    if (isValid)
+    {
+        *flags |= SCM_FLAG_VALIDATED;
+        *flags &= ~SCM_FLAG_NOCHAIN;
+    }
+    else
+    {
+        *flags |= SCM_FLAG_NOCHAIN;
+    }
     if (fullpath == NULL)
         return 0;
     if (validManSrch == NULL)
@@ -4168,6 +4176,7 @@ add_ghostbusters(
     else
     {
         flags |= SCM_FLAG_VALIDATED;
+        flags &= ~SCM_FLAG_NOCHAIN;
     }
 
     sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id_old);
