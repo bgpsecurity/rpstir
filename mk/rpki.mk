@@ -1872,11 +1872,6 @@ EXTRA_DIST += \
 	tests/subsystem/testcases/makeM1111 \
 	tests/subsystem/testcases/makeM112 \
 	tests/subsystem/testcases/makeM231 \
-	tests/subsystem/testcases/queryIgnoreAll \
-	tests/subsystem/testcases/t1-1_actions \
-	tests/subsystem/testcases/t1-1_expect \
-	tests/subsystem/testcases/t1-1_flist \
-	tests/subsystem/testcases/t1-1_query \
 	tests/subsystem/testcases/test1.log \
 	tests/subsystem/testcases/tools/test.conf
 
