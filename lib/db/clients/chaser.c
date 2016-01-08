@@ -400,19 +400,26 @@ int64_t db_chaser_read_sia(
     dbconn *conn,
     char ***results,
     int64_t *num_malloced,
-    unsigned int chase_not_yet_validated)
+    unsigned int chase_invalid)
 {
     MYSQL_STMT *stmt;
     stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     unsigned int flag;
+    unsigned int notvalid_flag;
     int ret;
 
-    if (chase_not_yet_validated)
+    if (chase_invalid)
+    {
         flag = 0;
+        notvalid_flag = 0;
+    }
     else
-        flag = SCM_FLAG_VALIDATED;
+    {
+        flag = SCM_FLAG_VALID;
+        notvalid_flag = SCM_FLAG_NOTVALID;
+    }
     MYSQL_BIND bind_in[] = {
         // the flag
         {
@@ -425,6 +432,13 @@ int64_t db_chaser_read_sia(
         {
             .buffer_type = MYSQL_TYPE_LONG,
             .buffer = &flag,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // the NOTVALID flag
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &notvalid_flag,
             .is_unsigned = (my_bool)1,
             .is_null = (my_bool *)0,
         },

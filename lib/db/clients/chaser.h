@@ -75,7 +75,7 @@ int64_t db_chaser_read_crldp(
  * @param conn an opaque pointer to a db connection
  * @param[out] results The URI strings.  Caller frees these.
  * @param[out] num_malloced number of pointers malloced in results
- * @param chase_not_yet_validated if true, retrieve URIs from all SIAs,
+ * @param chase_invalid if true, retrieve URIs from all SIAs,
  *     else, only retrieve URIs from SIAs of validated certs
  *
  * @ret number of results filled on success
@@ -86,7 +86,7 @@ int64_t db_chaser_read_sia(
     dbconn * conn,
     char ***results,
     int64_t * num_malloced,
-    unsigned int chase_not_yet_validated);
+    unsigned int chase_invalid);
 
 
 #endif

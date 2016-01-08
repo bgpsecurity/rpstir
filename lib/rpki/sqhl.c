@@ -1198,8 +1198,8 @@ find_certs(
     }
     else
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
-    addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
-    addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(certSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(certSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
 
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
@@ -1364,8 +1364,8 @@ struct cert_answers *find_cert_by_aKI(
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\'%s\'", aki);
-    addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
-    addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(certSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(certSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
 
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
@@ -1491,8 +1491,8 @@ cert_revoked(
     char escaped [strlen(issuer)*2+1];
     mysql_escape_string(escaped, issuer, strlen(issuer));
     xsnprintf(revokedSrch->wherestr, WHERESTR_SIZE, "issuer=\"%s\"", escaped);
-    addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
-    addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(revokedSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(revokedSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
     isRevoked = 0;
     sn_len = strlen(sn);
     if (sn_len != 2 + 2*SER_NUM_MAX_SZ) // "^x" followed by hex
@@ -1927,8 +1927,8 @@ updateValidFlags(
 {
     char stmt[150];
     int flags = isValid ?
-        ((prevFlags | SCM_FLAG_VALIDATED) & (~SCM_FLAG_NOCHAIN)) :
-        (prevFlags | SCM_FLAG_NOCHAIN);
+        ((prevFlags | SCM_FLAG_VALID) & (~SCM_FLAG_NOTVALID)) :
+        (prevFlags & (~SCM_FLAG_VALID));
     xsnprintf(stmt, sizeof(stmt), "update %s set flags=%d where local_id=%d;",
               tabp->tabname, flags, id);
     return statementscm_no_data(conp, stmt);
@@ -2434,8 +2434,12 @@ verifyChildCert(
         ADDCOL(crlSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
     }
     xsnprintf(crlSrch->wherestr, WHERESTR_SIZE,
-              "aki=\"%s\" and issuer=\"%s\"", data->ski, data->subject);
-    addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
+              "aki=\"%s\" and issuer=\"%s\" and (",
+              data->ski, data->subject);
+    addFlagTest(crlSrch->wherestr, SCM_FLAG_VALID, 0, 0);
+    where_append(crlSrch->wherestr, " or");
+    addFlagTest(crlSrch->wherestr, SCM_FLAG_NOTVALID, 1, 0);
+    where_append(crlSrch->wherestr, ")");
     /** @bug ignores error code without explanation */
     sta = searchscm(conp, theCRLTable, crlSrch, NULL, &verifyChildCRL,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
@@ -2447,8 +2451,11 @@ verifyChildCert(
               SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
 
     /* Check for associated ROA */
-    xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
-    addFlagTest(crlSrch->wherestr, SCM_FLAG_NOCHAIN, 1, 1);
+    xsnprintf(crlSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\" and (", data->ski);
+    addFlagTest(crlSrch->wherestr, SCM_FLAG_VALID, 0, 0);
+    where_append(crlSrch->wherestr, " or");
+    addFlagTest(crlSrch->wherestr, SCM_FLAG_NOTVALID, 1, 0);
+    where_append(crlSrch->wherestr, ")");
     /** @bug ignores error code without explanation */
     sta = searchscm(conp, theROATable, crlSrch, NULL, &verifyChildROA,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
@@ -2551,8 +2558,8 @@ static int countvalidparents(
         return (sta);
     xsnprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
     free(now);
-    addFlagTest(ws, SCM_FLAG_VALIDATED, 1, 1);
-    addFlagTest(ws, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(ws, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(ws, SCM_FLAG_NOTVALID, 0, 1);
     mymcf.did = 0;
     scmsrcha srch = {
         .vec = srch1,
@@ -2740,7 +2747,8 @@ invalidateChildCert(
         ADDCOL(roaSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
     }
     xsnprintf(roaSrch->wherestr, WHERESTR_SIZE, "ski=\"%s\"", data->ski);
-    addFlagTest(roaSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(roaSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(roaSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
 
     if (invalidateCRLSrch == NULL)
     {
@@ -2756,7 +2764,8 @@ invalidateChildCert(
     mysql_escape_string(escaped, data->subject, strlen(data->subject));
     xsnprintf(invalidateCRLSrch->wherestr, WHERESTR_SIZE,
               "aki=\"%s\" AND issuer=\"%s\"", data->ski, escaped);
-    addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
+    addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(invalidateCRLSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
 
 
     /** @bug ignores error code without explanation */
@@ -2950,7 +2959,19 @@ verifyOrNotChildren(
              *                 that should now be valid
              *     @endverbatim
              */
-            addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOCHAIN, doVerify, 1);
+            if (doVerify)
+            {
+                where_append(childrenSrch->wherestr, " and (");
+                addFlagTest(childrenSrch->wherestr, SCM_FLAG_VALID, 0, 0);
+                where_append(childrenSrch->wherestr, " or");
+                addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOTVALID, 1, 0);
+                where_append(childrenSrch->wherestr, ")");
+            }
+            else
+            {
+                addFlagTest(childrenSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+                addFlagTest(childrenSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
+            }
         }
         if (!isRoot)
         {
@@ -3013,12 +3034,12 @@ addStateToFlags(
 
     if (isValid)
     {
-        *flags |= SCM_FLAG_VALIDATED;
-        *flags &= ~SCM_FLAG_NOCHAIN;
+        *flags |= SCM_FLAG_VALID;
+        *flags &= ~SCM_FLAG_NOTVALID;
     }
     else
     {
-        *flags |= SCM_FLAG_NOCHAIN;
+        *flags &= ~SCM_FLAG_VALID;
     }
     if (fullpath == NULL)
         return 0;
@@ -3030,7 +3051,8 @@ addStateToFlags(
     }
     xsnprintf(validManSrch->wherestr, WHERESTR_SIZE,
               "files regexp binary \"%s\"", filename);
-    addFlagTest(validManSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
+    addFlagTest(validManSrch->wherestr, SCM_FLAG_VALID, 1, 1);
+    addFlagTest(validManSrch->wherestr, SCM_FLAG_NOTVALID, 0, 1);
     initTables(scmp);
     validManPath[0] = 0;
     /** @bug ignores error code without explanation */
@@ -3588,7 +3610,8 @@ extractAndAddCert(
              * to clean this up later.
              */
         }
-        else if (!sta && (cf->flags & SCM_FLAG_VALIDATED))
+        else if (!sta && (cf->flags & SCM_FLAG_VALID)
+                 && !(cf->flags & SCM_FLAG_NOTVALID))
             sta = 1;
     }
     X509_free(x509p);
@@ -4070,7 +4093,7 @@ add_manifest(
     // know that the cert validates the manifest)
     int manValid = (v > 0);
 
-    unsigned int flags = manValid ? SCM_FLAG_VALIDATED : SCM_FLAG_NOCHAIN;
+    unsigned int flags = manValid ? SCM_FLAG_VALID : 0;
     if (stale)
     {
         flags |= SCM_FLAG_STALEMAN;
@@ -4171,12 +4194,12 @@ add_ghostbusters(
     }
     else if (sta == 0)
     {
-        flags |= SCM_FLAG_NOCHAIN;
+        flags &= ~SCM_FLAG_VALID;
     }
     else
     {
-        flags |= SCM_FLAG_VALIDATED;
-        flags &= ~SCM_FLAG_NOCHAIN;
+        flags |= SCM_FLAG_VALID;
+        flags &= ~SCM_FLAG_NOTVALID;
     }
 
     sta = getmaxidscm(scmp, conp, "local_id", theGBRTable, &local_id_old);
@@ -4382,8 +4405,8 @@ crliterator(
         return (0);
     flags = *(unsigned int *)(s->vec[3].valptr);
     // ?????????? test for this in where of select statement ???????????????
-    if ((flags & SCM_FLAG_VALIDATED) == 0 ||
-        (flags & SCM_FLAG_NOCHAIN) != 0 ||
+    if ((flags & SCM_FLAG_VALID) == 0 ||
+        (flags & SCM_FLAG_NOTVALID) != 0 ||
         s->vec[3].avalsize < (SQLLEN)(sizeof(unsigned int)))
         return (0);
     lid = *(unsigned int *)(s->vec[4].valptr);
