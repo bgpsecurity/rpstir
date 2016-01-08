@@ -26,7 +26,8 @@ struct config_context;
        True iff the context is for a default value, as opposed to a
        value from a configuration file.
 */
-bool config_context_is_default(
+_Bool
+config_context_is_default(
     const struct config_context *context);
 
 
@@ -67,7 +68,8 @@ void config_message(
        True on success, false on failure.  This means that this
        function can be used to validate input.
 */
-typedef bool (*config_value_converter)(
+typedef _Bool
+(*config_value_converter)(
     const struct config_context *context,
     void *usr_arg,
     const char *input,
@@ -88,7 +90,8 @@ typedef void (*config_value_free) (
     void *data);
 
 /** Check an array of values for inter-value consistency/correctness. */
-typedef bool (*config_array_validator) (
+typedef _Bool
+(*config_array_validator)(
     const struct config_context *context,
     void *usr_arg,
     void const *const *input,
