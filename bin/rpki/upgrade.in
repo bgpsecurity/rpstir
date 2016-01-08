@@ -95,6 +95,8 @@ EOF
  without potentially incorrect results.  Either downgrade to 0.10 or\
  re-initialize the database via @PACKAGE_NAME@-initialize."
 
+    # v0.12 eliminated the SCM_FLAG_NOCHAIN flag.  Any record with
+    # that flag set should be considered invalid instead.
     mysql_cmd <<\EOF || fatal "failed to update database records"
 ALTER TABLE rpki_manifest DROP COLUMN cert_id;
 DROP INDEX `dirname` ON `rpki_dir`;
@@ -104,7 +106,18 @@ ALTER TABLE `rpki_metadata`
     DROP COLUMN `qu_last`,
     DROP COLUMN `gc_last`,
     DROP COLUMN `ch_last`;
+UPDATE rpki_cert SET flags=(flags & (~0x4) & (~0x8))
+    WHERE (flags & 0x8) != 0;
+UPDATE rpki_crl SET flags=(flags & (~0x4) & (~0x8))
+    WHERE (flags & 0x8) != 0;
+UPDATE rpki_ghostbusters SET flags=(flags & (~0x4) & (~0x8))
+    WHERE (flags & 0x8) != 0;
+UPDATE rpki_manifest SET flags=(flags & (~0x4) & (~0x8))
+    WHERE (flags & 0x8) != 0;
+UPDATE rpki_roa SET flags=(flags & (~0x4) & (~0x8))
+    WHERE (flags & 0x8) != 0;
 EOF
+    clear_rpki_rtr
 }
 
 upgrade_from_0_10 () {
