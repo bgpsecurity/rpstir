@@ -1,6 +1,7 @@
 #include "test/unittest.h"
 #include "util/logging.h"
 #include "util/path_compat.h"
+#include "util/stringutils.h"
 
 #include "configlib/configlib.h"
 
@@ -9,6 +10,8 @@
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
 #include "configlib/types/string_cvt.h"
+
+#include <stdarg.h>
 
 enum config_key {
     CONFIG_SOME_INT,
@@ -291,6 +294,35 @@ static const struct config_option CONFIG_OPTIONS[] = {
 };
 
 
+static char logbuf[4096] = {0};
+static size_t logbuf_offset = 0;
+static log_custom_backend_logger logger;
+void
+logger(
+    int priority,
+    const char *restrict ident,
+    const char *restrict format,
+    ...)
+{
+    (void)ident;
+
+    logbuf_offset += xsnprintf(
+        logbuf + logbuf_offset, sizeof(logbuf) - logbuf_offset,
+        "%s: ", LOG_LEVEL_TEXT[priority]);
+
+    va_list arg;
+    va_start(arg, format);
+    logbuf_offset += xvsnprintf(
+        logbuf + logbuf_offset, sizeof(logbuf) - logbuf_offset,
+        format, arg);
+    va_end(arg);
+
+    logbuf_offset += xsnprintf(
+        logbuf + logbuf_offset, sizeof(logbuf) - logbuf_offset,
+        "\n");
+}
+
+
 static bool test_config(
     const char *conf_file)
 {
@@ -315,8 +347,31 @@ static bool test_config(
         return false;
     }
 
+    log_custom_backend.log = &logger;
+    CLOSE_LOG();
+    OPEN_LOG("test", LOG_CUSTOM_BACKEND);
+
     ret = config_load(CONFIG_NUM_OPTIONS, CONFIG_OPTIONS, conf_file, NULL);
     TEST_BOOL(ret, true);
+
+    CLOSE_LOG();
+    OPEN_LOG("config-test-good", LOG_USER);
+
+    char expected_logbuf[4096];
+    xsnprintf(
+        expected_logbuf, sizeof(expected_logbuf),
+        "NOTICE: %s:28: duplicate option overwriting previous value\n"
+        "WARN: %s:38: variable ${ENV_VAR_UNSET} not found, using the empty"
+        " string instead\n"
+        "WARN: %s:38: variable ${ENV_VAR_UNSET} not found, using the empty"
+        " string instead\n"
+        "WARN: %s:38: variable ${ENV_VAR_UNSET} not found, using the empty"
+        " string instead\n"
+        "WARN: %s:38: variable ${ENV_VAR_UNSET} not found, using the empty"
+        " string instead\n"
+        , conf_file, conf_file, conf_file, conf_file, conf_file);
+
+    TEST_STR(logbuf, ==, expected_logbuf);
 
     TEST(int, "%d", CONFIG_SOME_INT_get(), ==, -5);
 
