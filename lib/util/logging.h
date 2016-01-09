@@ -28,7 +28,73 @@ enum {
      *     to syslog().
      */
     LOG_CONSOLE,
+
+    /**
+     * @brief
+     *     Special facility that means to log to a custom backend
+     *     function.
+     *
+     * If this facility is used, @c log_custom_backend_function must
+     * be non-NULL.
+     */
+    LOG_CUSTOM_BACKEND,
 };
+
+/**
+ * @brief
+ *     custom backend logging function type
+ *
+ * @param[in] priority
+ *     One of the syslog() priority levels.
+ * @param[in] ident
+ *     Identity based on the value of the @c ident parameter passed to
+ *     OPEN_LOG().  This may be NULL.
+ */
+typedef void
+log_custom_backend_logger(
+    int priority,
+    const char *restrict ident,
+    const char *restrict format,
+    ...);
+
+typedef void
+log_custom_backend_flush(
+    void);
+
+typedef void
+log_custom_backend_close(
+    void);
+
+/**
+ * @brief
+ *     logging functions called if the facility is LOG_CUSTOM_BACKEND
+ *
+ * Everything in this variable is initialized to NULL on program
+ * startup.
+ */
+extern struct log_custom_backend {
+    /**
+     * @brief
+     *     custom logging function called from LOG()
+     */
+    log_custom_backend_logger *log;
+
+    /**
+     * @brief
+     *     custom flush function called from FLUSH_LOG()
+     *
+     * NULL is equivalent to a do-nothing function.
+     */
+    log_custom_backend_flush *flush;
+
+    /**
+     * @brief
+     *     custom close function called from CLOSE_LOG()
+     *
+     * NULL is equivalent to a do-nothing function.
+     */
+    log_custom_backend_close *close;
+} log_custom_backend;
 
 #define OPEN_LOG(ident, facility)                                       \
     do {                                                                \
@@ -37,6 +103,7 @@ enum {
         switch (log_facility)                                           \
         {                                                               \
         case LOG_CONSOLE:                                               \
+        case LOG_CUSTOM_BACKEND:                                        \
             /* no setup needed */                                       \
             break;                                                      \
         default:                                                        \
@@ -50,6 +117,12 @@ enum {
         {                                                               \
         case LOG_CONSOLE:                                               \
             /* no cleanup needed */                                     \
+            break;                                                      \
+        case LOG_CUSTOM_BACKEND:                                        \
+            if (log_custom_backend.close)                               \
+            {                                                           \
+                (*log_custom_backend.close)();                          \
+            }                                                           \
             break;                                                      \
         default:                                                        \
             closelog();                                                 \
@@ -65,6 +138,12 @@ enum {
         {                                                               \
         case LOG_CONSOLE:                                               \
             fflush(stderr);                                             \
+            break;                                                      \
+        case LOG_CUSTOM_BACKEND:                                        \
+            if (log_custom_backend.flush)                               \
+            {                                                           \
+                (*log_custom_backend.flush)();                          \
+            }                                                           \
             break;                                                      \
         default:                                                        \
             /* syslog() doesn't need flushing */                        \
@@ -112,6 +191,10 @@ volatile sig_atomic_t LOG_LEVEL;
                     LOG_LEVEL_TEXT[(priority)], ## __VA_ARGS__);        \
             break;                                                      \
         }                                                               \
+        case LOG_CUSTOM_BACKEND:                                        \
+            (*log_custom_backend.log)(                                  \
+                (priority), log_ident, format, ## __VA_ARGS__);         \
+            break;                                                      \
         default:                                                        \
         {                                                               \
             int log_backend_priority = (priority);                      \
