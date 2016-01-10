@@ -107,7 +107,6 @@ for BAD_SINGLE_FILE in bad*; do
 	case ${BAD_SINGLE_FILE} in
 	    badGBRExtraProperty.gbr);;
 	    badGBRNoContact.gbr);;
-	    badGBRNotVCard.gbr);;
 	    *) xfail=;;
 	esac
 	t4s_testcase ${xfail:+"${xfail}"} "BAD_SINGLE_FILE=${BAD_SINGLE_FILE}" '
