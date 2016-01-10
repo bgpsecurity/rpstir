@@ -1,9 +1,10 @@
 #!@SHELL_BASH@
 
-# gen_all_GBRs.sh - create all GBR test cases for RPKI syntactic
-#                   conformance test
+# create all CMS test cases for RPKI syntactic conformance test
 
 @SETUP_ENVIRONMENT@
+
+t4s_setup
 
 # Safe bash shell scripting practices
 @trap_errors@
@@ -20,7 +21,7 @@ Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
   -h        \tDisplay this help file
 
-This script creates a large number of GBRs (with embedded EE certs),
+This script creates a large number of ROAs (with embedded EE certs),
 prompts the user multiple times to edit interactively (e.g., in order
 to introduce errors), and captures those edits in '.patch' files
 (output of diff -u).  Later, running $0 with the -P option can replay
@@ -30,9 +31,9 @@ keys are reused from the keys directory, instead of the default of
 generating new keys.
 
 This tool assumes the repository structure in the diagram below.  It
-creates a ton of GBRs (with embedded EE certs).  In the EE certs' SIA, the
+creates a ton of ROAs (with embedded EE certs).  In the EE certs' SIA, the
 accessMethod id-ad-signedObject will have an accessLocation of
-rsync://rpki.bbn.com/conformance/root/subjname.gbr.
+rsync://rpki.bbn.com/conformance/root/subjname.roa.
 
 NOTE: this script does NOT update the manifest issued by root.
 
@@ -50,7 +51,7 @@ NOTE: this script does NOT update the manifest issued by root.
          |     | rsync://rpki.bbn.com/conformance/root/ |    |
          |     |                                        V    |
          |     | +-------------+       +-----------------+   |
-         |     | | *GBR issued |<--+   | Manifest issued |   |
+         |     | | *ROA issued |<--+   | Manifest issued |   |
          |     | | by Root     |   |   | by Root         |   |
          |     | | +--------+  |   |   | root.mft        |   |
          |     | | | EECert |  |   |   +-----------------+   |
@@ -68,12 +69,12 @@ Inputs:
   -P - (optional) use patch mode for automatic insertion of errors
 
 Outputs:
-  GBR
+  ROA - AS/IP is hardcoded in goodCert.raw and goodROA templates
   patch files - manual edits are saved as diff output in
-                'badROA<filestem>.stageN.patch' (N=0..1) in the patch
+                'badCMS<filestem>.stageN.patch' (N=0..1) in the patch
                 directory
   key files - generated key pairs for the EE certs are stored in keys directory
-              as badROA<filestem>.ee.p15
+              as badCMS<filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -84,7 +85,6 @@ Outputs:
 # Variable naming convention -- preset constants and command line
 # arguments are in ALL_CAPS.  Derived/computed values are in
 # lower_case.
-
 
 # Options and defaults
 OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
@@ -119,8 +119,8 @@ else
     patch_option=
 fi
 
-single_GBR_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CMS.sh"
-single_GBR_cmd="${single_GBR_script} ${patch_option} -o ${OUTPUT_DIR}"
+single_CMS_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CMS.sh"
+single_CMS_cmd="${single_CMS_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################
 # Check for prerequisite tools and files
@@ -143,17 +143,82 @@ ensure_dir_exists ( ) {
 }
 
 ensure_dir_exists "$OUTPUT_DIR"
-ensure_file_exists "${single_GBR_script}"
+ensure_file_exists "${single_CMS_script}"
 
 ###############################################################################
-# Generate GBR cases
+# Generate CMS cases
+##############################################################################
+
+single_CMS() {
+    eval "single_CMS_testname=\${$#}"
+    t4s_testcase -- "${single_CMS_testname}" '
+        ${single_CMS_cmd} "$@"
+    ' "$@"
+}
+
+single_CMS CMS 512 ContentType
+single_CMS CMS 513 NoCerts
+single_CMS CMS 514 2Certs
+single_CMS CMS 515 Version2
+single_CMS CMS 516 Version4
+single_CMS CMS 517 DigestAlgSameWrong
+single_CMS CMS 546 DigestAlgWrongOuter
+single_CMS CMS 518 2DigestAlgs
+single_CMS CMS 519 NoDigestAlgs
+single_CMS CMS 520 HasCRL
+single_CMS CMS 521 NoSigInfo
+single_CMS CMS 721 2SigInfo
+single_CMS CMS 523 SigInfoVersion
+single_CMS CMS 524 SigInfoVersion4
+single_CMS CMS 525 SigInfoNoSid
+single_CMS CMS 526 SigInfoWrongSid
+single_CMS CMS 527 SigInfoBadSid
+single_CMS CMS 528 SigInfoHashAlg
+single_CMS CMS 529 SigInfoNoAttrs
+single_CMS CMS 722 SigInfoForbiddenAttr
+single_CMS CMS 530 SigInfoAttrsNoContType
+single_CMS CMS 531 SigInfoAttrsContTypeOid
+single_CMS CMS 533 SigInfoAttrsNoMsgDigest
+single_CMS CMS 548 SigInfoAttrsWrongDigest
+single_CMS CMS 534 SigInfoAttrs2ContType
+single_CMS CMS 535 SigInfoAttrs2MsgDigest
+single_CMS CMS 536 SigInfoAttrs2SigTime
+single_CMS CMS 537 SigInfoAttrs2BinSigTime
+single_CMS CMS 549 SigInfoAttrsContType2Val
+single_CMS CMS 564 SigInfoAttrsMsgDigest2Val
+single_CMS CMS 565 SigInfoAttrsSigTime2Val
+single_CMS CMS 566 SigInfoAttrsBinSigTime2Val
+single_CMS CMS 567 SigInfoAttrsContType0Val
+single_CMS CMS 568 SigInfoAttrsMsgDigest0Val
+single_CMS CMS 570 SigInfoAttrsSigTime0Val
+single_CMS CMS 569 SigInfoAttrsBinSigTime0Val
+single_CMS CMS 538 SigInfoUnSigAttrs
+single_CMS CMS 539 SigInfoNoSig
+single_CMS CMS 540 SigInfo2Sig
+single_CMS CMS 571 SigInfoBadSigVal
+single_CMS CMS 542 SigInfoWrongSigAlg
+single_CMS CMS 543 SigInfoNoHashAlg
+
+###############################################################################
+# Generate EE certificate cases (embedded in ROAs)
 ###############################################################################
 
-${single_GBR_cmd} -x good GBR 600 NothingWrong
-${single_GBR_cmd} GBR 601 NotVCard
-${single_GBR_cmd} GBR 606 ExtraProperty
-${single_GBR_cmd} GBR 607 NoContact
-${single_GBR_cmd} GBR 602 WrongOID
-${single_GBR_cmd} GBR 603 IPv4NotInherit
-${single_GBR_cmd} GBR 604 IPv6NotInherit
-${single_GBR_cmd} GBR 605 ASNotInherit
+single_CMS EE 572 HasBasicConstraints
+single_CMS EE 575 HasCABasicConstraint
+single_CMS EE 544 KeyUsageCABits
+single_CMS EE 573 KeyUsageNoDigitalSig
+single_CMS EE 574 KeyUsageHasKeyCertSign
+single_CMS EE 576 KeyUsageHasKeyCertSignCABool
+single_CMS EE 577 KeyUsageHasCRLSign
+single_CMS EE 578 KeyUsageHasNonRepu
+single_CMS EE 581 HasEKU
+single_CMS EE 545 SIAWrongAccessMethod
+single_CMS -x good EE 579 SIAExtraAccessMethod
+single_CMS EE 580 SIAExtraWrongAccessMethod
+single_CMS EE 582 SIANoRsync
+single_CMS -x good EE 583 SIA2Rsync
+single_CMS -x good EE 584 SIAHtRs
+single_CMS -x good EE 716 SIAHasNonURI
+single_CMS EE 717 BadSig
+
+t4s_done

@@ -1,6 +1,9 @@
 #!@SHELL_BASH@
 
 @SETUP_ENVIRONMENT@
+
+t4s_setup
+
 @trap_errors@
 
 usage () {
@@ -33,8 +36,13 @@ then
     exit 1
 fi
 
+x() {
+    t4s_testcase -- "$2" '$X "$@"' "$@"
+}
 
 # Generate name cases
-$X 900 NAMSeqNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
-$X 901 NAMSeqSerName goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
-$X 902 NAMSetNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+x 900 NAMSeqNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+x 901 NAMSeqSerName goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+x 902 NAMSetNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+
+t4s_done

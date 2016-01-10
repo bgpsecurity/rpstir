@@ -1,9 +1,10 @@
 #!@SHELL_BASH@
 
-# gen_all_MFTs.sh - create all MFT test cases for RPKI syntactic
-#                   conformance test
+# create all CRL test cases for RPKI syntactic conformance test
 
 @SETUP_ENVIRONMENT@
+
+t4s_setup
 
 # Safe bash shell scripting practices
 @trap_errors@
@@ -20,7 +21,7 @@ Options:
   -P        \tApply patches instead of prompting user to edit (default = false)
   -h        \tDisplay this help file
 
-This script creates a large number of MFTs in subdirectories, prompts
+This script creates a large number of CRLs in subdirectories, prompts
 the user multiple times to edit interactively (e.g., in order to
 introduce errors), and captures those edits in '.patch' files (output
 of diff -u).  Later, running $0 with the -P option can replay the
@@ -30,7 +31,8 @@ reused from the keys directory, instead of the default of generating
 new keys.
 
 This tool assumes the repository structure in the diagram below.  It
-creates a ton of subdirectories each with a MFT and corresponding CRL.
+creates a ton of subdirectories each w/ a CRL and corresponding
+manifest.
 
 NOTE: this script does NOT update the manifest issued by root.
 
@@ -60,13 +62,13 @@ NOTE: this script does NOT update the manifest issued by root.
 	     +-------------------------------------------------+
              | rsync://rpki.bbn.com/conformance/root/subjname/ |
              |                                     	       |
-             |     +---------------------------------------+   |
-             |     | *Manifest issued by Child (TEST CASE) |   |
-             |     +---------------------------------------+   |
+             |     +---------------------------+   	       |
+             |     | *Manifest issued by Child |               |
+             |     +---------------------------+               |
              |                                                 |
-             |     +----------------------+                    |
-             |     | *CRL issued by Child |                    |
-             |     +----------------------+                    |
+             |     +----------------------------------+        |
+             |     | *CRL issued by Child (TEST CASE) |        |
+             |     +----------------------------------+        |
              |                                                 |
              | *Child's Repo Directory                         |
              +-------------------------------------------------+
@@ -78,10 +80,10 @@ Outputs:
   child CA certificate - inherits AS/IP resources from parent via inherit bit
   child repo directory - ASSUMED to be a subdirectory of parent's repo. The
                          new directory will be <outdir>/<subjectname>/
-  crl issued by child - named <subjectname>.crl, and has no entries
-  mft issued by child - named bad<subjectname>.mft, and has one entry (the crl)
+  crl issued by child - named bad<subjectname>.crl, and has no entries
+  mft issued by child - named <subjectname>.mft, and has one entry (the crl)
 
-  The filename for the mft will be prepended by the string 'bad' by
+  The filename for the crl will be prepended by the string 'bad' by
   default, though this can be replaced by an arbitrary non-empty
   string using the -x option.
 
@@ -90,9 +92,9 @@ Auxiliary Outputs: (not shown in diagram)
   child-issued MFT EE cert - <outdir>/<subjectname>/<subjectname>.mft.cer
   child-issued MFT EE key pair - <outdir>/<subjectname>/<subjectname>.mft.p15
   patch files - manual edits are saved as diff output in
-                'badMFT<subjectname>.stageN.patch' (N=0..1)
+                'badCRL<subjectname>.stageN.patch' (N=0..1)
   key files - generated key pairs for child and EE certs are stored in keys dir
-             as badMFT<filestem>.ee.p15
+             as badCRL<filestem>.ee.p15
     "
     printf "${usagestr}\n"
     exit 1
@@ -138,8 +140,8 @@ else
     patch_option=
 fi
 
-single_MFT_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_MFT.sh"
-single_MFT_cmd="${single_MFT_script} ${patch_option} -o ${OUTPUT_DIR}"
+single_CRL_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CRL.sh"
+single_CRL_cmd="${single_CRL_script} ${patch_option} -o ${OUTPUT_DIR}"
 
 ###############################################################################
 # Check for prerequisite tools and files
@@ -162,36 +164,48 @@ ensure_dir_exists ( ) {
 }
 
 ensure_dir_exists "$OUTPUT_DIR"
-ensure_file_exists "${single_MFT_script}"
+ensure_file_exists "${single_CRL_script}"
 
 ###############################################################################
-# Generate MFT cases
+# Generate CRL cases
 ###############################################################################
 
-${single_MFT_cmd} 768 MFTWrongType
-${single_MFT_cmd} 769 MFTVersion0
-${single_MFT_cmd} 770 MFTVersion1
-${single_MFT_cmd} 771 MFTNoNum
-${single_MFT_cmd} 772 MFTNegNum
-${single_MFT_cmd} 773 MFTThisUpdUTC
-${single_MFT_cmd} 774 MFTThisUpdFuture
-${single_MFT_cmd} 775 MFTNextUpdUTC
-${single_MFT_cmd} 776 MFTNextUpdPast
-${single_MFT_cmd} 789 MFTUpdCrossed
-${single_MFT_cmd} 790 MFTStartCrossed
-${single_MFT_cmd} 791 MFTEndCrossed
-${single_MFT_cmd} 777 MFTHashAlg
-${single_MFT_cmd} 795 MFTHashAlgSameLength
-${single_MFT_cmd} 779 MFTFileHashShort
-${single_MFT_cmd} 780 MFTFileHashLong
-${single_MFT_cmd} 781 MFTFileNotIA5
-${single_MFT_cmd} 782 MFTHashOctetStr
-${single_MFT_cmd} 783 MFTDuplicateFileOneHash
-${single_MFT_cmd} 784 MFTDuplicateFileTwoHashes
-${single_MFT_cmd} -x good 785 MFTNumMax
-${single_MFT_cmd} -x good 786 MFTNumZero
-${single_MFT_cmd} 787 MFTNumTooBig
-${single_MFT_cmd} -x good 788 MFTUnkownFileExtension
-${single_MFT_cmd} 792 MFTIPv4NotInherit
-${single_MFT_cmd} 793 MFTIPv6NotInherit
-${single_MFT_cmd} 794 MFTASNotInherit
+single_CRL() {
+    eval "single_CRL_testname=\${$#}"
+    t4s_testcase -- "${single_CRL_testname}" '
+        ${single_CRL_cmd} "$@"
+    ' "$@"
+}
+
+single_CRL 640 CRLNoVersion
+single_CRL 641 CRLVersion0
+single_CRL 676 CRLVersion2
+single_CRL 642 CRLSigAlgInner
+single_CRL 643 CRLSigAlgOuter
+single_CRL 677 CRLSigAlgMatchButWrong
+single_CRL 644 CRLIssuerOID
+single_CRL 645 CRLIssuer2Sets
+single_CRL 646 CRLIssuerUTF
+single_CRL 647 CRLIssuer2Seq
+single_CRL 648 CRLIssuerSet2SerNums
+single_CRL 678 CRLIssuerSeq2SerNums
+single_CRL 679 CRLIssuerSerNum
+single_CRL 650 CRLThisUpdateTyp
+single_CRL 651 CRLNextUpdatePast
+single_CRL 652 CRLNextUpdateTyp
+single_CRL 653 CRLUpdatesCrossed
+single_CRL 654 CRLIssAltName
+single_CRL 655 CRLIssDistPt
+single_CRL 656 CRLDeltaCRLInd
+single_CRL 657 CRLNoAKI
+single_CRL 658 CRLNoCRLNum
+single_CRL 659 CRLEntryReason
+single_CRL 680 CRLEntryHasExtension
+single_CRL 669 CRLNumber2Big
+single_CRL 670 CRL2CRLNums
+single_CRL -x good 671 CRLEntrySerNumMax
+single_CRL -x good 673 CRLNumberMax
+single_CRL -x good 674 CRLNumberZero
+single_CRL 675 CRLNumberNeg
+
+t4s_done

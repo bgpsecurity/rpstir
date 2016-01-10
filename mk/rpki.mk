@@ -1606,37 +1606,37 @@ EXTRA_DIST += \
 	tests/conformance/raw/templates/goodROA.raw \
 	tests/conformance/scripts/conformance.conf
 
-check_SCRIPTS += tests/conformance/scripts/gen_all.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all.sh
-tests/conformance/scripts/gen_all.sh: $(srcdir)/tests/conformance/scripts/gen_all.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all.tap
+tests/conformance/scripts/gen_all.tap: $(srcdir)/tests/conformance/scripts/gen_all.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_CMSs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CMSs.sh
-tests/conformance/scripts/gen_all_CMSs.sh: $(srcdir)/tests/conformance/scripts/gen_all_CMSs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_CMSs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CMSs.tap
+tests/conformance/scripts/gen_all_CMSs.tap: $(srcdir)/tests/conformance/scripts/gen_all_CMSs.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_CRLs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CRLs.sh
-tests/conformance/scripts/gen_all_CRLs.sh: $(srcdir)/tests/conformance/scripts/gen_all_CRLs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_CRLs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_CRLs.tap
+tests/conformance/scripts/gen_all_CRLs.tap: $(srcdir)/tests/conformance/scripts/gen_all_CRLs.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_GBRs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_GBRs.sh
-tests/conformance/scripts/gen_all_GBRs.sh: $(srcdir)/tests/conformance/scripts/gen_all_GBRs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_GBRs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_GBRs.tap
+tests/conformance/scripts/gen_all_GBRs.tap: $(srcdir)/tests/conformance/scripts/gen_all_GBRs.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_MFTs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_MFTs.sh
-tests/conformance/scripts/gen_all_MFTs.sh: $(srcdir)/tests/conformance/scripts/gen_all_MFTs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_MFTs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_MFTs.tap
+tests/conformance/scripts/gen_all_MFTs.tap: $(srcdir)/tests/conformance/scripts/gen_all_MFTs.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_NAMs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_NAMs.sh
-tests/conformance/scripts/gen_all_NAMs.sh: $(srcdir)/tests/conformance/scripts/gen_all_NAMs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_NAMs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_NAMs.tap
+tests/conformance/scripts/gen_all_NAMs.tap: $(srcdir)/tests/conformance/scripts/gen_all_NAMs.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_ROAs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_ROAs.sh
-tests/conformance/scripts/gen_all_ROAs.sh: $(srcdir)/tests/conformance/scripts/gen_all_ROAs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_ROAs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_ROAs.tap
+tests/conformance/scripts/gen_all_ROAs.tap: $(srcdir)/tests/conformance/scripts/gen_all_ROAs.tap.in
 
-check_SCRIPTS += tests/conformance/scripts/gen_all_certs.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_certs.sh
-tests/conformance/scripts/gen_all_certs.sh: $(srcdir)/tests/conformance/scripts/gen_all_certs.sh.in
+check_SCRIPTS += tests/conformance/scripts/gen_all_certs.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all_certs.tap
+tests/conformance/scripts/gen_all_certs.tap: $(srcdir)/tests/conformance/scripts/gen_all_certs.tap.in
 
 check_SCRIPTS += tests/conformance/scripts/gen_child_ca.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_child_ca.sh
@@ -1671,12 +1671,12 @@ MK_SUBST_FILES_EXEC += tests/conformance/scripts/sign_root_CAs.sh
 tests/conformance/scripts/sign_root_CAs.sh: $(srcdir)/tests/conformance/scripts/sign_root_CAs.sh.in
 
 
-check_SCRIPTS += tests/conformance/scripts/run_tests.sh
-MK_SUBST_FILES_EXEC += tests/conformance/scripts/run_tests.sh
-tests/conformance/scripts/run_tests.sh: $(srcdir)/tests/conformance/scripts/run_tests.sh.in
+check_SCRIPTS += tests/conformance/scripts/run_tests.tap
+MK_SUBST_FILES_EXEC += tests/conformance/scripts/run_tests.tap
+tests/conformance/scripts/run_tests.tap: $(srcdir)/tests/conformance/scripts/run_tests.tap.in
 
 TESTS += \
-	tests/conformance/scripts/run_tests.sh
+	tests/conformance/scripts/run_tests.tap
 
 CLEANDIRS += \
 	tests/conformance/output \

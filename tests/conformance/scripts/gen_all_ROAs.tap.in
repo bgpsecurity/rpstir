@@ -1,0 +1,256 @@
+#!@SHELL_BASH@
+
+# create all ROA test cases for RPKI syntactic conformance test
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+# Safe bash shell scripting practices
+@trap_errors@
+
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
+
+# Usage
+usage ( ) {
+    usagestr="
+Usage: $0 [options]
+
+Options:
+  -P        \tApply patches instead of prompting user to edit (default = false)
+  -h        \tDisplay this help file
+
+This script creates a large number of ROAs (with embedded EE certs),
+prompts the user multiple times to edit interactively (e.g., in order
+to introduce errors), and captures those edits in '.patch' files
+(output of diff -u).  Later, running $0 with the -P option can replay
+the creation process by automatically applying those patch files
+instead of prompting for user intervention.  In patch mode, existing
+keys are reused from the keys directory, instead of the default of
+generating new keys.
+
+This tool assumes the repository structure in the diagram below.  It
+creates a ton of ROAs (with embedded EE certs).  In the EE certs' SIA, the
+accessMethod id-ad-signedObject will have an accessLocation of
+rsync://rpki.bbn.com/conformance/root/subjname.roa.
+
+NOTE: this script does NOT update the manifest issued by root.
+
+               +-----------------------------------+
+               | rsync://rpki.bbn.com/conformance/ |
+               |     +--------+                    |
+         +---------->|  Root  |                    |
+         |     |     |  cert  |                    |
+         |     |     |  SIA ----------------------------+
+         |     |     +---|----+                    |    |
+         |     +---------|-------------------------+    |
+         |               |                              |
+         |               V                              |
+         |     +----------------------------------------|----+
+         |     | rsync://rpki.bbn.com/conformance/root/ |    |
+         |     |                                        V    |
+         |     | +-------------+       +-----------------+   |
+         |     | | *ROA issued |<--+   | Manifest issued |   |
+         |     | | by Root     |   |   | by Root         |   |
+         |     | | +--------+  |   |   | root.mft        |   |
+         |     | | | EECert |  |   |   +-----------------+   |
+         +----------- AIA   |  |   |                         |
+               | | |  SIA ---------+       +------------+    |
+               | | |  CRLDP--------------->| CRL issued |    |
+               | | +--------+  |           | by Root    |    |
+               | +-------------+           | root.crl   |    |
+               |                           +------------+    |
+               | Root's Repo                                 |
+               | Directory                                   |
+               +---------------------------------------------+
+
+Inputs:
+  -P - (optional) use patch mode for automatic insertion of errors
+
+Outputs:
+  ROA - AS/IP is hardcoded in goodCert.raw and goodROA templates
+  patch files - manual edits are saved as diff output in
+                'badROA<filestem>.stageN.patch' (N=0..1) in the patch
+                directory
+  key files - generated key pairs for the EE certs are stored in keys directory
+              as badROA<filestem>.ee.p15
+    "
+    printf "${usagestr}\n"
+    exit 1
+}
+
+# NOTES
+
+# Variable naming convention -- preset constants and command line
+# arguments are in ALL_CAPS.  Derived/computed values are in
+# lower_case.
+
+
+# Options and defaults
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
+USE_EXISTING_PATCHES=
+
+# Process command line arguments.
+while getopts Ph opt
+do
+  case $opt in
+      P)
+	  USE_EXISTING_PATCHES=1
+	  ;;
+      h)
+	  usage
+	  ;;
+  esac
+done
+shift $((OPTIND - 1))
+if [ $# != "0" ]
+then
+    usage
+fi
+
+###############################################################################
+# Computed Variables
+###############################################################################
+
+if [ $USE_EXISTING_PATCHES ]
+then
+    patch_option="-P"
+else
+    patch_option=
+fi
+
+single_ROA_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_CMS.sh"
+single_ROA_cmd="${single_ROA_script} ${patch_option} -o ${OUTPUT_DIR}"
+
+###############################################################################
+# Check for prerequisite tools and files
+###############################################################################
+
+ensure_file_exists ( ) {
+    if [ ! -e "$1" ]
+    then
+	echo "Error: file not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+	echo "Error: directory not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists "$OUTPUT_DIR"
+ensure_file_exists "${single_ROA_script}"
+
+###############################################################################
+# Generate ROA cases
+###############################################################################
+
+single_ROA() {
+    eval "single_ROA_testname=\${$#}"
+    t4s_testcase -- "${single_ROA_testname}" '
+        ${single_ROA_cmd} "$@"
+    ' "$@"
+}
+
+single_ROA -x good ROA 550 NothingWrong
+single_ROA ROA 718 WrongType
+single_ROA ROA 551 ASIDSmall
+single_ROA ROA 552 ASIDLarge
+single_ROA -x good ROA 560 ASIDZero
+single_ROA -x good ROA 561 ASIDMax
+single_ROA ROA 553 Family
+single_ROA ROA 554 FamilyLth
+single_ROA ROA 719 IPv4PrefixLong
+single_ROA ROA 720 IPv6PrefixLong
+single_ROA ROA 555 IPv4MaxLthLong
+single_ROA ROA 585 IPv4MaxLthShort
+single_ROA ROA 586 IPv6MaxLthLong
+single_ROA ROA 587 IPv6MaxLthShort
+single_ROA -x good ROA 588 IPv4DupPrefixSameMaxLen
+single_ROA -x good ROA 589 IPv6DupPrefixSameMaxLen
+single_ROA -x good ROA 590 IPv4DupPrefixDiffMaxLen
+single_ROA -x good ROA 591 IPv6DupPrefixDiffMaxLen
+single_ROA ROA 562 IPv4Inherit
+single_ROA ROA 563 IPv6Inherit
+single_ROA ROA 723 IPv4SAFI
+single_ROA ROA 724 IPv6SAFI
+single_ROA ROA 593 IPv4OnlyPfxBelowPfxNoGap
+single_ROA ROA 631 IPv4OnlyPfxBelowRangeNoGap
+single_ROA ROA 594 IPv4OnlyPfxAbovePfxNoGap
+single_ROA ROA 632 IPv4OnlyPfxAboveRangeNoGap
+single_ROA ROA 595 IPv4OnlyPfxBetweenPfxPfxNoGaps
+single_ROA ROA 633 IPv4OnlyPfxBetweenPfxRangeNoGaps
+single_ROA ROA 634 IPv4OnlyPfxBetweenRangePfxNoGaps
+single_ROA ROA 635 IPv4OnlyPfxBetweenRangeRangeNoGaps
+single_ROA ROA 636 IPv4OnlyPfxTouchRanges
+single_ROA ROA 596 IPv4OnlyPfxSpanPfxes
+single_ROA ROA 637 IPv4OnlyPfxSpanRanges
+single_ROA ROA 638 IPv4OnlyPfxSupersetLowRange
+single_ROA ROA 639 IPv4OnlyPfxSupersetHighRange
+single_ROA ROA 597 IPv4OnlyPfxSupersetLowPfx
+single_ROA ROA 598 IPv4OnlyPfxSupersetHighPfx
+single_ROA ROA 686 IPv4OnlyPfxOverlapLowRange
+single_ROA ROA 687 IPv4OnlyPfxOverlapHighRange
+single_ROA ROA 599 IPv4ExtraPfxBelowPfx
+single_ROA ROA 688 IPv4ExtraPfxBelowRange
+single_ROA ROA 608 IPv4ExtraPfxAbovePfx
+single_ROA ROA 689 IPv4ExtraPfxAboveRange
+single_ROA -x good ROA 609 IPv4PfxEqualPfx
+single_ROA -x good ROA 690 IPv4PfxesEqualRange
+single_ROA -x good ROA 610 IPv4PfxesEqualPfxes
+single_ROA -x good ROA 691 IPv4PfxesEqualRanges
+single_ROA -x good ROA 611 IPv4ExtraSubPfxInPfxMiddle
+single_ROA -x good ROA 692 IPv4ExtraSubPfxInRangeMiddle
+single_ROA -x good ROA 612 IPv4OnlyPfxInPfxLow
+single_ROA -x good ROA 613 IPv4OnlyPfxInPfxHigh
+single_ROA -x good ROA 693 IPv4OnlyPfxInRangeLow
+single_ROA -x good ROA 694 IPv4OnlyPfxInRangeHigh
+single_ROA -x good ROA 614 IPv4OnlyPfxesInPfxesMiddle
+single_ROA -x good ROA 695 IPv4OnlyPfxesInRangesMiddle
+single_ROA ROA 615 IPv6OnlyPfxBelowPfxNoGap
+single_ROA ROA 696 IPv6OnlyPfxBelowRangeNoGap
+single_ROA ROA 616 IPv6OnlyPfxAbovePfxNoGap
+single_ROA ROA 697 IPv6OnlyPfxAboveRangeNoGap
+single_ROA ROA 617 IPv6OnlyPfxBetweenPfxPfxNoGaps
+single_ROA ROA 698 IPv6OnlyPfxBetweenPfxRangeNoGaps
+single_ROA ROA 699 IPv6OnlyPfxBetweenRangePfxNoGaps
+single_ROA ROA 700 IPv6OnlyPfxBetweenRangeRangeNoGaps
+single_ROA ROA 701 IPv6OnlyPfxTouchRanges
+single_ROA ROA 618 IPv6OnlyPfxSpanPfxes
+single_ROA ROA 702 IPv6OnlyPfxSpanRanges
+single_ROA ROA 703 IPv6OnlyPfxSupersetLowRange
+single_ROA ROA 704 IPv6OnlyPfxSupersetHighRange
+single_ROA ROA 619 IPv6OnlyPfxSupersetLowPfx
+single_ROA ROA 620 IPv6OnlyPfxSupersetHighPfx
+single_ROA ROA 705 IPv6OnlyPfxOverlapLowRange
+single_ROA ROA 706 IPv6OnlyPfxOverlapHighRange
+single_ROA ROA 621 IPv6ExtraPfxBelowPfx
+single_ROA ROA 707 IPv6ExtraPfxBelowRange
+single_ROA ROA 622 IPv6ExtraPfxAbovePfx
+single_ROA ROA 708 IPv6ExtraPfxAboveRange
+single_ROA -x good ROA 623 IPv6PfxEqualPfx
+single_ROA -x good ROA 709 IPv6PfxesEqualRange
+single_ROA -x good ROA 624 IPv6PfxesEqualPfxes
+single_ROA -x good ROA 710 IPv6PfxesEqualRanges
+single_ROA -x good ROA 625 IPv6ExtraSubPfxInPfxMiddle
+single_ROA -x good ROA 711 IPv6ExtraSubPfxInRangeMiddle
+single_ROA -x good ROA 626 IPv6OnlyPfxInPfxLow
+single_ROA -x good ROA 627 IPv6OnlyPfxInPfxHigh
+single_ROA -x good ROA 712 IPv6OnlyPfxInRangeLow
+single_ROA -x good ROA 713 IPv6OnlyPfxInRangeHigh
+single_ROA -x good ROA 628 IPv6OnlyPfxesInPfxesMiddle
+single_ROA -x good ROA 714 IPv6OnlyPfxesInRangesMiddle
+single_ROA ROA 629 IPv4GoodIPv6Bad
+single_ROA ROA 630 IPv6GoodIPv4Bad
+single_ROA -x good ROA 715 ComplexResources
+single_ROA ROA 556 IP2Big
+single_ROA ROA 557 VersionV1Explicit
+single_ROA ROA 558 VersionV1ExplicitBadSig
+single_ROA ROA 559 VersionV2
+
+t4s_done

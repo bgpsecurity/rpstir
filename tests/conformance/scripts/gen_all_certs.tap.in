@@ -1,10 +1,11 @@
 #!@SHELL_BASH@
 #
 
-# gen_all_certs.sh - create all certificates for RPKI syntax
-#                    conformance test
+# create all certificates for RPKI syntax conformance test
 
 @SETUP_ENVIRONMENT@
+
+t4s_setup
 
 # Safe bash shell scripting practices
 @trap_errors@
@@ -156,123 +157,132 @@ ensure_file_exists "${single_cert_script}"
 # Generate Child certificates
 ###############################################################################
 
-${single_cert_cmd} -x good 101 AIA2AccessDescHtRs
-${single_cert_cmd} -x good 195 AIA2AccessDescRsRs
-${single_cert_cmd} 102 AIABadAccess
-${single_cert_cmd} 103 AIAAccessLoc
-${single_cert_cmd} 104 AIACrit
-${single_cert_cmd} 105 AKIHash
-${single_cert_cmd} 106 AKIShort
-${single_cert_cmd} 196 AKILong
-${single_cert_cmd} 197 AKIHasACIACSN
-${single_cert_cmd} 209 AKIHasACI
-${single_cert_cmd} 210 AKIHasACSN
-${single_cert_cmd} 107 UnkExtension
-${single_cert_cmd} 215 UnkExtensionCrit
-${single_cert_cmd} 109 BasicConstrNoCA
-${single_cert_cmd} 110 BasicConstrNoCrit
-${single_cert_cmd} 111 BasicConstrPathLth
-${single_cert_cmd} 112 Cpol2oid1correct
-${single_cert_cmd} 211 Cpol2oid2correct
-${single_cert_cmd} 198 CpolBadOid
-${single_cert_cmd} 113 CpolNoCrit
-${single_cert_cmd} -x good 212 CpolQualCps
-${single_cert_cmd} 213 CpolQualCpsUnotice
-${single_cert_cmd} 214 CpolQualUnotice
-${single_cert_cmd} -x good 114 CRLDP2DistPt
-${single_cert_cmd} 115 CRLDPCrit
-${single_cert_cmd} 116 CRLDPCrlIssuer
-${single_cert_cmd} 118 CRLDPReasons
-${single_cert_cmd} 119 EKU
-${single_cert_cmd} 120 InnerSigAlg
-${single_cert_cmd} 216 BothSigAlg
-${single_cert_cmd} 121 IssuerOID
-${single_cert_cmd} 122 Issuer2ComName
-${single_cert_cmd} 123 IssuerUtf
-${single_cert_cmd} 124 Issuer2SetComName
-${single_cert_cmd} 125 IssuerSerNum
-${single_cert_cmd} 126 IssUID
-${single_cert_cmd} 127 KUsageExtra
-${single_cert_cmd} 217 KUsageDigitalSig
-${single_cert_cmd} 128 KUsageNoCertSign
-${single_cert_cmd} 129 KUsageNoCrit
-${single_cert_cmd} 131 KUsageNoCRLSign
-${single_cert_cmd} 134 OuterSigAlg
-${single_cert_cmd} 135 PubKeyAlg
-${single_cert_cmd} 136 PubKeyExp
-${single_cert_cmd} 137 PubKeyShort
-${single_cert_cmd} 199 PubKeyLong
-${single_cert_cmd} 138 ResourcesASNoCrit
-${single_cert_cmd} 139 ResourcesBadAFI
-${single_cert_cmd} 140 ResourcesBadASOrder
-${single_cert_cmd} 141 ResourcesBadV4Order
-${single_cert_cmd} 142 ResourcesBadV6Order
-${single_cert_cmd} 143 ResourcesIPNoCrit
-${single_cert_cmd} 144 ResourcesNone
-${single_cert_cmd} 145 ResourcesSAFI
-${single_cert_cmd} -x good 218 ResourcesIP6Inherit
-${single_cert_cmd} -x good 219 ResourcesIP4Inherit
-${single_cert_cmd} -x good 220 ResourcesASInherit
-${single_cert_cmd} -x good 221 ResourcesAllInherit
-${single_cert_cmd} -x good 222 ResourcesIP6InhOnly
-${single_cert_cmd} -x good 223 ResourcesIP4InhOnly
-${single_cert_cmd} -x good 224 ResourcesASInhOnly
-${single_cert_cmd} 147 SIARepoNoRsync
-${single_cert_cmd} 200 SIAMFTNoRsync
-${single_cert_cmd} -x good 201 SIARepo2Rsync
-${single_cert_cmd} -x good 202 SIAMFT2Rsync
-${single_cert_cmd} -x good 203 SIARepoHtRs
-${single_cert_cmd} -x good 204 SIAMFTHtRs
-${single_cert_cmd} -x good 225 SIARepoHasNonURI
-${single_cert_cmd} -x good 226 SIAMFTHasNonURI
-${single_cert_cmd} 148 SIAAccessMethod
-${single_cert_cmd} 205 SIANoMFT
-${single_cert_cmd} 206 SIANoRepo
-${single_cert_cmd} 150 SKIHash
-${single_cert_cmd} 151 SKILong
-${single_cert_cmd} 194 SKIShort
-${single_cert_cmd} 152 SubjectOID
-${single_cert_cmd} 153 Subject2ComName
-${single_cert_cmd} 154 SubjectUtf
-${single_cert_cmd} 155 Subject2SetComName
-${single_cert_cmd} 156 SubjectSerNum
-${single_cert_cmd} 157 SubjUID
-${single_cert_cmd} 158 ValCrossed
-${single_cert_cmd} 159 ValFromFuture
-${single_cert_cmd} 160 ValFromTyp
-${single_cert_cmd} 162 ValToPast
-${single_cert_cmd} 163 ValToTyp
-${single_cert_cmd} 164 VersionNeg
-${single_cert_cmd} 165 Version1
-${single_cert_cmd} 166 Version2
-${single_cert_cmd} 167 Version4
-${single_cert_cmd} 168 SerNum
-${single_cert_cmd} 207 SerNum0
-${single_cert_cmd} 169 AIA2x
-${single_cert_cmd} 170 SIA2x
-${single_cert_cmd} 171 NoAIA
-${single_cert_cmd} 172 NoSIA
-${single_cert_cmd} 173 NoBasicConstr
-${single_cert_cmd} 174 2BasicConstr
-${single_cert_cmd} 175 NoSKI
-${single_cert_cmd} 176 2SKI
-${single_cert_cmd} 177 NoAKI
-${single_cert_cmd} 178 2AKI
-${single_cert_cmd} 179 NoKeyUsage
-${single_cert_cmd} 180 2KeyUsage
-${single_cert_cmd} 181 2CRLDP
-${single_cert_cmd} 182 NoCRLDP
-${single_cert_cmd} 183 NoCpol
-${single_cert_cmd} 184 2Cpol
-${single_cert_cmd} 185 2IPAddr
-${single_cert_cmd} 186 2ASNum
-${single_cert_cmd} 187 CRLDPNoRsyncDistPt
-${single_cert_cmd} 188 IssuerSet2SerNums
-${single_cert_cmd} 189 SubjectSet2SerNums
-${single_cert_cmd} 228 IssuerSeq2SerNums
-${single_cert_cmd} 229 SubjectSeq2SerNums
-${single_cert_cmd} 208 BadSig
-${single_cert_cmd} -x good 190 SerNumMax
-${single_cert_cmd} 191 SerNumTooBig
-${single_cert_cmd} 192 ResourcesIPEmpty
-${single_cert_cmd} 193 ResourcesASEmpty
+single_cert() {
+    eval "single_cert_testname=\${$#}"
+    t4s_testcase -- "${single_cert_testname}" '
+        ${single_cert_cmd} "$@"
+    ' "$@"
+}
+
+single_cert -x good 101 AIA2AccessDescHtRs
+single_cert -x good 195 AIA2AccessDescRsRs
+single_cert 102 AIABadAccess
+single_cert 103 AIAAccessLoc
+single_cert 104 AIACrit
+single_cert 105 AKIHash
+single_cert 106 AKIShort
+single_cert 196 AKILong
+single_cert 197 AKIHasACIACSN
+single_cert 209 AKIHasACI
+single_cert 210 AKIHasACSN
+single_cert 107 UnkExtension
+single_cert 215 UnkExtensionCrit
+single_cert 109 BasicConstrNoCA
+single_cert 110 BasicConstrNoCrit
+single_cert 111 BasicConstrPathLth
+single_cert 112 Cpol2oid1correct
+single_cert 211 Cpol2oid2correct
+single_cert 198 CpolBadOid
+single_cert 113 CpolNoCrit
+single_cert -x good 212 CpolQualCps
+single_cert 213 CpolQualCpsUnotice
+single_cert 214 CpolQualUnotice
+single_cert -x good 114 CRLDP2DistPt
+single_cert 115 CRLDPCrit
+single_cert 116 CRLDPCrlIssuer
+single_cert 118 CRLDPReasons
+single_cert 119 EKU
+single_cert 120 InnerSigAlg
+single_cert 216 BothSigAlg
+single_cert 121 IssuerOID
+single_cert 122 Issuer2ComName
+single_cert 123 IssuerUtf
+single_cert 124 Issuer2SetComName
+single_cert 125 IssuerSerNum
+single_cert 126 IssUID
+single_cert 127 KUsageExtra
+single_cert 217 KUsageDigitalSig
+single_cert 128 KUsageNoCertSign
+single_cert 129 KUsageNoCrit
+single_cert 131 KUsageNoCRLSign
+single_cert 134 OuterSigAlg
+single_cert 135 PubKeyAlg
+single_cert 136 PubKeyExp
+single_cert 137 PubKeyShort
+single_cert 199 PubKeyLong
+single_cert 138 ResourcesASNoCrit
+single_cert 139 ResourcesBadAFI
+single_cert 140 ResourcesBadASOrder
+single_cert 141 ResourcesBadV4Order
+single_cert 142 ResourcesBadV6Order
+single_cert 143 ResourcesIPNoCrit
+single_cert 144 ResourcesNone
+single_cert 145 ResourcesSAFI
+single_cert -x good 218 ResourcesIP6Inherit
+single_cert -x good 219 ResourcesIP4Inherit
+single_cert -x good 220 ResourcesASInherit
+single_cert -x good 221 ResourcesAllInherit
+single_cert -x good 222 ResourcesIP6InhOnly
+single_cert -x good 223 ResourcesIP4InhOnly
+single_cert -x good 224 ResourcesASInhOnly
+single_cert 147 SIARepoNoRsync
+single_cert 200 SIAMFTNoRsync
+single_cert -x good 201 SIARepo2Rsync
+single_cert -x good 202 SIAMFT2Rsync
+single_cert -x good 203 SIARepoHtRs
+single_cert -x good 204 SIAMFTHtRs
+single_cert -x good 225 SIARepoHasNonURI
+single_cert -x good 226 SIAMFTHasNonURI
+single_cert 148 SIAAccessMethod
+single_cert 205 SIANoMFT
+single_cert 206 SIANoRepo
+single_cert 150 SKIHash
+single_cert 151 SKILong
+single_cert 194 SKIShort
+single_cert 152 SubjectOID
+single_cert 153 Subject2ComName
+single_cert 154 SubjectUtf
+single_cert 155 Subject2SetComName
+single_cert 156 SubjectSerNum
+single_cert 157 SubjUID
+single_cert 158 ValCrossed
+single_cert 159 ValFromFuture
+single_cert 160 ValFromTyp
+single_cert 162 ValToPast
+single_cert 163 ValToTyp
+single_cert 164 VersionNeg
+single_cert 165 Version1
+single_cert 166 Version2
+single_cert 167 Version4
+single_cert 168 SerNum
+single_cert 207 SerNum0
+single_cert 169 AIA2x
+single_cert 170 SIA2x
+single_cert 171 NoAIA
+single_cert 172 NoSIA
+single_cert 173 NoBasicConstr
+single_cert 174 2BasicConstr
+single_cert 175 NoSKI
+single_cert 176 2SKI
+single_cert 177 NoAKI
+single_cert 178 2AKI
+single_cert 179 NoKeyUsage
+single_cert 180 2KeyUsage
+single_cert 181 2CRLDP
+single_cert 182 NoCRLDP
+single_cert 183 NoCpol
+single_cert 184 2Cpol
+single_cert 185 2IPAddr
+single_cert 186 2ASNum
+single_cert 187 CRLDPNoRsyncDistPt
+single_cert 188 IssuerSet2SerNums
+single_cert 189 SubjectSet2SerNums
+single_cert 228 IssuerSeq2SerNums
+single_cert 229 SubjectSeq2SerNums
+single_cert 208 BadSig
+single_cert -x good 190 SerNumMax
+single_cert 191 SerNumTooBig
+single_cert 192 ResourcesIPEmpty
+single_cert 193 ResourcesASEmpty
+
+t4s_done
