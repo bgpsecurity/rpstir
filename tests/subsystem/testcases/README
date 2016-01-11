@@ -1,11 +1,11 @@
                    Making Test Cases
 
 The creation of test cases has been automated largely with script
-files, starting with the file "makeall".  This file calls a number of
-other script files: "makecerts", "makecrls", "makeroas" and
-"makemanifests".  These in turn call programs in this directory, such
-as "make_test_cert", "make_itest_crl", make_test_roa" and
-"make_test_manifest" giving the name of the file to be created and
+files, starting with the file "makeall.tap".  This file calls a number
+of other script files: "makecerts.tap", "makecrls.tap", "makeroas.tap"
+and "makemanifests.tap".  These in turn call programs in this
+directory, such as "make_test_cert", "make_itest_crl", make_test_roa"
+and "make_test_manifest" giving the name of the file to be created and
 sometimes other parameters.  The files created have a simple naming
 structure indicating their types.  All certificates are named (in
 shell notation) "C*.cer", CRLs are "L*.crl", ROAs are "R*.roa", and
@@ -139,10 +139,10 @@ e.g.
 
 5. Script files
 
-The file "makeall" creates a set of test files by invoking the
-"makecerts", "makecrls", makeroas" and "makemanifests" scripts.  Each
-of these, in turn, then makes a set of files using the methods
-described above.  Makeall should be run at the start of a test cycle
-since each file it creates uses the current date as its start date,
-and typically expires a year later.  Note that some of the files are
-created deliberately with bad digital signitures, etc.
+The file "makeall.tap" creates a set of test files by invoking the
+"makecerts.tap", "makecrls.tap", makeroas.tap" and "makemanifests.tap"
+scripts.  Each of these, in turn, then makes a set of files using the
+methods described above.  makeall.tap should be run at the start of a
+test cycle since each file it creates uses the current date as its
+start date, and typically expires a year later.  Note that some of the
+files are created deliberately with bad digital signitures, etc.

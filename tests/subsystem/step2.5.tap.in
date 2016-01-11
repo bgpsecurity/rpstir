@@ -1,0 +1,32 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+actual=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
+expected_lines=3
+
+t4s_testcase "roa query" '
+    use_config_file "$TESTS_SRCDIR/specs.1.2.conf"
+    query -t roa -d filename >${actual} || t4s_fatal "query client failed"
+'
+t4s_testcase "roa query output" '
+    lines=$(wc -l <${actual})
+    [ "${lines}" -eq "${expected_lines}" ] \
+        || t4s_fatal "${lines} != ${expected_lines}"
+'
+
+t4s_testcase "gbr query" '
+    use_config_file "$TESTS_SRCDIR/specs.1.2.conf"
+    query -t gbr -d filename >${actual} || t4s_fatal "query client failed"
+'
+t4s_testcase "gbr query output" '
+    lines=$(wc -l <${actual})
+    [ "${lines}" -eq "${expected_lines}" ] \
+        || t4s_fatal "${lines} != ${expected_lines}"
+'
+
+t4s_done

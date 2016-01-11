@@ -1,0 +1,13 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+t4s_testcase "Making L111 expired" '
+    "$TESTS_BUILDDIR/makeL111Expired" || t4s_fatal "makeL111Expired failed"
+'
+
+t4s_done

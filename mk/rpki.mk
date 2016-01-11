@@ -1693,93 +1693,93 @@ MK_SUBST_FILES_EXEC += tests/subsystem/initDB
 tests/subsystem/initDB: $(srcdir)/tests/subsystem/initDB.in
 
 
-check_SCRIPTS += tests/subsystem/runSubsystemTest.sh
-MK_SUBST_FILES_EXEC += tests/subsystem/runSubsystemTest.sh
-tests/subsystem/runSubsystemTest.sh: $(srcdir)/tests/subsystem/runSubsystemTest.sh.in
+check_SCRIPTS += tests/subsystem/runSubsystemTest.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/runSubsystemTest.tap
+tests/subsystem/runSubsystemTest.tap: $(srcdir)/tests/subsystem/runSubsystemTest.tap.in
 
 
 check_SCRIPTS += \
-	tests/subsystem/step1.1 \
-	tests/subsystem/step1.2 \
-	tests/subsystem/step1.3 \
-	tests/subsystem/step1.4 \
-	tests/subsystem/step1.5 \
-	tests/subsystem/step1.6 \
-	tests/subsystem/step1.7 \
-	tests/subsystem/step1.8 \
-	tests/subsystem/step1.9 \
-	tests/subsystem/step2.1 \
-	tests/subsystem/step2.2 \
-	tests/subsystem/step2.3 \
-	tests/subsystem/step2.4 \
-	tests/subsystem/step2.5 \
-	tests/subsystem/step2.6 \
-	tests/subsystem/step2.7 \
-	tests/subsystem/step2.8 \
-	tests/subsystem/step3.1 \
-	tests/subsystem/step3.2 \
-	tests/subsystem/step3.3 \
-	tests/subsystem/step3.4 \
-	tests/subsystem/step3.5 \
-	tests/subsystem/step3.6 \
-	tests/subsystem/step3.7 \
-	tests/subsystem/step3.8 \
-	tests/subsystem/step3.9
+	tests/subsystem/step1.1.tap \
+	tests/subsystem/step1.2.tap \
+	tests/subsystem/step1.3.tap \
+	tests/subsystem/step1.4.tap \
+	tests/subsystem/step1.5.tap \
+	tests/subsystem/step1.6.tap \
+	tests/subsystem/step1.7.tap \
+	tests/subsystem/step1.8.tap \
+	tests/subsystem/step1.9.tap \
+	tests/subsystem/step2.1.tap \
+	tests/subsystem/step2.2.tap \
+	tests/subsystem/step2.3.tap \
+	tests/subsystem/step2.4.tap \
+	tests/subsystem/step2.5.tap \
+	tests/subsystem/step2.6.tap \
+	tests/subsystem/step2.7.tap \
+	tests/subsystem/step2.8.tap \
+	tests/subsystem/step3.1.tap \
+	tests/subsystem/step3.2.tap \
+	tests/subsystem/step3.3.tap \
+	tests/subsystem/step3.4.tap \
+	tests/subsystem/step3.5.tap \
+	tests/subsystem/step3.6.tap \
+	tests/subsystem/step3.7.tap \
+	tests/subsystem/step3.8.tap \
+	tests/subsystem/step3.9.tap
 
 MK_SUBST_FILES_EXEC += \
-	tests/subsystem/step1.1 \
-	tests/subsystem/step1.2 \
-	tests/subsystem/step1.3 \
-	tests/subsystem/step1.4 \
-	tests/subsystem/step1.5 \
-	tests/subsystem/step1.6 \
-	tests/subsystem/step1.7 \
-	tests/subsystem/step1.8 \
-	tests/subsystem/step1.9 \
-	tests/subsystem/step2.1 \
-	tests/subsystem/step2.2 \
-	tests/subsystem/step2.3 \
-	tests/subsystem/step2.4 \
-	tests/subsystem/step2.5 \
-	tests/subsystem/step2.6 \
-	tests/subsystem/step2.7 \
-	tests/subsystem/step2.8 \
-	tests/subsystem/step3.1 \
-	tests/subsystem/step3.2 \
-	tests/subsystem/step3.3 \
-	tests/subsystem/step3.4 \
-	tests/subsystem/step3.5 \
-	tests/subsystem/step3.6 \
-	tests/subsystem/step3.7 \
-	tests/subsystem/step3.8 \
-	tests/subsystem/step3.9
+	tests/subsystem/step1.1.tap \
+	tests/subsystem/step1.2.tap \
+	tests/subsystem/step1.3.tap \
+	tests/subsystem/step1.4.tap \
+	tests/subsystem/step1.5.tap \
+	tests/subsystem/step1.6.tap \
+	tests/subsystem/step1.7.tap \
+	tests/subsystem/step1.8.tap \
+	tests/subsystem/step1.9.tap \
+	tests/subsystem/step2.1.tap \
+	tests/subsystem/step2.2.tap \
+	tests/subsystem/step2.3.tap \
+	tests/subsystem/step2.4.tap \
+	tests/subsystem/step2.5.tap \
+	tests/subsystem/step2.6.tap \
+	tests/subsystem/step2.7.tap \
+	tests/subsystem/step2.8.tap \
+	tests/subsystem/step3.1.tap \
+	tests/subsystem/step3.2.tap \
+	tests/subsystem/step3.3.tap \
+	tests/subsystem/step3.4.tap \
+	tests/subsystem/step3.5.tap \
+	tests/subsystem/step3.6.tap \
+	tests/subsystem/step3.7.tap \
+	tests/subsystem/step3.8.tap \
+	tests/subsystem/step3.9.tap
 
-tests/subsystem/step1.1: $(srcdir)/tests/subsystem/step1.1.in
-tests/subsystem/step1.2: $(srcdir)/tests/subsystem/step1.2.in
-tests/subsystem/step1.3: $(srcdir)/tests/subsystem/step1.3.in
-tests/subsystem/step1.4: $(srcdir)/tests/subsystem/step1.4.in
-tests/subsystem/step1.5: $(srcdir)/tests/subsystem/step1.5.in
-tests/subsystem/step1.6: $(srcdir)/tests/subsystem/step1.6.in
-tests/subsystem/step1.7: $(srcdir)/tests/subsystem/step1.7.in
-tests/subsystem/step1.8: $(srcdir)/tests/subsystem/step1.8.in
-tests/subsystem/step1.9: $(srcdir)/tests/subsystem/step1.9.in
-tests/subsystem/step2.1: $(srcdir)/tests/subsystem/step2.1.in
-tests/subsystem/step2.2: $(srcdir)/tests/subsystem/step2.2.in
-tests/subsystem/step2.3: $(srcdir)/tests/subsystem/step2.3.in
-tests/subsystem/step2.4: $(srcdir)/tests/subsystem/step2.4.in
-tests/subsystem/step2.5: $(srcdir)/tests/subsystem/step2.5.in
-tests/subsystem/step2.6: $(srcdir)/tests/subsystem/step2.6.in
-tests/subsystem/step2.7: $(srcdir)/tests/subsystem/step2.7.in
-tests/subsystem/step2.8: $(srcdir)/tests/subsystem/step2.8.in
-tests/subsystem/step3.1: $(srcdir)/tests/subsystem/step3.1.in
-tests/subsystem/step3.2: $(srcdir)/tests/subsystem/step3.2.in
-tests/subsystem/step3.3: $(srcdir)/tests/subsystem/step3.3.in
-tests/subsystem/step3.4: $(srcdir)/tests/subsystem/step3.4.in
-tests/subsystem/step3.5: $(srcdir)/tests/subsystem/step3.5.in
-tests/subsystem/step3.6: $(srcdir)/tests/subsystem/step3.6.in
-tests/subsystem/step3.7: $(srcdir)/tests/subsystem/step3.7.in
-tests/subsystem/step3.8: $(srcdir)/tests/subsystem/step3.8.in
-tests/subsystem/step3.9: $(srcdir)/tests/subsystem/step3.9.in
+tests/subsystem/step1.1.tap: $(srcdir)/tests/subsystem/step1.1.tap.in
+tests/subsystem/step1.2.tap: $(srcdir)/tests/subsystem/step1.2.tap.in
+tests/subsystem/step1.3.tap: $(srcdir)/tests/subsystem/step1.3.tap.in
+tests/subsystem/step1.4.tap: $(srcdir)/tests/subsystem/step1.4.tap.in
+tests/subsystem/step1.5.tap: $(srcdir)/tests/subsystem/step1.5.tap.in
+tests/subsystem/step1.6.tap: $(srcdir)/tests/subsystem/step1.6.tap.in
+tests/subsystem/step1.7.tap: $(srcdir)/tests/subsystem/step1.7.tap.in
+tests/subsystem/step1.8.tap: $(srcdir)/tests/subsystem/step1.8.tap.in
+tests/subsystem/step1.9.tap: $(srcdir)/tests/subsystem/step1.9.tap.in
+tests/subsystem/step2.1.tap: $(srcdir)/tests/subsystem/step2.1.tap.in
+tests/subsystem/step2.2.tap: $(srcdir)/tests/subsystem/step2.2.tap.in
+tests/subsystem/step2.3.tap: $(srcdir)/tests/subsystem/step2.3.tap.in
+tests/subsystem/step2.4.tap: $(srcdir)/tests/subsystem/step2.4.tap.in
+tests/subsystem/step2.5.tap: $(srcdir)/tests/subsystem/step2.5.tap.in
+tests/subsystem/step2.6.tap: $(srcdir)/tests/subsystem/step2.6.tap.in
+tests/subsystem/step2.7.tap: $(srcdir)/tests/subsystem/step2.7.tap.in
+tests/subsystem/step2.8.tap: $(srcdir)/tests/subsystem/step2.8.tap.in
+tests/subsystem/step3.1.tap: $(srcdir)/tests/subsystem/step3.1.tap.in
+tests/subsystem/step3.2.tap: $(srcdir)/tests/subsystem/step3.2.tap.in
+tests/subsystem/step3.3.tap: $(srcdir)/tests/subsystem/step3.3.tap.in
+tests/subsystem/step3.4.tap: $(srcdir)/tests/subsystem/step3.4.tap.in
+tests/subsystem/step3.5.tap: $(srcdir)/tests/subsystem/step3.5.tap.in
+tests/subsystem/step3.6.tap: $(srcdir)/tests/subsystem/step3.6.tap.in
+tests/subsystem/step3.7.tap: $(srcdir)/tests/subsystem/step3.7.tap.in
+tests/subsystem/step3.8.tap: $(srcdir)/tests/subsystem/step3.8.tap.in
+tests/subsystem/step3.9.tap: $(srcdir)/tests/subsystem/step3.9.tap.in
 
 
 check_PROGRAMS += tests/subsystem/testcases/cert_validate
@@ -1958,33 +1958,33 @@ COPYFILES += \
 	tests/subsystem/testcases/CM1.p15
 
 
-check_SCRIPTS += tests/subsystem/testcases/makeall
-MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makeall
-tests/subsystem/testcases/makeall: $(srcdir)/tests/subsystem/testcases/makeall.in
+check_SCRIPTS += tests/subsystem/testcases/makeall.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makeall.tap
+tests/subsystem/testcases/makeall.tap: $(srcdir)/tests/subsystem/testcases/makeall.tap.in
 
-check_SCRIPTS += tests/subsystem/testcases/makecerts
-MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecerts
-tests/subsystem/testcases/makecerts: $(srcdir)/tests/subsystem/testcases/makecerts.in
+check_SCRIPTS += tests/subsystem/testcases/makecerts.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecerts.tap
+tests/subsystem/testcases/makecerts.tap: $(srcdir)/tests/subsystem/testcases/makecerts.tap.in
 
-check_SCRIPTS += tests/subsystem/testcases/makecrls
-MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecrls
-tests/subsystem/testcases/makecrls: $(srcdir)/tests/subsystem/testcases/makecrls.in
+check_SCRIPTS += tests/subsystem/testcases/makecrls.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makecrls.tap
+tests/subsystem/testcases/makecrls.tap: $(srcdir)/tests/subsystem/testcases/makecrls.tap.in
 
-check_SCRIPTS += tests/subsystem/testcases/makegbrs
-MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makegbrs
-tests/subsystem/testcases/makegbrs: $(srcdir)/tests/subsystem/testcases/makegbrs.in
+check_SCRIPTS += tests/subsystem/testcases/makegbrs.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makegbrs.tap
+tests/subsystem/testcases/makegbrs.tap: $(srcdir)/tests/subsystem/testcases/makegbrs.tap.in
 
 check_SCRIPTS += tests/subsystem/testcases/makekeys
 MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makekeys
 tests/subsystem/testcases/makekeys: $(srcdir)/tests/subsystem/testcases/makekeys.in
 
-check_SCRIPTS += tests/subsystem/testcases/makemanifests
-MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makemanifests
-tests/subsystem/testcases/makemanifests: $(srcdir)/tests/subsystem/testcases/makemanifests.in
+check_SCRIPTS += tests/subsystem/testcases/makemanifests.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makemanifests.tap
+tests/subsystem/testcases/makemanifests.tap: $(srcdir)/tests/subsystem/testcases/makemanifests.tap.in
 
-check_SCRIPTS += tests/subsystem/testcases/makeroas
-MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makeroas
-tests/subsystem/testcases/makeroas: $(srcdir)/tests/subsystem/testcases/makeroas.in
+check_SCRIPTS += tests/subsystem/testcases/makeroas.tap
+MK_SUBST_FILES_EXEC += tests/subsystem/testcases/makeroas.tap
+tests/subsystem/testcases/makeroas.tap: $(srcdir)/tests/subsystem/testcases/makeroas.tap.in
 
 
 CLEANDIRS += \
@@ -2002,7 +2002,7 @@ CLEANFILES += \
 
 
 
-TESTS += tests/subsystem/testcases/makeall
+TESTS += tests/subsystem/testcases/makeall.tap
 
 
 EXTRA_DIST += \
@@ -2023,9 +2023,9 @@ EXTRA_DIST += \
 
 
 EXTRA_DIST += \
-	tests/subsystem/runSubsystemTest1.sh \
-	tests/subsystem/runSubsystemTest2.sh \
-	tests/subsystem/runSubsystemTest3.sh
+	tests/subsystem/runSubsystemTest1.tap \
+	tests/subsystem/runSubsystemTest2.tap \
+	tests/subsystem/runSubsystemTest3.tap
 
 
 check_SCRIPTS += \
@@ -2051,6 +2051,6 @@ CLEANFILES += \
 
 
 TESTS += \
-	tests/subsystem/runSubsystemTest1.sh \
-	tests/subsystem/runSubsystemTest2.sh \
-	tests/subsystem/runSubsystemTest3.sh
+	tests/subsystem/runSubsystemTest1.tap \
+	tests/subsystem/runSubsystemTest2.tap \
+	tests/subsystem/runSubsystemTest3.tap

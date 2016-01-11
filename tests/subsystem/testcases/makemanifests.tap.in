@@ -1,0 +1,18 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+mkmanifest() {
+    t4s_testcase "$1" './make_test_manifest "$@"' "$@"
+}
+
+mkmanifest M1 < "$TESTS_SRCDIR/makeM1"
+mkmanifest M11 < "$TESTS_SRCDIR/makeM11"
+mkmanifest M111 < "$TESTS_SRCDIR/makeM111"
+mkmanifest M112 < "$TESTS_SRCDIR/makeM112"
+mkmanifest M231 < "$TESTS_SRCDIR/makeM231"
+mkmanifest M1111 < "$TESTS_SRCDIR/makeM1111"
+
+t4s_done

@@ -1,0 +1,109 @@
+#!/bin/sh -e
+
+# NOTE: make_test_cert currently copies the CRLDP from the parent cert.
+# This is problematic because TAs must not have CRLDPs.
+# To work around this, there are two versions of the TA, one for basing the
+# child certs on and one for adding to the database.
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+cd "$TESTS_BUILDDIR"
+
+# first assemble the root cert from source
+cp "$TESTS_SRCDIR/C.fake-parent.orig" C.raw
+chmod +w C.raw
+rr < C.raw > C.cer
+
+mkcert() {
+    t4s_testcase "$1" './make_test_cert "$@"' "$@"
+}
+
+mkcert C 20000207115900Z 20490313120100Z < "$TESTS_SRCDIR/makeC"
+mkcert CM1     0D 1M
+mkcert C1      0D 1Y < "$TESTS_SRCDIR/makeC1"
+mkcert C1M1    0D 1M
+mkcert C11     0D 1Y < "$TESTS_SRCDIR/makeC11"
+mkcert C11G1   0D 1M
+mkcert C11R1   0D 1M e
+mkcert C11M1   0D 1M
+mkcert C11M2   0D 1M
+mkcert C111    0D 1Y < "$TESTS_SRCDIR/makeC111"
+mkcert C111G1  0D 1M
+mkcert C111R1  0D 1M e
+mkcert C111G2  0D 1M
+mkcert C111R2  0D 1M e
+mkcert C111G3  0D 1M
+mkcert C111R3  0D 1M e
+mkcert C111M1  0D 1M
+mkcert C1111   0D 1Y < "$TESTS_SRCDIR/makeC1111"
+mkcert C1111G1 0D 1M
+mkcert C1111R1 0D 1M e
+mkcert C112    0D 1Y < "$TESTS_SRCDIR/makeC112"
+mkcert C112G1  0D 1M
+mkcert C112R1  0D 1M e
+mkcert C113    0D 1Y < "$TESTS_SRCDIR/makeC113"
+mkcert C113G1  0D 1M
+mkcert C113R1  0D 1M e
+mkcert C12     0D 1Y < "$TESTS_SRCDIR/makeC12"
+mkcert C121    0D 1Y < "$TESTS_SRCDIR/makeC121"
+mkcert C121G1  0D 1M
+mkcert C121R1  0D 1M e
+mkcert C13     0D 1Y < "$TESTS_SRCDIR/makeC13"
+mkcert C131    0D 1Y < "$TESTS_SRCDIR/makeC131"
+mkcert C131G1  0D 1M
+mkcert C131R1  0D 1M e
+mkcert C132    0D 1Y < "$TESTS_SRCDIR/makeC132"
+mkcert C132G1  0D 1M
+mkcert C132R1  0D 1M e
+mkcert C132G2  0D 1M
+mkcert C132R2  0D 1M e
+mkcert C2      0D 1Y < "$TESTS_SRCDIR/makeC2"
+mkcert C21     0D 1Y < "$TESTS_SRCDIR/makeC21"
+mkcert C211    0D 1Y < "$TESTS_SRCDIR/makeC211"
+mkcert C211G1  0D 1M
+mkcert C211R1  0D 1M e
+mkcert C22     0D 1Y < "$TESTS_SRCDIR/makeC22"
+mkcert C22G1   0D 1M
+mkcert C22R1   0D 1M e
+mkcert C221    0D 1Y < "$TESTS_SRCDIR/makeC221"
+mkcert C221G1  0D 1M
+mkcert C221R1  0D 1M e
+mkcert C2211   0D 1Y < "$TESTS_SRCDIR/makeC2211"
+mkcert C2211G1 0D 1M
+mkcert C2211R1 0D 1M e
+mkcert C2212   0D 1Y < "$TESTS_SRCDIR/makeC2212"
+mkcert C2212G1 0D 1M
+mkcert C2212R1 0D 1M e
+mkcert C2212G2 0D 1M
+mkcert C2212R2 0D 1M e
+mkcert C23     0D 1Y b < "$TESTS_SRCDIR/makeC23"
+mkcert C23G1   0D 1M
+mkcert C23R1   0D 1M e
+mkcert C23G2   0D 1M n
+mkcert C23R2   0D 1M n
+mkcert C23M1   0D 1M e
+mkcert C231    0D 1Y < "$TESTS_SRCDIR/makeC231"
+mkcert C231G1  0D 1M
+mkcert C231R1  0D 1M e
+mkcert C231G2  0D 1M
+mkcert C231R2  0D 1M e
+mkcert C232    0D 1Y < "$TESTS_SRCDIR/makeC232"
+mkcert C232G1  0D 1M
+mkcert C232R1  0D 1M e
+mkcert C233    0D 1Y < "$TESTS_SRCDIR/makeC233"
+mkcert C233G1  0D 1M
+mkcert C233R1  0D 1M e
+mkcert C233G9  0D 1M x
+mkcert C233R9  0D 1M xe
+
+cp C2.cer C2X.cer
+cp C2.raw C2X.raw
+
+cp "$TESTS_SRCDIR/C.real.orig" C.raw
+chmod +w C.raw
+rr < C.raw > C.cer
+mkcert C 20000207115900Z 20490313120100Z < "$TESTS_SRCDIR/makeC"
+
+t4s_done
