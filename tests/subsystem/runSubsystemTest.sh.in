@@ -34,7 +34,7 @@ cd "$TESTS_BUILDDIR"
 ./initDB || check_errs $? "initDB failed!"
 
 # check for existing loader and fail if so
-port=$(config_get RPKIPort)
+port=$(config_get RPKIPort) || fatal "unable to get RPKIPort"
 if port_open ${port}; then
     echo "ERROR: port ${port} is already in use.  Aborting subsystem test."
     exit 3
