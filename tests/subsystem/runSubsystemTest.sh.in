@@ -35,7 +35,7 @@ cd "$TESTS_BUILDDIR"
 
 # check for existing loader and fail if so
 port=$(config_get RPKIPort) || fatal "unable to get RPKIPort"
-if port_open ${port}; then
+if port_open "${port}"; then
     echo "ERROR: port ${port} is already in use.  Aborting subsystem test."
     exit 3
 fi
@@ -58,7 +58,7 @@ trap 'kill_loader' EXIT
 run_bg "rcli-w" rcli -w -p
 LOADER_PID=$!
 timeout=15
-while ! port_open ${port}; do
+while ! port_open "${port}"; do
     [ "${timeout}" -gt 0 ] || fatal "timed out waiting for rcli to start"
     sleep 1
     timeout=$((timeout-1))

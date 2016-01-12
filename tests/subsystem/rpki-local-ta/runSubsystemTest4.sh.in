@@ -36,7 +36,7 @@ run "update_cert" update_cert 0D 2Y testcases4_LTA/C?*.cer
 
 # check for existing loader and fail if so
 port=$(config_get RPKIPort) || fatal "unable to get RPKIPort"
-if port_open ${port}; then
+if port_open "${port}"; then
     echo "ERROR: port ${port} is already in use.  Aborting subsystem test."
     exit 3
 fi
