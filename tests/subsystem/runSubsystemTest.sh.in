@@ -36,7 +36,7 @@ cd "$TESTS_BUILDDIR"
 # check for existing loader and fail if so
 port=$(config_get RPKIPort) || fatal "unable to get RPKIPort"
 if port_open "${port}"; then
-    echo "ERROR: port ${port} is already in use.  Aborting subsystem test."
+    echo "ERROR: port ${port} is already in use"
     exit 3
 fi
 
