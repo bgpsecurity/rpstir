@@ -132,19 +132,7 @@ AC_ARG_WITH(
 
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
-  # this is a bit of a hack because mysql_config --include specified
-  # non-system include flags
-  for flag in `$MYSQL_CONFIG --include`; do
-    case $flag in
-      -I*)
-        dir="`echo $flag | $SED 's/^-I//'`"
-        CPPFLAGS="$CPPFLAGS -isystem${dir}"
-        ;;
-      *)
-        CPPFLAGS="$CPPFLAGS $flag"
-        ;;
-    esac
-  done
+  CPPFLAGS="$CPPFLAGS $($MYSQL_CONFIG --include)"
 
   # this is a bit of a hack because mysql_config --libs_r specifies
   # compiler flags, not linker flags
@@ -188,13 +176,13 @@ if test x${cryptlib_lib} != x; then
 fi
 
 if test x${odbc_include} != x; then
-  CFLAGS="${CFLAGS} -isystem${odbc_include}"
+  CFLAGS="${CFLAGS} -I${odbc_include}"
 fi
 if test x${cryptlib_include} != x; then
-  CFLAGS="${CFLAGS} -isystem${cryptlib_include}"
+  CFLAGS="${CFLAGS} -I${cryptlib_include}"
 fi
 if test x${ssl_include} != x; then
-  CFLAGS="${CFLAGS} -isystem${ssl_include}"
+  CFLAGS="${CFLAGS} -I${ssl_include}"
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
