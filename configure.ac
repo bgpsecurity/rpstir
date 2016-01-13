@@ -73,8 +73,77 @@ if test -z "$SHELL_BASH"; then
   AC_MSG_WARN([cannot find bash, which is needed by some scripts])
 fi
 
+######################################################################
+# The following are helper macros to back up and restore user flag
+# variables.  User flag variables should only be temporarily modified;
+# their values should be backed up before executing a check that
+# modifies their value and restored after the check completes.  This
+# is important for the following reasons:
+#
+#   * These variables are AC_SUBSTed into Makefile.in.  If the value
+#     substituted into Makefile.in differs from what the user set, the
+#     user is unable to safely override them when running 'make'.
+#     See:
+#     https://www.gnu.org/software/automake/manual/html_node/User-Variables.html
+#     https://www.gnu.org/software/autoconf/manual/html_node/Preset-Output-Variables.html#index-CFLAGS-84
+#
+#   * Modifying them can interfere with subsequent checks.
+#
+# A common usage pattern for these macros is:
+#
+#   * Use flags_backup only once at the beginning
+#
+#   * For each library dependency, run
+#     flags_declare_addons([[NAME_]]), substituting an appropriate
+#     name for NAME_.  For example, for OpenSSL, run
+#     flags_declare_addons([[OPENSSL_]]).
+#
+#   * For each check that modifies a user flag variable:
+#     - Run the check
+#     - For each flag variable foo, set NAME_foo to the flags that the
+#       check determined should be added to foo.  For example, if
+#       linking against OpenSSL requires adding -lcrypto to LIBS, then
+#       set OPENSSL_LIBS to -lcrypto
+#     - Use flags_restore to restore the backed up flags so that the
+#       next check (or AC_OUTPUT) has unmodified flags
+#
+#   * If a check depends on a library, and that library's flags were
+#     saved under NAME_, use flags_load_addons([[NAME_]]) before
+#     running the check to append that library's flags to the user
+#     flag variables.
+
 # List of user flag variables used in this configure.ac.
 m4_define([flagvars], [[CPPFLAGS] [CFLAGS] [LIBS] [LDFLAGS]])
+
+# Back up user flag variables:  For each user flag variable foo, set
+# the foo_BACKUP variable to the value of foo.
+m4_define([flags_backup], [
+    m4_foreach_w([flagvar], flagvars, [
+        flagvar[_BACKUP=${]flagvar[}]
+      ])
+  ])
+
+# Restore user flag variables:  For each user flag variable foo, set
+# its value to the value of the foo_BACKUP variable.
+m4_define([flags_restore], [
+    m4_foreach_w([flagvar], flagvars, [
+        flagvar[=${]flagvar[_BACKUP}]
+      ])
+  ])
+
+# For each user flag variable foo, append the value of the PREFIXfoo
+# variable (except prepend when foo is LIBS), where PREFIX is the
+# first argument passed to the macro.  If two arguments are passed to
+# the macro, append (or prepend) to $2foo instead of foo.
+m4_define([flags_load_addons], [
+    m4_foreach_w([flagvar], flagvars, [
+        m4_if([flagvar], [[LIBS]], [
+            $2[]flagvar[="${]$1[]flagvar[} ${]$2[]flagvar[}"]
+          ], [
+            $2[]flagvar[="${]$2[]flagvar[} ${]$1[]flagvar[}"]
+          ])
+      ])
+  ])
 
 # For each user variable foo, unset PREFIXfoo and mark PREFIXfoo for
 # substitution where where PREFIX is the first argument passed to the
@@ -85,6 +154,13 @@ m4_define([flags_declare_addons], [
         AC_SUBST($1[]flagvar)
       ])
   ])
+######################################################################
+
+flags_backup
+
+# these flag addon variables hold flags that should be used
+# everywhere, not just for particular programs and libraries
+flags_declare_addons([[CONFIGURE_]])
 
 ######################################################################
 # MySQL
@@ -98,7 +174,6 @@ AC_ARG_WITH(
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   MYSQL_CPPFLAGS=$("$MYSQL_CONFIG" --include)
-  CPPFLAGS="${CPPFLAGS} ${MYSQL_CPPFLAGS}"
 
   # this is a bit of a hack because mysql_config --libs_r specifies
   # compiler flags, not linker flags
@@ -115,12 +190,12 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
         ;;
     esac
   done
-  LIBS="${MYSQL_LIBS} ${LIBS}"
 else
   AC_MSG_ERROR(
     [cannot find or execute mysql_config, make sure MySQL client is installed])
 fi
 AC_MSG_CHECKING([whether mysql flags are useable])
+flags_load_addons([[MYSQL_]])
 AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([[]], [[return 0;]])],
   [AC_MSG_RESULT([yes])],
@@ -129,6 +204,7 @@ AC_LINK_IFELSE(
     AC_MSG_FAILURE([cannot compile and link a program with the flags\
  supplied by mysql_config])
   ])
+flags_restore
 
 ######################################################################
 # OpenSSL
@@ -144,7 +220,6 @@ AC_ARG_WITH(
   [ssl_include=/usr/local/ssl/include])
 if test x${ssl_include} != x; then
   OPENSSL_CPPFLAGS="-I${ssl_include}"
-  CPPFLAGS="${CPPFLAGS} ${OPENSSL_CPPFLAGS}"
 fi
 AC_ARG_WITH(
   [ssl-lib],
@@ -156,16 +231,19 @@ AC_ARG_WITH(
   [ssl_lib=/usr/local/ssl/lib])
 if test x${ssl_lib} != x; then
   OPENSSL_LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
-  LDFLAGS="${LDFLAGS} ${OPENSSL_LDFLAGS}"
 fi
+flags_load_addons([[OPENSSL_]])
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
     AC_MSG_ERROR([OpenSSL is required for building this project])
   ])
+flags_restore
+flags_load_addons([[OPENSSL_]])
 AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [
     OPENSSL_LIBS="-lcrypto"
   ], [
     AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
   ])
+flags_restore
 
 ######################################################################
 # ODBC
@@ -180,7 +258,6 @@ AC_ARG_WITH(
   [odbc_include=/usr/local/include])
 if test x${odbc_include} != x; then
   ODBC_CPPFLAGS="-I${odbc_include}"
-  CPPFLAGS="${CPPFLAGS} ${ODBC_CPPFLAGS}"
 fi
 AC_ARG_WITH(
   [odbc-lib],
@@ -191,18 +268,21 @@ AC_ARG_WITH(
   [odbc_lib=/usr/local/lib])
 if test x${odbc_lib} != x; then
   ODBC_LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
-  LDFLAGS="${LDFLAGS} ${ODBC_LDFLAGS}"
 fi
+flags_load_addons([[ODBC_]])
 AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [
     ODBC_LIBS="-l${ac_lib}"
   ], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
+flags_restore
+flags_load_addons([[ODBC_]])
 AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [
     ODBC_LIBS="-l${ac_lib} ${ODBC_LIBS}"
   ], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
+flags_restore
 
 ######################################################################
 # cryptlib
@@ -217,7 +297,6 @@ AC_ARG_WITH(
   [cryptlib_include=/usr/local/include])
 if test x${cryptlib_include} != x; then
   CRYPTLIB_CPPFLAGS="-I${cryptlib_include}"
-  CPPFLAGS="${CPPFLAGS} ${CRYPTLIB_CPPFLAGS}"
 fi
 AC_ARG_WITH(
   [cryptlib-lib],
@@ -228,13 +307,14 @@ AC_ARG_WITH(
   [cryptlib_lib=/usr/local/lib])
 if test x${cryptlib_lib} != x; then
   CRYPTLIB_LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
-  LDFLAGS="${LDFLAGS} ${CRYPTLIB_LDFLAGS}"
 fi
+flags_load_addons([[CRYPTLIB_]])
 AC_SEARCH_LIBS([cryptInit], [cl], [
     CRYPTLIB_LIBS="-lcl"
   ], [
     AC_MSG_ERROR([cryptlib is required for building this project])
   ])
+flags_restore
 
 ######################################################################
 # libdl
@@ -245,6 +325,16 @@ AC_SEARCH_LIBS([dlopen], [dl], [
   ], [
     AC_MSG_ERROR([libdl is required for building this project])
   ])
+flags_restore
+
+# add all of the library-specific flags to the CONFIGURE_* flags
+#
+# TODO: delete this and instead reference the library-specific flag
+# variables from the appropriate *_LDFLAGS, *_LIBADD, *_LDADD,
+# *_CPPFLAGS variables in Makefile.am
+m4_foreach_w([lib], [[MYSQL] [OPENSSL] [ODBC] [CRYPTLIB] [LIBDL]], [
+    flags_load_addons([lib[_]], [[CONFIGURE_]])
+  ])
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
 #  If --enable-stack-protector is specified: enable it
@@ -252,12 +342,11 @@ AC_SEARCH_LIBS([dlopen], [dl], [
 #  Else if C compiler supports it: enable it
 #  Else: don't enable it
 AC_MSG_CHECKING([whether C compiler supports -fstack-protector])
-CFLAGS_RESTORE="${CFLAGS}"
 CFLAGS="${CFLAGS} -fstack-protector"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
   [AC_MSG_RESULT([yes]); HAVE_STACK_PROTECTOR=yes],
   [AC_MSG_RESULT([no]);  HAVE_STACK_PROTECTOR=no])
-CFLAGS="${CFLAGS_RESTORE}"
+flags_restore
 AC_ARG_ENABLE(
   [stack-protector],
   [AS_HELP_STRING(
@@ -266,12 +355,12 @@ AC_ARG_ENABLE(
      to yes when using gcc and no otherwise])],
   [
     if test x"$enableval" != xno; then
-      CFLAGS="${CFLAGS} -fstack-protector"
+      CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} -fstack-protector"
     fi
   ],
   [
     if test x"$HAVE_STACK_PROTECTOR" = xyes; then
-      CFLAGS="${CFLAGS} -fstack-protector"
+      CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} -fstack-protector"
     fi
   ])
 
@@ -280,8 +369,8 @@ AX_PTHREAD
 if test x"$ax_pthread_ok" != xyes; then
   AC_MSG_ERROR([pthread support is required])
 fi
-LIBS="$PTHREAD_LIBS $LIBS"
-CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CONFIGURE_LIBS="$PTHREAD_LIBS $CONFIGURE_LIBS"
+CONFIGURE_CFLAGS="$CONFIGURE_CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
 # Checks for header files.
