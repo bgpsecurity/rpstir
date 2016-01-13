@@ -39,7 +39,7 @@ bool set_signature(
 
     memset(hash, 0, 40);
 
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
     {
         LOG(LOG_ERR, "can't initialize cryptlib");
         free(signstring);

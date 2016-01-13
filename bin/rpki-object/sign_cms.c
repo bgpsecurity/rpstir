@@ -30,7 +30,7 @@ int main(
     const char *errmsg = NULL;
     struct CMSBlob cms;
 
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
     {
         LOG(LOG_ERR, "could not initialize cryptlib");
         return -1;

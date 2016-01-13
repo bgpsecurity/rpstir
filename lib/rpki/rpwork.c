@@ -435,7 +435,7 @@ sign_cert(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
     memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
         return ERR_SCM_CRYPTLIB;
     if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0

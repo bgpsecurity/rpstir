@@ -40,7 +40,7 @@ int main(
                 "Need argv[1] for label, [2] for .req file, [3] for outfile\n");
     else
     {
-        if (cryptInit() != CRYPT_OK)
+        if (cryptInit_wrapper() != CRYPT_OK)
         {
             FATAL("Can't open Cryptlib");
         }
@@ -121,8 +121,6 @@ int main(
         {
             FATAL("Can't destroy private key context");
         }
-
-        cryptEnd();
     }
     return 0;
 }

@@ -69,7 +69,7 @@ check_sig(
     *buf = ASN_SET;
 
     // (re)init the crypt library
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
         return ERR_SCM_CRYPTLIB;
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2))
         return ERR_SCM_CRYPTLIB;

@@ -29,7 +29,7 @@ int main(
                 ksize, STANDARD_KEY_SIZE);
     }
     printf("Making %s with key size %d bits \n", argv[1], ksize);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
     {
         fprintf(stderr, "Can't open Cryptlib\n");
         return 1;
@@ -59,7 +59,6 @@ int main(
     }
     cryptKeysetClose(cryptKeyset);
     cryptDestroyContext(privKeyContext);
-    cryptEnd();
 
     return 0;
 }

@@ -27,7 +27,7 @@ const char *signCRL(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(&crlp->toBeSigned.self, signstring);
     memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
     {
         msg = "initializing cryptlib";
         ansr = -1;

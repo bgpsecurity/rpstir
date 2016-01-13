@@ -92,7 +92,7 @@ static int gen_sha2(
     int ansr;
 
     memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
     {
         FATAL(MSG_ERROR, "initializing cryptlib");
     }
@@ -104,7 +104,6 @@ static int gen_sha2(
     cryptEncrypt(hashContext, inbufp, 0);
     cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
     cryptDestroyContext(hashContext);
-    cryptEnd();
     memcpy(outbufp, hash, ansr);
     return ansr;
 }
