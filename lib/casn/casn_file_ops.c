@@ -118,7 +118,8 @@ int put_casn_file(
     }
     b = (uchar *) calloc(1, siz);
     encode_casn(casnp, b);
-    write(fd, b, siz);
+    if (write(fd, b, siz) != siz)
+        abort();
     free(b);
     if (name)
         close(fd);

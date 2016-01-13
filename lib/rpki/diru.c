@@ -65,7 +65,8 @@ char *r2adir(
         return (NULL);
     }
     ptr = getcwd(outdir, PATH_MAX);
-    (void)chdir(mydir);
+    if (chdir(mydir))
+        abort();
     free((void *)mydir);
     if (ptr == NULL)
     {
@@ -135,7 +136,8 @@ splitdf(
      */
     if (dirprefix == NULL && dirname == NULL && strchr(fname, '/') == NULL)
     {
-        (void)getcwd(work, PATH_MAX);
+        if (!getcwd(work, PATH_MAX))
+            abort();
         wsta = strwillfit(work, PATH_MAX, wsta, "/");
         if (wsta < 0)
         {

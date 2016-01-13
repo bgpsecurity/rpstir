@@ -112,7 +112,8 @@ int main(
     *inbuf = 0;
     while (1)
     {
-        fgets(inbuf, sizeof(inbuf), str);
+        if (!fgets(inbuf, sizeof(inbuf), str))
+            abort();
         if (!strncmp(inbuf, "SKI ", 4))
             break;
         fputs(inbuf, tmpstr);

@@ -193,7 +193,8 @@ int main(
                             *b = '.';
                     while (d < &obuf[66])
                         *d++ = ' ';
-                    write(1, obuf, 67);
+                    if (write(1, obuf, 67) != 67)
+                        abort();
                     pos += did;
                     lth -= did;
                     left -= did;
@@ -238,7 +239,8 @@ int main(
                             *b = '.';
                     while (d < &obuf[66])
                         *d++ = ' ';
-                    write(1, obuf, 67);
+                    if (write(1, obuf, 67) != 67)
+                        abort();
                     pos += did;
                     lth -= did;
                     left -= did;

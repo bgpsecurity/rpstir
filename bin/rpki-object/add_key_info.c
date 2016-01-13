@@ -126,6 +126,7 @@ int main(
     char fname[80];
     strcat(strcpy(fname, argv[1]), ".raw");
     int fd = creat(fname, 0777);
-    write(fd, buf, siz);
+    if (write(fd, buf, siz) != siz)
+        abort();
     return 0;
 }

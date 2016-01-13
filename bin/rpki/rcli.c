@@ -231,8 +231,10 @@ static void membail(
     void)
 {
     static char oom[] = "Out of memory!\n";
+    size_t len = strlen(oom);
 
-    (void)write(fileno(stderr), oom, strlen(oom));
+    if ((size_t)write(fileno(stderr), oom, len) != len)
+        abort();
 }
 
 /*
@@ -675,7 +677,8 @@ sockline(
             break;
         case 'y':
         case 'Y':              /* synchronize */
-            (void)write(s, "Y", 1);
+            if (write(s, "Y", 1) != 1)
+                abort();
             break;
         case 0:
             break;

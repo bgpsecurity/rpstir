@@ -48,7 +48,8 @@ static bool extract_content(
         goto done;
     }
 
-    (void)write(STDOUT_FILENO, content, (size_t)content_len);
+    if (write(STDOUT_FILENO, content, (size_t)content_len) != content_len)
+        abort();
 
     ret = true;
 

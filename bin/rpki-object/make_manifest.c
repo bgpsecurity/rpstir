@@ -117,7 +117,8 @@ static void getDate(
     printf("%supdate date (YYYYMMDDhhmssZ)? ", text);
     while (1)
     {
-        fgets(locbuf, sizeof(locbuf), stdin);
+        if (!fgets(locbuf, sizeof(locbuf), stdin))
+            abort();
         char *c;
         for (c = locbuf; *c > ' '; c++);
         *c = 0;
@@ -159,7 +160,8 @@ int main(
     struct Manifest *manp =
         &cms.content.signedData.encapContentInfo.eContent.manifest;
     printf("What manifest number? ");
-    fgets(locbuf, sizeof(locbuf), stdin);
+    if (!fgets(locbuf, sizeof(locbuf), stdin))
+        abort();
     sscanf(locbuf, "%d", &man_num);
     write_casn_num(&manp->manifestNumber, (long)man_num);
     getDate(&manp->thisUpdate, "This");
@@ -190,7 +192,8 @@ int main(
         char *a;
 
         printf("File[%d]? ", num);
-        fgets(c, (CURR_FILE_SIZE - (c - curr_file)), stdin);
+        if (!fgets(c, (CURR_FILE_SIZE - (c - curr_file)), stdin))
+            abort();
         if (strlen(curr_file) > CURR_FILE_SIZE - 1)
             FATAL(MSG_FN_LONG, curr_file);
         if (*c < ' ')
@@ -225,7 +228,8 @@ int main(
     if (put_casn_file(&cms.self, argv[1], 0) < 0)
         FATAL(MSG_WRITING, argv[1]);
     printf("What readable file, if any? ");
-    fgets(curr_file, CURR_FILE_SIZE, stdin);
+    if (!fgets(curr_file, CURR_FILE_SIZE, stdin))
+        abort();
     curr_file[strlen(curr_file) - 1] = 0;
     if (*curr_file > ' ')
     {

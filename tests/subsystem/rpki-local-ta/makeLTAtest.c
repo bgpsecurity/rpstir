@@ -54,7 +54,8 @@ int main(
         c = (char *)calloc(1, lth + 2);
         dump_casn(&extensions.self, c);
         int fd = open(filename, (O_CREAT | O_RDWR | O_CREAT), 0755);
-        write(fd, c, lth);
+        if (write(fd, c, lth) != lth)
+            abort();
         close(fd);
         clear_casn(&extensions.self);
     }
