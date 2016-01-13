@@ -151,7 +151,6 @@ int splitdf(
     else
     {
         if (dirprefix != NULL && dirprefix[0] != 0)
-            // (void)strcpy(work, dirprefix);
         {
             wsta = strwillfit(work, PATH_MAX, wsta, dirprefix);
             if (wsta < 0)

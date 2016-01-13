@@ -5,10 +5,6 @@
 #include "util/cryptlib_compat.h"
 #include <string.h>
 
-/*
- * int fatal(char *msg) { if (msg && *msg) fprintf(stderr, "%s\n", msg);
- * exit(0); }
- */
 int main(
     int argc,
     char **argv)

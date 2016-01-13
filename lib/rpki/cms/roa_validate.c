@@ -141,7 +141,6 @@ int check_sig(
     // all done, clean up
     cryptDestroyContext(pubkeyContext);
     cryptDestroyContext(hashContext);
-    // cryptEnd();
     delete_casn(&rsapubkey.self);
     delete_casn(&sigInfo.self);
 
