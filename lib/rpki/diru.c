@@ -1,5 +1,6 @@
 #include "diru.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,6 +10,7 @@
 #include <limits.h>
 
 #include "err.h"
+#include "util/logging.h"
 #include "util/stringutils.h"
 
 
@@ -23,11 +25,17 @@ int isadir(
     memset(&mystat, 0, sizeof(mystat));
     sta = stat(indir, &mystat);
     if (sta < 0)
+    {
+        ERR_LOG(errno, NULL, "stat(\"%s\") failed", indir);
         return (sta);
+    }
     if (S_ISDIR(mystat.st_mode))
         return (1);
     else
+    {
+        LOG(LOG_ERR, "%s is not a directory", indir);
         return (0);
+    }
 }
 
 char *r2adir(
@@ -38,17 +46,24 @@ char *r2adir(
     char *ptr;
 
     if (indir == NULL || indir[0] == 0)
+    {
+        LOG(LOG_ERR, "indir must not be NULL or an empty string");
         return (NULL);
+    }
     if (isadir(indir) <= 0)
         return (NULL);
     // get current dir
     mydir = (char *)calloc(PATH_MAX, sizeof(char));
     if (mydir == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
         return (NULL);
+    }
     outdir = (char *)calloc(PATH_MAX, sizeof(char));
     if (outdir == NULL)
     {
         free((void *)mydir);
+        LOG(LOG_ERR, "out of memory");
         return (NULL);
     }
     ptr = getcwd(mydir, PATH_MAX);
@@ -56,12 +71,14 @@ char *r2adir(
     {
         free((void *)mydir);
         free((void *)outdir);
+        ERR_LOG(errno, NULL, "failed to get current working directory");
         return (NULL);
     }
     if (chdir(indir) < 0)
     {
         free((void *)mydir);
         free((void *)outdir);
+        ERR_LOG(errno, NULL, "failed to change directory to %s", indir);
         return (NULL);
     }
     ptr = getcwd(outdir, PATH_MAX);
@@ -71,6 +88,7 @@ char *r2adir(
     if (ptr == NULL)
     {
         free((void *)outdir);
+        ERR_LOG(errno, NULL, "unable to get current working directory");
         return (NULL);
     }
     return (outdir);
@@ -85,7 +103,10 @@ int strwillfit(
     int newlen;
 
     if (inbuf == NULL || newbuf == NULL)
+    {
+        LOG(LOG_ERR, "neither inbuf nor newbuf may be NULL");
         return (ERR_SCM_INVALARG);
+    }
     if (already < 0)
     {
         if (inbuf[0] == 0)
@@ -98,7 +119,10 @@ int strwillfit(
     else
         newlen = strlen(newbuf);
     if ((already + newlen) >= totlen)
+    {
+        LOG(LOG_ERR, "not enough room in buffer to concatenate strings");
         return (ERR_SCM_INVALSZ);
+    }
     strncat(inbuf, newbuf, newlen);
     return (already + newlen);
 }
@@ -119,7 +143,10 @@ splitdf(
     int wsta = ERR_SCM_UNSPECIFIED;
 
     if (fname == NULL || fname[0] == 0)
+    {
+        LOG(LOG_ERR, "fname argument must not be NULL or an empty string");
         return (ERR_SCM_INVALARG);
+    }
     if (outdir != NULL)
         *outdir = NULL;
     if (outfile != NULL)
@@ -128,7 +155,10 @@ splitdf(
         *outfull = NULL;
     work = (char *)calloc(PATH_MAX, sizeof(char));
     if (work == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
         return (ERR_SCM_NOMEM);
+    }
     /*
      * First form a path. in the special case that the prefix and the dirname
      * both null and fname contains no / characters, then use the current
@@ -199,11 +229,13 @@ splitdf(
     slash = strrchr(work, '/');
     if (slash == NULL)
     {
+        LOG(LOG_ERR, "no slash found in current working directory: %s", work);
         free((void *)work);
         return (ERR_SCM_NOTADIR);
     }
     if (slash[1] == 0)
     {
+        LOG(LOG_ERR, "working directory ends with a slash: %s", work);
         free((void *)work);
         return (ERR_SCM_BADFILE);
     }
@@ -211,6 +243,8 @@ splitdf(
     outd = r2adir(work);
     if (outd == NULL)
     {
+        LOG(LOG_ERR, "unable to convert relative path to absolute path: %s",
+            work);
         free((void *)work);
         return (ERR_SCM_NOTADIR);
     }
@@ -218,7 +252,10 @@ splitdf(
         *outdir = outd;
     outf = strdup(slash + 1);
     if (outf == NULL)
+    {
+        LOG(LOG_ERR, "out of memory");
         return (ERR_SCM_NOMEM);
+    }
     if (outfile != NULL)
         *outfile = outf;
     if (outfull != NULL)
@@ -226,7 +263,10 @@ splitdf(
         xsnprintf(work, PATH_MAX, "%s/%s", outd, outf);
         *outfull = strdup(work);
         if (*outfull == NULL)
+        {
+            LOG(LOG_ERR, "out of memory");
             return (ERR_SCM_NOMEM);
+        }
     }
     free((void *)work);
     return (0);

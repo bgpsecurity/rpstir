@@ -1,6 +1,8 @@
 #define COMPAT_NO_CLOBBER
 #include "cryptlib_compat.h"
 
+#include "util/logging.h"
+
 #include <pthread.h>
 
 
@@ -20,6 +22,7 @@ C_RET cryptInit_wrapper()
     int ret = pthread_once(&cryptInit_called, &cryptInit_once_routine);
     if (ret != 0)
     {
+        ERR_LOG(ret, NULL, "pthread_once(..., &cryptInit_once_routine) failed");
         return CRYPT_ERROR_FAILED;
     }
 
