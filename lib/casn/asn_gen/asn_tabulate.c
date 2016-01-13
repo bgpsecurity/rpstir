@@ -122,7 +122,7 @@ static void tab_def(
     int parent,
     struct name_table *ptbp)
 {
-/**
+/*
 1. IF have a tag,
         IF type is constructed, put constructed bit in tag
         Put tag in name table
@@ -145,7 +145,7 @@ static void tab_def(
    IF table flag is set, set it in object table
    Clear assorted variables
    Set state to IN_ITEM
-**/
+*/
     if (*defined_by)
         mk_table_child(parent, (long)0, option);
     /*
@@ -210,7 +210,7 @@ static void tab_item(
     int parent,
     int in_choice)
 {
-/**
+/*
 1. IF in a choice, make an "in-name"
    IF it's a DEFINED BY, make a table entry
    IF it's a boolean, clear subclass (in case it's a BOOLEAN DEFINED BY)
@@ -244,7 +244,7 @@ static void tab_item(
 	    Copy all its contents to main stream
 	    Mark new stream emptied
         Go to GLOBAL state
-**/
+*/
     int child,
         tmp;
     static long did = 0;
