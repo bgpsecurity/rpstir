@@ -7,7 +7,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#include <my_global.h>
 #include <mysql.h>
 
 #include "db/connect.h"

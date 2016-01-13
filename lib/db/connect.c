@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <my_global.h>
-#include <my_sys.h>
 #include <mysql.h>
 
 #include "config/config.h"

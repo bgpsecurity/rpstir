@@ -2,7 +2,6 @@
 #define DB_INTERNAL_H_
 
 
-#include <my_global.h>
 #include <mysql.h>
 
 #include "connect.h"

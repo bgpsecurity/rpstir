@@ -1,6 +1,5 @@
 #include "prep-stmt.h"
 
-#include <my_global.h>
 #include <mysql.h>
 
 #include "connect.h"
