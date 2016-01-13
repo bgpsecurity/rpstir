@@ -185,7 +185,7 @@ int decode_asn(
 {
     struct asn *curr_asnp;
     uchar typ;
-    int ansr;
+    int ansr = 0;
     int did;
     int indef;
     /* step 1 */

@@ -388,7 +388,7 @@ static void write_ASNums(
         num;
     for (ansr = num = 0; fgets(nbuf, 100, stdin) && nbuf[0] > ' ';)
     {
-        struct ASNumberOrRangeA *asNumorRangep;
+        struct ASNumberOrRangeA *asNumorRangep = NULL;
         if (ansr >= 0)
             asNumorRangep =
                 (struct ASNumberOrRangeA *)inject_casn(&asnump->asnum.
@@ -439,7 +439,7 @@ static int write_family(
     int num;
     for (num = 0; fgets(nbuf, 100, stdin) && nbuf[0] > ' ';)
     {
-        struct IPAddressOrRangeA *ipAorRp;
+        struct IPAddressOrRangeA *ipAorRp = NULL;
         if (ansr >= 0)
             ipAorRp =
                 (struct IPAddressOrRangeA *)inject_casn(&famp->ipAddressChoice.

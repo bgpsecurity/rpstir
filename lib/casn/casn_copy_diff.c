@@ -48,7 +48,7 @@ diff_casn(
     struct casn *casnp1,
     struct casn *casnp2)
 {
-    int diff;
+    int diff = 0;
     int neg;
 
     if (_clear_error(casnp1) < 0 || _clear_error(casnp2) < 0)
@@ -272,7 +272,7 @@ _diff_casn(
     int mode)
 {                               // mode = 0 if at top level; mode = 1 if at
                                 // lower level
-    int diff;
+    int diff = 0;
     int lth;
     int lth1;
     int lth2;

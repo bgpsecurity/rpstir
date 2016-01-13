@@ -1332,7 +1332,7 @@ Procedure:
     int num;
     int lth;
     int explicit_extra;
-    int break_out;
+    int break_out = 0;
     int num_ofs;
     int indefs = 0;
     int has_indef;

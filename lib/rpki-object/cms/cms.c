@@ -55,7 +55,7 @@ const char *signCMS(
     int tbs_lth;
     char *msg = (char *)0;
     uchar *tbsp;
-    uchar *signature;
+    uchar *signature = NULL;
     uchar hash[40];
     struct casn *sidp;
     struct Attribute *attrp;

@@ -316,7 +316,7 @@ Procedure:
     char **argpp;
     char *b;
     char *d;
-    struct macro_item *mitp;
+    struct macro_item *mitp = NULL;
     /*
      * step 1
      */
@@ -1064,7 +1064,7 @@ Procedure:
     char tbname[64];
     ulong tmp;
     struct with_syntax *wsxp = &ctbp->with_syntax;
-    struct table_out *tbop;
+    struct table_out *tbop = NULL;
     struct class_item *citp;
     /*
      * step 1
@@ -1553,13 +1553,13 @@ Procedure:
 	IF it's a name, save it for use as an ID name
 2. Return the id_string
 **/
-    struct id_table *pidp;
+    struct id_table *pidp = NULL;
     char *id_string;
     char *eid_string;
     char *val_string;
     char locbuf[80];
     char locname[80];
-    size_t lth;
+    size_t lth = 0;
     size_t tmp;
     for (id_string = 0, cat(locname, name); *token != '}';)
     {
@@ -1721,7 +1721,7 @@ void scan_syntax(
     *tsxp)
 {
     char *c;
-    int ansr;
+    int ansr = 0;
     size_t lth,
         siz = strlen(wsxp->verb);
     memset((char *)tsxp, 0, sizeof(struct with_syntax));

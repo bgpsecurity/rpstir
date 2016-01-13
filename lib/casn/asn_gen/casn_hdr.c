@@ -193,7 +193,7 @@ print_hdr(
      * with fatal message
      */
     int dup_ansr;
-    int numdefineds;
+    int numdefineds = 0;
     for (end_item(); get_token(0, token);)
     {
         switch (state)

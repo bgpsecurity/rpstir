@@ -609,7 +609,7 @@ bool config_parse_file(
     ssize_t option = CONFIG_OPTION_NONE;
 
     // line number where currently active option started
-    size_t option_line;
+    size_t option_line = 0;
 
     // backup line number
     size_t line_backup;

@@ -53,9 +53,9 @@ void tabulate(
      * (indicating the end of an item) Tabulate the item Default: Exit with
      * fatal message
      */
-    int parent;
-    int in_choice;
-    struct name_table *ptbp;
+    int parent = 0;
+    int in_choice = 0;
+    struct name_table *ptbp = NULL;
     option = 0;
     if (state != SUB_ITEM)
         end_definition();
@@ -569,7 +569,7 @@ Procedure:
 	IF it is a basic TABLE
             Set table's tag to parent's and parent's position to table's
 **/
-    struct name_table *ptbp;
+    struct name_table *ptbp = NULL;
     struct name_table *ctbp;
     struct name_table *lftbp;
     int curr_parent;
@@ -914,9 +914,9 @@ static void sort_defineds(
     struct name_table *ntbp)
 {
     struct parent tparent;
-    struct parent *parentp;
+    struct parent *parentp = NULL;
     struct parent *nparentp;
-    struct parent *pparentp;
+    struct parent *pparentp = NULL;
     do
     {
         for (nparentp = (parentp = &ntbp->parent)->next;
