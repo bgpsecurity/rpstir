@@ -148,6 +148,10 @@ int main(
     }
     for (numcerts = 0; fgets(certbuf, 40, stdin) && certbuf[0] > ' ';)
     {
+        // skip comments
+        if ('#' == certbuf[0])
+            continue;
+
         long certnum;
         char subjfile[80],
             delta[20];
