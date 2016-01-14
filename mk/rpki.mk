@@ -1838,11 +1838,6 @@ EXTRA_DIST += \
 	tests/subsystem/testcases/C.real.orig \
 	tests/subsystem/testcases/certpattern \
 	tests/subsystem/testcases/falseC2.cer \
-	tests/subsystem/testcases/makeL1 \
-	tests/subsystem/testcases/makeL11 \
-	tests/subsystem/testcases/makeL111 \
-	tests/subsystem/testcases/makeL112 \
-	tests/subsystem/testcases/makeL21 \
 	tests/subsystem/testcases/makeM1 \
 	tests/subsystem/testcases/makeM11 \
 	tests/subsystem/testcases/makeM111 \

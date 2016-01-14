@@ -8,10 +8,26 @@ mkcrl() {
     t4s_testcase "$1" './make_test_crl "$@"' "$@"
 }
 
-mkcrl L1 0D 1Y < "$TESTS_SRCDIR/makeL1"
-mkcrl L11 0D 3M < "$TESTS_SRCDIR/makeL11"
-mkcrl L111 -1M  2M < "$TESTS_SRCDIR/makeL111"
-mkcrl L112 0D 3M < "$TESTS_SRCDIR/makeL112"
-mkcrl L21 0D 3M < "$TESTS_SRCDIR/makeL21"
+mkcrl L1 0D 1Y <<EOF
+EOF
+mkcrl L11 0D 3M <<EOF
+C12 -20D
+C13 -8D
+
+EOF
+mkcrl L111 -1M  2M <<EOF
+C111  -10D
+
+EOF
+mkcrl L112 0D 3M <<EOF
+C111 -30D
+C112 -2D
+
+EOF
+mkcrl L21 0D 3M <<EOF
+C21 -20D
+C22 -8D
+
+EOF
 
 t4s_done
