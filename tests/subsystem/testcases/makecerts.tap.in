@@ -20,13 +20,7 @@ mkcert() {
     t4s_testcase "$1" './make_test_cert "$@"' "$@"
 }
 
-mkcert C 20000207115900Z 20490313120100Z <<EOF
-163/8
-
-4234:2342:0000:0000:0000/80
-
-1-100
-EOF
+mkcert C 20000207115900Z 20490313120100Z
 mkcert CM1     0D 1M
 mkcert C1      0D 1Y <<EOF
 163.0/14
@@ -246,12 +240,6 @@ cp C2.raw C2X.raw
 cp "$TESTS_SRCDIR/C.real.orig" C.raw
 chmod +w C.raw
 rr < C.raw > C.cer
-mkcert C 20000207115900Z 20490313120100Z <<EOF
-163/8
-
-4234:2342:0000:0000:0000/80
-
-1-100
-EOF
+mkcert C 20000207115900Z 20490313120100Z
 
 t4s_done
