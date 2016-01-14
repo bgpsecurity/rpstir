@@ -126,15 +126,16 @@ generate this ROA and save off a printable version, you use
 
 4. Manifests
 
-    Manifests are created with the tool make_test_manifest, which takes three
-parameters (the manifest name and start and end times) and a script file
-listing all the objects covered by the manifest.  If the name of an object is
+Manifests are created with the tool make_test_manifest, which takes
+the manifest name as an argument and a script file on standard input
+that lists all the objects covered by the manifest.  If the name of an
+object is
 followed by white space and a letter, the hash in the entry for that file in
 the manifest is made bad.  The name of the manifest consists of "M" followed
 by digits and ".man".  The manifest M123.man is the third manifest issued by
 CA C12 and signed by end entity C12M3, e.g.
 
-    make_test_manifest M123 0D 3M <makeM123
+    make_test_manifest M123 <makeM123
 
 5. Script files
 
