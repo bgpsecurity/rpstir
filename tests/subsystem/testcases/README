@@ -16,9 +16,7 @@ readable form.
     In addition to the "makeall" script there are several shell scripts that
 are used to manipulate the test data and run tests.  The script "testall.sh"
 initializes the database and then loads the test files into the database for
-further manual work.  The scripts "runtAll.sh" and "runt.sh" run a set of
-tests using the data files on this directory, and then compare expected with
-actual results, as described below.
+further manual work.
 
 1. Certificates
 
