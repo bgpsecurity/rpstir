@@ -101,28 +101,28 @@ issued.
 3. ROAs
 
     ROAs are made with the tool make_test_roa, which takes as parameters the
-ROA filename, the EE certificate filename, the EE certificate keyfile name (to
-get the private key), the index of the AS number for this ROA (the cert will
-likely have more than one AS number under its control). There are optional
-arguments as well, to mark the signature bad, and to generate a file
-containing a readable version of the ROA.
+ROA filename and the AS number for this ROA.  There are optional
+arguments as well, to mark the signature bad, generate a file
+containing a readable version of the ROA, and to specify maximum
+prefix lengths.  Filenames for related files such as the certificate
+and key files are derived from the ROA filename.
 
 usage:
-./make_test_roa -r roafile -c certfile -k keyfile -i index [-R readable][-b]
-
-  -r roafile: file to which to write roa
-  -c certfile: file holding EE cert for roa
-  -k keyfile: file holding p15-format public key for signing roa
-  -i index: which child is this (of that cert) (one-based)
-  -R readable: file to write readable asn.1 for roa to
+./make_test_roa -r roafile -a asnum [-R readable] [-b]
+    [-4 [v4maxlen | cv4choicenum]] [-6 [v6maxlen | cv6choicenum]]
+  -r roafile: file to write roa to
+  -a asnum: autonomous system number
+  -R readable-version: where to write readable asn.1 for roa
   -b: generate bad (invalid) signature
+  -4: specify maxLength for first IPv4 Address
+  -6: specify maxLength for first IPv6 Address
 
 Typically, the name of the ROA consists of "R" followed by digits and
 ".roa", so R123.roa is the third ROA produced by CA C12 (cert C12.cer) and
 signed by end entity C12R3.cer, with key pair found in C12R3.p15. To
 generate this ROA and save off a printable version, you use
 
-    make_test_roa -r R123.roa -c C12R3.cer -i 3 -k C12R3.p15 -R R123.raw
+    make_test_roa -r R123.roa -a 23 -R R123.raw
 
 4. Manifests
 
