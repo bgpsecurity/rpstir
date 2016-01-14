@@ -13,11 +13,6 @@ type below.  For convenience, the various tools produce an additional file
 suffixed ".raw" which shows the contents of the main file generated in more
 readable form.
 
-    In addition to the "makeall" script there are several shell scripts that
-are used to manipulate the test data and run tests.  The script "testall.sh"
-initializes the database and then loads the test files into the database for
-further manual work.
-
 1. Certificates
 
     Certificates have only a simple commonName for their issuer and subject

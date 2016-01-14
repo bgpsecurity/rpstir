@@ -1876,11 +1876,6 @@ EXTRA_DIST += \
 	tests/subsystem/testcases/tools/test.conf
 
 
-EXTRA_DIST += \
-	tests/subsystem/testcases/print-cert-addrs.sh \
-	tests/subsystem/testcases/testall.sh
-
-
 COPYFILES += \
 	tests/subsystem/testcases/C.p15 \
 	tests/subsystem/testcases/C1.p15 \
