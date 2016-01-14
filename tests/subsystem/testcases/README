@@ -9,7 +9,7 @@ created and sometimes other parameters.  The files created have a simple naming
 structure indicating their types.  All certificates are named (in shell
 notation) "C*.cer", CRLs are "L*.crl", ROAs are "R*.roa", and manifests are
 "M*.man".  The meanings of the intervening characters are described under each
-type below.  For convenmience, the various tools produce an additional file
+type below.  For convenience, the various tools produce an additional file
 suffixed ".raw" which shows the contents of the main file generated in more
 readable form.
 
@@ -41,7 +41,7 @@ suffixed ".p15", thus
 
 produces the file "C12.p15".  The script file "makekeys" will generate all
 but the root key, C.p15, which is never changed.  It is not necessary to
-generate the kays more than once.
+generate the keys more than once.
 
     To make the certificate one must then run
 
