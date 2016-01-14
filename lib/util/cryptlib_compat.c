@@ -28,4 +28,3 @@ C_RET cryptInit_wrapper()
 
     return cryptInit_ret;
 }
-

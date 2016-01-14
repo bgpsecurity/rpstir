@@ -83,9 +83,9 @@ static int add_names(
 }
 
 static int gen_sha2(
-    uchar * inbufp,
+    uchar *inbufp,
     int bsize,
-    uchar * outbufp)
+    uchar *outbufp)
 {
     CRYPT_CONTEXT hashContext;
     uchar hash[40];
