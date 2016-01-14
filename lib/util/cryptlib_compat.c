@@ -7,7 +7,9 @@
 static pthread_once_t cryptInit_called = PTHREAD_ONCE_INIT;
 static volatile C_RET cryptInit_ret;
 
-static void cryptInit_once_routine()
+static void
+cryptInit_once_routine(
+    void)
 {
     cryptInit_ret = cryptInit();
 }
