@@ -1,3 +1,5 @@
+#include "configlib.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -8,7 +10,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-#include "configlib.h"
 #include "config_load.h"
 
 
@@ -108,7 +109,7 @@ err:
 }
 
 ssize_t config_find(
-    const char * name)
+    const char *name)
 {
     size_t key;
 
@@ -126,7 +127,7 @@ ssize_t config_find(
 
 
 bool config_context_is_default(
-    const struct config_context * context)
+    const struct config_context *context)
 {
     return context->is_default;
 }
@@ -152,14 +153,15 @@ void config_message(
     }
     else
     {
-        const struct config_context_file * file_context;
+        const struct config_context_file *file_context;
 
         // modelled after gcc error messages for included files
         for (file_context = &context->context.file_context;
             file_context != NULL;
             file_context = file_context->includes)
         {
-            if (file_context->includes != NULL && file_context->includes->line != 0)
+            if (file_context->includes != NULL
+                && file_context->includes->line != 0)
             {
                 LOG(priority, "In config file included from %s:%zu:",
                     file_context->file, file_context->line);
@@ -290,7 +292,8 @@ void config_unload(
         }
         else
         {
-            config_options[i].value_free(config_values[i].value.single_value.data);
+            config_options[i].value_free(
+                config_values[i].value.single_value.data);
         }
     }
 

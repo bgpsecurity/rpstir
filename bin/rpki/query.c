@@ -17,11 +17,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-
-/*
- * $Id$ 
- */
-
 /****************
  * This is the query client, which allows a user to read information
  * out of the database and the repository.
@@ -64,27 +59,22 @@ static scmcon *connection = NULL;
 struct {
     char *objectName;
     char *tableName;
-} tableNames[] =
-{
-    {
-    "cert", "certificate"},
-    {
-    "roa", "roa"},
-    {
-    "crl", "crl"},
-    {
-    "manifest", "manifest"},
-    {
-    "gbr", "ghostbusters"},
+} tableNames[] = {
+    {"cert", "certificate"},
+    {"roa", "roa"},
+    {"crl", "crl"},
+    {"manifest", "manifest"},
+    {"gbr", "ghostbusters"},
 };
 
 
-/*
- * callback function for searchscm that prints the output 
+/**
+ * @brief
+ *     callback function for searchscm() that prints the output
  */
 static int handleResults(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     int result = 0;
@@ -161,10 +151,10 @@ static int handleResults(
 }
 
 /*
- * given the object type (aka query type) we are looking for, tell 
+ * given the object type (aka query type) we are looking for, tell
  */
 /*
- * caller which table to search 
+ * caller which table to search
  */
 static char *tableName(
     char *objType)
@@ -179,7 +169,7 @@ static char *tableName(
 }
 
 /*
- * sets up and performs the database query, and handles the results 
+ * sets up and performs the database query, and handles the results
  */
 static int doQuery(
     char **displays,
@@ -193,11 +183,11 @@ static int doQuery(
     char errMsg[1024];
     int srchFlags = SCM_SRCH_DOVALUE_ALWAYS;
     unsigned long blah = 0;
-    int i,
-        j,
-        status;
-    QueryField *field,
-       *field2;
+    int i;
+    int j;
+    int status;
+    QueryField *field;
+    QueryField *field2;
     char *name;
     int maxW = MAX_CONDS * 20;
 
@@ -211,7 +201,7 @@ static int doQuery(
     checkErr(table == NULL, "Cannot find table %s\n", objectType);
 
     /*
-     * set up where clause, i.e. the filter 
+     * set up where clause, i.e. the filter
      */
     srch.where = NULL;
     whereStr[0] = 0;
@@ -287,7 +277,7 @@ static int doQuery(
         srch.wherestr = whereStr;
     }
     /*
-     * set up columns to select 
+     * set up columns to select
      */
     srch.vec = srch1;
     srch.sname = NULL;
@@ -335,7 +325,7 @@ static int doQuery(
     }
 
     /*
-     * do query 
+     * do query
      */
     status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
                        orderp);
@@ -348,10 +338,10 @@ static int doQuery(
 }
 
 /*
- * show what options the user has for fields for display and filtering 
+ * show what options the user has for fields for display and filtering
  */
 static int listOptions(
-    )
+    void)
 {
     int i,
         j;
@@ -385,7 +375,7 @@ static int listOptions(
 }
 
 /*
- * add all fields appropriate for this type (user sent '-d all') 
+ * add all fields appropriate for this type (user sent '-d all')
  */
 static int addAllFields(
     char *displays[],
@@ -410,7 +400,7 @@ static int addAllFields(
 }
 
 /*
- * Help user by showing the possible arguments 
+ * Help user by showing the possible arguments
  */
 static int printUsage(
     )
@@ -458,11 +448,11 @@ int main(
     int argc,
     char **argv)
 {
-    char *displays[MAX_VALS],
-       *clauses[MAX_CONDS],
-       *orderp = NULL;
-    int i,
-        status;
+    char *displays[MAX_VALS];
+    char *clauses[MAX_CONDS];
+    char *orderp = NULL;
+    int i;
+    int status;
     int numDisplays = 0;
     int numClauses = 0;
 

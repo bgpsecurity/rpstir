@@ -1,3 +1,4 @@
+#include "create_cert.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +25,7 @@ int eecert = 0;                 // either EE or CA
 int selfSigned = 0;             // defaults to not self signed
 
 /*
- * function declarations 
+ * function declarations
  */
 extern int sign_cert(
     struct Certificate *certp,
@@ -94,7 +95,7 @@ int write_cert_asnums(
  * Note: Some fields are in the table as optional but are actually required.
  * These are special cases where we could get the value from multiple places.
  * For example, Issuer Name can come from the parentcertfile (subject in the
- * parentcertfile) or it can be specified exactly as issuer) 
+ * parentcertfile) or it can be specified exactly as issuer)
  */
 struct object_field cert_field_table[] = {
     {"outputfilename", TEXT, NULL, REQUIRED, NULL},     // for the certificate
@@ -118,9 +119,9 @@ struct object_field cert_field_table[] = {
     {"crldp", LIST, NULL, OPTIONAL, write_cert_crldp},  // crl distribution
                                                         // point
     {"aia", TEXT, NULL, OPTIONAL, write_cert_aia},      // auth information
-                                                        // access 
+                                                        // access
     {"sia", TEXT, NULL, OPTIONAL, write_cert_sia},      // subj information
-                                                        // access 
+                                                        // access
     {"ipv4", LIST, NULL, OPTIONAL, write_cert_ipv4},    // ipv4 addresses
     {"ipv6", LIST, NULL, OPTIONAL, write_cert_ipv6},    // ipv6 addresses
     {"as", LIST, NULL, OPTIONAL, write_cert_asnums},    // as num resources
@@ -136,7 +137,7 @@ struct object_field *get_cert_field_table(
 }
 
 /*
- * Take values from the parents certificateand write them to the 
+ * Take values from the parents certificateand write them to the
  * current certificate.
  * val is filename of the parent certificate
  * fields of interest:
@@ -245,7 +246,7 @@ int write_default_fields(
             cextp = make_extension(&ctftbsp->extensions, id_basicConstraints);
         write_casn_num(&cextp->critical, 1);
         // write_casn(&cextp->extnValue.basicConstraints.self, (uchar *)"",
-        // 0); 
+        // 0);
         write_casn_num(&cextp->extnValue.basicConstraints.cA, caConstraint);
     }
 
@@ -254,7 +255,7 @@ int write_default_fields(
 
 
 /*
- * Take values from the subject keyfile and write them to the 
+ * Take values from the subject keyfile and write them to the
  * current certificate.
  * val is filename of the subject keyfile
  * values of interest are the subject public key and the ski.
@@ -529,7 +530,7 @@ int write_notAfter_time(
 }
 
 /*
- * Write the subject public key info. It is a comma-separated pair of 
+ * Write the subject public key info. It is a comma-separated pair of
  * hex integers: "0xXX,0xYY". Currently, RSA is the only allowed algorithm
  * for the RPKI, so the public key information is defined as modulus followed
  * by publicExponent.
@@ -594,7 +595,7 @@ int write_cert_pubkey(
         free(ekey);
         return -1;
     }
-    // fprintf(stdout, "bytes written are %d\n", bytes_written); 
+    // fprintf(stdout, "bytes written are %d\n", bytes_written);
     if (write_casn(&rpk.exponent, ekey, bytes_written) < 0)
     {
         free(ekey);
@@ -1179,7 +1180,7 @@ int create_cert(
     // fill in the default fields
     write_default_fields(&cert);
 
-    // Populate the certificate fields with data from the 
+    // Populate the certificate fields with data from the
     // table. Note the table is populated from input arguments
     // If there is no function to call and the argument is optional then
     // it is ok otherwise it is an error.

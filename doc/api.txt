@@ -468,9 +468,10 @@ This utility function is used to turn off syslogging.
 This utility function is used to look up the end-entity certificate that
 signed a ROA.  "ski" denotes the SKI contained within the ROA. "scmp" and
 "conp" are the usual schema and connection pointers. On success this function
-returns an X509 pointer (cast to a void * for convenience), sets "fn" to
-point to the full pathname of the underlying certificate file, and sets "stap"
-to zero. On failure NULL is returned and "stap" is set to a negative error code
+returns an X509 pointer (cast to a void * for convenience), writes the
+full pathname of the underlying certificate file to the buffer of size
+PATH_LEN at *fn (if "fn" is non-NULL), and sets "stap" to zero.  On
+failure NULL is returned and "stap" is set to a negative error code
 defined in err.h.
 
 2.3 OpenSSL utility functions
@@ -547,12 +548,12 @@ This function is used to free all the memory allocated by crl2fields().
 
 2.4 ROA utility functions
 
-2.4.1 int roaFromConfig(char *fname, int doval, struct ROA** rp)
+2.4.1 int roaFromConfig(char *fname, int doval, struct ROA **rp)
 
 This function reads the file at "fname" and parses it.  Presuming the file
 represents a ROA in syntactically correct OpenSSL conf file format,
 the function will allocate space for and return a ROA structure at the
-location pointed to by "rp".  
+location pointed to by "rp".
 
 On success this function returns 0; on failure it returns a negative
 error code.
@@ -581,7 +582,7 @@ If "fmt" is 0 this function attempts to intuit the file format
 based on the first CR or LF delimited line in the file and also
 the filename; if "fmt" is non-zero then it is an OpenSSL enum value
 specifying the file format (binary DER or PEM encoded DER).
-  
+
 If "doval" is any nonzero value then the ROA will also be syntactically
 validated using all steps that do not require access to the database;
 if "doval" is 0 only ASN.1 validation will be performed.

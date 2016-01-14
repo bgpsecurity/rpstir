@@ -14,7 +14,7 @@ int main(
     // struct SubjectPublicKeyInfo *pubkeyinfo;
 
     /*
-     * Process input and output file command line arguments. 
+     * Process input and output file command line arguments.
      */
     if (argc < 2 || argc > 3)
     {

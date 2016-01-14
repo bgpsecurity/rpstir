@@ -1,5 +1,5 @@
 /*
- * $begin csapp.h 
+ * $begin csapp.h
  */
 #ifndef __CSAPP_H__
 #define __CSAPP_H__
@@ -28,33 +28,33 @@
 
 
 /*
- * Default file permissions are DEF_MODE & ~DEF_UMASK 
+ * Default file permissions are DEF_MODE & ~DEF_UMASK
  */
 /*
- * $begin createmasks 
+ * $begin createmasks
  */
 #define DEF_MODE   S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
 #define DEF_UMASK  S_IWGRP|S_IWOTH
 /*
- * $end createmasks 
+ * $end createmasks
  */
 
 /*
- * Simplifies calls to bind(), connect(), and accept() 
+ * Simplifies calls to bind(), connect(), and accept()
  */
 /*
- * $begin sockaddrdef 
+ * $begin sockaddrdef
  */
 typedef struct sockaddr SA;
 /*
- * $end sockaddrdef 
+ * $end sockaddrdef
  */
 
 /*
- * Persistent state for the robust I/O (Rio) package 
+ * Persistent state for the robust I/O (Rio) package
  */
 /*
- * $begin rio_t 
+ * $begin rio_t
  */
 #define RIO_BUFSIZE 8192
 typedef struct {
@@ -64,24 +64,24 @@ typedef struct {
     char rio_buf[RIO_BUFSIZE];  /* internal buffer */
 } rio_t;
 /*
- * $end rio_t 
+ * $end rio_t
  */
 
 /*
- * External variables 
+ * External variables
  */
 extern int h_errno;             /* defined by BIND for DNS errors */
 extern char **environ;          /* defined by libc */
 
 /*
- * Misc constants 
+ * Misc constants
  */
 #define	MAXLINE	 8192           /* max text line length */
 #define MAXBUF   8192           /* max I/O buffer size */
 #define LISTENQ  1024           /* second argument to listen() */
 
 /*
- * Our own error-handling functions 
+ * Our own error-handling functions
  */
 void unix_error(
     char *msg);
@@ -94,7 +94,7 @@ void app_error(
     char *msg);
 
 /*
- * Process control wrappers 
+ * Process control wrappers
  */
 pid_t Fork(
     void);
@@ -124,7 +124,7 @@ pid_t Getpgrp(
     void);
 
 /*
- * Signal wrappers 
+ * Signal wrappers
  */
 typedef void handler_t(
     int);
@@ -150,7 +150,7 @@ int Sigismember(
     int signum);
 
 /*
- * Unix I/O wrappers 
+ * Unix I/O wrappers
  */
 int Open(
     const char *pathname,
@@ -187,7 +187,7 @@ void Fstat(
     struct stat *buf);
 
 /*
- * Memory mapping wrappers 
+ * Memory mapping wrappers
  */
 void *Mmap(
     void *addr,
@@ -201,7 +201,7 @@ void Munmap(
     size_t length);
 
 /*
- * Standard I/O wrappers 
+ * Standard I/O wrappers
  */
 void Fclose(
     FILE * fp);
@@ -230,7 +230,7 @@ void Fwrite(
     FILE * stream);
 
 /*
- * Dynamic storage allocation wrappers 
+ * Dynamic storage allocation wrappers
  */
 void *Malloc(
     size_t size);
@@ -244,7 +244,7 @@ void Free(
     void *ptr);
 
 /*
- * Sockets interface wrappers 
+ * Sockets interface wrappers
  */
 int Socket(
     int domain,
@@ -273,7 +273,7 @@ void Connect(
     int addrlen);
 
 /*
- * DNS wrappers 
+ * DNS wrappers
  */
 struct hostent *Gethostbyname(
     const char *name);
@@ -283,7 +283,7 @@ struct hostent *Gethostbyaddr(
     int type);
 
 /*
- * Pthreads thread control wrappers 
+ * Pthreads thread control wrappers
  */
 void Pthread_create(
     pthread_t * tidp,
@@ -306,7 +306,7 @@ void Pthread_once(
     void (*init_function) ());
 
 /*
- * Rio (Robust I/O) package 
+ * Rio (Robust I/O) package
  */
 ssize_t rio_readn(
     int fd,
@@ -329,7 +329,7 @@ ssize_t rio_readlineb(
     size_t maxlen);
 
 /*
- * Wrappers for Rio package 
+ * Wrappers for Rio package
  */
 ssize_t Rio_readn(
     int fd,
@@ -352,7 +352,7 @@ ssize_t Rio_readlineb(
     size_t maxlen);
 
 /*
- * Client/server helper functions 
+ * Client/server helper functions
  */
 int open_clientfd(
     char *hostname,
@@ -361,7 +361,7 @@ int open_listenfd(
     int portno);
 
 /*
- * Wrappers for client/server helper functions 
+ * Wrappers for client/server helper functions
  */
 int Open_clientfd(
     char *hostname,
@@ -371,5 +371,5 @@ int Open_listenfd(
 
 #endif                          /* __CSAPP_H__ */
 /*
- * $end csapp.h 
+ * $end csapp.h
  */

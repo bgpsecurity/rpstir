@@ -1,7 +1,3 @@
-/*
- * $Id$ 
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,7 +15,7 @@
 
 
 /*
- * Decode the last error on a handle 
+ * Decode the last error on a handle
  */
 
 static void heer(
@@ -37,11 +33,11 @@ static void heer(
 }
 
 /*
- * Free a stack of SQLHSTMTs. 
+ * Free a stack of SQLHSTMTs.
  */
 
 static void freehstack(
-    stmtstk * stackp)
+    stmtstk *stackp)
 {
     stmtstk *nextp;
 
@@ -58,20 +54,12 @@ static void freehstack(
     }
 }
 
-/*
- * Disconnect from a DSN and free all memory. 
- */
-
 void disconnectscm(
-    scmcon * conp)
+    scmcon *conp)
 {
     if (conp == NULL)
         return;
     freehstack(conp->hstmtp);
-    /*
-     * if ( conp->hstmt != NULL ) { SQLFreeHandle(SQL_HANDLE_STMT,
-     * conp->hstmt); conp->hstmt = NULL; } 
-     */
     if (conp->connected > 0)
     {
         SQLDisconnect(conp->hdbc);
@@ -95,21 +83,8 @@ void disconnectscm(
     free((void *)conp);
 }
 
-/*
- * ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt); if ( !
- * SQLOK(ret) ) { if ( errmsg != NULL && emlen > 0 ) heer((void *)conp->hdbc,
- * SQL_HANDLE_DBC, errmsg, emlen); disconnectscm(conp); return(NULL); } ret =
- * SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN, (SQLPOINTER)SQL_NOSCAN_ON,
- * SQL_IS_UINTEGER); 
- */
-
-/*
- * Create a new STMT and push it onto the top of the stack of STMTs in the
- * connection. 
- */
-
 SQLRETURN newhstmt(
-    scmcon * conp)
+    scmcon *conp)
 {
     SQLRETURN ret;
     stmtstk *stackp;
@@ -138,13 +113,8 @@ SQLRETURN newhstmt(
     return (0);
 }
 
-/*
- * Pop the top element off the hstmt stack of a connection, free the hstmt and 
- * the associated memory. 
- */
-
 void pophstmt(
-    scmcon * conp)
+    scmcon *conp)
 {
     stmtstk *stackp;
 
@@ -158,11 +128,6 @@ void pophstmt(
         SQLFreeHandle(SQL_HANDLE_STMT, stackp->hstmt);
     free((void *)stackp);
 }
-
-/*
- * Initialize a connection to the named DSN. Return a connection object on
- * success and a negative error code on failure. 
- */
 
 scmcon *connectscm(
     char *dsnp,
@@ -254,46 +219,33 @@ scmcon *connectscm(
         return (NULL);
     }
     /*
-     * ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt); if ( ! 
+     * ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt); if ( !
      * SQLOK(ret) ) { if ( errmsg != NULL && emlen > 0 ) heer((void
      * *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen); disconnectscm(conp);
      * return(NULL); } ret = SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN,
-     * (SQLPOINTER)SQL_NOSCAN_ON, SQL_IS_UINTEGER); 
+     * (SQLPOINTER)SQL_NOSCAN_ON, SQL_IS_UINTEGER);
      */
     return (conp);
 }
 
-/*
- * Get the error message from a connection. 
- */
-
 char *geterrorscm(
-    scmcon * conp)
+    scmcon *conp)
 {
     if (conp == NULL || conp->mystat.errmsg == NULL)
         return (NULL);
     return (conp->mystat.errmsg);
 }
 
-/*
- * Get the name of the table that had an error. 
- */
-
 char *gettablescm(
-    scmcon * conp)
+    scmcon *conp)
 {
     if (conp == NULL)
         return (NULL);
     return (conp->mystat.tabname);
 }
 
-
-/*
- * Get the number of rows returned by a statement. 
- */
-
 int getrowsscm(
-    scmcon * conp)
+    scmcon *conp)
 {
     int r;
 
@@ -303,18 +255,8 @@ int getrowsscm(
     return (r);
 }
 
-/*
- * Execute an SQL statement.
- * 
- * Before calling statementscm: You must call newhstmt(conp) and verify its
- * return value.
- * 
- * After calling statementscm and using its statement handle: You must call
- * pophstmt(conp). 
- */
-
 int statementscm(
-    scmcon * conp,
+    scmcon *conp,
     char *stm)
 {
     SQLINTEGER istm;
@@ -343,19 +285,15 @@ int statementscm(
     return (0);
 }
 
-/*
- * Execute a SQL statement, ignoring any returned rows. 
- */
-
 int statementscm_no_data(
-    scmcon * conp,
+    scmcon *conp,
     char *stm)
 {
     SQLRETURN ret;
 
     ret = newhstmt(conp);
     if (!SQLOK(ret))
-        return ret;
+        return ERR_SCM_SQL;
 
     ret = statementscm(conp, stm);
 
@@ -364,14 +302,8 @@ int statementscm_no_data(
     return ret;
 }
 
-
-/*
- * Create a database and grant the mysql default user the standard set of
- * privileges for that database. 
- */
-
 int createdbscm(
-    scmcon * conp,
+    scmcon *conp,
     char *dbname,
     char *dbuser)
 {
@@ -392,12 +324,8 @@ int createdbscm(
     return (sta);
 }
 
-/*
- * Delete a database. 
- */
-
 int deletedbscm(
-    scmcon * conp,
+    scmcon *conp,
     char *dbname)
 {
     char *mk;
@@ -418,12 +346,12 @@ int deletedbscm(
 }
 
 /*
- * Create a single table. 
+ * Create a single table.
  */
 
 static int createonetablescm(
-    scmcon * conp,
-    scmtab * tabp)
+    scmcon *conp,
+    scmtab *tabp)
 {
     char *mk;
     int sta;
@@ -443,14 +371,9 @@ static int createonetablescm(
     return (sta);
 }
 
-/*
- * Create all the tables listed in scmp. This assumes that the database has
- * already been created through a call to createdbscm(). 
- */
-
 int createalltablesscm(
-    scmcon * conp,
-    scm * scmp)
+    scmcon *conp,
+    scm *scmp)
 {
     char *mk;
     int sta = 0;
@@ -480,11 +403,11 @@ int createalltablesscm(
 
 /*
  * Return the index of the named column in the given schema table, or a
- * negative error code on failure. 
+ * negative error code on failure.
  */
 
 static int findcol(
-    scmtab * tabp,
+    scmtab *tabp,
     char *coln)
 {
     char *ptr;
@@ -503,15 +426,18 @@ static int findcol(
     return (-3);
 }
 
-/*
- * Validate that each of the columns mentioned actually occurs in the
- * indicated table. Return 0 on success and a negative error code on failure. 
+/**
+ * @brief
+ *     Validate that each of the columns mentioned actually occurs in the
+ *     indicated table.
+ *
+ * @return
+ *     0 on success and a negative error code on failure.
  */
-
 static int valcols(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * arr)
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *arr)
 {
     char *ptr;
     int i;
@@ -536,21 +462,22 @@ static int valcols(
 
 
 /**
- * Quote the input as needed for use in a SQL statement.
+ * @brief
+ *     Quote the input as needed for use in a SQL statement.
  *
- * Note the special convention that if the value (as a string) begins with 
+ * Note the special convention that if the value (as a string) begins with
  * ^x it is NOT quoted. The ^x is turned into 0x and then inserted. This
  * is so that we can insert binary strings in their hex representation
  * without having to pass in column information. Thus if we said
  * ^x00656667 -> 0x00656667 as the value it would get inserted as NULefg
  * but if we said "0x00656667" it would get inserted as the string
- * 0x00656667. 
+ * 0x00656667.
  *
  * @return 0 on success, error code on error
  */
 static int quote_value(
-    const char * input,
-    char ** output)
+    const char *input,
+    char **output)
 {
     size_t i;
     size_t len;
@@ -600,15 +527,10 @@ static int quote_value(
     }
 }
 
-
-/*
- * Insert an entry into a database table. 
- */
-
 int insertscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * arr)
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *arr)
 {
     char *stmt;
     char *quoted = NULL;
@@ -699,7 +621,7 @@ int insertscm(
 }
 
 int getuintscm(
-    scmcon * conp,
+    scmcon *conp,
     unsigned int *ival)
 {
     SQLUINTEGER f1;
@@ -729,16 +651,11 @@ int getuintscm(
         return (0);
 }
 
-/*
- * Get the maximum of the specified id field of the given table.  If table is
- * empty, then sets *ival to 0.  
- */
-
 int getmaxidscm(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *field,
-    scmtab * mtab,
+    scmtab *mtab,
     unsigned int *ival)
 {
     char stmt[160];
@@ -748,7 +665,7 @@ int getmaxidscm(
         return (ERR_SCM_INVALARG);
     sta = newhstmt(conp);
     if (!SQLOK(sta))
-        return sta;
+        return ERR_SCM_SQL;
     xsnprintf(stmt, sizeof(stmt),
               "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
     sta = statementscm(conp, stmt);
@@ -763,14 +680,14 @@ int getmaxidscm(
     return 0;
 }
 
-/*
- * Validate a search array struct 
+/**
+ * @brief
+ *     Validate a search array struct
  */
-
 static int validsrchscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmsrcha * srch)
+    scmcon *conp,
+    scmtab *tabp,
+    scmsrcha *srch)
 {
     scmsrch *vecp;
     int sta;
@@ -798,19 +715,10 @@ static int validsrchscm(
     return (0);
 }
 
-/*
- * This function searches in a database table for entries that match the
- * stated search criteria.
- * 
- * Note that searchscm can be call recursively, so that there can be more than 
- * one cursor open at a time. For this reason, searchscm() must create its own 
- * STMT and then destroy it when it is done. 
- */
-
 int searchscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmsrcha * srch,
+    scmcon *conp,
+    scmtab *tabp,
+    scmsrcha *srch,
     sqlcountfunc cnter,
     sqlvaluefunc valer,
     int what,
@@ -949,8 +857,6 @@ int searchscm(
         sprintf(&stmt[strlen(stmt)], " order by %s ", orderp);
 
     (void)strcat(stmt, ";");
-    // Print SQL statement for debugging.
-    // fprintf(stderr, "%s\n", stmt);
 
     // execute the select statement
     rc = newhstmt(conp);
@@ -979,7 +885,7 @@ int searchscm(
             pophstmt(conp);
             return (ERR_SCM_SQL);
         }
-        sta = (*cnter) (conp, srch, nrows);
+        sta = (*cnter)(conp, srch, nrows);
         if (sta < 0 && (what & SCM_SRCH_BREAK_CERR))
         {
             SQLCloseCursor(conp->hstmtp->hstmt);
@@ -1037,7 +943,7 @@ int searchscm(
                 docall++;
             if (docall > 0)
             {
-                sta = (valer) (conp, srch, ridx);
+                sta = (valer)(conp, srch, ridx);
                 if ((sta < 0) && (what & SCM_SRCH_BREAK_VERR))
                     break;
             }
@@ -1053,12 +959,8 @@ int searchscm(
         return (0);
 }
 
-/*
- * Free all the memory in a search array 
- */
-
 void freesrchscm(
-    scmsrcha * srch)
+    scmsrcha *srch)
 {
     scmsrch *vecp;
     int i;
@@ -1102,9 +1004,6 @@ void freesrchscm(
     }
 }
 
-/*
- * add clause for testing the value of a flag to a where string 
- */
 void addFlagTest(
     char *whereStr,
     int flagVal,
@@ -1116,28 +1015,19 @@ void addFlagTest(
      * test for the value of a flag being set or clear in a total-flags value
      * using the c mod operator '%'.  A simpler to follow way would be to
      * test using bitwise and and then != 0 or == 0 test, but this is
-     * (presumably) not allowed.  The 'mod' test is best understood by example 
-     * - so to test for flag 0x04 being set, take the value of total-flags mod 
+     * (presumably) not allowed.  The 'mod' test is best understood by example
+     * - so to test for flag 0x04 being set, take the value of total-flags mod
      * (0x04 * 2) and see if it is >= 0x04 (in which case bit 0x04 is set),
-     * or < 0x04 (in which case bit 0x04 is not set). 
+     * or < 0x04 (in which case bit 0x04 is not set).
      */
     int len = strlen(whereStr);
-    xsnprintf(&whereStr[len], WHERESTR_SIZE - len, "%s ((flags%%%d)%s%d)", needAnd ? " and" : "", 2 * flagVal   /* 2x
-                                                                                                                 * since 
-                                                                                                                 * we 
-                                                                                                                 * are 
-                                                                                                                 * doing 
-                                                                                                                 * flag 
-                                                                                                                 * mod 
-                                                                                                                 * this 
-                                                                                                                 * value 
-                                                                                                                 */ ,
-              isSet ? ">=" : "<", flagVal);
+    xsnprintf(&whereStr[len], WHERESTR_SIZE - len,
+              "%s ((flags%%%d)%s%d)",
+              needAnd ? " and" : "",
+              2 * flagVal,  /* 2x since we are doing flag mod this value */
+              isSet ? ">=" : "<",
+              flagVal);
 }
-
-/*
- * Create a new empty srch array 
- */
 
 scmsrcha *newsrchscm(
     char *name,
@@ -1188,14 +1078,8 @@ scmsrcha *newsrchscm(
     return (newp);
 }
 
-/*
- * Add a new column to a search array. Note that this function does not grow
- * the size of the column array, so enough space must have already been
- * allocated when the array was created. 
- */
-
 int addcolsrchscm(
-    scmsrcha * srch,
+    scmsrcha *srch,
     char *colname,
     int sqltype,
     unsigned valsize)
@@ -1225,13 +1109,13 @@ int addcolsrchscm(
     return (0);
 }
 
-/*
- * This is the value function callback for the next function. 
+/**
+ * @brief
+ *     value function callback for searchorcreatescm()
  */
-
 static int socvaluefunc(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -1246,43 +1130,12 @@ static int socvaluefunc(
     return (-1);
 }
 
-/*
- * This function performs a find-or-create operation for a specific id. It
- * first searches in table "tab" with search criteria "srch". If the entry is
- * found it returns the value of the id. If it isn't found then the max_id is
- * looked up in the metadata table and incremented, a new entry is created in
- * "tab" using the creation criteria "ins", and the max id in the metadata
- * table is updated and returned.
- * 
- * Since this is somewhat convoluted and contains several steps, consider an
- * example.  Suppose I wish to find or create two directories in the directory 
- * table.  These directories are /path/to/somewhere and /path/to/elsewhere.  I 
- * want to get the directory ids for these directories in either case, e.g.
- * whether they are already there or have to be created. If a new directory is 
- * created I also want the maximum directory id in the metadata table to be
- * updated.
- * 
- * Consider the following putative sequence.  I construct a search for
- * "/path/to/somewhere" in the directory table. The first element of the
- * search is the id. The search succeeds, and the id is returned. The metadata 
- * table is unchanged. Now I construct a second search for
- * "/path/to/elsewhere". That search fails. So I fetch the maximum directory
- * id from the metadata table and increment it. I then create an entry in the
- * directory table with elements "/path/to/elsewhere" and that (incremented)
- * id. I update the metadata table's value for the max directory id to the
- * new, incremented id, and, finally, I return that new, incremented id.
- * 
- * Certs, CRLs, ROAs and directories all have ids and their tables all have
- * max ids in the metadata table and so all of them have to be managed using
- * this (sadly prolix) function. 
- */
-
 int searchorcreatescm(
-    scm * scmp,
-    scmcon * conp,
-    scmtab * tabp,
-    scmsrcha * srch,
-    scmkva * ins,
+    scm *scmp,
+    scmcon *conp,
+    scmtab *tabp,
+    scmsrcha *srch,
+    scmkva *ins,
     unsigned int *idp)
 {
     unsigned int mid = 0;
@@ -1334,15 +1187,10 @@ int searchorcreatescm(
     return (0);
 }
 
-/*
- * This function deletes entries in a database table that match the stated
- * search criteria. 
- */
-
 int deletescm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * deld)
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *deld)
 {
     char *stmt = NULL;
     int leen = 128;
@@ -1422,16 +1270,10 @@ int deletescm(
     return (sta);
 }
 
-/*
- * Set the flags value on a match corresponding to a search criterion.
- * 
- * This function returns 0 on success and a negative error code on failure. 
- */
-
 int setflagsscm(
-    scmcon * conp,
-    scmtab * tabp,
-    scmkva * where,
+    scmcon *conp,
+    scmtab *tabp,
+    scmkva *where,
     unsigned int flags)
 {
     char *stmt;
@@ -1491,13 +1333,9 @@ int setflagsscm(
     return (sta);
 }
 
-/*
- * Convert a binary array into a hex string. Allocates memory. 
- */
-
 char *hexify(
     int bytelen,
-    void const * ptr,
+    void const *ptr,
     int useox)
 {
     unsigned char *inptr;
@@ -1545,14 +1383,9 @@ char *hexify(
     return (aptr);
 }
 
-/*
- * Convert a hex string into a byte array. Allocates memory. The string must
- * not begin with 0x or ^x. 
- */
-
 void *unhexify(
     int strnglen,
-    char const * strng)
+    char const *strng)
 {
     unsigned char *oot;
     unsigned int x;
@@ -1584,14 +1417,9 @@ void *unhexify(
     return oot;
 }
 
-/*
- * This very specific function updates the sninuse and snlist entries on a CRL 
- * using the local_id as the where criterion. 
- */
-
 int updateblobscm(
-    scmcon * conp,
-    scmtab * tabp,
+    scmcon *conp,
+    scmtab *tabp,
     uint8_t *snlist,
     unsigned int sninuse,
     unsigned int snlen,
@@ -1622,14 +1450,9 @@ int updateblobscm(
     return (sta);
 }
 
-/*
- * This specialized function updates the appropriate xx_last field in the
- * metadata table for the indicated time when the client completed. 
- */
-
 int updateranlastscm(
-    scmcon * conp,
-    scmtab * mtab,
+    scmcon *conp,
+    scmtab *mtab,
     char what,
     char *now)
 {

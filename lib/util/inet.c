@@ -1,9 +1,9 @@
+#include "inet.h"
+
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "inet.h"
 
 
 #define CVTV_BODY_COMMON(addrstrlen, ip_type, number_func, separators, family) \

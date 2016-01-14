@@ -1,8 +1,3 @@
-/*
- * $Id: make_manifest.c 453 2007-07-25 15:30:40Z gardiner $ 
- */
-
-
 #include "rpki-object/cms/cms.h"
 #include "rpki-asn1/manifest.h"
 #include "util/cryptlib_compat.h"
@@ -15,7 +10,7 @@
 #include "util/logging.h"
 
 /*
- * This file has a program to make manifests. 
+ * This file has a program to make manifests.
  */
 
 #define MSG_OK "Finished OK"
@@ -171,7 +166,7 @@ int main(
     getDate(&manp->nextUpdate, "Next");
     write_objid(&manp->fileHashAlg, id_sha256);
 
-    // now get the files 
+    // now get the files
     memset(curr_file, 0, CURR_FILE_SIZE);
     if (argc > 4)
     {

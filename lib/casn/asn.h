@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     asn.h
 Contents: Header file for basic ASN.1 functions.
@@ -11,17 +8,12 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-/*
- * sfcsid[] = "@(#)asn.h 824P" 
- */
 #ifndef _ASN_H
 #define _ASN_H
 
-#define uchar unsigned char
-#ifndef ushort
-#define ushort unsigned short
-#endif
-#define ulong unsigned long
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned long ulong;
 
 #define ASN_ANY              0
 #define ASN_BOOLEAN          1
@@ -56,7 +48,7 @@ Remarks:
 #define ASN_APPL_CONSTR      (ASN_APPL_SPEC | ASN_CONSTRUCTED)
 #define ASN_CONT_SPEC        0x80
 #define ASN_CONT_CONSTR      (ASN_CONT_SPEC | ASN_CONSTRUCTED)
-#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED)  /* bwds compat 
+#define ASN_CONT_SPEC0       (ASN_CONT_SPEC | ASN_CONSTRUCTED)  /* bwds compat
                                                                  */
 #define ASN_PRIV_SPEC        0xC0
 #define ASN_PRIV_CONSTR      (ASN_PRIV_SPEC | ASN_CONSTRUCTED)

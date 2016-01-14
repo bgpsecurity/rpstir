@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     asn_cconstr.c
 Contents: Functions to generate .c files as part of ASN_CGEN program.
@@ -11,8 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-char casn_constr_id[] = "@(#)casn_constr.c 828P";
 
 #include "asn_gen.h"
 
@@ -170,24 +165,24 @@ static char simple_opener[] = "void %s(struct %s *mine, ushort level)\n\
 struct tagq *lasttagqp = (struct tagq *)0;
 
 void cconstruct(
-    )
+    void)
 {
     /*
      * Function: Creates constructors for the things defined an ASN.1 file.
      * Outputs: C code written to 'outstr' Procedure: 1. WHILE have a next
-     * token Switch on state 2. Case GLOBAL IF reading global returns GLOBAL, 
+     * token Switch on state 2. Case GLOBAL IF reading global returns GLOBAL,
      * return Case IN_DEFINITION IF token is not '{' (rerun of table) AND
      * reading definition returns less than 0, return IF STATE is not GLOBAL,
      * construct definition 3. Case IN_ITEM Case SUB_ITEM Read the item IF
      * token is '}' OR ',' (indicating the end of an item) Construct the item
-     * Default: Exit with fatal message 4. Search name table for pointer items 
+     * Default: Exit with fatal message 4. Search name table for pointer items
      * (starting with '_') that have no parent that's a passthrough, i.e. no
-     * definition Make a definition for any found 
+     * definition Make a definition for any found
      */
     char *c;
-    int /* did, */ classgeneration;
-    struct name_table *ntbp,
-       *ptbp;
+    int classgeneration;
+    struct name_table *ntbp;
+    struct name_table *ptbp;
     long parenttype = -1;
     if (state != SUB_ITEM)
         end_definition();
@@ -211,7 +206,7 @@ void cconstruct(
                 constr_def(&classgeneration, &parenttype);
             break;
             /*
-             * step 3 
+             * step 3
              */
         case IN_ITEM:          /* got '{' */
         case SUB_ITEM:
@@ -253,11 +248,11 @@ static void constr_def(
    IF token is { AND (type is BIT STRING OR INTEGER OR ENUMERATED)
         Set enumerated flag
    IF this is a DEFINED BY in a table, find what it's called in the
-	generation table
+        generation table
    See if it needs dup stuff
    IF it's a primitive AND no enumerated flag, clear duped flag
    IF it needs dup for other than 'OF' AND it's not imported
-    	Print the OF stuff
+        Print the OF stuff
    IF it's not imported AND (there's a '{' OR it's an OF OR it's a pointer)
         IF it's a pointer, print pointer opener
         IF it's not a table, print opener C text and stuff for definition
@@ -272,23 +267,23 @@ static void constr_def(
         ELSE
             IF it needed a dup function, print dup stuff
             IF not universal tag, print tag msg
-	    IF not derived from its type, print _type message
+            IF not derived from its type, print _type message
     Go to IN_ITEM state OR SUB_ITEM, depending on current state
 3. ELSE  (line end) have to print sub-stuff
     IF it's not a passthrough
         Make itemname out of subclass, unless the replacement name's type
-	    is primitive AND this is not an OF
+            is primitive AND this is not an OF
         IF this is a pointer, print point, tag & type messages
         ELSE
             IF there's a subtype, use "array" as the itemname
-	    IF there's max, print min/max and clear max
-	    IF there's a subclass AND its type is primitive
+            IF there's max, print min/max and clear max
+            IF there's a subclass AND its type is primitive
                 Use that as the subtype
             Print item with flags, except for OF flag, using as tag
-		Either (IF there's a subtype AND (no subclass OR subitem is
+                Either (IF there's a subtype AND (no subclass OR subitem is
                     separately defined)) the subtype
-		Or none
-	    IF there's (now) a subtype AND subclass AND this item has a max
+                Or none
+            IF there's (now) a subtype AND subclass AND this item has a max
                 Set its bounds
         Print finale
 4.      IF it has constraint, print the constraint
@@ -369,7 +364,7 @@ static void constr_def(
         }
     }
     /*
-     * step 2 
+     * step 2
      */
     if (*token == '{')
     {
@@ -404,7 +399,7 @@ static void constr_def(
         did = 0;
     }
     /*
-     * step 3 
+     * step 3
      */
     else                        /* no further definition */
     {
@@ -494,7 +489,7 @@ static void constr_def(
                 fprintf(outstr, finale, itemname, c);
             }
             /*
-             * step 4 
+             * step 4
              */
         }
         if (constraint_area.next)
@@ -509,83 +504,83 @@ static int constr_item(
 {
 /**
 1. IF the object is an item in a TABLE AND lack either a numeric string
-	OR an itemname, fatal error
+        OR an itemname, fatal error
    IF it's a DEFINED BY AND (the definer has no child OR has no grandchild)
         Syntax error
    IF doing defineds beyond the first in a table, make the subclass name
    IF (explicit OR CHOICE OR ANY) AND have a tag bigger than universal AND
         not ENUM
- 	Set explicit option
+        Set explicit option
    IF no tag so far AND type is a universal primitive, use type as tag
    ELSE IF this is a DEFINED BY AND it's not an ANY, do nothing
    ELSE IF this item is explicitly tagged AND it's not a subdefined
- 	primitive, set the constructed bit in the tag
+        primitive, set the constructed bit in the tag
    ELSE IF have a type, then 'Or' the constructed bit of the type into the tag
    IF ENUM is set in flags, set it in option
 2. IF it's an imported item, do nothing
    ELSE IF it's a table item
- 	IF no type, use itemname
- 	ELSE use class name
- 	Print the table line
- 	IF have a name, print line to create sub-item
- 	IF it's not the last item, print about next item
+        IF no type, use itemname
+        ELSE use class name
+        Print the table line
+        IF have a name, print line to create sub-item
+        IF it's not the last item, print about next item
    ELSE IF it's not a FUNCTION
- 	IF there's no itemname, make one from type or subclass
-	IF in definee but no type or subclass, table error
+        IF there's no itemname, make one from type or subclass
+        IF in definee but no type or subclass, table error
         IF class is enumerated
             Print line to set tag
             Clear tag and type
 3.      IF there's a subclass that's not a primitive
             IF it's a boolean definition, set the type to BOOLEAN with
                 no name table entry
-	    ELSE
-		IF the subclass isn't in the table, error
+            ELSE
+                IF the subclass isn't in the table, error
                 IF there's a type in the table
                   'Or' that object's constructed bit into the tag
-		ELSE if the subclass isn't a pointer, warn of undefined variable
-     	        IF table has a tag
+                ELSE if the subclass isn't a pointer, warn of undefined variable
+                IF table has a tag
                     IF item has an explicit tag, warn
-     		    ELSE IF no tag so far
-     		        Set the expected tag (for checking the last tag list)
-     		        IF table tag is primitive AND item is explicit
+                    ELSE IF no tag so far
+                        Set the expected tag (for checking the last tag list)
+                        IF table tag is primitive AND item is explicit
                             Use that as tag (any constructed or implicit
                                item will set its own tag)
-		IF the item's generation is less than th ecurrent one
-		    Add the subclass as a child of this class
-		    Test for looping
- 	    IF there's no type, use type from table
- 	    ELSE IF there's no subtype, use the subtype from the table
- 	    IF explicit, 'Or' constructed into the tag
+                IF the item's generation is less than th ecurrent one
+                    Add the subclass as a child of this class
+                    Test for looping
+            IF there's no type, use type from table
+            ELSE IF there's no subtype, use the subtype from the table
+            IF explicit, 'Or' constructed into the tag
         IF the expected tag matches anything in the last_tag list
             Print warning
- 	IF no expected tag so far, use the tag, or, if no tag so far
- 	    Use the type as the expected tag
+        IF no expected tag so far, use the tag, or, if no tag so far
+            Use the type as the expected tag
         IF this item is optional OR (parenttype is CHOICE AND there's no
             defined_by) OR parenttype is SET
             Add the expected tag to last_tag list
         ELSE clear last_tag list
-	IF beyond the first defined column in a table, get the options
-	    for it
+        IF beyond the first defined column in a table, get the options
+            for it
         Print the item with all options, including tag if no defined_by left
- 	IF there's a default, print that stuff
+        IF there's a default, print that stuff
 4. IF token does not indicate the last item, finish the item
    ELSE IF not in COMPONENTS OF
         IF it's not imported, print the finale
         IF table flag is set
-    	    Set state to INDEFINITION
-    	    IF doing defineds
-		IF at the last one, setstate to GLOBAL
-		ELSE bump up the name
-	    ELSE (just did basic table) FOR each parent of basic table
-		Find the path from definer to definee
-		Print the whole constructor
-		Set up to do first defined item
-	    Go back to start of table
-	ELSE IF there are constraints, print them
-	Clear previous name
-	Free the list of last tags
+            Set state to INDEFINITION
+            IF doing defineds
+                IF at the last one, setstate to GLOBAL
+                ELSE bump up the name
+            ELSE (just did basic table) FOR each parent of basic table
+                Find the path from definer to definee
+                Print the whole constructor
+                Set up to do first defined item
+            Go back to start of table
+        ELSE IF there are constraints, print them
+        Clear previous name
+        Free the list of last tags
         IF not in state IN_DEFINITION, finish the definition
-	ELSE finish item
+        ELSE finish item
    ELSE return 0
    Return 1
 **/
@@ -600,7 +595,7 @@ static int constr_item(
     static struct name_table *ntablep;
     static int bool_val;
     /*
-     * step 1 
+     * step 1
      */
     if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) == ASN_TABLE_FLAG)
     {
@@ -629,7 +624,7 @@ static int constr_item(
     if ((flags & ASN_ENUM_FLAG))
         option |= ASN_ENUM_FLAG;
     /*
-     * step 2 
+     * step 2
      */
     if (curr_pos <= real_start);
     else if ((flags & (ASN_TABLE_FLAG | ASN_DEFINED_FLAG)) == ASN_TABLE_FLAG)
@@ -649,7 +644,7 @@ static int constr_item(
         definer_ids[numdefiners - 1] = calloc(1, strlen(numstring) + 1);
         strcpy(definer_ids[numdefiners - 1], numstring);
         /*
-         * chars are in form '\123' 
+         * chars are in form '\123'
          */
     }
     else if (type != ASN_FUNCTION)
@@ -665,11 +660,10 @@ static int constr_item(
             cat(itemname, c);
         }
         *itemname |= 0x20;
-        // if (thisdefined > 0 && type < 0 && !*subclass) done(true, MSG_INCOMPLETE_ITEM, itemname);
         if ((option & ASN_ENUM_FLAG) && !sub_val)
             tag = type = -1;
         /*
-         * step 3 
+         * step 3
          */
         tag_tb = -1;
         if (*subclass && find_type(subclass) == ASN_NOTYPE)
@@ -825,7 +819,7 @@ static int constr_item(
     else
         clear_data_item(outstr);
     /*
-     * step 4 
+     * step 4
      */
     if (*token != '}')
         end_item();             /* not last */
@@ -986,7 +980,7 @@ static void checkq(
 }
 
 static void clear_data_item(
-    FILE * outstr)
+    FILE *outstr)
 {
     char *c;
     for (c = itemname; *c && *c != '('; c++);
@@ -1000,7 +994,7 @@ static void clear_data_item(
 }
 
 static char *dec_to_bin(
-    uchar * to,
+    uchar *to,
     char *from)
 {
     uchar *b,
@@ -1103,7 +1097,7 @@ Outputs:
 Procedure:
 1. Find the name table entry for the table
    Search each of its parents
-	IF the defined object is not OPTIONAL, return 0
+        IF the defined object is not OPTIONAL, return 0
    Return 1
 **/
     struct name_table *ptbp,
@@ -1132,7 +1126,7 @@ static char *next_word(
 }
 
 static void print_components(
-    FILE * outstr,
+    FILE *outstr,
     char *c)
 {
     char *b;
@@ -1175,11 +1169,12 @@ static void print_components(
             c = next_word(c);
     }
     else
-        done(true, MSG_NOT_SUPPORTED, "simple constraint"); /* simple constraint */
+        /* simple constraint */
+        done(true, MSG_NOT_SUPPORTED, "simple constraint");
 }
 
 static void print_constraint(
-    FILE * outstr)
+    FILE *outstr)
 {
     char *b,
        *c = constraint_area.area;
@@ -1236,7 +1231,7 @@ static void print_constraint(
 }
 
 static void print_enums(
-    FILE * outstr,
+    FILE *outstr,
     char *c)
 {
     struct id_table *idp;
@@ -1254,7 +1249,7 @@ static void print_enums(
         if (*b)
             *b++ = 0;
         if (classtype == ASN_OBJ_ID)
-        {                       // 
+        {                       //
             if (*c > '2' && (idp = find_id(c)))
                 c = idp->val;
             if (*c >= '0' && *c < '3')
@@ -1371,7 +1366,7 @@ static void print_primitive(
 }
 
 static void print_range(
-    FILE * outstr,
+    FILE *outstr,
     char *c)
 {
     char *a,

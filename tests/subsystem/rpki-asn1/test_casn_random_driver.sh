@@ -8,13 +8,13 @@
 
 # clean up on exit
 trap abort 1 2 15
-abort() 
+abort()
 {
     echo aborting
     rm -f $out $tmp
     exit 1
 }
-    
+
 # how many times to try
 max=1000000
 
@@ -39,29 +39,29 @@ while [ $i -lt $max ]; do
     dd if=/dev/random of=$tmp bs=$filesize count=1 2>/dev/null
 
     # run the test
-    ./test_casn_random $tmp >$out 2>&1 
+    ./test_casn_random $tmp >$out 2>&1
 
     # did it fail?
     if [ $? != 0 ]; then
-	echo test aborted, saving $tmp and $i.out
-	cp $out $i.out
+        echo test aborted, saving $tmp and $i.out
+        cp $out $i.out
     else
-	# check for lines in the output that aren't in the ignore list
-	egrep -v "$ignore" $out
-	if [ $? != 1 ]; then
-	    echo suspicious output, keeping file $tmp and $i.out
-	    cp $out $i.out
-	else
-	    # everything looks good, delete it and go on
-	    rm $tmp
-	fi
+        # check for lines in the output that aren't in the ignore list
+        egrep -v "$ignore" $out
+        if [ $? != 1 ]; then
+            echo suspicious output, keeping file $tmp and $i.out
+            cp $out $i.out
+        else
+            # everything looks good, delete it and go on
+            rm $tmp
+        fi
     fi
-    
+
     # next
     i=`expr $i + 1`
 
     # user feedback
     if [ `expr $i % $feedback` -eq 0 ]; then
-	echo iter $i done
+        echo iter $i done
     fi
 done

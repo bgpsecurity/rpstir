@@ -1,6 +1,3 @@
-/*
- * sfcsid[] = "@(#)casn.h 830P" 
- */
 /*****************************************************************************
 File:     casn.h
 Contents: Basic definitions
@@ -52,178 +49,274 @@ struct oidtable {
     char *label;
 };
 
-int copy_casn(
+int
+copy_casn(
     struct casn *,
-    struct casn *),
-    decode_casn(
+    struct casn *);
+
+int
+decode_casn(
     struct casn *casnp,
-    uchar * from),
-    decode_casn_lth(
+    uchar * from);
+
+int
+decode_casn_lth(
     struct casn *,
     uchar *,
-    int),
-    diff_casn(
+    int);
+
+int
+diff_casn(
     struct casn *,
-    struct casn *),             // can return -2 (error)!
-    diff_casn_num(
+    struct casn *);             // can return -2 (error)!
+
+int
+diff_casn_num(
     struct casn *casnp,
-    long val),                  // can return -2 (error)!
-    diff_casn_time(
+    long val);                  // can return -2 (error)!
+
+int
+diff_casn_time(
     struct casn *casnp1,
-    struct casn *casnp2),       // can return -2 (error)!
-    diff_objid(
+    struct casn *casnp2);       // can return -2 (error)!
+
+int
+diff_objid(
     struct casn *fr_casnp,
-    const char *objidp),
-    dump_casn(
+    const char *objidp);
+
+int
+dump_casn(
     struct casn *,
-    char *),
-    dump_size(
+    char *);
+
+int
+dump_size(
     struct casn *),
     eject_casn(
     struct casn *,
-    int),
-    eject_all_casn(
+    int);
+
+int
+eject_all_casn(
     struct casn *),
     encodesize_casn(
     struct casn *,
-    uchar **),
-    encode_casn(
+    uchar **);
+
+int
+encode_casn(
     struct casn *,
-    uchar *),
-    get_casn_file(
+    uchar *);
+
+int
+get_casn_file(
     struct casn *casnp,
     const char *,
-    int),
-    num_items(
-    struct casn *casnp),
-    put_casn_file(
+    int);
+
+int
+num_items(
+    struct casn *casnp);
+
+int
+put_casn_file(
     struct casn *casnp,
     char *,
-    int),
-    readvsize_casn(
+    int);
+
+int
+readvsize_casn(
     struct casn *,
-    uchar **),
-    readvsize_objid(
+    uchar **);
+
+int
+readvsize_objid(
     struct casn *,
-    char **),
-    read_casn(
+    char **);
+
+int
+read_casn(
     struct casn *,
-    uchar *),
-    read_casn_bit(
-    struct casn *),
-    read_casn_bits(
+    uchar *);
+
+int
+read_casn_bit(
+    struct casn *);
+
+int
+read_casn_bits(
     struct casn *casnp,
-    uchar * to,
-    int *shift),
-    read_casn_double(
+    uchar *to,
+    int *shift);
+
+int
+read_casn_double(
     struct casn *casnp,
-    double *val),
-    read_casn_num(
+    double *val);
+
+int
+read_casn_num(
     struct casn *,
-    long *),
-    read_casn_num_max(
+    long *);
+
+int
+read_casn_num_max(
     struct casn *,
-    intmax_t *),
-    read_casn_time(
+    intmax_t *);
+
+int
+read_casn_time(
     struct casn *,
-    int64_t *),
-    read_objid(
+    int64_t *);
+
+int
+read_objid(
     struct casn *,
-    char *),
-    size_casn(
-    struct casn *),
-    tag_casn(
-    struct casn *),
-    vsize_casn(
-    struct casn *),
-    vsize_casn_bits(
-    struct casn *casnp),
-    vsize_objid(
-    struct casn *casnp),
-    write_casn(
+    char *);
+
+int
+size_casn(
+    struct casn *);
+
+int
+tag_casn(
+    struct casn *);
+
+int
+vsize_casn(
+    struct casn *);
+
+int
+vsize_casn_bits(
+    struct casn *casnp);
+
+int
+vsize_objid(
+    struct casn *casnp);
+
+int
+write_casn(
     struct casn *,
     uchar *,
-    int),
-    _write_casn(
+    int);
+
+int
+_write_casn(
     struct casn *casnp,
-    uchar * c,
-    int lth),
-    _write_casn_num(
+    uchar *c,
+    int lth);
+
+int
+_write_casn_num(
     struct casn *casnp,
-    long),
-    write_casn_bit(
+    long);
+
+int
+write_casn_bit(
     struct casn *,
-    int),
-    write_casn_bits(
+    int);
+
+int
+write_casn_bits(
     struct casn *casnp,
-    uchar * from,
+    uchar *from,
     int lth,
-    int shift),
-    write_casn_double(
+    int shift);
+
+int
+write_casn_double(
     struct casn *casnp,
     double val,
-    int base),
-    write_casn_num(
+    int base);
+
+int
+write_casn_num(
     struct casn *,
-    long),
-    write_casn_time(
+    long);
+
+int
+write_casn_time(
     struct casn *,
-    int64_t),
-    write_objid(
+    int64_t);
+
+int
+write_objid(
     struct casn *,
-    const char *),
-    _write_objid(
+    const char *);
+
+int
+_write_objid(
     struct casn *,
     const char *);                    // for use by constructors only
 
-int cf_oid(
+int
+cf_oid(
     char *curr_oid,
     char *test_oid);
 
-int adjustTime(
+int
+adjustTime(
     struct casn *timep,
     long basetime,
     char *deltap);
 
-void delete_casn(
-    struct casn *),
-    clear_casn(
-    struct casn *),
-    simple_constructor(
+void
+delete_casn(
+    struct casn *);
+
+void
+clear_casn(
+    struct casn *);
+
+void
+simple_constructor(
     struct casn *,
     ushort level,
-    int type),
-    tagged_constructor(
+    int type);
+
+void
+tagged_constructor(
     struct casn *,
     ushort level,
     int type,
     int tag);
 
-void load_oidtable(
+void
+load_oidtable(
     char *name);
 
-struct casn *dup_casn(
-    struct casn *casnp),
-   *inject_casn(
-    struct casn *,
-    int),
-   *member_casn(
-    struct casn *casnp,
-    int num),
-   *next_of(
+struct casn *
+dup_casn(
     struct casn *casnp);
 
-char *find_label(
+struct casn *
+inject_casn(
+    struct casn *,
+    int);
+
+struct casn *
+member_casn(
+    struct casn *casnp,
+    int num);
+
+struct casn *
+next_of(
+    struct casn *casnp);
+
+char *
+find_label(
     char *oidp,
     int *diffp,
-    struct oidtable * oidtable,
+    struct oidtable *oidtable,
     int oidtable_size);
 
 #ifndef DEBUG
 #define dbcalloc calloc
 #define dbfree free
 #else
-uchar *dbcalloc(
+uchar *
+dbcalloc(
     int,
     int);
 #endif

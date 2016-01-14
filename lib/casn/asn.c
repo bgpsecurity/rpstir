@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /**************************************************************************
  * FILE:        asn.c
  * AUTHORs:     Charles Gardiner (gardiner@bbn.com),
@@ -9,24 +6,26 @@
  * DESCRIPTION: Routines to support Distinguished Encoding of ASN.1
  *              defined structures.
  *
- *
- * $Revision: 1.19 $
- * $Source: /u1/MSP/Dev/rcs/lib/asn1utils/local/asn.c,v $
- * $State: Exp $
- *
  *************************************************************************/
+
+#include "asn.h"
 
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
-#include "asn.h"
-char asn_sfcsid[] = "@(#)asn.c 838P";
 
-uchar asn_typ(
-    uchar **),
-   *asn_set(
+static uchar
+asn_typ(
+    uchar **);
+
+uchar *
+asn_set(
     struct asn *);
+
+static int
+count_sub_asns(
+    uchar **);
 
 struct typnames typnames[] = {
     {ASN_BOOLEAN, "boo"},       /* 1 */
@@ -69,12 +68,11 @@ int set_asn_lth(
     uchar *);
 
 uchar *asn_set(
-    asnp)
-     struct asn *asnp;
+    struct asn *asnp)
 {
     uchar *from = asnp->stringp;
-    int ansr = -1,
-        lth;
+    int ansr = -1;
+    int lth;
     asn_typ(&from);
     if (((lth = *from++) & ASN_INDEF))
     {
@@ -91,10 +89,10 @@ uchar *asn_set(
 }
 
 uchar asn_typ(
-    uchar ** s)
+    uchar **s)
 {
-    uchar typ,
-       *from = *s;
+    uchar typ;
+    uchar *from = *s;
     if (((typ = *from++) & ASN_XT_TAG) == ASN_XT_TAG)
     {
         while ((*from & ASN_INDEF))
@@ -105,78 +103,47 @@ uchar asn_typ(
     return typ;
 }
 
-uchar *asn_typ_lth(
-    asnp,
-    typ,
-    new)
-     struct asn *asnp;
-     uchar *typ;
-     int new;
-{
-    uchar *from = asnp->stringp;
-    int ansr = -1;
-    ushort lth;
-    *typ = asn_typ(&from);
-    if (((lth = *from++) & ASN_INDEF))
-    {
-        if ((ansr = (lth &= (uchar) ~ ASN_INDEF)))
-        {
-            for (lth = 0; ansr--; lth = (lth << 8) + *from++);
-        }
-    }
-    if (new)
-    {
-        if (!(asnp->lth = lth) && !ansr)
-            asnp->level |= ASN_INDEF_FLAG;
-        else
-            asnp->level &= ~ASN_INDEF_FLAG;
-    }
-    return from;
-}
-
-int count_asns(
-    unsigned char *from)
-{
 /**
 Function: Counts number of ASN.1 items in string pointed to by from
 Inputs: Pointer to ASN.1-encoded string
 Outputs: Count of number of items
 Procedure: Calls the recursive version
 **/
-    int count_sub_asns(
-    uchar **);
+int count_asns(
+    unsigned char *from)
+{
     return (1 + count_sub_asns(&from));
 }
 
-int count_sub_asns(
-    uchar ** from)
-{
 /**
 Function: Counts ASN.1 items in recursive fashion
 Inputs: Pointer to address of start of item
 Outputs: 'from' pointer set to address of next item
-	 Returns count of items
+         Returns count of items
 Procedure:
 1. DO
- 	Set up local asn for current item
+        Set up local asn for current item
         Count it
         IF current item has indefinite length
             IF item is constructed
-	        DO
-	            Add contents of subordinate items to count
+                DO
+                    Add contents of subordinate items to count
                 UNTIL remaining data is double null
             ELSE scan forward to double null
-2. 	ELSE
-	    IF have no end pointer yet, set end pointer
-	    IF item is primitive, advance pointer by its length
-	    IF no end pointer, return count
+2.      ELSE
+            IF have no end pointer yet, set end pointer
+            IF item is primitive, advance pointer by its length
+            IF no end pointer, return count
    WHILE have an end pointer AND haven't reached it
 3. Set 'from' pointer
    Return count
 **/
+int count_sub_asns(
+    uchar **from)
+{
     int count = 0;
-    uchar *c = *from,
-        *e = (uchar *) 0;
+    uchar *c = *from;
+    uchar *e = (uchar *)0;
     struct asn asn;
     memset(&asn, 0, sizeof(asn));
     do                          /* step 1 */
@@ -213,23 +180,21 @@ Procedure:
 }
 
 int decode_asn(
-    asnpp,
-    easnp,
-    from,
-    nbytes,
-    level)
-     struct asn **asnpp,
-     *easnp;
-     uchar *from;
-     ulong nbytes;
-     ushort level;
+    struct asn **asnpp,
+    struct asn *easnp,
+    uchar *from,
+    ulong nbytes,
+    ushort level)
 {
     struct asn *curr_asnp;
     uchar typ;
-    int ansr,
-        did,
-        indef;                  /* step 1 */
-    for (did = 0, curr_asnp = *asnpp; !nbytes || nbytes > (ulong)did; curr_asnp++)
+    int ansr;
+    int did;
+    int indef;
+    /* step 1 */
+    for (did = 0, curr_asnp = *asnpp;
+         !nbytes || nbytes > (ulong)did;
+         curr_asnp++)
     {
         if (curr_asnp >= easnp)
             return -1;
@@ -306,7 +271,7 @@ int decode_asn(
 
 int make_asn_table(
     struct asn **asnbase,
-    uchar * c,
+    uchar *c,
     ulong lth)
 {
     struct asn *asnp;
@@ -320,10 +285,8 @@ int make_asn_table(
 }
 
 int put_asn_lth(
-    to,
-    lth)
-     uchar *to;
-     ulong lth;
+    uchar *to,
+    ulong lth)
 {
     uchar *c = to;
     ulong tmp = 0;
@@ -339,12 +302,12 @@ int put_asn_lth(
 }
 
 int set_asn_lth(
-    uchar * s,
-    uchar * e)
+    uchar *s,
+    uchar *e)
 {
     uchar *c;
-    ulong lth,
-        tmp;
+    ulong lth;
+    ulong tmp;
     int bwd;
     asn_typ(&s);
     if ((bwd = (int)*s++) & ASN_INDEF)

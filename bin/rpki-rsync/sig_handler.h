@@ -7,10 +7,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-/*
- * $Id$ 
- */
-
 void sig_handler(
     int);
 int setup_sig_catchers(

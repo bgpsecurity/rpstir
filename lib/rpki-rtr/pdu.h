@@ -2,6 +2,7 @@
 #define _RTR_PDU_H
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #include <sys/socket.h>
@@ -41,12 +42,12 @@
 #define ERR_UNSUPPORTED_TYPE 5
 #define ERR_UNKNOWN_WITHDRAW 6
 #define ERR_DUPLICATE_ANNOUNCE 7
-#define ERR_IS_FATAL(code) \
-	((code) != ERR_NO_DATA)
+#define ERR_IS_FATAL(code)                                              \
+    ((code) != ERR_NO_DATA)
 
 /**
-	NOTE: all values in structs are stored in host byte order.
-	The functions parse_pdu and dump_pdu will handle byte order issues.
+   NOTE: all values in structs are stored in host byte order.  The
+   functions parse_pdu and dump_pdu will handle byte order issues.
 */
 
 typedef uint16_t session_id_t;
@@ -61,13 +62,13 @@ typedef uint32_t as_number_t;
 
 
 /**
-	@return true iff s1 is greater than s2 using serial number arithmetic
+   @return
+       true iff s1 is greater than s2 using serial number arithmetic
 
-	See RFC 1982 for caveats on serial number arithmetic.
-        Briefly, RFC 1982 defines 4 possible answers to comparison of
-        s1 and s2: >, ==, <, and not-comparable.  This function
-        returns true if s1 > s2, and it returns false for the other
-        three states.
+   See RFC 1982 for caveats on serial number arithmetic.  Briefly, RFC
+   1982 defines 4 possible answers to comparison of s1 and s2: >, ==,
+   <, and not-comparable.  This function returns true if s1 > s2, and
+   it returns false for the other three states.
 */
 bool serial_number_greater(
     serial_number_t s1,
@@ -148,12 +149,13 @@ struct _PDU {
                                  * invalid value */
 #define PDU_IS_ERROR(retval) ((retval) <= PDU_CORRUPT_DATA)
 /**
-	Attempt to parse as much of buffer as possible into pdu.
+   Attempt to parse as much of buffer as possible into pdu.
 
-	NOTE: pdu may contain pointers into buffer after parsing.
-	Use pdu_deepcopy to get a copy that isn't tied to buffer.
+   NOTE: pdu may contain pointers into buffer after parsing.  Use
+   pdu_deepcopy to get a copy that isn't tied to buffer.
 
-	@return one of the above constants
+   @return
+       one of the above constants
 */
 int parse_pdu(
     uint8_t * buffer,
@@ -162,9 +164,10 @@ int parse_pdu(
 
 
 /**
-	Attempt to dump a valid PDU into a buffer.
+   Attempt to dump a valid PDU into a buffer.
 
-	@return Number of bytes written, or -1 if there's an error.
+   @return
+       Number of bytes written, or -1 if there's an error.
 */
 ssize_t dump_pdu(
     uint8_t * buffer,
@@ -206,11 +209,12 @@ void fill_pdu_cache_reset(
     PDU * pdu);
 
 /**
-	The encapsulated_pdu and error_text parameters are stored in pdu
-	without copying. The calling code should handle any necessary copying.
+   The encapsulated_pdu and error_text parameters are stored in pdu
+   without copying.  The calling code should handle any necessary
+   copying.
 
-	If encapsulated_pdu or error_text is NULL, its respective length field
-	must be 0.
+   If encapsulated_pdu or error_text is NULL, its respective length
+   field must be 0.
 */
 void fill_pdu_error_report(
     PDU * pdu,
@@ -221,8 +225,10 @@ void fill_pdu_error_report(
     uint8_t * error_text);
 
 /**
-	@param pdu a parsed and valid PDU
-	@return a deep copy of pdu, or NULL if there isn't enough memory
+   @param pdu
+       a parsed and valid PDU
+   @return
+       a deep copy of pdu, or NULL if there isn't enough memory
 */
 PDU *pdu_deepcopy(
     const PDU * pdu);
@@ -232,19 +238,18 @@ void pdu_free(
     PDU * pdu);
 
 /**
-	Deep free the array of PDUs.
+   Deep free the array of PDUs.
 
-	NOTE: num_pdus is the number of fully initialized PDUs
-	in the array, which is less than or equal to the length
-	of the array.
+   NOTE: num_pdus is the number of fully initialized PDUs in the
+   array, which is less than or equal to the length of the array.
 */
 void pdu_free_array(
     PDU * pdus,
     size_t num_pdus);
 
 /**
-	Print information from the valid pdu onto one line in buffer.
-	This is primarily useful for debugging.
+   Print information from the valid pdu onto one line in buffer.  This
+   is primarily useful for debugging.
 */
 #define PDU_SPRINT_BUFSZ 512
 void pdu_sprint(

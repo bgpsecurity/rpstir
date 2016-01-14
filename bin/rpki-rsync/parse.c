@@ -1,12 +1,9 @@
+#include "parse.h"
+
 #include <stdio.h>
 // #include <linux/limits.h>
-#include "parse.h"
 #include "main.h"
 #include "util/stringutils.h"
-
-/*
- * $Id$ 
- */
 
 
 static const char *WHITESPACE = "\n\r\t ";
@@ -16,7 +13,7 @@ static const char *WHITESPACE = "\n\r\t ";
  * A path which ends in '/' will simply be copied, whereas a path with no '/'
  * returns the string ".".  At most dest_len characters will be copied,
  * including the terminating '\0'.  If dest_len was not enough space, a NULL
- * is returned. 
+ * is returned.
  */
 static char *dirname(
     char *dest,
@@ -30,7 +27,7 @@ static char *dirname(
         return NULL;
 
     /*
-     * Search for right-most slash. 
+     * Search for right-most slash.
      */
     right_most_slash = strrchr(path, '/');
     if (!right_most_slash)
@@ -42,7 +39,7 @@ static char *dirname(
     }
 
     /*
-     * Copy directory substring, terminating with null. 
+     * Copy directory substring, terminating with null.
      */
     dir_length = right_most_slash - path + 1;
     if (dir_length > dest_len - 1)
@@ -97,7 +94,7 @@ char *getMessageFromString(
     char *retStr = NULL;
 
     /*
-     * len < 2 so we are sure that we have at least YX or '*\ ' for parsing 
+     * len < 2 so we are sure that we have at least YX or '*\ ' for parsing
      */
 
     if ((!str) || (len < 2))
@@ -110,7 +107,7 @@ char *getMessageFromString(
     {
     case '*':
         /*
-         * deletion event 
+         * deletion event
          */
         if (looksOK(str, len) != TRUE)
         {
@@ -125,14 +122,14 @@ char *getMessageFromString(
             }
         }
         /*
-         * looks OK - create and return REMOVE 
+         * looks OK - create and return REMOVE
          */
         retStr = makeRemoveStr(str, len, retlen);
         return (retStr);
         break;
     case '<':
         /*
-         * transfer to remote host 
+         * transfer to remote host
          */
         if (looksOK(str, len) != TRUE)
         {
@@ -148,7 +145,7 @@ char *getMessageFromString(
         }
         /*
          * we passed the looksOK test - if flags wants INFO then return an
-         * INFO str, else return NULL 
+         * INFO str, else return NULL
          */
         if (flags & INFO_FLAG)
         {
@@ -162,10 +159,10 @@ char *getMessageFromString(
         break;
     case '>':
         /*
-         * transfer to local host (receiving file) 
+         * transfer to local host (receiving file)
          */
         /*
-         * this is what we are primarily interested in 
+         * this is what we are primarily interested in
          */
         if (looksOK(str, len) != TRUE)
         {
@@ -189,10 +186,10 @@ char *getMessageFromString(
         break;
     case 'c':
         /*
-         * change/creation (directory or symlink) 
+         * change/creation (directory or symlink)
          */
         /*
-         * transfer to remote host 
+         * transfer to remote host
          */
         if (looksOK(str, len) != TRUE)
         {
@@ -208,7 +205,7 @@ char *getMessageFromString(
         }
         /*
          * we passed the looksOK test - if this is a change specifying a
-         * symlink then create a link message 
+         * symlink then create a link message
          */
         if (X == 'L')
         {
@@ -217,7 +214,7 @@ char *getMessageFromString(
         }
         /*
          * it looksOK, it's not a Link, so if verbose wants INFO strings make
-         * one and return it, otherwise return(NULL); 
+         * one and return it, otherwise return(NULL);
          */
         if (flags & INFO_FLAG)
         {
@@ -231,7 +228,7 @@ char *getMessageFromString(
         break;
     case 'h':
         /*
-         * hard link to another element 
+         * hard link to another element
          */
         if (looksOK(str, len) != TRUE)
         {
@@ -246,14 +243,14 @@ char *getMessageFromString(
             }
         }
         /*
-         * passed the looksOK test 
+         * passed the looksOK test
          */
         retStr = makeLinkStr(str, len, retlen);
         return (retStr);
         break;
     case '.':
         /*
-         * not being updated - possible attribute change 
+         * not being updated - possible attribute change
          */
         if (looksOK(str, len) != TRUE)
         {
@@ -279,7 +276,7 @@ char *getMessageFromString(
         break;
     default:
         /*
-         * unknown - send as WARNING 
+         * unknown - send as WARNING
          */
         if (flags & ERROR_FLAG)
         {
@@ -315,7 +312,7 @@ char *makeGenericStr(
 {
     /*
      * WARNING - have not included parsing of strings to include escaping of
-     * CR or LF to '\013' and '\010' 
+     * CR or LF to '\013' and '\010'
      */
 
     char *retStr,
@@ -421,28 +418,28 @@ static char *makeAURStr(
     /*
      * the update string will contain "\010" and "\013" as replacements for
      * any in-line NL and CR values. Additionally, we need to preface the
-     * message with "U " and suffix it with "\r\n". We do NOT include the 9 or 
+     * message with "U " and suffix it with "\r\n". We do NOT include the 9 or
      * 11 character %i format string.
-     * 
-     * Thus, the output string is: "U path_and_filename\r\n" (replace "U" with 
+     *
+     * Thus, the output string is: "U path_and_filename\r\n" (replace "U" with
      * "A" or "R" depending on update/add/remove)
-     * 
+     *
      * STRIKE THE ABOVE - we're using fgets() as the initial input from the
      * log file - and so HOW WOULD WE COME ACROSS AN EMBEDDED \n?!?!
-     * 
+     *
      * The solution:
-     * 
+     *
      * This function assumes that at the very least that the checks for
      * has_I_Format and has_Text_Value have passed succesfully. Further that
      * since this is an UPDATE string that the log line has the proper
-     * extension {der,cer,pem,crl,roa}. Though we still try to make sure that 
+     * extension {der,cer,pem,crl,roa}. Though we still try to make sure that
      * the input string is at least 11 characters in length at the beginning
      * of the function.
-     * 
+     *
      * As the output from this is not expected to be handled by the shell (it
      * is envisioned that {f}open(), etc. are used) we don't need to worry
      * about escaping shell nasties such as *;'` etc. etc.
-     * 
+     *
      */
 
     int ret,
@@ -452,13 +449,13 @@ static char *makeAURStr(
        *copiedStr;
 
     /*
-     * sanity check 
+     * sanity check
      */
     if (!str || len < 11)
         return (NULL);
 
     /*
-     * make local copy of 'len' bytes of str, null-terminated 
+     * make local copy of 'len' bytes of str, null-terminated
      */
     copiedStr = (char *)malloc(len + 1);
     if (!copiedStr)
@@ -467,14 +464,14 @@ static char *makeAURStr(
     copiedStr[len] = '\0';
 
     /*
-     * strip any pesky whitespaces that we will be clobbering anyway 
+     * strip any pesky whitespaces that we will be clobbering anyway
      */
     strip(copiedStr, WHITESPACE);
 
     /*
      * our return string will be the string passed in minus the 9 or 11 chars
-     * in the %i description at the end plus 2 for "U " plus 3 for "\r\n\0" at 
-     * the end 
+     * in the %i description at the end plus 2 for "U " plus 3 for "\r\n\0" at
+     * the end
      */
     ptr = start_of_next_field(copiedStr, WHITESPACE);
     holdLen = field_length(ptr, WHITESPACE) + 2 + 3;
@@ -527,10 +524,10 @@ char *makeLinkStr(
     UNREFERENCED_PARAMETER(len);
     UNREFERENCED_PARAMETER(retlen);
     /*
-     * this requires more than just makeGenericStr() 
+     * this requires more than just makeGenericStr()
      */
     /*
-     * STUB 
+     * STUB
      */
     return (NULL);
 }
@@ -558,13 +555,13 @@ int looksOK(
 
     /*
      * start with simple sanity checks - minumum length, ascii characters,
-     * etc. etc. Then move on to more message specific checks. 
+     * etc. etc. Then move on to more message specific checks.
      */
 
     /*
      * we expect even in the smallest log message that there will be two
      * characters. This would end up being a message from a delete '*\
-     * [sometext]'. 
+     * [sometext]'.
      */
     if (len < 2)
         return (FALSE);
@@ -572,20 +569,20 @@ int looksOK(
     /*
      * PATH_MAX is the longest absolute path with filename allowed on most
      * systems. For Linux it is 4096. We also have at MOST 9 flags in the
-     * rsync %i format which will be followed by a SPACE 
+     * rsync %i format which will be followed by a SPACE
      */
 
     if (len > (PATH_MAX + 10))
         return (FALSE);
 
     /*
-     * test for a newline 
+     * test for a newline
      */
     if (!has_newline(str, len))
         return (FALSE);
 
     /*
-     * we expect the entire string to be either printable chars or cr|nl 
+     * we expect the entire string to be either printable chars or cr|nl
      */
     for (i = 0; i < (int)len; i++)
     {
@@ -682,9 +679,9 @@ int has_I_Format(
     unsigned int len)
 {
     /*
-     * This will check that the first 9 chars appear to be from the %i format. 
+     * This will check that the first 9 chars appear to be from the %i format.
      * Note that in newer versions of rsync, the %i format has 11 chars.  The
-     * following code should return true for both. 
+     * following code should return true for both.
      */
 
     int i,
@@ -740,7 +737,7 @@ int has_Text_Value(
 {
     /*
      * checks to make sure there is some data after the %i format, we would
-     * expect this to be a filename most of the time 
+     * expect this to be a filename most of the time
      */
     int i,
         field_len;
@@ -754,7 +751,7 @@ int has_Text_Value(
         return (FALSE);
 
     /*
-     * the filename chars should be at the very least printable 
+     * the filename chars should be at the very least printable
      */
     field_len = field_length(text, WHITESPACE);
     for (i = 0; i < field_len; i++)
@@ -791,7 +788,7 @@ int has_Correct_Extension(
     endlen = strlen(hold);
 
     /*
-     * 4 with \n 
+     * 4 with \n
      */
     if ((endlen == 4) || (endlen == 3))
     {
@@ -894,11 +891,11 @@ char *makeEndStr(
  * Returns the file position indicator via ftell() for the beginning of the
  * *next* directory block, or end-of-file.  The file position indicator is
  * restored to the current value at the end of this function.
- * 
+ *
  * Returns -1 on error.
- * 
+ *
  * Sample file:
- * 
+ *
  * *deleting SPARTA/1/C3A60F37CFC8876F19337BAAC87279C1B53DC38F.cer *deleting
  * SPARTA/SPARTA-ELS/2/0BFBDDC896073CA14265D5C50C04857A680F23F8.cer
  * .d..t...... SPARTA/1/ >f..t...... SPARTA/1/RhlvrxS2z8WclJS4Um2J01Bhd-E.crl
@@ -910,12 +907,12 @@ char *makeEndStr(
  * isc/2/r-Vxn-I7YluASnxRHksRELhf_Qk.mnf .d..t...... isc/3/ >f..t......
  * isc/3/i8T5t-AgIfdC-yr_BzVVcm_7kT0.crl >f..t......
  * isc/3/i8T5t-AgIfdC-yr_BzVVcm_7kT0.mnf
- * 
+ *
  * An example of a "directory block" would be:
- * 
+ *
  * .d..t...... SPARTA/1/ >f..t...... SPARTA/1/RhlvrxS2z8WclJS4Um2J01Bhd-E.crl
  * >f..t...... SPARTA/1/RhlvrxS2z8WclJS4Um2J01Bhd-E.mnf
- * 
+ *
  */
 long next_dirblock(
     FILE * fp)
@@ -932,7 +929,7 @@ long next_dirblock(
     initial_pos = ftell(fp);
 
     /*
-     * Search line by line for a change in directory. 
+     * Search line by line for a change in directory.
      */
     first_line = 1;
     first_directory[0] = '\0';
@@ -979,9 +976,9 @@ long next_dirblock(
         if (first_line)
         {
             /*
-             * The following is safe despite strncpy weakness.  By this point, 
+             * The following is safe despite strncpy weakness.  By this point,
              * 'directory' will be safely NULL-terminated, and
-             * 'first_directory' and 'directory' are equal sized buffers. 
+             * 'first_directory' and 'directory' are equal sized buffers.
              */
             strncpy(first_directory, directory, PATH_MAX);
             first_line = 0;

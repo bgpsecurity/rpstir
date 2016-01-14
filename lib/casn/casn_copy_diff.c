@@ -1,8 +1,3 @@
-/*
- * $Id$ 
- */
-/*
- */
 /*****************************************************************************
 File:     casn_copy_diff.c
 Contents: Basic functions for ASN.1 objects.
@@ -18,60 +13,85 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 #include "casn.h"
-char casn_copy_diff_sfcsid[] = "@(#)casn_copy_diff.c 864P";
 
-extern void _clear_casn(
+void
+_clear_casn(
     struct casn *,
     ushort);
 
-extern struct casn *_find_chosen(
-    struct casn *casnp),
-   *_dup_casn(
-    struct casn *casnp),
-   *_find_filled(
-    struct casn *casnp),
-   *_find_filled_or_chosen(
+struct casn *
+_find_chosen(
+    struct casn *casnp);
+
+struct casn *
+_dup_casn(
+    struct casn *casnp);
+
+struct casn *
+_find_filled(
+    struct casn *casnp);
+
+struct casn *
+_find_filled_or_chosen(
     struct casn *casnp,
-    int *errp),
-   *_find_flag(
+    int *errp);
+
+struct casn *
+_find_tag(
     struct casn *casnp,
-    int flag),
-   *_find_tag(
-    struct casn *casnp,
-    ulong tag),
-   *_go_up(
-    struct casn *casnp),
-   *_skip_casn(
+    ulong tag);
+
+struct casn *
+_go_up(
+    struct casn *casnp);
+
+struct casn *
+_skip_casn(
     struct casn *casnp,
     int num);
 
-extern int _casn_obj_err(
+int
+_casn_obj_err(
     struct casn *,
-    int),
-    _calc_lth_lth(
-    int),
-    _check_filled(
+    int);
+
+int
+_calc_lth_lth(
+    int);
+
+int
+_check_filled(
     struct casn *,
-    int),
-    _clear_error(
-    struct casn *),
-    _encode_tag_lth(
-    uchar * to,
-    struct casn **casnpp),
-    _fill_upward(
+    int);
+
+int
+_clear_error(
+    struct casn *);
+
+int
+_encode_tag_lth(
+    uchar *to,
+    struct casn **casnpp);
+
+int
+_fill_upward(
     struct casn *casnp,
     int val);
 
-int _copy_casn(
+static int
+_copy_casn(
     struct casn *to_casnp,
     struct casn *fr_casnp,
-    int level),
-    _diff_casn(
+    int level);
+
+static int
+_diff_casn(
     struct casn *casnp1,
     struct casn *casnp2,
     int mode);
 
-int copy_casn(
+int
+copy_casn(
     struct casn *to_casnp,
     struct casn *fr_casnp)
 {
@@ -86,12 +106,13 @@ int copy_casn(
     return _copy_casn(to_casnp, fr_casnp, 0);
 }
 
-int diff_casn(
+int
+diff_casn(
     struct casn *casnp1,
     struct casn *casnp2)
 {
-    int diff,
-        neg;
+    int diff;
+    int neg;
 
     if (_clear_error(casnp1) < 0 || _clear_error(casnp2) < 0)
         return -1;
@@ -137,7 +158,8 @@ int diff_casn(
     return diff;
 }
 
-int _copy_casn(
+int
+_copy_casn(
     struct casn *to_casnp,
     struct casn *fr_casnp,
     int level)
@@ -306,16 +328,17 @@ Procedure:
     return did;
 }
 
-int _diff_casn(
+int
+_diff_casn(
     struct casn *casnp1,
     struct casn *casnp2,
     int mode)
 {                               // mode = 0 if at top level; mode = 1 if at
                                 // lower level
-    int diff,
-        lth,
-        lth1,
-        lth2;
+    int diff;
+    int lth;
+    int lth1;
+    int lth2;
 
     lth1 = (casnp1->flags & ASN_FILLED_FLAG);
     lth2 = (casnp2->flags & ASN_FILLED_FLAG);

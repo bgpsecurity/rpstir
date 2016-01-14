@@ -1,27 +1,3 @@
-/*
- * $Id$ 
- */
-/*
- * Dec 6 1996 411U 
- */
-/*
- * Dec 6 1996 GARDINER changed 
- */
-/*
- * Jul 10 1996 378U 
- */
-/*
- * Jul 10 1996 GARDINER changed for Solaris 2 
- */
-/*
- * Mar 8 1994 1U 
- */
-/*
- * Mar 8 1994 GARDINER Started on SPARC 
- */
-/*
- * Mar 8 1994 
- */
 #define MSP 1
 
 #ifdef MSP
@@ -30,11 +6,9 @@
 #define ulong unsigned long
 #endif
 
-char util_sfcsid[] = "@(#)util.c 411P";
-
 
 /*
- * $i1(q( byte_cmp (s1,s2,lth) $i1)q) 
+ * $i1(q( byte_cmp (s1,s2,lth) $i1)q)
  */
 int byte_cmp(
     s1,
@@ -46,8 +20,8 @@ int byte_cmp(
 {
     /*
      * Function: Compares lth bytes in strings s1 and s2
-     * 
-     * Returns; 0 if they match; -1 if they don't 
+     *
+     * Returns; 0 if they match; -1 if they don't
      */
     while (*s1++ == *s2++ && lth)
         lth--;
@@ -56,7 +30,7 @@ int byte_cmp(
 
 
 /*
- * $i1(q( copynbytes (to,from,lth) $i1)q) 
+ * $i1(q( copynbytes (to,from,lth) $i1)q)
  */
 int copynbytes(
     uchar * to,
@@ -70,7 +44,7 @@ int copynbytes(
 
 
 /*
- * $i1(q( isempty (from,size) $i1)q) 
+ * $i1(q( isempty (from,size) $i1)q)
  */
 int isempty(
     uchar * from,
@@ -86,7 +60,7 @@ int isempty(
 
 
 /*
- * $i1(q( putx (c,val) $i1)q) 
+ * $i1(q( putx (c,val) $i1)q)
  */
 uchar *putx(
     c,

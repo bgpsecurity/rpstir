@@ -17,7 +17,7 @@ Threat Model:
 
 * Who/Motivation: Adversary wishing to alter routing through DoS of
   RTR server.
-  
+
 * Capability: Fully control/impersonate one or more RTR clients.  Can
   initiate arbitrary client connections, and send arbitrary data over
   RTR transport.
@@ -40,7 +40,7 @@ D2. (Derived from T2). Basic authentication of client: firewall.  The RTR
     server is ASSUMED to sit behind a firewall that will (1) limit RTR
     clients to a set of pre-configured IP addresses, and (2) limit the
     number of concurrent connections from each IP address.
-    
+
 D3. (Derived from T2). Rate limit on queries.  The RTR server must limit
     the number of queries per connection, possibly by type of query, since
     reset queries can be expensive.

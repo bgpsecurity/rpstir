@@ -1,9 +1,9 @@
 /*
  * File: create_object.h Contents: Header file for creating testbed objects
  * Created: Author: Karen Sirois
- * 
+ *
  * Remarks:
- * 
+ *
  * ****************************************************************************
  */
 #ifndef _CREATE_OBJ_H
@@ -27,6 +27,10 @@
 #define IPv4 4
 #define IPv6 6
 #define ASNUM 8
+
+struct ASNum;
+struct Extensions;
+struct IPAddressFamilyA;
 
 typedef int (
     *my_func) (

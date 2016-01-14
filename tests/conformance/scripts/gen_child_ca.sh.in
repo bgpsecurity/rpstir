@@ -49,17 +49,17 @@ Note: this script does NOT update the 'Manifest issued by Parent'.
                +---------------|----------------------+
                                |
                                V
-		 +--------------------------------+
-     	       	 | +---------------------------+  |
-		 | | *Manifest issued by Child |  |
-		 | +---------------------------+  |
-		 |                                |
-		 | +---------------------------+  |
-		 | | *CRL issued by Child      |  |
-		 | +---------------------------+  |
-		 |                                |
-		 | *Child's Repo Directory        |
-	       	 +--------------------------------+
+                 +--------------------------------+
+                 | +---------------------------+  |
+                 | | *Manifest issued by Child |  |
+                 | +---------------------------+  |
+                 |                                |
+                 | +---------------------------+  |
+                 | | *CRL issued by Child      |  |
+                 | +---------------------------+  |
+                 |                                |
+                 | *Child's Repo Directory        |
+                 +--------------------------------+
 
 Inputs:
   subjectname - subject name for the child
@@ -113,19 +113,19 @@ while getopts b:o:x:d:Kh opt
 do
   case $opt in
       b)
-      	  if [ $OPTARG = "crl" ]
-	  then
-	      USE_CRL_PREFIX=1
-	  elif [ $OPTARG = "mft" ]
-	  then
-	      USE_MFT_PREFIX=1
-	  else
-	      usage
-	  fi
-	  ;;
+          if [ $OPTARG = "crl" ]
+          then
+              USE_CRL_PREFIX=1
+          elif [ $OPTARG = "mft" ]
+          then
+              USE_MFT_PREFIX=1
+          else
+              usage
+          fi
+          ;;
       o)
-	  OUTPUT_DIR=$OPTARG
-	  ;;
+          OUTPUT_DIR=$OPTARG
+          ;;
       x)
           PREFIX=$OPTARG
           ;;
@@ -136,12 +136,12 @@ do
           USE_EXISTING_KEYS=1
           ;;
       h)
-	  usage
-	  ;;
+          usage
+          ;;
   esac
 done
 shift $((OPTIND - 1))
-if [ $# = "6" ] 
+if [ $# = "6" ]
 then
     SUBJECTNAME=$1
     SERIAL=$2
@@ -211,7 +211,7 @@ grandchildren_aia="${parent_sia}${SUBJECTNAME}.cer"
 
 # Compute local paths to child CA
 child_cert_path=${OUTPUT_DIR}/${SUBJECTNAME}.cer
- 
+
 # Compute local paths to child CA publication point and CRL/manifest
 child_sia_path=${OUTPUT_DIR}/${SUBJECTNAME}
 child_crl_path=${child_sia_path}/${child_crl_name}

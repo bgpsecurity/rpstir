@@ -1,8 +1,3 @@
-/*
- * $Id: make_TA.c c 506 2008-06-03 21:20:05Z gardiner $ 
- */
-
-
 #include <stdio.h>
 #include <util/cryptlib_compat.h>
 #include <rpki-asn1/keyfile.h>
@@ -60,7 +55,7 @@ int main(
     // get EE's Auth Key ID
     if (!(sextp = find_extension(&EEcert.toBeSigned.extensions, id_authKeyId, false)))
         FATAL(MSG_NO_AKI);
-    // add cert to CMS object 
+    // add cert to CMS object
     struct SignedData *signedDatap = &cms.content.signedData;
     struct Certificate *certp;
     clear_casn(&signedDatap->certificates.self);

@@ -9,10 +9,6 @@
 #include <limits.h>
 #include <time.h>
 
-/*
- * $Id$ 
- */
-
 char *getMessageFromString(
     const char *,
     unsigned int,
@@ -76,7 +72,7 @@ int has_newline(
     unsigned int len);
 
 /*
- * Lower level parsing utilities. 
+ * Lower level parsing utilities.
  */
 long next_dirblock(
     FILE * fp);

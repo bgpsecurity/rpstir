@@ -1,13 +1,10 @@
+#include "usage.h"
+
 #include "main.h"
-
-
-/*
- * $Id$ 
- */
 
 /*****************************************************/
 /*
- * void usage(const char *) 
+ * void usage(const char *)
  */
 /*
  */

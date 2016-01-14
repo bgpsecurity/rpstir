@@ -6,7 +6,7 @@ bool config_type_string_converter(
     const char *input,
     void **data)
 {
-    struct config_type_string_usr_arg * args =
+    struct config_type_string_usr_arg *args =
         (struct config_type_string_usr_arg *)usr_arg;
 
     if (input == NULL)
@@ -58,7 +58,7 @@ char * config_type_string_converter_inverse(
         return NULL;
     }
 
-    char * ret = strdup((const char *)input);
+    char *ret = strdup((const char *)input);
 
     if (ret == NULL)
     {

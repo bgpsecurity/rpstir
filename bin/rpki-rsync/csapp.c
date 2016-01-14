@@ -1,17 +1,17 @@
 /*
- * $begin csapp.c 
+ * $begin csapp.c
  */
 
 #include "csapp.h"
 
-/************************** 
+/**************************
  * Error-handling functions
  **************************/
 /*
- * $begin errorfuns 
+ * $begin errorfuns
  */
 /*
- * $begin unixerror 
+ * $begin unixerror
  */
 void unix_error(
     char *msg)                  /* unix-style error */
@@ -21,7 +21,7 @@ void unix_error(
 }
 
 /*
- * $end unixerror 
+ * $end unixerror
  */
 
 void posix_error(
@@ -47,7 +47,7 @@ void app_error(
 }
 
 /*
- * $end errorfuns 
+ * $end errorfuns
  */
 
 /*********************************************
@@ -55,7 +55,7 @@ void app_error(
  ********************************************/
 
 /*
- * $begin forkwrapper 
+ * $begin forkwrapper
  */
 pid_t Fork(
     void)
@@ -68,7 +68,7 @@ pid_t Fork(
 }
 
 /*
- * $end forkwrapper 
+ * $end forkwrapper
  */
 
 void Execve(
@@ -81,7 +81,7 @@ void Execve(
 }
 
 /*
- * $begin wait 
+ * $begin wait
  */
 pid_t Wait(
     int *status)
@@ -94,7 +94,7 @@ pid_t Wait(
 }
 
 /*
- * $end wait 
+ * $end wait
  */
 
 pid_t Waitpid(
@@ -110,7 +110,7 @@ pid_t Waitpid(
 }
 
 /*
- * $begin kill 
+ * $begin kill
  */
 void Kill(
     pid_t pid,
@@ -123,7 +123,7 @@ void Kill(
 }
 
 /*
- * $end kill 
+ * $end kill
  */
 
 void Pause(
@@ -167,11 +167,11 @@ pid_t Getpgrp(
 }
 
 /************************************
- * Wrappers for Unix signal functions 
+ * Wrappers for Unix signal functions
  ***********************************/
 
 /*
- * $begin sigaction 
+ * $begin sigaction
  */
 handler_t *Signal(
     int signum,
@@ -190,7 +190,7 @@ handler_t *Signal(
 }
 
 /*
- * $end sigaction 
+ * $end sigaction
  */
 
 void Sigprocmask(
@@ -497,7 +497,7 @@ void Fwrite(
 }
 
 
-/**************************** 
+/****************************
  * Sockets interface wrappers
  ****************************/
 
@@ -571,11 +571,11 @@ void Connect(
 }
 
 /************************
- * DNS interface wrappers 
+ * DNS interface wrappers
  ***********************/
 
 /*
- * $begin gethostbyname 
+ * $begin gethostbyname
  */
 struct hostent *Gethostbyname(
     const char *name)
@@ -588,7 +588,7 @@ struct hostent *Gethostbyname(
 }
 
 /*
- * $end gethostbyname 
+ * $end gethostbyname
  */
 
 struct hostent *Gethostbyaddr(
@@ -639,7 +639,7 @@ void Pthread_join(
 }
 
 /*
- * $begin detach 
+ * $begin detach
  */
 void Pthread_detach(
     pthread_t tid)
@@ -651,7 +651,7 @@ void Pthread_detach(
 }
 
 /*
- * $end detach 
+ * $end detach
  */
 
 void Pthread_exit(
@@ -680,7 +680,7 @@ void Pthread_once(
  * rio_readn - robustly read n bytes (unbuffered)
  */
 /*
- * $begin rio_readn 
+ * $begin rio_readn
  */
 ssize_t rio_readn(
     int fd,
@@ -709,14 +709,14 @@ ssize_t rio_readn(
 }
 
 /*
- * $end rio_readn 
+ * $end rio_readn
  */
 
 /*
  * rio_writen - robustly write n bytes (unbuffered)
  */
 /*
- * $begin rio_writen 
+ * $begin rio_writen
  */
 ssize_t rio_writen(
     int fd,
@@ -743,7 +743,7 @@ ssize_t rio_writen(
 }
 
 /*
- * $end rio_writen 
+ * $end rio_writen
  */
 
 
@@ -756,7 +756,7 @@ ssize_t rio_writen(
  *    read() if the internal buffer is empty.
  */
 /*
- * $begin rio_read 
+ * $begin rio_read
  */
 static ssize_t rio_read(
     rio_t * rp,
@@ -780,7 +780,7 @@ static ssize_t rio_read(
     }
 
     /*
-     * Copy min(n, rp->rio_cnt) bytes from internal buf to user buf 
+     * Copy min(n, rp->rio_cnt) bytes from internal buf to user buf
      */
     cnt = n;
     if ((size_t)rp->rio_cnt < n)
@@ -792,14 +792,14 @@ static ssize_t rio_read(
 }
 
 /*
- * $end rio_read 
+ * $end rio_read
  */
 
 /*
  * rio_readinitb - Associate a descriptor with a read buffer and reset buffer
  */
 /*
- * $begin rio_readinitb 
+ * $begin rio_readinitb
  */
 void rio_readinitb(
     rio_t * rp,
@@ -811,14 +811,14 @@ void rio_readinitb(
 }
 
 /*
- * $end rio_readinitb 
+ * $end rio_readinitb
  */
 
 /*
  * rio_readnb - Robustly read n bytes (buffered)
  */
 /*
- * $begin rio_readnb 
+ * $begin rio_readnb
  */
 ssize_t rio_readnb(
     rio_t * rp,
@@ -847,14 +847,14 @@ ssize_t rio_readnb(
 }
 
 /*
- * $end rio_readnb 
+ * $end rio_readnb
  */
 
 /*
  * rio_readlineb - robustly read a text line (buffered)
  */
 /*
- * $begin rio_readlineb 
+ * $begin rio_readlineb
  */
 ssize_t rio_readlineb(
     rio_t * rp,
@@ -889,7 +889,7 @@ ssize_t rio_readlineb(
 }
 
 /*
- * $end rio_readlineb 
+ * $end rio_readlineb
  */
 
 /**********************************
@@ -947,17 +947,17 @@ ssize_t Rio_readlineb(
     return rc;
 }
 
-/******************************** 
+/********************************
  * Client/server helper functions
  ********************************/
 /*
- * open_clientfd - open connection to server at <hostname, port> 
+ * open_clientfd - open connection to server at <hostname, port>
  *   and return a socket descriptor ready for reading and writing.
- *   Returns -1 and sets errno on Unix error. 
+ *   Returns -1 and sets errno on Unix error.
  *   Returns -2 and sets h_errno on DNS (gethostbyname) error.
  */
 /*
- * $begin open_clientfd 
+ * $begin open_clientfd
  */
 int open_clientfd(
     char *hostname,
@@ -971,7 +971,7 @@ int open_clientfd(
         return -1;              /* check errno for cause of error */
 
     /*
-     * Fill in the server's IP address and port 
+     * Fill in the server's IP address and port
      */
     if ((hp = gethostbyname(hostname)) == NULL)
         return -2;              /* check h_errno for cause of error */
@@ -982,7 +982,7 @@ int open_clientfd(
     serveraddr.sin_port = htons(port);
 
     /*
-     * Establish a connection with the server 
+     * Establish a connection with the server
      */
     if (connect(clientfd, (SA *) & serveraddr, sizeof(serveraddr)) < 0)
         return -1;
@@ -990,7 +990,7 @@ int open_clientfd(
 }
 
 /*
- * $end open_clientfd 
+ * $end open_clientfd
  */
 
 /*
@@ -998,7 +998,7 @@ int open_clientfd(
  *     Returns -1 and sets errno on Unix error.
  */
 /*
- * $begin open_listenfd 
+ * $begin open_listenfd
  */
 int open_listenfd(
     int port)
@@ -1008,32 +1008,32 @@ int open_listenfd(
     struct sockaddr_in serveraddr;
 
     /*
-     * Create a socket descriptor 
+     * Create a socket descriptor
      */
     if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         return -1;
 
     /*
-     * Eliminates "Address already in use" error from bind. 
+     * Eliminates "Address already in use" error from bind.
      */
     if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
                    (const void *)&optval, sizeof(int)) < 0)
         return -1;
 
     /*
-     * Listenfd will be an endpoint for all requests to port on any IP address 
-     * for this host 
+     * Listenfd will be an endpoint for all requests to port on any IP address
+     * for this host
      */
     bzero((char *)&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
     inet_aton("127.0.0.1", &(serveraddr.sin_addr));
-    // serveraddr.sin_addr.s_addr = htonl(INADDR_ANY); 
+    // serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serveraddr.sin_port = htons((unsigned short)port);
     if (bind(listenfd, (SA *) & serveraddr, sizeof(serveraddr)) < 0)
         return -1;
 
     /*
-     * Make it a listening socket ready to accept connection requests 
+     * Make it a listening socket ready to accept connection requests
      */
     if (listen(listenfd, LISTENQ) < 0)
         return -1;
@@ -1041,11 +1041,11 @@ int open_listenfd(
 }
 
 /*
- * $end open_listenfd 
+ * $end open_listenfd
  */
 
 /******************************************
- * Wrappers for the client/server helper routines 
+ * Wrappers for the client/server helper routines
  ******************************************/
 int Open_clientfd(
     char *hostname,
@@ -1074,5 +1074,5 @@ int Open_listenfd(
 }
 
 /*
- * $end csapp.c 
+ * $end csapp.c
  */

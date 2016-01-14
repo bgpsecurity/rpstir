@@ -31,19 +31,19 @@ Top-Level Requirements (“T”)
    following attack vectors:
 
    a. Potentially long lists in certs, CRLs, manifests, and ROAs
-   
+
    b. Unbounded publication in repositories (by breadth or depth)
-   
+
    c. Certificate validation loops or other attempts to sabotage
       certification path discovery
-   
+
    d. Confinement violations: objects published by one CA (or in one
       repository) may be designed to affect objects published by other
       CAs (or in other repositories).
-   
+
    e. Elevation of privilege: DB should be designed such that write
       permissions are given only to the processes that need it.
-   
+
 5. (*) In case of unauthorized deletions in remote repositories, DB
    must support fallback to a local cache of previously downloaded files.
 
@@ -55,7 +55,7 @@ Top-Level Requirements (“T”)
       addition, there must be a mechanism to associate each
       IANA-issued RIR cert with its corresponding RIR trust anchor
       cert.
-   
+
    b. DB must provide a mechanism to detect IP address overlap between
       pairs of certificates that do not have an ancestor relationship
       (e.g. between RIR trust anchor certificates).  ROAs issued over
@@ -65,10 +65,10 @@ Top-Level Requirements (“T”)
       may occur in normal “make-before-break” transfers, so this
       detection mechanism must be sensitive enough to distinguish
       transfers from contested resources.
-   
+
    c. DB must support selective rollback of affected certificates and
       ROAs.
-   
+
 7. (*) DB must support tracking and disabling a rogue CA from doing
    further damage.
 
@@ -80,11 +80,11 @@ Top-Level Requirements (“T”)
       misconfiguration or a targeted DoS of a portion of the RPKI.  DB
       must support persistent storage of each SIA’s history of
       reachability.
-   
+
    b. DB schema must provide a mechanism for collecting global
       statistics (e.g. running total of manifest errors), and adapting
       to future statistics with relatively few schema modifications.
-   
+
 9. (*) DB must support the notion of an “active set”: the set of RPKI
    objects that can affect routing.  For example, under normal
    circumstances an expired certificate is removed from the active
@@ -144,7 +144,7 @@ Derived Requirements (“D”)
       simplified content-addressable filesystem such as that used in
       the git version control system, where each file is stored and
       referenced based on its SHA-256 hash.
-   
+
 6. (Derived from T6) DB must support efficient “overlap” detection.
    This may not be possible within a SQL database, and may require an
    external “interval tree” data structure.  Alternatively, if
@@ -171,16 +171,16 @@ Derived Requirements (“D”)
    the global RPKI places acceptable limits on the constants.
 
    a. Adding any file other than a manifest
-   
+
       i. Check manifest if hashes match.
-      
+
       ii. If all files on the manifest are present and there are no
          files not on the manifest, mark all relevant files as
          manifest-clean.
-      
+
       iii. If the new file is not on the manifest, mark all relevant
          files as not manifest-clean.
-      
+
    b. Adding a certificate
 
       i. Determine parent cert's validity.
@@ -250,7 +250,7 @@ The sceme for adding in SQL statements to scmtabbuilder is the following:
  all SQL keywords should be uppercase
 */
 
-static scmtab scmtabbuilder[] = 
+static scmtab scmtabbuilder[] =
   {
     {    /* RPKI_CERT */
 /*

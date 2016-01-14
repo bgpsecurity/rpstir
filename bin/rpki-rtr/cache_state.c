@@ -1,9 +1,9 @@
+#include "cache_state.h"
+
 #include <stdlib.h>
 
 #include "util/logging.h"
 #include "db/clients/rtr.h"
-
-#include "cache_state.h"
 
 // NOTE: if this returns false, the contents of state are undefined
 static bool get_cache_state(

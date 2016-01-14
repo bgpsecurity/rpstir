@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     casn_num.c
 Contents: Functions to handle numeris ASN.1 objects.
@@ -12,7 +9,6 @@ Remarks:
 
 *****************************************************************************/
 
-char casn_num_sfcsid[] = "@(#)casn_num.c 854P";
 #include "casn.h"
 
 extern struct casn *_go_up(

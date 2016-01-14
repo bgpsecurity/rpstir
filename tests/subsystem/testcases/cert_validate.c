@@ -1,8 +1,3 @@
-/*
- * $Id: roa_validate.c 506 2008-06-03 21:20:05Z csmall $ 
- */
-
-
 #include <assert.h>
 
 #include "util/logging.h"
@@ -13,8 +8,8 @@
 
 /*
  * This file contains the functions that semantically validate the ROA. Any
- * and all syntactic validation against existing structures is assumed to have 
- * been performed at the translation step (see roa_serialize.c). 
+ * and all syntactic validation against existing structures is assumed to have
+ * been performed at the translation step (see roa_serialize.c).
  */
 #define MINMAXBUFSIZE 20
 

@@ -13,10 +13,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-/*
- * $Id$ 
- */
-
 
 /****************
  * This is the garbage collector client, which tracks down all the
@@ -36,12 +32,13 @@ static scmtab *certTable,
    *roaTable,
    *manifestTable;
 
-/*
- * callback function for searchscm that records the timestamps 
+/**
+ * @brief
+ *     callback function for searchscm() that records the timestamps
  */
 static int handleTimestamps(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -51,13 +48,15 @@ static int handleTimestamps(
     return 0;
 }
 
-/*
- * callback for countCurrentCRLs search; check if count == 0, and
- * if so then do the setting of certs' flags
+/**
+ * @brief
+ *     callback for countCurrentCRLs() search
+ *
+ * check if count == 0, and if so then do the setting of certs' flags
  */
 static int handleIfStale(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t cnt)
 {
     UNREFERENCED_PARAMETER(s);
@@ -78,13 +77,15 @@ static int handleIfStale(
     return statementscm_no_data(conp, msg);
 }
 
-/*
- * callback for countCurrentCRLs search; check if count > 0, and
- * if so then remove unknown flag from cert
+/**
+ * @brief
+ *     callback for countCurrentCRLs() search
+ *
+ * check if count > 0, and if so then remove unknown flag from cert
  */
 static int handleIfCurrent(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t cnt)
 {
     char msg[128];
@@ -96,16 +97,19 @@ static int handleIfCurrent(
     return statementscm_no_data(conp, msg);
 }
 
-/*
- * callback function for stale crl search that checks stale crls to see if
- * another crl exists that is more recent; if not, it sets all certs
- * covered by this crl to have status stale_crl
+/**
+ * @brief
+ *     callback function for stale crl search
+ *
+ * checks stale crls to see if another crl exists that is more recent;
+ * if not, it sets all certs covered by this crl to have status
+ * stale_crl
  */
 static scmsrcha *cntSrch = NULL;
 
 static int countCurrentCRLs(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(numLine);
@@ -131,17 +135,19 @@ static int countCurrentCRLs(
                      SCM_SRCH_DOCOUNT, NULL);
 }
 
-/*
- * callback function for stale manifest search that marks accordingly
- * all objects referenced by manifest that is stale
+/**
+ * @brief
+ *     callback function for stale manifest search
+ *
+ * marks accordingly all objects referenced by manifest that is stale
  */
 static char staleManStmt[MANFILES_SIZE];
 static char *staleManFiles[10000];
 static int numStaleManFiles = 0;
 
 static int handleStaleMan2(
-    scmcon * conp,
-    scmtab * tab,
+    scmcon *conp,
+    scmtab *tab,
     char *files)
 {
     char escaped_files[2 * strlen(files) + 1];
@@ -154,8 +160,8 @@ static int handleStaleMan2(
 }
 
 static int handleStaleMan(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(numLine);
@@ -173,8 +179,8 @@ static int handleStaleMan(
  * all objects referenced by manifest that is non-stale
  */
 static int handleFreshMan2(
-    scmcon * conp,
-    scmtab * tab,
+    scmcon *conp,
+    scmtab *tab,
     char *files)
 {
     char escaped_files[2 * strlen(files) + 1];
@@ -197,8 +203,8 @@ int main(
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
     unsigned long blah = 0;
-    int status,
-        i;
+    int status;
+    int i;
 
     // initialize
     (void)argc;

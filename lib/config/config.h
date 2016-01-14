@@ -156,7 +156,7 @@ CONFIG_GET_HELPER(CONFIG_RPKI_STATISTICS_DIR, char)
     See also config_unload() in configlib.h.
 */
 bool my_config_load(
-    );
+    void);
 
 
 #endif

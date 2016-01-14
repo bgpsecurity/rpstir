@@ -13,12 +13,10 @@
  * want to introduce more elaborate handling of       *
  * signals.                                           *
  *****************************************************/
+#include "sig_handler.h"
+
 #include "main.h"
 #include "util/stringutils.h"
-
-/*
- * $Id$ 
- */
 
 extern struct write_port *global_wport;
 
@@ -98,14 +96,14 @@ int setup_sig_catchers(
     struct sigaction sa;
 
     /*
-     * initialize sigaction structure 
+     * initialize sigaction structure
      */
     sa.sa_handler = sig_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
 
     /*
-     * map the signals to the handler referenced in sigaction struct 
+     * map the signals to the handler referenced in sigaction struct
      */
     if (sigaction(SIGINT, &sa, NULL) != 0)
     {

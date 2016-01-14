@@ -1,3 +1,5 @@
+#include "util.h"
+
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdarg.h>
@@ -15,14 +17,13 @@
 
 #include "db-internal.h"
 #include "util/logging.h"
-#include "util.h"
 
 
 /*==============================================================================
 ------------------------------------------------------------------------------*/
 int wrap_mysql_stmt_execute(
-    dbconn * conn,
-    MYSQL_STMT * stmt,
+    dbconn *conn,
+    MYSQL_STMT *stmt,
     const char *err_msg_in)
 {
     int tried = 0;
@@ -71,7 +72,7 @@ int wrap_mysql_stmt_execute(
 ------------------------------------------------------------------------------*/
 int getStringByFieldname(
     char **out,
-    MYSQL_RES * result,
+    MYSQL_RES *result,
     MYSQL_ROW row,
     char field_name[])
 {
@@ -121,14 +122,14 @@ int getStringByFieldname(
 }
 
 void flag_tests_empty(
-    struct flag_tests * tests)
+    struct flag_tests *tests)
 {
     tests->mask = 0;
     tests->result = 0;
 }
 
 void flag_tests_default(
-    struct flag_tests * tests)
+    struct flag_tests *tests)
 {
     // NOTE: This must be kept in sync with addQueryFlagTests.
 
@@ -163,7 +164,7 @@ void flag_tests_default(
 }
 
 void flag_tests_add_test_by_index(
-    struct flag_tests * tests,
+    struct flag_tests *tests,
     uint_fast16_t flag,
     bool isset)
 {
@@ -174,7 +175,7 @@ void flag_tests_add_test_by_index(
 }
 
 void flag_tests_add_tests_by_mask(
-    struct flag_tests * tests,
+    struct flag_tests *tests,
     unsigned long long mask,
     bool isset)
 {
@@ -191,8 +192,8 @@ void flag_tests_add_tests_by_mask(
 }
 
 void flag_tests_bind(
-    MYSQL_BIND * parameters,
-    struct flag_tests const * tests)
+    MYSQL_BIND *parameters,
+    struct flag_tests const *tests)
 {
     parameters[0].buffer_type = MYSQL_TYPE_LONGLONG;
     parameters[0].buffer = (void *)&tests->mask;

@@ -1,5 +1,7 @@
 /** @file */
 
+#include "myssl.h"
+
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +18,6 @@
 
 #include "globals.h"
 #include "util/hashutils.h"
-#include "myssl.h"
 #include "scm.h"
 #include "scmf.h"
 #include "sqhl.h"
@@ -27,29 +28,6 @@
 #include "util/stringutils.h"
 
 int strict_profile_checks = 0;
-
-/*
- * Convert between a time string in a certificate and a time string that will
- * be acceptable to the DB. The return value is allocated memory.
- * 
- * The time string can be either UTC or GENERALIZED. If only_gentime is false, 
- * UTC is used for dates <= 2049 and GENERALIZED is used for dates after >=
- * 2050. Otherwise, GENERALIZED is use for all dates.
- * 
- * The UTC format takes the form YYMMDDHHMMSST, where each of the fields is as 
- * follows: if YY <= 49 the year is 2000+YY otherwise it is 1900+YY 1 <= MM <= 
- * 12 1 <= DD <= 31 0 <= HH <= 24 0 <= MM <= 60 0 <= SS <= 60 (seconds field
- * is optional) T, is present and == Z indicates GMT
- * 
- * The GENERALIZED format takes the form YYYYMMDDHHMMSST, where the year is
- * given in the full four digit form, and all other fields are the same. Note
- * that seconds can be given as either SS or SS.S.
- * 
- * Both fields can have an optional suffix of the form +HHMM or -HHMM.
- * 
- * On success, *stap ("status pointer") is set to 0.  On failure, it is set to 
- * the appropriate error code (e.g. ERR_SCM_INVALDT). 
- */
 
 #define UTC10    10             // UTC format without seconds
 #define UTC12    12             // UTC format with seconds
@@ -166,7 +144,7 @@ char *ASNTimeToDBTime(
     if (tz != 'Z' || mon < 1 || mon > 12 || day < 1 || day > 31 || hour < 0 ||
         hour > 23 || min < 0 || min > 59 || sec < 0 || sec > 61)
         /*
-         * 61 because of leap seconds 
+         * 61 because of leap seconds
          */
     {
         *stap = ERR_SCM_INVALDT;
@@ -207,11 +185,6 @@ char *ASNTimeToDBTime(
     return (out);
 }
 
-/*
- * This function converts the local time into GMT in a form recognized by the
- * DB. 
- */
-
 char *LocalTimeToDBTime(
     int *stap)
 {
@@ -226,25 +199,28 @@ char *UnixTimeToDBTime(
 {
     struct tm *tmp;
     char *out;
+    int sta = 0;
 
-    if (stap == NULL)
-        return (NULL);
-    *stap = 0;
     out = (char *)calloc(48, sizeof(char));
     if (out == NULL)
     {
-        *stap = ERR_SCM_NOMEM;
-        return (NULL);
+        sta = ERR_SCM_NOMEM;
+        goto done;
     }
     tmp = gmtime(&clck);
     xsnprintf(out, 48, "%d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
               1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday,
               tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+done:
+    if (stap)
+    {
+        *stap = sta;
+    }
     return (out);
 }
 
 void freecf(
-    cert_fields * cf)
+    cert_fields *cf)
 {
     int i;
 
@@ -268,7 +244,7 @@ void freecf(
 }
 
 void freecrf(
-    crl_fields * cf)
+    crl_fields *cf)
 {
     int i;
 
@@ -336,7 +312,7 @@ static char *addgn(
 }
 
 static char *cf_get_subject(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -362,11 +338,11 @@ static char *cf_get_subject(
 }
 
 /*
- * This is a public version of the above. 
+ * This is a public version of the above.
  */
 
 char *X509_to_subject(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -374,7 +350,7 @@ char *X509_to_subject(
 }
 
 static char *cf_get_issuer(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -400,7 +376,7 @@ static char *cf_get_issuer(
 }
 
 static char *cf_get_sn(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -467,7 +443,7 @@ static char *cf_get_sn(
 }
 
 static char *cf_get_from(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -507,7 +483,7 @@ static char *cf_get_from(
 }
 
 static char *cf_get_to(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -545,7 +521,7 @@ static char *cf_get_to(
 }
 
 static char *cf_get_sig(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -569,9 +545,9 @@ static char *cf_get_sig(
 }
 
 static void cf_get_ski(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -607,9 +583,9 @@ static void cf_get_ski(
 }
 
 static void cf_get_aki(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -647,9 +623,9 @@ static void cf_get_aki(
 }
 
 static void cf_get_sia(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -681,9 +657,9 @@ static void cf_get_sia(
 }
 
 static void cf_get_aia(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -715,9 +691,9 @@ static void cf_get_aia(
 }
 
 static void cf_get_crldp(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -759,9 +735,9 @@ static void cf_get_crldp(
 }
 
 static void cf_get_flags(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -782,16 +758,15 @@ static void cf_get_flags(
         cf->flags |= SCM_FLAG_CA;
 }
 
-/*
+/**
  * This is the raw processing function that extracts the data/length of the
  * IPAddressBlock in the ASN.1 of the certificate and places them into the
- * corresponding cf fields. 
+ * corresponding cf fields.
  */
-
 static void cf_get_ipb(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *ex,
-    cert_fields * cf,
+    cert_fields *cf,
     int *stap,
     int *x509stap)
 {
@@ -832,7 +807,7 @@ static cfx_validator xvalidators[] = {
 
 /*
  * Given an X509V3 extension tag, this function returns the corresponding
- * extension validator. 
+ * extension validator.
  */
 
 static cfx_validator *cfx_find(
@@ -859,31 +834,11 @@ static cf_validator validators[] = {
     {NULL, 0, 0}                /* terminator */
 };
 
-/*
- * This function can operate in two ways.  If "fname" and "fullname" are both
- * given, then it opens a certificate from a file and extracts all the fields
- * from it.  If "xp" points to an already available certificate, then it just
- * manipulates that. This function does not touch the DB at all, it just
- * manipulates the certificate.
- * 
- * On success this function returns a pointer to allocated memory containing
- * all the indicated fields (except the "dirid" field) and sets stap to 0, and 
- * x509stap to 1.
- * 
- * Note carefully that this function does NOT set all the fields in the cf. In 
- * particular, it is the responsibility of the caller to set the dirid field.
- * This field requires DB access and are therefore is not part of this
- * function.
- * 
- * On failure this function returns NULL and sets stap to a negative error
- * code. If an X509 error occurred, x509stap is set to that error. 
- */
-
 cert_fields *cert2fields(
     char *fname,
     char *fullname,
     int typ,
-    X509 ** xp,
+    X509 **xp,
     int *stap,
     int *x509stap)
 {
@@ -991,7 +946,7 @@ cert_fields *cert2fields(
     {
         if (validators[i].get_func == NULL)
             break;
-        res = (*validators[i].get_func) (x, stap, x509stap);
+        res = (*validators[i].get_func)(x, stap, x509stap);
         if (res == NULL && validators[i].need > 0)
         {
             if (freex)
@@ -1033,9 +988,9 @@ cert_fields *cert2fields(
         {
             need = cfx->need;
             if (cfx->raw == 0)
-                (*cfx->get_func) (meth, exts, cf, stap, x509stap);
+                (*cfx->get_func)(meth, exts, cf, stap, x509stap);
             else
-                (*cfx->get_func) (meth, ex, cf, stap, x509stap);
+                (*cfx->get_func)(meth, ex, cf, stap, x509stap);
         }
         if (meth->it)
             ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
@@ -1069,12 +1024,8 @@ cert_fields *cert2fields(
     return (cf);
 }
 
-/*
- * This utility function just gets the SKI from an X509 data structure. 
- */
-
 char *X509_to_ski(
-    X509 * x,
+    X509 *x,
     int *stap,
     int *x509stap)
 {
@@ -1131,9 +1082,9 @@ char *X509_to_ski(
         if (cfx != NULL && cfx->get_func != NULL)
         {
             if (cfx->raw == 0)
-                (*cfx->get_func) (meth, exts, cf, stap, x509stap);
+                (*cfx->get_func)(meth, exts, cf, stap, x509stap);
             else
-                (*cfx->get_func) (meth, ex, cf, stap, x509stap);
+                (*cfx->get_func)(meth, ex, cf, stap, x509stap);
         }
         if (meth->it)
             ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
@@ -1157,7 +1108,7 @@ char *X509_to_ski(
 }
 
 static char *crf_get_issuer(
-    X509_CRL * x,
+    X509_CRL *x,
     int *stap,
     int *crlstap)
 {
@@ -1183,7 +1134,7 @@ static char *crf_get_issuer(
 }
 
 static char *crf_get_last(
-    X509_CRL * x,
+    X509_CRL *x,
     int *stap,
     int *crlstap)
 {
@@ -1221,7 +1172,7 @@ static char *crf_get_last(
 }
 
 static char *crf_get_next(
-    X509_CRL * x,
+    X509_CRL *x,
     int *stap,
     int *crlstap)
 {
@@ -1259,7 +1210,7 @@ static char *crf_get_next(
 }
 
 static char *crf_get_sig(
-    X509_CRL * x,
+    X509_CRL *x,
     int *stap,
     int *crlstap)
 {
@@ -1292,9 +1243,9 @@ static crf_validator crvalidators[] = {
 };
 
 static void crf_get_crlno(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    crl_fields * cf,
+    crl_fields *cf,
     int *stap,
     int *crlstap)
 {
@@ -1343,9 +1294,9 @@ static void crf_get_crlno(
 }
 
 static void crf_get_aki(
-    const X509V3_EXT_METHOD * meth,
+    const X509V3_EXT_METHOD *meth,
     void *exts,
-    crl_fields * cf,
+    crl_fields *cf,
     int *stap,
     int *crlstap)
 {
@@ -1389,7 +1340,7 @@ static crfx_validator crxvalidators[] = {
 
 /*
  * Given an X509V3 extension tag, this function returns the corresponding
- * extension validator. 
+ * extension validator.
  */
 
 static crfx_validator *crfx_find(
@@ -1405,36 +1356,18 @@ static crfx_validator *crfx_find(
     return (NULL);
 }
 
-/*
- * This function can operate in two ways.  If "fname" and "fullname" are both
- * given, then it opens a CRL from a file and extracts all the fields from it. 
- * If "xp" points to an already available CRL, then it just manipulates that.
- * This function does not touch the DB at all, it just manipulates the CRL.
- * 
- * On success this function returns a pointer to allocated memory containing
- * all the indicated fields (except the "dirid" field) and sets stap to 0, and 
- * crlstap to 1.
- * 
- * Note carefully that this function does NOT set all the fields in the crf.
- * In particular, it is the responsibility of the caller to set the dirid
- * field.  This field requires DB access and are therefore is not part of this
- * function.
- * 
- * On failure this function returns NULL and sets stap to a negative error
- * code. If an X509 error occurred, crlstap is set to that error. 
- */
 crl_fields *crl2fields(
     char *fname,
     char *fullname,
     int typ,
-    X509_CRL ** xp,
+    X509_CRL **xp,
     int *stap,
     int *crlstap,
     void *oidtestp)
 {
     const unsigned char *udat;
     crfx_validator *cfx;
-    STACK_OF(X509_REVOKED) * rev;
+    STACK_OF(X509_REVOKED) *rev;
     const X509V3_EXT_METHOD *meth;
     X509_EXTENSION *ex;
     X509_REVOKED *r;
@@ -1533,7 +1466,7 @@ crl_fields *crl2fields(
     {
         if (crvalidators[i].get_func == NULL)
             break;
-        res = (*crvalidators[i].get_func) (x, stap, crlstap);
+        res = (*crvalidators[i].get_func)(x, stap, crlstap);
         if (res == NULL && crvalidators[i].need > 0)
         {
             if (freex)
@@ -1547,7 +1480,8 @@ crl_fields *crl2fields(
         }
         cf->fields[i] = res;
     }
-    // get flags, snlen and snlist; note that snlen is the count of serials, not bytes
+    // get flags, snlen and snlist; note that snlen is the count of
+    // serials, not bytes
     cf->flags = 0;
     if (X509_cmp_current_time(X509_CRL_get_nextUpdate(x)) < 0)
         cf->flags |= SCM_FLAG_STALECRL;
@@ -1667,7 +1601,7 @@ crl_fields *crl2fields(
             if (cfx != NULL && cfx->get_func != NULL)
             {
                 need = cfx->need;
-                (*cfx->get_func) (meth, exts, cf, stap, crlstap);
+                (*cfx->get_func)(meth, exts, cf, stap, crlstap);
             }
             if (meth->it)
                 ASN1_item_free(exts, ASN1_ITEM_ptr(meth->it));
@@ -1738,7 +1672,7 @@ static void x509v3_load_extensions(
      * Passing int*, instead of NULL, to the 3rd and 4th parameters of
      * X509_get_ext_d2i() allows it to return the extensions we are looking
      * for, instead of returning NULL, in certain error cases.  Also, it may
-     * return error codes via those pointers.  
+     * return error codes via those pointers.
      */
     int crit = INT_MIN;
 
@@ -1748,17 +1682,17 @@ static void x509v3_load_extensions(
     X509_digest(x, EVP_sha1(), x->sha1_hash, NULL);
 #endif
     /*
-     * Does subject name match issuer ? 
+     * Does subject name match issuer ?
      */
     if (!X509_NAME_cmp(X509_get_subject_name(x), X509_get_issuer_name(x)))
         x->ex_flags |= EXFLAG_SS;
     /*
-     * V1 should mean no extensions ... 
+     * V1 should mean no extensions ...
      */
     if (!X509_get_version(x))
         x->ex_flags |= EXFLAG_V1;
     /*
-     * Handle basic constraints 
+     * Handle basic constraints
      */
     if ((bs = X509_get_ext_d2i(x, NID_basic_constraints, &crit, NULL)))
     {
@@ -1786,7 +1720,7 @@ static void x509v3_load_extensions(
     }
 
     /*
-     * Handle proxy certificates 
+     * Handle proxy certificates
      */
     if ((pci = X509_get_ext_d2i(x, NID_proxyCertInfo, &crit, NULL)))
     {
@@ -1809,7 +1743,7 @@ static void x509v3_load_extensions(
     }
 
     /*
-     * Handle key usage 
+     * Handle key usage
      */
     if ((usage = X509_get_ext_d2i(x, NID_key_usage, &crit, NULL)))
     {
@@ -1903,11 +1837,11 @@ static void x509v3_load_extensions(
 }
 
 /*
- * Check certificate flags against the manifest certificate type 
+ * Check certificate flags against the manifest certificate type
  */
 
 static int rescert_flags_chk(
-    X509 * x,
+    X509 *x,
     int ct)
 {
     unsigned long ta_flags,
@@ -1958,13 +1892,13 @@ static int rescert_flags_chk(
  ************************************************************/
 
 static int rescert_version_chk(
-    X509 * x)
+    X509 *x)
 {
     long l;
 
     l = X509_get_version(x);
     /*
-     * returns the value which is 2 to denote version 3 
+     * returns the value which is 2 to denote version 3
      */
 
     LOG(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
@@ -1997,11 +1931,11 @@ static int rescert_version_chk(
  ************************************************************/
 
 static int rescert_basic_constraints_chk(
-    X509 * x,
+    X509 *x,
     int ct)
 {
-    int i,
-        basic_flag = 0;
+    int i;
+    int basic_flag = 0;
     int ex_nid;
     int ret = 0;
     X509_EXTENSION *ex = NULL;
@@ -2009,15 +1943,15 @@ static int rescert_basic_constraints_chk(
 
     /*
      * test the basic_constraints based against either an CA_CERT (cert
-     * authority), EE_CERT (end entity), or TA_CERT (trust anchor) as definied 
-     * in the X509 Profile for resource certificates. 
+     * authority), EE_CERT (end entity), or TA_CERT (trust anchor) as definied
+     * in the X509 Profile for resource certificates.
      */
     switch (ct)
     {
 
     case UN_CERT:
         /*
-         * getting here means we couldn't figure it out above.. 
+         * getting here means we couldn't figure it out above..
          */
         LOG(LOG_ERR, "couldn't determine cert_type to test against");
         return (ERR_SCM_INVALARG);
@@ -2026,8 +1960,8 @@ static int rescert_basic_constraints_chk(
     case CA_CERT:
     case TA_CERT:
         /*
-         * Basic Constraints MUST be present, MUST be critical, cA boolean has 
-         * to be set for CAs 
+         * Basic Constraints MUST be present, MUST be critical, cA boolean has
+         * to be set for CAs
          */
         for (i = 0; i < X509_get_ext_count(x); i++)
         {
@@ -2092,7 +2026,7 @@ static int rescert_basic_constraints_chk(
 
     case EE_CERT:
         /*
-         * Basic Constraints MUST NOT be present 
+         * Basic Constraints MUST NOT be present
          */
         for (i = 0; i < X509_get_ext_count(x); i++)
         {
@@ -2124,7 +2058,7 @@ static int rescert_basic_constraints_chk(
  * @return 0 on success<br />negative integer on failure
  -----------------------------------------------------------------------------*/
 static int rescert_ski_chk(
-    X509 * x,
+    X509 *x,
     struct Certificate *certp)
 {
 
@@ -2162,7 +2096,7 @@ static int rescert_ski_chk(
     }
 
     /*
-     * check ski hash 
+     * check ski hash
      */
     struct Extension *extp = find_extension(&certp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, false);
@@ -2240,7 +2174,7 @@ static int rescert_ski_chk(
  ************************************************************/
 
 static int rescert_aki_chk(
-    X509 * x,
+    X509 *x,
     int ct)
 {
     int aki_flag = 0;
@@ -2275,8 +2209,8 @@ static int rescert_aki_chk(
             }
 
             /*
-             * Key Identifier sub field MUST be present in any certs that have 
-             * an AKI 
+             * Key Identifier sub field MUST be present in any certs that have
+             * an AKI
              */
             if (!akid->keyid)
             {
@@ -2351,7 +2285,7 @@ static int rescert_aki_chk(
  ************************************************************/
 
 static int rescert_key_usage_chk(
-    X509 * x)
+    X509 *x)
 {
     int kusage_flag = 0;
     int i;
@@ -2382,16 +2316,16 @@ static int rescert_key_usage_chk(
              * but don't know it yet...). Check asn1/asn1.h for struct
              * asn1_string_st, x509v3/v3_bitst.c, and get the ASN1_BIT_STRING
              * via usage=X509_get_ext_d2i(x, NID_key_usage, NULL, NULL) if we
-             * end up doing this correctly. 
+             * end up doing this correctly.
              */
             /*
-             * TODO: possibly replace this function. Notes from Charlie Oct 2, 
+             * TODO: possibly replace this function. Notes from Charlie Oct 2,
              * 2011: In the file /home/gardiner/cwgrpki/trunk/proto/myssl.c
              * around line 1271 there is code to check the usage bits.  It
              * requires the variable "ct", which is available in
              * rescerrt_profile_chk, and a pointer to the extension, which
              * should be obtainable from the Certificate structure in
-             * rescert_profile_chk(). 
+             * rescert_profile_chk().
              */
         }
     }
@@ -2418,7 +2352,7 @@ static int rescert_key_usage_chk(
 
 /** Checks based on http://tools.ietf.org/html/rfc6487#section-4.8.5 */
 static int rescert_extended_key_usage_chk(
-    X509 * x,
+    X509 *x,
     int ct)
 {
     int i;
@@ -2485,7 +2419,7 @@ static int rescert_extended_key_usage_chk(
  ************************************************************/
 
 static int rescert_crldp_chk(
-    X509 * x,
+    X509 *x,
     int ct)
 {
     int crldp_flag = 0;
@@ -2510,14 +2444,6 @@ static int rescert_crldp_chk(
         if (ex_nid == NID_crl_distribution_points)
         {
             crldp_flag++;
-#if 0                           // MCR removed this test
-            if (ct == TA_CERT)
-            {
-                LOG(LOG_ERR, "[crldp] crldp found in self-signed cert");
-                ret = ERR_SCM_CRLDPTA;
-                goto skip;
-            }
-#endif
             if (X509_EXTENSION_get_critical(ex))
             {
                 LOG(LOG_ERR, "[crldp] marked critical, violation");
@@ -2530,7 +2456,7 @@ static int rescert_crldp_chk(
     if (ct == TA_CERT)
     {
         /*
-         * CRLDP must be omitted if TA 
+         * CRLDP must be omitted if TA
          */
         ret = crldp_flag ? ERR_SCM_CRLDPTA : 0;
         goto skip;
@@ -2549,7 +2475,7 @@ static int rescert_crldp_chk(
     }
     /*
      * we should be here if NID_crl_distribution_points was found, and it was
-     * not marked critical 
+     * not marked critical
      */
     crldp = X509_get_ext_d2i(x, NID_crl_distribution_points, &crit, &idx);
     if (!crldp)
@@ -2581,7 +2507,7 @@ static int rescert_crldp_chk(
                 goto skip;
             }
             /*
-             * all of the general names must be of type URI 
+             * all of the general names must be of type URI
              */
             if (gen_name->type != GEN_URI)
             {
@@ -2597,7 +2523,7 @@ static int rescert_crldp_chk(
             {
                 /*
                  * printf("uri: %s\n",
-                 * gen_name->d.uniformResourceIdentifier->data); 
+                 * gen_name->d.uniformResourceIdentifier->data);
                  */
                 rsync_uri_flag++;
             }
@@ -2642,11 +2568,11 @@ static int rescert_crldp_chk(
  ************************************************************/
 
 static int rescert_aia_chk(
-    X509 * x,
+    X509 *x,
     int ct)
 {
-    int info_flag = 0,
-        uri_flag = 0;
+    int info_flag = 0;
+    int uri_flag = 0;
     int i;
     int ex_nid;
     int ret = 0;
@@ -2709,11 +2635,11 @@ static int rescert_aia_chk(
     /*
      * we should be here if NID_info_access was found, it was not marked
      * critical, and there was only one instance of it.
-     * 
+     *
      * Rob's code from rcynic shows how to get the URI out of the aia... so
      * lifting his teachings.  Though he should be using strncasecmp rather
      * than strncmp as I don't think there are any specifications requiring
-     * the URI to be case sensitive. 
+     * the URI to be case sensitive.
      */
 
     aia = X509_get_ext_d2i(x, NID_info_access, &crit, &idx);
@@ -2733,7 +2659,7 @@ static int rescert_aia_chk(
             goto skip;
         }
         /*
-         * URI form of object identification in AIA 
+         * URI form of object identification in AIA
          */
         if (adesc->location->type != GEN_URI)
         {
@@ -2949,7 +2875,7 @@ static int rescert_sia_chk(
  ************************************************************/
 
 static int rescert_cert_policy_chk(
-    X509 * x)
+    X509 *x)
 {
     int policy_flag = 0;
     int i;
@@ -3000,7 +2926,7 @@ static int rescert_cert_policy_chk(
 
     /*
      * we should be here if policy_flag == 1, it was marked critical, and
-     * there was only one instance of it. 
+     * there was only one instance of it.
      */
     ex_cpols = X509_get_ext_d2i(x, NID_certificate_policies, &crit, &idx);
     if (!ex_cpols)
@@ -3171,7 +3097,7 @@ static int rescert_ip_resources_chk(
  ************************************************************/
 /*
  * openssl not checking AS number canonicity as of 1.0.0.d even tho it
- * contains Rob Austein's patch from Dec, 20101 
+ * contains Rob Austein's patch from Dec, 20101
  */
 static int rescert_as_resources_chk(
     struct Certificate *certp,
@@ -3265,12 +3191,12 @@ static int rescert_as_resources_chk(
  * and that the extension(s) present are marked critical.    *
  ************************************************************/
 static int rescert_ip_asnum_chk(
-    X509 * x,
+    X509 *x,
     struct Certificate *certp,
     int ct)
 {
-    int have_ip_resources,
-        have_as_resources;
+    int have_ip_resources;
+    int have_as_resources;
     ASIdentifiers *as_ext;
     IPAddrBlocks *ip_ext;
 
@@ -3333,7 +3259,7 @@ static int rescert_ip_asnum_chk(
 
 
 /*
- * from x509v3/v3_purp.c 
+ * from x509v3/v3_purp.c
  */
 static int res_nid_cmp(
     int *a,
@@ -3345,27 +3271,27 @@ static int res_nid_cmp(
 /*
  * this function is a minimal change to OpenSSL's X509_supported_extension()
  * function from crypto/x509v3/v3_purp.c
- * 
+ *
  * The modifications are a change in the supported nids array to match the
  * Resource Certificate Profile sepecification
- * 
+ *
  * This function is used to catch extensions that might be marked critical
  * that we were not expecting. You should only pass this criticals.
- * 
+ *
  * Criticals in Resource Certificate Profile: Basic Constraints Key Usage
  * Certificate Policies (NOT Subject Alt Name, which is going to be removed
- * anyway in the future from this profile) IP Resources AS Resources 
+ * anyway in the future from this profile) IP Resources AS Resources
  */
 
 static int rescert_crit_ext_chk(
-    X509_EXTENSION * ex)
+    X509_EXTENSION *ex)
 {
     /*
-     * This table is a list of the NIDs of supported extensions: that is those 
+     * This table is a list of the NIDs of supported extensions: that is those
      * which are used by the verify process. If an extension is critical and
      * doesn't appear in this list then the verify process will normally
      * reject the certificate. The list must be kept in numerical order
-     * because it will be searched using bsearch. 
+     * because it will be searched using bsearch.
      */
 
     static int supported_nids[] = {
@@ -3405,7 +3331,7 @@ static int rescert_crit_ext_chk(
  ************************************************************/
 
 static int rescert_criticals_chk(
-    X509 * x)
+    X509 *x)
 {
     int ret = 0;
     int i;
@@ -3937,12 +3863,8 @@ static int rescert_extensions_chk(
 }
 
 
-/*
- * Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
- * on a single file. 
- */
 int rescert_profile_chk(
-    X509 * x,
+    X509 *x,
     struct Certificate *certp,
     int ct)
 {
@@ -3951,7 +3873,7 @@ int rescert_profile_chk(
     if (x == NULL || ct == UN_CERT)
         return (ERR_SCM_INVALARG);
     /*
-     * load the X509_st extension values 
+     * load the X509_st extension values
      */
     x509v3_load_extensions(x);
 
@@ -4149,9 +4071,10 @@ static int crl_issuer_chk(
 }
 
 /**
-  Check whether the ChoiceOfTime is convertible to a database-style
-  date and time.
-*/
+ * @brief
+ *     Check whether the ::ChoiceOfTime is convertible to a
+ *     database-style date and time.
+ */
 static int cvt_crldate2DB(
     struct ChoiceOfTime *cotp)
 {
@@ -4462,14 +4385,6 @@ static int crl_extensions_chk(
     return 0;
 }
 
-/**=============================================================================
- * @brief Check CRL conformance to rescert profile, standalone/syntax only
- *
- * @param crlp (struct CertificateRevocationList*)
- * @return 0 on success<br />a negative integer on failure
- *
- * Check CRL conformance with respect to RFCs 5280 and 6487.
-  -----------------------------------------------------------------------------*/
 int crl_profile_chk(
     struct CertificateRevocationList *crlp)
 {

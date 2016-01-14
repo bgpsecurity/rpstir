@@ -1,74 +1,111 @@
+#ifndef LIB_RPKI_QUERYSUPPORT_H
+#define LIB_RPKI_QUERYSUPPORT_H
 
-/*
- * $Id: query.c 857 2009-09-30 15:27:40Z dmontana $ 
+/**
+ * @file
+ *
+ * @brief
+ *     Functions and flags shared by query and server code
  */
 
-/****************
- * Functions and flags shared by query and server code
- ****************/
+#include "scmf.h"
 
-/******
- * put the appropriate tests for SCM_FLAG_XXX flags in the where
- *   string of a query
- ******/
+/**
+ * @brief
+ *     put the appropriate tests for @c SCM_FLAG_XXX flags in the
+ *     where string of a query
+ */
 extern void addQueryFlagTests(
     char *whereStr,
     int needAnd);
 
-/****** prototype for a function for displaying a field *****/
+/**
+ * @brief
+ *     prototype for a function for displaying a field
+ */
 typedef int (
-    *displayfunc) (
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    *displayfunc)(
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr);
 
-/******
- * attributes of a field to display or filter on
- ******/
+/**
+ * @brief
+ *     attributes of a field to display or filter on
+ */
 typedef struct _QueryField {
-    char *name;                 /* name of the field */
-    char *description;          /* one-line description for user help */
-    int flags;                  /* flags (see Q_xyz above) */
-    int sqlType;                /* what type of data to expect from query */
-    int maxSize;                /* how much space to allocate for response */
-    char *dbColumn;             /* if not NULL, use this for query, not name */
-    char *otherDBColumn;        /* if not NULL, second field for query */
-    char *heading;              /* name of column heading to use in printout */
-    displayfunc displayer;      /* function for display string, NULL if std */
+    /** @brief name of the field */
+    char *name;
+    /** @brief one-line description for user help */
+    char *description;
+    /** @brief flags (see @c Q_xyz above) */
+    int flags;
+    /** @brief what type of data to expect from query */
+    int sqlType;
+    /** @brief how much space to allocate for response */
+    int maxSize;
+    /** @brief if not NULL, use this for query, not name */
+    char *dbColumn;
+    /** @brief if not NULL, second field for query */
+    char *otherDBColumn;
+    /** @brief name of column heading to use in printout */
+    char *heading;
+    /** @brief function for display string, NULL if std */
+    displayfunc displayer;
 } QueryField;
 
-/******
- * Find the attributes of a particular field to query on
- ******/
+/**
+ * @brief
+ *     Find the attributes of a particular field to query on
+ */
 extern QueryField *findField(
     char *name);
 
-/******
- * The set of all the fields
- ******/
+/**
+ * @brief
+ *     The set of all the fields
+ */
 extern QueryField *getFields(
     void);
 
-/******
- * The total number of fields
- ******/
+/**
+ * @brief
+ *     The total number of fields
+ */
 extern int getNumFields(
     void);
 
-/*****
- * check the valdity via the db of the cert whose ski or localID is given
- *****/
+/**
+ * @brief
+ *     check the validity of a cert in the db
+ *
+ * @param[in] ski
+ *     If non-NULL, the subject key identifier identifying the
+ *     certificate to check.  If NULL, the certificate to check is
+ *     identified by @p localID.
+ * @param[in] localID
+ *     Identifies the certificate if @p ski is NULL.  This parameter
+ *     is ignored if @p ski is not NULL.
+ * @param[in] scmp
+ *     Database schema pointer.
+ * @param[in] connect
+ *     Database connection pointer.
+ * @return
+ *     True (non-zero) if the certificate is valid, false (0)
+ *     otherwise.
+ */
 extern int checkValidity(
     char *ski,
     unsigned int localID,
-    scm * scmp,
-    scmcon * connect);
+    scm *scmp,
+    scmcon *connect);
 
-/*****
- * displayFlags function needs to know if object is a manifes
- *****/
+/**
+ * @brief
+ *     displayFlags() needs to know if object is a manifest
+ */
 void setIsManifest(
     int val);
 
@@ -81,3 +118,5 @@ void setIsManifest(
 #define Q_FOR_GBR       0x40
 
 #define MAX_RESULT_SZ (128 * 1024)
+
+#endif /* !LIB_RPKI_QUERYSUPPORT_H */

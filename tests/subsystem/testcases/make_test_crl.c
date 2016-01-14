@@ -1,8 +1,3 @@
-/*
- * $Id: make_crl.c 453 2008-05-28 15:30:40Z cgardiner $ 
- */
-
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -47,9 +42,9 @@ static void make_fullpath(
     char *locpath)
 {
     // CRL goes in issuer's directory, e.g.
-    // L1.crl goes nowhere else, 
-    // L11.crl goes into C1/, 
-    // L121.crl goes into C1/2 
+    // L1.crl goes nowhere else,
+    // L11.crl goes into C1/,
+    // L121.crl goes into C1/2
     // L1231.crl goes into C1/2/3
     char *f = fullpath,
         *l = locpath;

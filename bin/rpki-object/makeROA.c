@@ -2,11 +2,6 @@
 #include "rpki/err.h"
 #include "util/stringutils.h"
 
-
-/*
- * $Id$ 
- */
-
 int main(
     int argc,
     char **argv)

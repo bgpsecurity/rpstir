@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     casn_real.c
 Contents: Functions for AsnReal objects
@@ -11,7 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-char casn_real_sfcsid[] = "@(#)casn_real.c 860P";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,9 +22,9 @@ extern struct casn *_go_up(
 #if (sparc || SPARC || INTEL || PA_RISC)
 /*
  * bits in double for Sparc: low addr high addr SXXXXXXX XXXXMMMM MMMMMMMM
- * MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM 0x7FF 1 = MSBit bits in double 
+ * MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM MMMMMMMM 0x7FF 1 = MSBit bits in double
  * for Intel machine -- just reversed byte order: MMMMMMMM MMMMMMMM MMMMMMMM
- * MMMMMMMM MMMMMMMM MMMMMMMM XXXXMMMM SXXXXXXX 
+ * MMMMMMMM MMMMMMMM MMMMMMMM XXXXMMMM SXXXXXXX
  */
 #define DBL_EXPONENT_BITS 11    // # of bits in exponent
 #define DBL_EXPONENT_BYTES ((DBL_EXPONENT_BITS + 7) >> 3)
@@ -115,7 +111,7 @@ int read_casn_double(
     union dbl_box box;
     union end_box bigend;
     /*
-     * step 1 
+     * step 1
      */
     bigend.short_val = 1;
     i = 0;
@@ -168,7 +164,7 @@ int read_casn_double(
         for (exponent = (!(locbuf[i] & 0x80)) ? 0 : -1; exp_size--;
              exponent = (exponent << 8) + locbuf[i++]);
         /*
-         * step 2 
+         * step 2
          */
         if (base_exp)
             exponent *= (base_exp + 2);
@@ -205,7 +201,7 @@ int read_casn_double(
         if (!locbuf[mantissa_lth - 1])
             mantissa_lth--;
         /*
-         * step 3 
+         * step 3
          */
         // delete MS bit
         *locbuf &= DBL_MMSBYTE_MASK;
@@ -273,7 +269,7 @@ int write_casn_double(
     bigend.short_val = 1;
     box.dbl_val = val;
     /*
-     * step 1 
+     * step 1
      */
     if (type != -1 && type != 1 && type != 2 && type != 10)
         return _casn_obj_err(casnp, ASN_UNDEF_VALUE);
@@ -302,7 +298,7 @@ int write_casn_double(
             strncpy(&locbuf[1], c, strlen(c) + 1);
         for (Ep = &locbuf[1]; *Ep && *Ep != 'E'; Ep++); // go to E
         sscanf(&Ep[1], "%ld", &exponent);
-        for (Ep--; Ep[-1] == '0'; Ep--);        // trim off trailing zeroes in 
+        for (Ep--; Ep[-1] == '0'; Ep--);        // trim off trailing zeroes in
                                                 // mantissa
         if (*Ep != '0')
             Ep++;
@@ -313,7 +309,7 @@ int write_casn_double(
         {
             strncpy(ptp, &ptp[1], strlen(ptp));
             Ep[-1] = '.';
-            exponent -= strlen(ptp) - 1;        // adjust for shift of decimal 
+            exponent -= strlen(ptp) - 1;        // adjust for shift of decimal
                                                 // pt
         }
         if (exponent == 0)
@@ -346,7 +342,7 @@ int write_casn_double(
             *mantissap |= (1 << DBL_MMSBIT_EXP);
         // step 4
         /*
-         * bits of shift 
+         * bits of shift
          */
         for (uc = &box.cval[DBL_MLSBYTE_INDEX], shift = 0; !*uc;
              uc--, shift += 8);

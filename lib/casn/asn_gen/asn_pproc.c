@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     asn_pproc.c
 Contents: Functions to pre-process ASN.1 files as part of the ASN_GEN
@@ -12,10 +9,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-
-const char asn_pproc_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_pproc.c,v 1.1 1995/01/11 22:43:11 jlowry Exp gardiner $";
-char asn_pproc_id[] = "@(#)asn_pproc.c 828P";
 
 #include "asn_gen.h"
 #ifdef WIN32
@@ -29,10 +22,10 @@ char asn_pproc_id[] = "@(#)asn_pproc.c 828P";
 such as:
 
     XXX ::= SEQUENCE {
-	a   SET {
-	    b   INTEGER,
-	    c   OCTET STRING },
-	d   BOOLEAN }
+        a   SET {
+            b   INTEGER,
+            c   OCTET STRING },
+        d   BOOLEAN }
 
 by use of recursive calls to pre_proc().  It also generated the necessary
 synthetic names and implemented the ENCRYPTED and SIGNED macros and handled all
@@ -107,7 +100,7 @@ calls do_macro() to perform the substitutions.
 
 struct import_table *imtbp;
                /*
-                * pointer to entry for imported file currently being read 
+                * pointer to entry for imported file currently being read
                 */
 
 static int num_imports;
@@ -227,7 +220,7 @@ Procedure:
         *elinebuf = &linebuf[sizeof(linebuf)];
     int active;                 /* -1= in main file, 0= in imported file but
                                  * not imported class 1= in imported file in
-                                 * an imported class, no details needed 2= " " 
+                                 * an imported class, no details needed 2= " "
                                  * " " " " " , but details needed */
     if (!in_sub)
         *classname = *token = 0;
@@ -879,7 +872,7 @@ static int pre_proc_def(
             *table = 0;
         }
         /*
-         * step 3 
+         * step 3
          */
         else if (*token == '(')
         {
@@ -1441,7 +1434,7 @@ static void glob_type(
         {
             val = (add_id(classname) - (struct id_table *)id_area.area);
             /*
-             * get_obj_id may move id_area.area 
+             * get_obj_id may move id_area.area
              */
             c = get_obj_id(fd, (*token >= 'A') ? token : "", classname);
             cidp = &((struct id_table *)id_area.area)[val];

@@ -1,8 +1,11 @@
 #ifndef LIB_UTIL_STRINGUTILS_H
 #define LIB_UTIL_STRINGUTILS_H
 
-/*
- * Low-level string parsing utilities
+/**
+ * @file
+ *
+ * @brief
+ *     Low-level string parsing utilities
  */
 
 #include "macros.h"
@@ -140,11 +143,15 @@ int expand_by_doubling(
     size_t min_nmemb);
 
 /**=============================================================================
- * @brief Replace questionable chars from string for printing.
+ * @brief
+ *     Replace questionable chars from string for printing.
  *
- * @note Caller handles memory for dst.
- * @note Output might be truncated, compared to input.
- * @note dst will be null terminated, at or before index dst_sz-1.
+ * @note
+ *     Caller handles memory for dst.
+ * @note
+ *     Output might be truncated, compared to input.
+ * @note
+ *     dst will be null terminated, at or before index dst_sz-1.
  *
  * @param[out] dst
  *     Location of the buffer to hold the output string.  This may be
@@ -163,8 +170,8 @@ int expand_by_doubling(
  * @param[in] other_chars_to_escape
  *     nul-terminated array of additional characters to escape with a
  *     backslash.  This may be NULL.
- *
- * @return dst on success, NULL on error
+ * @return
+ *     dst on success, NULL on error
 ------------------------------------------------------------------------------*/
 char *scrub_for_print(
     char *dst,
@@ -174,8 +181,9 @@ char *scrub_for_print(
     char const *other_chars_to_escape);
 
 /**
- * @brief same as snprintf(), but calls abort() if snprintf() returns
- * less than 0 or >= n.
+ * @brief
+ *     same as snprintf(), but calls abort() if snprintf() returns
+ *     less than 0 or >= n.
  */
 int
 xsnprintf(
@@ -185,8 +193,9 @@ xsnprintf(
     ...) WARN_PRINTF(3, 4);
 
 /**
- * @brief same as vsnprintf(), but calls abort() if vsnprintf()
- * returns less than 0 or >= n.
+ * @brief
+ *     same as vsnprintf(), but calls abort() if vsnprintf() returns
+ *     less than 0 or >= n.
  */
 int
 xvsnprintf(

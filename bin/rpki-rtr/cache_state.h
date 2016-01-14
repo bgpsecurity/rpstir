@@ -21,20 +21,23 @@ struct global_cache_state {
 };
 
 /**
-	\brief Initialize the global cache state.
+   \brief
+       Initialize the global cache state.
 
-	Initialize the lock and get the session and serial number from the database.
+   Initialize the lock and get the session and serial number from the database.
 
-	@return Whether or not the initialization was successful.
+   @return
+       Whether or not the initialization was successful.
 */
 bool initialize_global_cache_state(
     struct global_cache_state *state,
     dbconn * db);
 
 /**
-	Update the global cache state from the database.
+   Update the global cache state from the database.
 
-	@return Whether or not the update was successful.
+   @return
+       Whether or not the update was successful.
 */
 bool update_global_cache_state(
     struct global_cache_state *state,

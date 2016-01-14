@@ -1,8 +1,8 @@
-#include <errno.h>
-
 #define PATH_COMPAT_NO_CLOBBER
 #include "path_compat.h"
 #undef PATH_COMPAT_NO_CLOBBER
+
+#include <errno.h>
 
 
 #ifdef __NetBSD__

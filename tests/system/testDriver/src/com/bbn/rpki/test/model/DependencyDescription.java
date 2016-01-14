@@ -13,5 +13,6 @@ import java.util.Collection;
  */
 public class DependencyDescription {
   private XMLBase successorTaskDescription;
-  private final Collection<TaskDescription> predecessorTaskDescriptions = new ArrayList<TaskDescription>();
+  private final Collection<TaskDescription> predecessorTaskDescriptions =
+      new ArrayList<TaskDescription>();
 }

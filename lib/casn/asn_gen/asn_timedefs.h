@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     asn_timedefs.h
 Contents: Header file for basic ASN.1 functions.
@@ -11,9 +8,6 @@ Author:   Charles W. Gardiner <gardiner@bbn.com>
 Remarks:
 
 *****************************************************************************/
-/*
- * sfcsid[] = "@(#)asn_timedefs.h 552P" 
- */
 #ifndef _ASN_TIMEDEFS_H
 #define _ASN_TIMEDEFS_H
 #define UTCBASE 70

@@ -12,7 +12,6 @@ lib_rpki_librpki_a_SOURCES = \
 	lib/rpki/cms/roa_utils.h \
 	lib/rpki/cms/roa_validate.c \
 	lib/rpki/conversion.c \
-	lib/rpki/conversion.h \
 	lib/rpki/db_constants.h \
 	lib/rpki/diru.c \
 	lib/rpki/diru.h \

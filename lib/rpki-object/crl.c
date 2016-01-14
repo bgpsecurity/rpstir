@@ -1,9 +1,9 @@
+#include "crl.h"
+
 #include <stdbool.h>
 
 #include "util/cryptlib_compat.h"
 #include "rpki-asn1/cms.h"
-
-#include "crl.h"
 
 
 const char *signCRL(

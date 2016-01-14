@@ -37,7 +37,7 @@ int main(
     }
 
     /*
-     * parse arguments 
+     * parse arguments
      */
     if (argc != 3)
     {
@@ -48,7 +48,7 @@ int main(
     keyfilename = argv[2];
 
     /*
-     * read CMS file 
+     * read CMS file
      */
     CMSBlob(&cms, (ushort) 0);
     if (get_casn_file(&cms.self, (char *)cmsfilename, 0) < 0)
@@ -58,7 +58,7 @@ int main(
     }
 
     /*
-     * sign CMS 
+     * sign CMS
      */
     errmsg = signCMSBlob(&cms, keyfilename);
     if (errmsg)
@@ -68,7 +68,7 @@ int main(
     }
 
     /*
-     * write CMS file 
+     * write CMS file
      */
     if (put_casn_file(&cms.self, (char *)cmsfilename, 0) < 0)
     {

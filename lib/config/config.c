@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,8 +12,6 @@
 #include "util/logging.h"
 #include "util/stringutils.h"
 
-#include "config.h"
-
 
 /** All available config options */
 static const struct config_option config_options[] = {
@@ -20,7 +20,8 @@ static const struct config_option config_options[] = {
      "RPKIPort",
      false,
      config_type_sscanf_converter, &config_type_sscanf_arg_uint16_t,
-     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_uint16_t,
+     config_type_sscanf_converter_inverse,
+     &config_type_sscanf_inverse_arg_uint16_t,
      free,
      NULL, NULL,
      "7344"},
@@ -90,7 +91,8 @@ static const struct config_option config_options[] = {
      "DownloadConcurrency",
      false,
      config_type_sscanf_converter, &config_type_sscanf_arg_size_t,
-     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_size_t,
+     config_type_sscanf_converter_inverse,
+     &config_type_sscanf_inverse_arg_size_t,
      free,
      NULL, NULL,
      "24"},
@@ -173,7 +175,8 @@ static const struct config_option config_options[] = {
      config_type_string_converter_inverse, NULL,
      free,
      NULL, NULL,
-     "\"https://rpki.bbn.com/check-version?package=" PACKAGE_NAME "&version=" PACKAGE_VERSION "\""},
+     "\"https://rpki.bbn.com/check-version?package=" PACKAGE_NAME
+     "&version=" PACKAGE_VERSION "\""},
 
     // CONFIG_NEW_VERSION_CHECK_CA_CERT
     {
@@ -260,7 +263,8 @@ static const struct config_option config_options[] = {
      "LogRetention",
      false,
      config_type_sscanf_converter, &config_type_sscanf_arg_size_t,
-     config_type_sscanf_converter_inverse, &config_type_sscanf_inverse_arg_size_t,
+     config_type_sscanf_converter_inverse,
+     &config_type_sscanf_inverse_arg_size_t,
      free,
      NULL, NULL,
      "9"},
@@ -278,7 +282,7 @@ static const struct config_option config_options[] = {
 
 
 bool my_config_load(
-    )
+    void)
 {
     const char * user_home = getenv("HOME");
     if (user_home == NULL)

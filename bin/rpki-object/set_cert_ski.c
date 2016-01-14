@@ -1,9 +1,3 @@
-
-/*
- * $Id: set_cert_ski.c 453 2007-07-25 15:30:40Z gardiner $ 
- */
-
-
 #include "rpki/cms/roa_utils.h"
 #include "rpki-asn1/manifest.h"
 #include "util/hashutils.h"

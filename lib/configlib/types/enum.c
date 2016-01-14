@@ -1,7 +1,7 @@
+#include "enum.h"
+
 #include <syslog.h>
 #include <string.h>
-
-#include "enum.h"
 
 bool config_type_enum_converter(
     const struct config_context *context,

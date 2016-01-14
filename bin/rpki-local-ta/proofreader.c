@@ -82,8 +82,8 @@ int main(
     int argc,
     char **argv)
 {
-    char **skis,
-        inbuf[128];
+    char **skis;
+    char inbuf[128];
     int numskis = 0;
     if (argc < 2)
         fatal("Usage: name of constraints file");
@@ -92,8 +92,8 @@ int main(
         fatal("Can't open %s", argv[1]);
     FILE *tmpstr;
     char *f = "xproof.tmp";
-    int ansr,
-        i = 0;
+    int ansr;
+    int i = 0;
     struct keyring keyring = { NULL, NULL, NULL };
 
     OPEN_LOG("proofreader", LOG_USER);

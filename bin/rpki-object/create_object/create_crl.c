@@ -1,3 +1,4 @@
+#include "create_crl.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +23,7 @@
 
 
 /*
- * function declarations 
+ * function declarations
  */
 extern int sign_cert(
     struct Certificate *certp,
@@ -62,7 +63,7 @@ int write_crlNum(
  * Note: Some fields are in the table as optional but are actually required.
  * These are special cases where we could get the value from multiple places.
  * For example, Issuer Name can come from the parentcertfile (subject in the
- * parentcertfile) or it can be specified exactly as issuer) 
+ * parentcertfile) or it can be specified exactly as issuer)
  */
 struct object_field crl_field_table[] = {
     {"outputfilename", TEXT, NULL, REQUIRED, NULL},
@@ -102,7 +103,7 @@ struct CRLExtension *findCrlExtension(
 
 
 /*
- * Take values from the certificate and write them to the 
+ * Take values from the certificate and write them to the
  * current CRL
  * val is filename of the parent certificate
  * fields of interest:
@@ -571,7 +572,7 @@ int create_crl(
         return (FILE_OPEN_ERR);
     }
 
-    // Populate the crl fields with data from the 
+    // Populate the crl fields with data from the
     // table. Note the table is populated from input arguments
     // If there is no function to call and the argument is optional then
     // it is ok otherwise it is an error.

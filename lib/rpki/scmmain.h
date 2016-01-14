@@ -1,8 +1,3 @@
-/*
- * $Id: scmmain.h 1285 2010-10-01 19:43:05Z bkohler $ 
- */
-
-
 #ifndef _SCMMAIN_H_
 #define _SCMMAIN_H_
 
@@ -34,20 +29,20 @@
     "CHECK (prefix_max_length <= length(prefix) * 8)"
 
 /*
- * Table definitions 
+ * Table definitions
  */
 
 /*
  * The sceme for adding in SQL statements to scmtabbuilder is the following:
  * column names should start with a lowercase letter all SQL keywords should
- * be uppercase 
+ * be uppercase
  */
 
 static scmtab scmtabbuilder[] = {
     {                           /* RPKI_CERT */
      /*
       * Usage notes: valfrom and valto are stored in GMT. local_id is a unique
-      * identifier with the new one obtained via max(local_id) + 1 
+      * identifier with the new one obtained via max(local_id) + 1
       */
      "rpki_cert",
      "CERTIFICATE",
@@ -90,8 +85,8 @@ static scmtab scmtabbuilder[] = {
       * the corresponding sn set to 0 in the list. sninuse keeps track of the
       * number of serial numbers that are not zero in the list.  When this
       * number drops to 0, the entire CRL may be deleted from the DB.
-      * 
-      * Note that snlist is of type MEDIUMBLOB, indicating that it can hold at 
+      *
+      * Note that snlist is of type MEDIUMBLOB, indicating that it can hold at
       * most 16M/20 = 838860 entries.
       */
      "rpki_crl",
@@ -120,7 +115,7 @@ static scmtab scmtabbuilder[] = {
      /*
       * Usage notes: the ski is the ski of the signing cert, and is thus
       * effectively the parent of this ROA. The asn is the AS number from the
-      * ROA (there is only one now, not a list). The IP address information is 
+      * ROA (there is only one now, not a list). The IP address information is
       * stored in rpki_roa_prefix below. local_id is as with certs and crls.
       */
      "rpki_roa",
@@ -222,14 +217,8 @@ static scmtab scmtabbuilder[] = {
     {                           /* RTR_UPDATE */
      "rtr_update",
      "RTR_UPDATE",
-     "serial_num      INT UNSIGNED NOT NULL," "prev_serial_num INT UNSIGNED,"   // NULL 
-                                                                                // indicates 
-                                                                                // no 
-                                                                                // previous 
-                                                                                // serial 
-                                                                                // number 
-                                                                                // currently 
-                                                                                // exists
+     // NULL indicates no previous serial number currently exists
+     "serial_num      INT UNSIGNED NOT NULL," "prev_serial_num INT UNSIGNED,"
      "create_time     DATETIME NOT NULL,"
      "has_full        BOOLEAN NOT NULL,"
      "                PRIMARY KEY (serial_num),"
@@ -252,7 +241,7 @@ static scmtab scmtabbuilder[] = {
      "RTR_INCREMENTAL",
      "serial_num  INT UNSIGNED NOT NULL,"       /* serial number immediately
                                                  * after the incremental
-                                                 * changes, i.e. after reading 
+                                                 * changes, i.e. after reading
                                                  * all of rtr_incremental
                                                  * where serial_num = x, the
                                                  * client is at serial number

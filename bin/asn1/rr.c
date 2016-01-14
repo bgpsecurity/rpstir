@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 #include <sys/types.h>
 #include <fcntl.h>
 
@@ -19,91 +16,198 @@
 #define MSG_OPEN "Can't open %s"
 #define MSG_OVERFLOW "Area %s overflowed"
 
-char rr_sfcsid[] = "@(#)rr.c 845p";
+/**
+Function: Transfers the contents of asn_area to output.  Note the setting of
+asn_area.next to zero to force putout to go elsewhere
+**/
+static void
+dump_asn(
+    void);
 
-void dump_asn(
-    );
-
-void putasn(
+static void
+putasn(
     uchar);
 
-void putout(
+static void
+putout(
     uchar);
 
-char buf[512],
-   *hash_start,
-   *cvt_int(char *),
+char buf[512];
+char *hash_start;
 
-   *cvt_obj_id(
+static char *
+cvt_int(
+    char *);
+
+static char *
+cvt_obj_id(
     char *,
-    char *),
-   *cvt_out(
-    char *),
-   *do_it(
+    char *);
+
+/*
+ * Function: Converts string pointed to by c and puts it in right place
+ *
+ * IF string is decimal, convert it to a hex string
+ * See if there is an odd number of nibbles
+ * IF so. put out the first nibble as a number
+ * FOR each byte pair
+ *     Convert byte pairs to a byte
+ *     Write the byte to output
+ */
+static char *
+cvt_out(
+    char *);
+
+/*
+ * Function: Converts text PM-request/response to true form
+ *
+ * Inputs: Standard input is an input file
+ *
+ * Outputs: Standard output is result
+ *
+ * 1. IF not at top level, skip to first blank
+ *    Starting with no left margin, WHILE forever
+ *         Skip white space
+ *         IF at line end
+ *             Get another line
+ *             Go to first non-blank
+ *             IF no left margin, set it to greater of this or min
+ *             IF at EOF OR line starts before left margin
+ *                 IF translating dot notation, put it out
+ *                 IF had a start for this line, set the length
+ *                 IF not at top level, return current pointer
+ *                 Break out of WHILE
+ * 2.      IF not in a comment
+ *             IF no left margin, set it to this
+ *             IF char is numeric,
+ *                 IF string is decimal or hex, output data to appropriate
+ *                   place
+ *                 ELSE (dot notation) append to dot_buf
+ *             ELSE IF char is quote, put data in appropriate place
+ *             ELSE IF char is '{'
+ *                 IF this is the first one, get space
+ *                 Set the offset in varfld
+ *             ELSE IF char is '}'
+ *                 Set the length in varfld
+ *                 Write varfld to output
+ *             ELSE IF char is '/' OR '-', note half in comment
+ *             ELSE IF starting a hash here, mark that
+ *             ELSE
+ *                 IF not at a reserved word, skip it
+ *                 ELSE
+ *                     IF had an ASN.1 item started, set its length
+ *                     IF there's a tag, print it
+ *                     ELSE convert the next word from hex
+ *                     Put out zero length
+ *                     IF it's constructed
+ *                         Call this function for the next level
+ *                         Set the length of this item
+ *                         IF should be at a higher level, return current
+ *                           pointer
+ *                         IF at end of line, break out of WHILE
+ *                         Continue in WHILE
+ * 3.      ELSE IF half in a comment
+ *                 IF char is second half, note fully in comment
+ *                 ELSE IF char is non-whitespace,
+ *                     Note not in comment
+ *                     Back up one char to repeat
+ *         ELSE IF fully in comment
+ *             IF char is firts exit char, note half out of comment
+ *             ELSE IF char is non-whitespace, note fully out of comment
+ *         ELSE IF half out of comment
+ *             IF char is final exit char, note out of comment
+ *             ELSE IF char is non-whitespace, note fully in comment
+ *         IF at a non-null, go to next char
+ * 4. IF have anything in asn_area, put that out
+ *    IF have any vararea, write it to output
+ *    IF -r switch is set, put length in proper field
+ */
+static char *
+do_it(
     char *,
     int,
-    int),
-   *getbuf(
+    int);
+
+static char *
+getbuf(
     char *,
     int);
 
 struct varfld {
-    ushort offset,              /* offset of field in vararea */
-        lth;                    /* length of variable-length field.  If field
-                                 * is not present, lth is zero */
+    /* offset of field in vararea */
+    ushort offset;
+    /*
+     * length of variable-length field.  If field is not present, lth
+     * is zero
+     */
+    ushort lth;
 } varfld;
 
-int bytes,
-    dflag,
-    aflag,
-    req,
-    linenum,
-    adj_asn(
-    int),
-    set_asn_lth(
+int bytes;
+int dflag;
+int aflag;
+int req;
+int linenum;
+
+static int
+adj_asn(
+    int);
+
+int
+set_asn_lth(
     uchar *,
-    uchar *),
-    wdcmp(
+    uchar *);
+
+/* s1 is target */
+static int
+wdcmp(
+    char *s1,
+    char *s2);
+
+static int
+write_out(
     char *,
-    char *),
-    write_out(
-    char *,
-    int),
-    write_varfld(
+    int);
+
+static int
+write_varfld(
     struct varfld *);
 
 struct name_tab {
     char *name;
-    unsigned chunk,
-        limit;
-    char *area;                 /* pointer to a general name area */
-    unsigned size,              /* size of the area */
-        next;                   /* offset to next free part of area */
-} genarea =
-{
-"genarea", 1024, 0x4000, NULL, 0, 0},       /* for varareas */
+    unsigned chunk;
+    unsigned limit;
+    /* pointer to a general name area */
+    char *area;
+    /* size of the area */
+    unsigned size;
+    /* offset to next free part of area */
+    unsigned next;
+};
 
-    out_area =
-{
-"out_area", 1024, 0x20000, NULL, 0, 0},     /* for all output, to avoid having to do
-                                 * lseek() with -r option */
-    asn_area =
-{
-"asn_area", 1024, 0x20000, NULL, 0, 0};
+/* for varareas */
+struct name_tab genarea = {"genarea", 1024, 0x4000, NULL, 0, 0};
+/* for all output, to avoid having to do lseek() with -r option */
+struct name_tab out_area = {"out_area", 1024, 0x20000, NULL, 0, 0};
+struct name_tab asn_area = {"asn_area", 1024, 0x20000, NULL, 0, 0};
 
-extern struct typnames typnames[];      /* in asn.c */
+/* in asn.c */
+extern struct typnames typnames[];
 
+/*
+ * 1. Scan argvs to see if -r flag is set
+ *    IF standard input and output have been redirected, run with them
+ *    Scan argvs and at any file name
+ *         Append .raw and open that as standard input
+ *         Append .req and open that as standard output
+ *         Convert the input file
+ *         Close both standard input and output
+ * 2. Exit with OK message
+ */
 int main(
     int argc,
     char **argv)
 {
-    /*
-     * $b(+ 1. Scan argvs to see if -r flag is set IF standard input and
-     * output have been redirected, run with them Scan argvs and at any file
-     * name Append .raw and open that as standard input Append .req and open
-     * that as standard output Convert the input file Close both standard
-     * input and output 2. Exit with OK message $b) 
-     */
     char *c,
       **p;
     int fd;
@@ -159,42 +263,6 @@ char *do_it(
     int min,
     int level)
 {
-    /*
-     * $b(+ Function: Converts text PM-request/response to true form
-     * 
-     * Inputs: Standard input is an input file
-     * 
-     * Outputs: Standard output is result
-     * 
-     * 1. IF not at top level, skip to first blank Starting with no left
-     * margin, WHILE forever Skip white space IF at line end Get another line
-     * Go to first non-blank IF no left margin, set it to greater of this or
-     * min IF at EOF OR line starts before left margin IF translating dot
-     * notation, put it out IF had a start for this line, set the length IF
-     * not at top level, return current pointer Break out of WHILE 2. IF not
-     * in a comment IF no left margin, set it to this IF char is numeric, IF
-     * string is decimal or hex, output data to appropriate place ELSE (dot
-     * notation) append to dot_buf ELSE IF char is quote, put data in
-     * appropriate place ELSE IF char is '{' IF this is the first one, get
-     * space Set the offset in varfld ELSE IF char is '}' Set the length in
-     * varfld Write varfld to output ELSE IF char is '/' OR '-', note half in
-     * comment ELSE IF starting a hash here, mark that ELSE IF not at a
-     * reserved word, skip it ELSE IF had an ASN.1 item started, set its
-     * length IF there's a tag, print it ELSE convert the next word from hex
-     * Put out zero length IF it's constructed Call this function for the next 
-     * level Set the length of this item IF should be at a higher level,
-     * return current pointer IF at end of line, break out of WHILE Continue
-     * in WHILE 3. ELSE IF half in a comment IF char is second half, note
-     * fully in comment ELSE IF char is non-whitespace, Note not in comment
-     * Back up one char to repeat ELSE IF fully in comment IF char is firts
-     * exit char, note half out of comment ELSE IF char is non-whitespace,
-     * note fully out of comment ELSE IF half out of comment IF char is final
-     * exit char, note out of comment ELSE IF char is non-whitespace, note
-     * fully in comment IF at a non-null, go to next char 4. IF have anything
-     * in asn_area, put that out IF have any vararea, write it to output IF -r 
-     * switch is set, put length in proper field $b) 
-     */
-
     char *b,
        *lmarg,
         quote,
@@ -202,7 +270,8 @@ char *do_it(
        *edot;
     int val,
         start = -1;
-    char comment[4];            /* contains up to 3 chars, 2 entry & 1 exit */
+    /* contains up to 3 chars, 2 entry & 1 exit */
+    char comment[4];
     ushort lth;
     struct typnames *tpnmp = (struct typnames *)0;
     *(edot = dot_buf) = 0;
@@ -210,7 +279,8 @@ char *do_it(
     if (level)
         while (*c > ' ')
             c++;
-    for (lmarg = (char *)0; 1;) /* step 1 */
+    /* step 1 */
+    for (lmarg = (char *)0; 1;)
     {
         while (*c && *c <= ' ')
             c++;
@@ -238,13 +308,16 @@ char *do_it(
                 }
             }
         }
-        if (!comment[0])        /* step 2 */
+        /* step 2 */
+        if (!comment[0])
         {
             if (aflag && *c == '(')
             {
                 while (*c != ')')
-                    c++;        // skip lth field
-                for (c++; *c == ' '; c++);      // go to next char
+                    // skip lth field
+                    c++;
+                // go to next char
+                for (c++; *c == ' '; c++);
             }
             if (*c >= '0' && *c <= '9')
             {
@@ -363,7 +436,8 @@ char *do_it(
                 }
             }
         }
-        else if (!comment[1])   /* step 3 */
+        /* step 3 */
+        else if (!comment[1])
         {
             if ((comment[0] == '/' && (*c == '*' || *c == '/')) ||
                 (comment[0] == '-' && *c == '-'))
@@ -383,7 +457,8 @@ char *do_it(
     if (edot > dot_buf)
         cvt_obj_id(dot_buf, edot);
     if (asn_area.next)
-        dump_asn();             /* step 4 */
+        /* step 4 */
+        dump_asn();
     if (genarea.area)
     {
         if (genarea.next & 1)
@@ -471,7 +546,8 @@ char *cvt_obj_id(
         locbuf[20],
        *e = &locbuf[sizeof(locbuf)];
     long val,
-        tmp;                    /* do first field */
+        tmp;
+    /* do first field */
     for (val = 0; from < to && *from != '.'; val = (val * 10) + *from++ - '0');
     val *= 40;
     for (from++, tmp = 0; from < to && *from != '.'; tmp = (tmp * 10) + *from++
@@ -481,7 +557,8 @@ char *cvt_obj_id(
         *(--b) = (uchar) (val & 0x7F) | ((tmp != val) ? 0x80 : 0);
     while (b < e)
         putout(*b++);
-    for (from++; from < to; from++)     /* now do next fields */
+    /* now do next fields */
+    for (from++; from < to; from++)
     {
         for (val = 0; from < to && *from != '.';
              val = (val * 10) + *from++ - '0');
@@ -499,14 +576,6 @@ char *cvt_obj_id(
 char *cvt_out(
     char *c)
 {
-    /*
-     * $b(+ Function: Converts string pointed to by c and puts it in right
-     * place
-     * 
-     * IF string is decimal, convert it to a hex string See if there is an odd 
-     * number of nibbles IF so. put out the first nibble as a number FOR each
-     * byte pair Convert byte pairs to a byte Write the byte to output $b) 
-     */
     uchar val;
     char *a,
        *b,
@@ -551,12 +620,8 @@ char *cvt_out(
 }
 
 void dump_asn(
-    )
+    void)
 {
-/**
-Function: Transfers the contents of asn_area to output.  Note the setting of
-asn_area.next to zero to force putout to go elsewhere
-**/
     char *c,
        *e;
     for (c = asn_area.area, e = &c[asn_area.next], asn_area.next = 0; c < e;
@@ -674,7 +739,7 @@ void putout(
 
 int wdcmp(
     char *s1,
-    char *s2)                   /* s1 is target */
+    char *s2)
 {
     for (; *s1 > '+' && *s1 == *s2; s1++, s2++);
     if (*s1 > '+' || (*s1 != '+' && *s2 > '+'))

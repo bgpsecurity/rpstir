@@ -9,7 +9,7 @@ class AllocationError(Exception):
 
 class AllocationInternalError(AllocationError):
     """Exception raised for programming mistakes trying to allocate."""
-    
+
 def generic_allocate(free_list, used_list, requests, range_not_prefix=True):
     """Allocate Internet number resources based on a free list.
 

@@ -1,14 +1,11 @@
-/*
- * $Id$ 
- */
-
-
 #include "rpki/cms/roa_utils.h"
 
 #include "rpki/scm.h"
 #include "rpki/scmf.h"
 #include "rpki/sqhl.h"
 #include "rpki/err.h"
+
+#include <limits.h>
 
 static unsigned char *myreadfile(
     char *fn,
@@ -92,7 +89,7 @@ int main(
     char errmsg[1024];
     char *filename_cnf = NULL;
     char *ski;
-    char *fn = NULL;
+    char fn[PATH_MAX];
     int sta = 0;
 
     CMS(&roa, (ushort) 0);
@@ -151,7 +148,7 @@ int main(
         freescm(scmp);
         return -4;
     }
-    cert = (X509 *) roa_parent(scmp, conp, ski, &fn, &sta);
+    cert = (X509 *)roa_parent(scmp, conp, ski, &fn, &sta);
     disconnectscm(conp);
     freescm(scmp);
     free(ski);

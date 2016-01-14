@@ -61,7 +61,7 @@ Additional EE cert: BghcBcD2mv4nKeK_dd9MnRWJKK4
  2.12: Subj info access field duplicated
  2.13: IP Addresses or AS number field duplicated
 
- 2.14: Subject key ID critical bit set 
+ 2.14: Subject key ID critical bit set
  2.15: Auth key ID critical bit set
  2.16: CRL dist point critical bit set
  2.17: Auth info access critical bit set
@@ -186,7 +186,7 @@ CRL: s0Rk925AmjX-pu8WWN9FOXuHz8Q
  3.8: PK OID corrupt
  3.9: PK data corrupt
 
- 3.10: Next issue date same as issue date 
+ 3.10: Next issue date same as issue date
  3.11: End date before start date
  3.12: Date before 2049 encoded as Generalized Time (should be UTC) (RFC3280)
  3.13: Date in 2050 or later encoded as UTC (should be generalized)

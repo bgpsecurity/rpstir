@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     dump.c
 Contents: Main function of the dump utility
@@ -12,7 +9,7 @@ Remarks:
 
 *****************************************************************************/
 /*
- * DUMP 
+ * DUMP
  */
 #include <stdlib.h>
 #include <unistd.h>
@@ -36,51 +33,61 @@ Remarks:
 #define MSG_PIPE "Can't start in pipe with indefinite-length-encoded item"
 #define MSG_LEN "File is shorter than first item's length implies"
 
-char dump_sfcsid[] = "@(#)dump.c 840P";
-
-extern int asn1dump(
+int
+asn1dump(
     unsigned char *,
     int,
     FILE *);
 
-static void dump_asn1(
+uchar *
+asn_set(
+    struct asn *asnp);
+
+static void
+dump_asn1(
     int,
     long);
 
-char ibuf[BSIZE],
-    obuf[80] = "     0  ",
-    *fname,
-    hex[] = "0123456789ABCDEF";
+static char ibuf[BSIZE];
+static char obuf[80] = "     0  ";
+static char *fname;
+static char hex[] = "0123456789ABCDEF";
 
-char *hexit(
+static char *
+hexit(
     char *,
     unsigned char);
 
-long getd(
-    );
-int aflag,
-    is_numeric(
+static long
+getd(
+    char **b,
+    int lev);
+
+int aflag;
+
+int
+is_numeric(
     );
 
 int main(
     int argc,
     char **argv)
 {
-    char *b,
-       *c,
-      **p;
-    char *d,
-       *e,
-       *ee;
-    int did,
-        fd = 0,
-        offset,
-        lth,
-        count,
-        little;
-    long start,
-        pos,
-        left;
+    char *b;
+    char *c;
+    char **p;
+    char *d;
+    char *e;
+    char *ee;
+    int did;
+    int fd = 0;
+    int offset;
+    int lth;
+    int count;
+    int little;
+    long start;
+    long pos;
+    long left;
     union {
         short x;
         char y[2];
@@ -250,8 +257,8 @@ long getd(
 {
     long val = 0;
     int base = 16;
-    char *c = *b,
-        wk;
+    char *c = *b;
+    char wk;
     if (*c == '0')
     {
         if (*(++c) != 'x' && *c != 'X')
@@ -316,13 +323,11 @@ void dump_asn1(
     int fd,
     long pos)
 {
-    int lth,
-        size;
+    int lth;
+    int size;
     struct asn asn;
-    uchar *area,
-       *c,
-       *asn_set(
-        );
+    uchar *area;
+    uchar *c;
     struct stat tstat;
     if (pos < 0)
         FATAL(MSG_INVAL);

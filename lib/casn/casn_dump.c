@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     casn_dump.c
 Contents: Functions to dump ASN.1 objects.
@@ -15,8 +12,6 @@ COPYRIGHT 2004 BBN Systems and Technologies
 Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
-
-char casn_dump_sfcsid[] = "@(#)casn_dump.c 858P";
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -230,7 +225,7 @@ Procedure:
         buf[20];
     struct casn *tcasnp;
     /*
-     * step 1 
+     * step 1
      */
     if (!to)
         return _casn_obj_err(casnp, ASN_NULL_PTR);
@@ -251,7 +246,7 @@ Procedure:
             (!(casnp->flags & ASN_DEFINED_FLAG) ||
              (casnp->flags & ASN_EXPLICIT_FLAG) || casnp->tag < ASN_APPL_SPEC))
         {                       /* a tagged CHOICE is implicitly tagged
-                                 * explicitly and an explicitly tagged DEFINED 
+                                 * explicitly and an explicitly tagged DEFINED
                                  * needs the same, as does a nonANY DEFINED */
             if (casnp->tag != ASN_BOOLEAN)      /* so _dumpsize 7 lines below
                                                  * won't repeat it */
@@ -290,7 +285,7 @@ Procedure:
             return _dumpsize(tcasnp, to, offset, mode);
     }
     /*
-     * step 2 
+     * step 2
      */
     ansr += (j = _dump_tag(casnp->tag, c, offset,
                            (casnp->flags & ASN_INDEF_LTH_FLAG), mode));
@@ -309,7 +304,7 @@ Procedure:
             c += j;
     }
     /*
-     * step 3 
+     * step 3
      */
     if ((tcasnp->type & ASN_CONSTRUCTED))
     {
@@ -373,11 +368,11 @@ long _dumpread(
     char *c = to;
     int printable;
     long type = (casnp->type == ASN_ANY) ? casnp->tag : casnp->type;
-    long ansr = 0,
-        i,
-        j,
-        count = 80 - offset - 2,        // # of printable spaces less "" or 0x
-        lth;
+    long ansr = 0;
+    long i;
+    long j;
+    long count = 80 - offset - 2;        // # of printable spaces less "" or 0x
+    long lth;
 
     lth = casnp->lth;
     if (type == ASN_IA5_STRING || type == ASN_OCTETSTRING)

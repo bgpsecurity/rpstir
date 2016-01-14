@@ -1,6 +1,8 @@
 /**
-	Functions used for accessing the RTR database.
+   Functions used for accessing the RTR database.
  */
+
+#include "rtr.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -20,7 +22,6 @@
 #include "util/logging.h"
 #include "util/macros.h"
 #include "db/prep-stmt.h"
-#include "rtr.h"
 #include "db/util.h"
 
 

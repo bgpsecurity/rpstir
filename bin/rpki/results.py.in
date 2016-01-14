@@ -32,10 +32,10 @@ parser.add_option("-v", "--verbose",
                   help="output lists of valid/invalid/unknown objects in addition to counts")
 parser.add_option("-a", "--list-accepted",
           action="store_true", dest="listURIsAccepted", default=False,
-          help="list accepted objects") 
+          help="list accepted objects")
 parser.add_option("-n", "--list-not-accepted",
           action="store_true", dest="listURIsNotAccepted", default=False,
-          help="list not-accepted objects") 
+          help="list not-accepted objects")
 (options, args) = parser.parse_args()
 
 #

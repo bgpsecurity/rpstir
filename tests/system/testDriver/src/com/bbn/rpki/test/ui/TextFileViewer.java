@@ -22,7 +22,7 @@ public class TextFileViewer {
   private final JScrollPane pane = new JScrollPane(viewer);
   /**
    * @param file
-   * @throws IOException 
+   * @throws IOException
    */
   public TextFileViewer(File file) throws IOException {
     FileReader reader = new FileReader(file);

@@ -1,7 +1,3 @@
-/*
- * $Id: rpwork.h 888 2009-11-17 17:59:35Z gardiner $ 
- */
-
 #include "rpwork.h"
 #include <time.h>
 #include <fcntl.h>
@@ -59,16 +55,16 @@ static char *translate_file(
         return strdup(to);
     }
 
-    char * from_for_dirname = strdup(from);
+    char *from_for_dirname = strdup(from);
     if (from_for_dirname == NULL)
     {
         return NULL;
     }
 
-    char * from_dirname = dirname(from_for_dirname);
+    char *from_dirname = dirname(from_for_dirname);
 
     size_t relative_path_len = strlen(from_dirname) + 1 + strlen(to) + 1;
-    char * relative_path = malloc(relative_path_len);
+    char *relative_path = malloc(relative_path_len);
     if (relative_path == NULL)
     {
         free(from_for_dirname);
@@ -79,7 +75,7 @@ static char *translate_file(
 
     free(from_for_dirname);
 
-    char * absolute_path = realpath(relative_path, NULL);
+    char *absolute_path = realpath(relative_path, NULL);
 
     free(relative_path);
 
@@ -116,7 +112,7 @@ static int check_keyring(
             return -1;
         }
 
-        char * filename_raw = strndup(cc, filename_raw_len);
+        char *filename_raw = strndup(cc, filename_raw_len);
         if (filename_raw == NULL)
         {
             return -1;
@@ -180,7 +176,7 @@ static int trueOrFalse(
 static int next_cmd(
     char *outbufp,
     int siz,
-    FILE * SKI)
+    FILE *SKI)
 {
     /*
      * Function: Gets next command in control file, eliminating superfluous white
@@ -196,25 +192,29 @@ static int next_cmd(
      * 1. DO
      *      Read in next line
      *      IF none, return 0
-     *      Check for overflow or initial white space 
+     *      Check for overflow or initial white space
      *    WHILE line is just a comment
      * 2. Starting at input and output buffers
      *    DO
-     *      Copy a word to output up to the limit of output 
+     *      Copy a word to output up to the limit of output
      *      Skip over white space in input
      *      IF the output buffer is full but there's more input
      *        Return error
-     *      Put one space in output   
+     *      Put one space in output
      *    WHILE there is more input
-     *    Overwrite the last space with line end codes 
-     *    Return success  
+     *    Overwrite the last space with line end codes
+     *    Return success
      */
-    char locbuf[2 * SKIBUFSIZ],
-       *eip = &locbuf[sizeof(locbuf) - 1],      // last allowed char
-        *eop = &outbufp[siz - 3];       // last allowed char
-    do                          // step1
+    char locbuf[2 * SKIBUFSIZ];
+    // last allowed char
+    char *eip = &locbuf[sizeof(locbuf) - 1];
+    // last allowed char
+    char *eop = &outbufp[siz - 3];
+    // step1
+    do
     {
-        *eip = 'x';             // a test character
+        // a test character
+        *eip = 'x';
         if (!fgets(locbuf, sizeof(locbuf), SKI))
             return 0;
         if (*eip != 'x' || locbuf[0] <= ' ')
@@ -230,12 +230,13 @@ static int next_cmd(
             *op++ = *ip++;
         while (*ip && *ip <= ' ')
             ip++;
-        if (*ip > ' ' && op >= eop)     // No room for more
+        if (*ip > ' ' && op >= eop)
+            // No room for more
             return -1;
         *op++ = ' ';
     }
     while (*ip);
-    op[-1] = '\n';              // <= &outbuf[siz-2] 
+    op[-1] = '\n';              // <= &outbuf[siz-2]
     *op = 0;                    // <= &outbuf[siz-1]
     return 1;
 }
@@ -440,21 +441,23 @@ int sort_resources(
     struct iprange *iprangesp,
     int numranges)
 {
-    struct iprange *rp0,
-       *rp1,
-        spare;
-    int did,
-        i;
+    struct iprange *rp0;
+    struct iprange *rp1;
+    struct iprange spare;
+    int did;
+    int i;
     for (did = 0, i = 1; i < numranges;)
     {
         rp0 = &iprangesp[i - 1];
         rp1 = &iprangesp[i];
-        if (diff_ipaddr(rp0, rp1) > 0)  // swap them
+        if (diff_ipaddr(rp0, rp1) > 0)
         {
+            // swap them
             memcpy(&spare, rp0, sizeof(struct iprange));
             memcpy(rp0, rp1, sizeof(struct iprange));
             memcpy(rp1, &spare, sizeof(struct iprange));
-            i = 1;              // go back to start
+            i = 1;
+            // go back to start
             did++;
         }
         else
@@ -493,7 +496,8 @@ static struct AddressesOrRangesInIPAddressChoiceA *find_IP(
          ipFamp = (struct IPAddressFamilyA *)next_of(&ipFamp->self))
     {
         read_casn(&ipFamp->addressFamily, fambuf);
-        if (fambuf[1] == loctyp)        // OK the cert has some
+        if (fambuf[1] == loctyp)
+            // OK the cert has some
             return &ipFamp->ipAddressChoice.addressesOrRanges;
     }
     return (struct AddressesOrRangesInIPAddressChoiceA *)0;
@@ -509,7 +513,8 @@ void mk_certranges(
     struct IPAddressOrRangeA *ipAddrOrRangep;
     struct iprange *certrangep;
     struct AddressesOrRangesInIPAddressChoiceA *ipAddrOrRangesp;
-    struct Extension *extp = find_extension(&certp->toBeSigned.extensions, id_pe_ipAddrBlock, 0);
+    struct Extension *extp = find_extension(&certp->toBeSigned.extensions,
+                                            id_pe_ipAddrBlock, 0);
     if (extp)
     {
         if ((ipAddrOrRangesp = find_IP(IPv4, extp)))
@@ -541,7 +546,8 @@ void mk_certranges(
             }
         }
     }
-    if ((extp = find_extension(&certp->toBeSigned.extensions, id_pe_autonomousSysNum, 0)))
+    if ((extp = find_extension(&certp->toBeSigned.extensions,
+                               id_pe_autonomousSysNum, 0)))
     {
         struct AsNumbersOrRangesInASIdentifierChoiceA *asNumbersOrRangesp =
             &extp->extnValue.autonomousSysNum.asnum.asNumbersOrRanges;
@@ -610,7 +616,7 @@ static int getIPBlock(
 }
 
 int getSKIBlock(
-    FILE * SKI,
+    FILE *SKI,
     char *skibuf,
     int siz)
 {
@@ -656,7 +662,8 @@ static int parse_privatekey(
         return ERR_SCM_BADSKIFILE;
     }
     for (cc = &skibuf[16]; *cc && *cc <= ' '; cc++);
-    if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc, file_being_parsed) < 0)
+    if (strncmp(cc, "Keyring", 7) || check_keyring(keyring, cc,
+                                                   file_being_parsed) < 0)
     {
         xsnprintf(errbuf, sizeof(errbuf), "Invalid private key method.");
         return ERR_SCM_BADSKIFILE;
@@ -667,11 +674,11 @@ static int parse_privatekey(
 static int parse_topcert(
     char *skibuf,
     int siz,
-    FILE * SKI,
-    const char * SKI_filename)
+    FILE *SKI,
+    const char *SKI_filename)
 {
-    int ansr = 0,
-        val = next_cmd(skibuf, siz, SKI);
+    int ansr = 0;
+    int val = next_cmd(skibuf, siz, SKI);
     char *c = NULL;
     if (val <= 0 || strncmp(skibuf, "TOPLEVELCERTIFICATE ", 20))
     {
@@ -682,7 +689,8 @@ static int parse_topcert(
             xsnprintf(errbuf, sizeof(errbuf), "No top level certificate.");
     }
     else
-    {                           // get root cert
+    {
+        // get root cert
         if ((c = strchr(skibuf, (int)'\n')))
             *c = 0;
         for (c = &skibuf[20]; *c == ' '; c++);
@@ -729,13 +737,13 @@ static int parse_topcert(
 static int parse_control_section(
     char *skibuf,
     int siz,
-    FILE * SKI,
+    FILE *SKI,
     int *locflagsp)
 {
-    int ansr = 0,
-        val = 0;
-    char *c = skibuf,
-        *cc;
+    int ansr = 0;
+    int val = 0;
+    char *c = skibuf;
+    char *cc;
     while (c && !ansr && !strncmp(skibuf, "CONTROL ", 8))
     {
         if ((c = strchr(skibuf, (int)'\n')))
@@ -804,7 +812,8 @@ static int parse_Xcrldp(
     int ansr = 0;
     cc = nextword(cc);
     if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
-                 !find_extension(&myrootcert.toBeSigned.extensions, id_cRLDistributionPoints, 0)))
+                 !find_extension(&myrootcert.toBeSigned.extensions,
+                                 id_cRLDistributionPoints, 0)))
         ansr = ERR_SCM_BADSKIFILE;
     else if (strchr(cc, (int)','))
         ansr = ERR_SCM_BADSKIFILE;
@@ -825,7 +834,8 @@ static int parse_Xcp(
     cc = nextword(cc);
     if (!*cc ||
         (*cc == 'R' &&
-         ((!(extp = find_extension(&myrootcert.toBeSigned.extensions, id_certificatePolicies, 0))) ||
+         ((!(extp = find_extension(&myrootcert.toBeSigned.extensions,
+                                   id_certificatePolicies, 0))) ||
           num_items(&extp->extnValue.certificatePolicies.self) > 1)))
         ansr = ERR_SCM_BADSKIFILE;
     else if (nextword(cc))
@@ -841,12 +851,12 @@ static int parse_Xcp(
 static int parse_tag_section(
     char *skibuf,
     int siz,
-    FILE * SKI)
+    FILE *SKI)
 {
-    int ansr = 0,
-        val = 0;
-    char *c,
-       *cc;
+    int ansr = 0;
+    int val = 0;
+    char *c;
+    char *cc;
     while (!ansr && !strncmp(skibuf, "TAG", 3))
     {
         if ((c = strchr(skibuf, (int)'\n')))
@@ -889,25 +899,29 @@ static int parse_tag_section(
 
 int parse_SKI_blocks(
     struct keyring *keyring,
-    FILE * SKI,
-    const char * SKI_filename,
+    FILE *SKI,
+    const char *SKI_filename,
     char *skibuf,
     int siz,
     int *locflagsp)
 {
     /*
-     * Procedure: 1. Get nformation on the top level certificate Get first SKI 
-     * line from the control file 2. IF no error, process the control section
-     * IF no error, process the tag section 3. IF no error AND the next is
-     * part of the control section, note error
-     * 
-     * FOR each item in done_certs Flag the target cert in the database as
-     * having a para Sign the paracertificate Put it into database with para
-     * flag Free all and return error 
+     * Procedure:
+     * 1. Get nformation on the top level certificate
+     *    Get first SKI line from the control file
+     * 2. IF no error, process the control section
+     *    IF no error, process the tag section
+     * 3. IF no error AND the next is part of the control section, note error
+     *
+     *      FOR each item in done_certs
+     *        Flag the target cert in the database as having a para
+     *        Sign the paracertificate
+     *        Put it into database with para flag
+     *    Free all and return error
      */
-    Certificate(&myrootcert, (ushort) 0);
-    char *c,
-       *cc;
+    Certificate(&myrootcert, (ushort)0);
+    char *c;
+    char *cc;
     // step 1
     int ansr = 0;
     int val = 0;

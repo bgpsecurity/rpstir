@@ -25,7 +25,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
   private enum AS {
     BLANK, EDIT, NEW
   }
-  
+
   static class ArgComponents {
     private final JTextField argName = new JTextField(20);
     private final JCheckBox isParameter = new JCheckBox();
@@ -34,8 +34,10 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
     private ArgDescription argDescription;
 
     ArgComponents(ActionListener editAction) {
-      argName.setToolTipText("Enter the name by which this argument will be referenced");
-      isParameter.setToolTipText("Select if this argument should always have the specified value");
+      argName.setToolTipText(
+          "Enter the name by which this argument will be referenced");
+      isParameter.setToolTipText(
+          "Select if this argument should always have the specified value");
       editButton = new JButton("Add");
       editButton.addActionListener(editAction);
       argName.addFocusListener(new FocusAdapter() {
@@ -108,18 +110,21 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
      */
     private void updateToolTips() {
       boolean parameter = argDescription.isParameter();
-      argValue.setToolTipText(parameter ? "Specifies a constant value for this argument" :
+      argValue.setToolTipText(
+        parameter ? "Specifies a constant value for this argument" :
         "Specifies a default value for this argument");
     }
   }
   private final ArgComponents[] argComponentsArray = new ArgComponents[6];
   private TaskDescription taskDescription;
-  
+
   /**
    * Initialize fields
    */
-  public ArgDescriptionsEditor() { 
-    addComponentsToTaskPanel(new JLabel("Arg Name"), new JLabel("Parameter"), new JLabel("Arg Value"), new JLabel("Action"));
+  public ArgDescriptionsEditor() {
+    addComponentsToTaskPanel(
+      new JLabel("Arg Name"), new JLabel("Parameter"),
+      new JLabel("Arg Value"), new JLabel("Action"));
     for (int i = 0; i < argComponentsArray.length; i++) {
       final int index = i;
       ActionListener editAction = new ActionListener() {
@@ -135,7 +140,7 @@ public class ArgDescriptionsEditor extends PropertiesEditor {
             ArgComponents argComponents = argComponentsArray[index];
             argComponents.setValues(argDescription);
             argComponents.setVisible(AS.EDIT);
-            if (index + 1 < argComponentsArray.length) 
+            if (index + 1 < argComponentsArray.length)
               argComponentsArray[index + 1].setVisible(AS.NEW);
           } else {
             // Remove

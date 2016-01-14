@@ -1,13 +1,8 @@
-/*
- * $Id$ 
- */
-
-
 #ifndef _SCM_H_
 #define _SCM_H_
 
 /*
- * some constants for sizes of db tables 
+ * some constants for sizes of db tables
  */
 #define DNAMESIZE 4096
 #define FNAMESIZE 256
@@ -20,10 +15,10 @@
 #define MANFILES_SIZE 400000
 
 /*
- * A database table has four characteristics: its real name (the name by which 
+ * A database table has four characteristics: its real name (the name by which
  * the database knows it), its user-friendly name, the SQL statement that
  * queries it, and the list of column names. The following data structure
- * captures that. 
+ * captures that.
  */
 
 typedef struct _scmtab {
@@ -35,7 +30,7 @@ typedef struct _scmtab {
 } scmtab;
 
 /*
- * This structure defines the overall database schema 
+ * This structure defines the overall database schema
  */
 
 typedef struct _scm {
@@ -51,14 +46,14 @@ typedef struct _scm {
 extern scm *initscm(
     void);
 extern void freescm(
-    scm * scmp);
+    scm *scmp);
 extern char *makedsnscm(
     const char *pref,
     const char *db,
     const char *usr,
     const char *pass);
 extern scmtab *findtablescm(
-    scm * scmp,
+    scm *scmp,
     char *hname);
 
 #endif

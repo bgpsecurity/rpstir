@@ -9,7 +9,7 @@ for use in downloading the Repository Objects of the RPKI.
 ================================================================================
     Top-level requirements
 --------------------------------------------------------------------------------
-T1. 
+T1.
 
 
 ================================================================================
@@ -60,4 +60,3 @@ $RPKI_ROOT/util/mysql-c-api/ to access the database.  Of those files,
 prep-stmt.c contains the prepared statements used to access the database, and
 client-chaser.c contains the functions that use the prepared statements and
 handle their results.
-

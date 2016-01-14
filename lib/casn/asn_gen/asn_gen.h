@@ -1,6 +1,6 @@
-/*
- * $Id$ 
- */
+#ifndef LIB_CASN_ASN_GEN_ASN_GEN_H
+#define LIB_CASN_ASN_GEN_ASN_GEN_H
+
 /***
  *
  * FILE:        asn_gen.h
@@ -10,9 +10,6 @@
  *
  */
 
-/*
- * sfcsid[] = "@(#)asn_gen.h 828P" 
- */
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>
@@ -56,36 +53,36 @@
 
 struct tag_table {
     ulong tag;
-    char *string,
-       *classname,
-       *define;
+    char *string;
+    char *classname;
+    char *define;
 };
 
 struct parent {
     struct parent *next;
-    int index,                  /* of parent */
-        map_lth;
+    int index;                  /* of parent */
+    int map_lth;
     char *mymap;                /* via this parent */
 };
 
 struct name_table {
     char *name;
     long pos;
-    long type,
-        tag;
-    short subtype;              /* used for SET/SEQ OF universal primitives to 
+    long type;
+    long tag;
+    short subtype;              /* used for SET/SEQ OF universal primitives to
                                  * deal with passthroughs */
-    int flags,
-        generation;
-    long min,
-        max;
-    struct parent parent,
-        child;
+    int flags;
+    int generation;
+    long min;
+    long max;
+    struct parent parent;
+    struct parent child;
 };
 
 struct id_table {
-    char *name,
-       *val;
+    char *name;
+    char *val;
 };
 
 struct ub_table {
@@ -105,12 +102,12 @@ struct module_table {
 
 struct name_area {
     char *name;
-    unsigned item,              /* size of each item in area */
-        chunk,                  /* number of items to add ad each enlargement */
-        limit;                  /* upper limit of size -- prevent runaway */
+    unsigned item;              /* size of each item in area */
+    unsigned chunk;             /* number of items to add ad each enlargement */
+    unsigned limit;             /* upper limit of size -- prevent runaway */
     char *area;                 /* pointer to a general name area */
-    unsigned size,              /* number of items in the area */
-        next;                   /* index to next first free item in area */
+    unsigned size;              /* number of items in the area */
+    unsigned next;              /* index to next first free item in area */
 };
 
 struct alt_subclass {
@@ -134,15 +131,15 @@ struct import_table *add_import_item(
 
 struct table_entry {
     struct table_entry *next;
-    char *item,
-       *id,
-       *value;
+    char *item;
+    char *id;
+    char *value;
 };
 
 struct class_item {
     struct class_item *next;
-    char *name,
-       *predicate;
+    char *name;
+    char *predicate;
 };
 
 struct table_out {
@@ -153,16 +150,16 @@ struct table_out {
 
 struct with_syntax {
     struct with_syntax *next;
-    char optional,
-       *subject,
-       *verb,
-       *object;
+    char optional;
+    char *subject;
+    char *verb;
+    char *object;
     struct table_out *table_outp;
 };
 
 struct class_table {
-    char *name,
-       *instance_name;
+    char *name;
+    char *instance_name;
     struct class_item item;
     struct with_syntax with_syntax;
     struct table_out table_out;
@@ -190,151 +187,170 @@ struct fd_to_stream {
 
 struct chain {
     struct chain *next;
-}  *add_chain(
+};
+
+struct chain *
+add_chain(
     struct chain *,
     size_t);
 
-void warn(
-    const char * format,
+void
+warn(
+    const char *format,
     ...)
     WARN_PRINTF(1, 2);
 
-void done(
+void
+done(
     bool is_error,
-    const char * format,
+    const char *format,
     ...)
     WARN_PRINTF(2, 3)
     NO_RETURN;
 
-extern char token[],
-    itemname[],
-    classname[],
-    prevname[],
-    path[],
-    subclass[],
-    defaultname[],
-    numstring[],
-    defined_by[],
-    definer[],
-    tablename[],
-    inclass[],
-   *source,
-    lo_end[],
-    hi_end[],
-    curr_file[],
-   *def_constraintp,
-   *sub_val,
-    asn_constr_id[],
-    asn_gen_id[],
-    asn_hdr_id[],
-    asn_java_id[],
-    asn_pproc_id[],
-    asn_read_id[],
-    asn_tabulate_id[],
-    absent_w[],
-    algid_w[],
-    all_w[],
-    any_w[],
-    application_w[],
-    array_w[],
-    begin_w[],
-    by_w[],
-    casn_constr_id[],
-    casn_hdr_id[],
-    casn_w[],
-    choice_w[],
-    class_w[],
-    colon_ch[],
-    component_w[],
-    components_w[],
-    constrained_w[],
-    default_w[],
-    defined_w[],
-    definitions_w[],
-    either_w[],
-    empty_w[],
-    encrypted_w[],
-    end_w[],
-    enumerated_w[],
-    equal_ch[],
-    explicit_w[],
-    exports_w[],
-    false_w[],
-    few_w[],
-    from_w[],
-    function_w[],
-    identifier_w[],
-    implicit_w[],
-    imports_w[],
-    in_w[],
-    instance_w[],
-    integer_w[],
-    many_w[],
-    min_w[],
-    max_w[],
-    none_w[],
-    null_w[],
-    null_ptr_w[],
-    of_w[],
-    optional_w[],
-    real_w[],
-    relOID_w[],
-    prefixes[],
-    present_w[],
-    private_w[],
-    self_w[],
-    sequence_w[],
-    signed_w[],
-    size_w[],
-    string_w[],
-    syntax_w[],
-    table_w[],
-    tags_w[],
-    true_w[],
-    type_identifier_w[],
-    union_w[],
-    unique_w[],
-    universal_w[],
-    with_w[],
-   *cat(
+extern char token[];
+extern char itemname[];
+extern char classname[];
+extern char prevname[];
+extern char path[];
+extern char subclass[];
+extern char defaultname[];
+extern char numstring[];
+extern char defined_by[];
+extern char definer[];
+extern char tablename[];
+extern char inclass[];
+extern char *source;
+extern char lo_end[];
+extern char hi_end[];
+extern char curr_file[];
+extern char *def_constraintp;
+extern char *sub_val;
+extern char asn_java_id[];
+extern char absent_w[];
+extern char algid_w[];
+extern char all_w[];
+extern char any_w[];
+extern char application_w[];
+extern char array_w[];
+extern char begin_w[];
+extern char by_w[];
+extern char casn_w[];
+extern char choice_w[];
+extern char class_w[];
+extern char colon_ch[];
+extern char component_w[];
+extern char components_w[];
+extern char constrained_w[];
+extern char default_w[];
+extern char defined_w[];
+extern char definitions_w[];
+extern char either_w[];
+extern char empty_w[];
+extern char encrypted_w[];
+extern char end_w[];
+extern char enumerated_w[];
+extern char equal_ch[];
+extern char explicit_w[];
+extern char exports_w[];
+extern char false_w[];
+extern char few_w[];
+extern char from_w[];
+extern char function_w[];
+extern char identifier_w[];
+extern char implicit_w[];
+extern char imports_w[];
+extern char in_w[];
+extern char instance_w[];
+extern char integer_w[];
+extern char many_w[];
+extern char min_w[];
+extern char max_w[];
+extern char none_w[];
+extern char null_w[];
+extern char null_ptr_w[];
+extern char of_w[];
+extern char optional_w[];
+extern char real_w[];
+extern char relOID_w[];
+extern char prefixes[];
+extern char present_w[];
+extern char private_w[];
+extern char self_w[];
+extern char sequence_w[];
+extern char signed_w[];
+extern char size_w[];
+extern char string_w[];
+extern char syntax_w[];
+extern char table_w[];
+extern char tags_w[];
+extern char true_w[];
+extern char type_identifier_w[];
+extern char union_w[];
+extern char unique_w[];
+extern char universal_w[];
+extern char with_w[];
+
+char *
+cat(
     char *,
-    char *),
-   *expand_area(
-    struct name_area *),
-   *find_child(
-    char *),
-   *find_class(
-    ulong),
-   *find_define(
-    ulong),
-   *find_defined_class(
-    int),
-   *find_typestring(
-    ulong),
-   *get_obj_id(
+    char *);
+
+char *
+expand_area(
+    struct name_area *);
+
+char *
+find_child(
+    char *);
+
+char *
+find_class(
+    ulong);
+
+char *
+find_define(
+    ulong);
+
+char *
+find_defined_class(
+    int);
+
+char *
+find_typestring(
+    ulong);
+
+char *
+get_obj_id(
     int,
     char *,
-    char *),
-   *peek_token(
-    int),
-  **read_table(
+    char *);
+
+char *
+peek_token(
+    int);
+
+char **
+read_table(
     int *ncolsp,
-    struct name_table *ntbp),
-   *recalloc(
+    struct name_table *ntbp);
+
+char *
+recalloc(
     char *,
     size_t,
     size_t);
 
 extern struct tag_table tag_table[];
 
-extern struct name_area class_area,
-    name_area,
-    id_area,
-    import_area,
-    macro_area,
-    constraint_area,
-    ub_area,
-    module_area;
+extern struct name_area class_area;
+extern struct name_area name_area;
+extern struct name_area id_area;
+extern struct name_area import_area;
+extern struct name_area macro_area;
+extern struct name_area constraint_area;
+extern struct name_area ub_area;
+extern struct name_area module_area;
 
 extern struct fd_to_stream streams;
 
@@ -342,222 +358,363 @@ extern struct alt_subclass *alt_subclassp;
 
 extern short subtype;
 
-extern int array,
-    classcount,
-    flags,
-    made_change,
-    option,
-    pre_proc_pass,
-    state,
-    explicit1,
-    add_child(
+extern int array;
+extern int classcount;
+extern int flags;
+extern int made_change;
+extern int option;
+extern int pre_proc_pass;
+extern int state;
+extern int explicit1;
+
+/**
+Function: Adds 'name' to object name table with 'parent', path defined by
+'offset', tag of 'type' and flags of 'option'
+Procedure:
+1. Add name to table
+   Set its tag and flags
+   Go to its last filled in parent structure (note: items may have been
+        addeas children by find_definer without a known offset)
+   IF need another parent structure, make one
+   Fill in parent index
+   IF offset is >= 0, put count of this subordinate into mymap
+**/
+int
+add_child(
     char *,
     int,
     long,
     long,
-    int),
-    add_class_def(
-    int),
-    add_include_name(
-    char *),
-    add_name(
+    int);
+
+int
+add_class_def(
+    int);
+
+int
+add_include_name(
+    char *);
+
+int
+add_name(
     char *,
     long,
-    int),
-    encr_xform(
+    int);
+
+int
+encr_xform(
     int,
-    char *),
-    find_file(
-    char *),
-    find_parent_index(
+    char *);
+
+int
+find_file(
+    char *);
+
+int
+find_parent_index(
     struct name_table *ntbp,
-    char *name),
-    get_known(
+    char *name);
+
+int
+get_known(
     int,
     char *,
-    char *),
-    get_must(
+    char *);
+
+int
+get_must(
     int,
-    char *),
-    get_token(
+    char *);
+
+int
+get_token(
     int,
-    char *),
-    is_reserved(
-    char *),
-    is_a_type(
-    char *),
-    is_imported(
-    char *),
-    loop_test(
+    char *);
+
+int
+is_reserved(
+    char *);
+
+int
+is_a_type(
+    char *);
+
+int
+is_imported(
+    char *);
+
+int
+loop_test(
     struct name_table *,
     struct name_table *,
-    int),
-    putoct(
-    char *,
-    long),
-    read_definition(
-    int),
-    read_global(
-)  ,
-    read_item(
-    int,
-    void (*func) ()),
-    set_name_option(
-    char *to,
-    char *from),
-    test_dup(
-    char *,
-    long *),
-    was_imported(
-    char *),
-    wdcmp(
-    char *,
-    char *);
+    int);
 
-extern ulong find_tag(
-    char *),
-    find_type(
-    char *);
+int
+putoct(
+    char *,
+    long);
 
-extern long curr_line,
-    curr_pos,
-    integer_val,
-    min,
-    max,
-    real_start,
-    tag,
-    tablepos,
-    table_start_line,
-    type,
-    find_ub(
-    char *),
-    tell_pos(
-    FILE *);
+int
+read_definition(
+    int);
 
-extern void add_class_member(
-    struct class_table *,
-    char *),
-    add_constraint(
-    char *,
-    int),
-    add_macro(
-    int,
-    char *),
-    add_ub(
-    char *,
-    long,
-    int),
-    bclr(
-    char *,
-    int),
-    class_instance(
-    int,
-    FILE *,
-    struct class_table *,
-    char *),
-    close_file(
-    int),
-    collect_ids(
-    int,
-    struct class_table *,
-    FILE *),
-    collect_id_type(
-    int,
-    struct class_table *,
-    FILE *),
-    cconstruct(
-)  ,
-    construct(
-)  ,
-    cdo_hdr(
-)  ,
-    cvt_number(
-    char *,
-    char *),
-    do_hdr(
-)  ,
-    do_macro(
-    int,
-    FILE *,
-    struct macro_table *),
-    do_subclass(
-    int fd,
-    FILE * str),
-    end_definition(
-)  ,
-    end_item(
-)  ,
-    fill_name(
-    char **,
-    char *),
-    fill_table_entry(
-    int,
-    int),
-    free_imports(
-)  ,
-    free_table(
-    char **tablepp,
-    int ncols),
-    get_expected(
-    int,
-    ulong,
-    char *),
-    get_exports(
-    int,
-    FILE *),
-    get_fnames(
-    int),
-    get_subtype(
-)  ,
-    jconstruct(
-)  ,
-    mk_in_name(
-    char *,
-    char *,
-    char *),
-    mk_subclass(
-    char *),
-    pre_proc(
-    int,
-    FILE *,
-    int),
-    scan_syntax(
-    int,
-    struct with_syntax *,
-    struct with_syntax *),
-    set_alt_subtype(
-    struct name_table *,
-    int),
-    set_classname(
-    int nc),
-    syntax(
-    char *),
-    tabulate(
-)  ,
-    test_paren(
-    int,
-    char *,
-    char *,
-    char **,
-    char *);
-
-extern struct name_table *find_name(
-    char *),
-   *find_parent(
-    char *),
-   *replace_name(
-    char *);
-
-extern FILE *outstr,
-   *find_stream(
+int
+read_global(
     );
 
-extern struct id_table *add_id(
-    char *),
-   *find_id(
+int
+read_item(
+    int,
+    void (*func)(void));
+
+int
+set_name_option(
+    char *to,
+    char *from);
+
+int
+test_dup(
+    char *,
+    long *);
+
+int
+was_imported(
     char *);
 
-extern struct macro_table *find_macro(
+int
+wdcmp(
+    char *,
+    char *);
+
+ulong
+find_tag(
+    char *);
+
+ulong
+find_type(
+    char *);
+
+extern long curr_line;
+extern long curr_pos;
+extern long integer_val;
+extern long min;
+extern long max;
+extern long real_start;
+extern long tag;
+extern long tablepos;
+extern long table_start_line;
+extern long type;
+
+long
+find_ub(
+    char *);
+
+long
+tell_pos(
+    FILE *);
+
+void
+add_class_member(
+    struct class_table *,
+    char *);
+
+void
+add_constraint(
+    char *,
+    int);
+
+void
+add_macro(
+    int,
+    char *);
+
+void
+add_ub(
+    char *,
+    long,
+    int);
+
+void
+bclr(
+    char *,
+    int);
+
+void
+class_instance(
+    int,
+    FILE *,
+    struct class_table *,
+    char *);
+
+void
+close_file(
+    int);
+
+void
+collect_ids(
+    int,
+    struct class_table *,
+    FILE *);
+
+void
+collect_id_type(
+    int,
+    struct class_table *,
+    FILE *);
+
+void
+cconstruct(
+    void);
+
+void
+cdo_hdr(
+    );
+
+void
+cvt_number(
+    char *,
+    char *);
+
+void
+do_hdr(
+    );
+
+void
+do_macro(
+    int,
+    FILE *,
+    struct macro_table *);
+
+void
+do_subclass(
+    int fd,
+    FILE *str);
+
+void
+end_definition(
+    );
+
+void
+end_item(
+    );
+
+void
+fill_name(
+    char **,
+    char *);
+
+void
+fill_table_entry(
+    int,
+    int);
+
+void
+free_imports(
+    );
+
+void
+free_table(
+    char **tablepp,
+    int ncols);
+
+void
+get_expected(
+    int,
+    ulong,
+    char *);
+
+void
+get_exports(
+    int,
+    FILE *);
+
+void
+get_fnames(
+    int);
+
+void
+get_subtype(
+    );
+
+void
+jconstruct(
+    );
+
+void
+mk_in_name(
+    char *,
+    char *,
+    char *);
+
+void
+mk_subclass(
+    char *);
+
+void
+pre_proc(
+    int,
+    FILE *,
+    int);
+
+void
+scan_syntax(
+    int,
+    struct with_syntax *,
+    struct with_syntax *);
+
+void
+set_alt_subtype(
+    struct name_table *,
+    int);
+
+void
+set_classname(
+    int nc);
+
+void
+syntax(
+    char *);
+
+void
+tabulate(
+    void);
+
+void
+test_paren(
+    int,
+    char *,
+    char *,
+    char **,
+    char *);
+
+struct name_table *
+find_name(
+    char *);
+
+struct name_table *
+find_parent(
+    char *);
+
+struct name_table *
+replace_name(
+    char *);
+
+extern FILE *outstr;
+
+FILE *
+find_stream(
+    );
+
+struct id_table *
+add_id(
+    char *);
+
+struct id_table *
+find_id(
+    char *);
+
+struct macro_table *
+find_macro(
     char *);
 
 /* verbosity: default 0 (nothing printed to stdout on success)
@@ -617,3 +774,5 @@ extern int vflag;
 #define MSG_INCOMPLETE_ITEM "Incomplete table item %s\n"
 #define MSG_FIND_CONSTRAINT "Couldn't find constraint for %s\n"
 #define MSG_RENAME_FILE "Can't rename file: %s\n"
+
+#endif

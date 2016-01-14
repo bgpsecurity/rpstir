@@ -1,3 +1,5 @@
+#include "connection_control.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
@@ -15,7 +17,6 @@
 
 #include "config.h"
 #include "signals.h"
-#include "connection_control.h"
 #include "connection.h"
 
 
@@ -216,7 +217,7 @@ void *connection_control_main(
             if (cxn_info->fd + 1 > nfds)
                 nfds = cxn_info->fd + 1;
         }
-        Bag_stop_iteration(connections);        // return value doesn't really 
+        Bag_stop_iteration(connections);        // return value doesn't really
                                                 // matter here
 
         retval = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
@@ -282,7 +283,7 @@ void *connection_control_main(
                 }
             }
         }
-        Bag_stop_iteration(connections);        // return value doesn't really 
+        Bag_stop_iteration(connections);        // return value doesn't really
                                                 // matter here
 
         for (i = 0; i < argsp->num_listen_fds; ++i)

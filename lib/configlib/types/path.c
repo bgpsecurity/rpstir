@@ -1,3 +1,5 @@
+#include "path.h"
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +9,6 @@
 
 #include "util/path_compat.h"
 #include "util/stringutils.h"
-
-#include "path.h"
 
 
 /**

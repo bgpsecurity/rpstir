@@ -4,8 +4,6 @@ lib_casn_asn_gen_asn_gen_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-DCONSTRAINTS \
 	-DINTEL \
-	-Dasn_constr_id=casn_constr_id \
-	-Dasn_hdr_id=casn_hdr_id \
 	-Dconstruct=cconstruct \
 	-Ddo_hdr=cdo_hdr \
 	-I$(top_srcdir)/lib/casn/asn_gen

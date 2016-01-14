@@ -1,18 +1,18 @@
-MAKE_ROA (1)             ROA-PKI                                   MAKE_ROA(1)                                     
+MAKE_ROA (1)             ROA-PKI                                   MAKE_ROA(1)
 
 NAME
 
         make_roa - makes a ROA
 
 SYNOPSIS
-  
+
         make_roa  -r roadatafile -c certfile -k keyfile -o outfile [-v vfile]
 
         make_roa parameterfile
 
 DESCRIPTION
 
-          This program (in the roa-utils directory) creates a ROA from these 
+          This program (in the roa-utils directory) creates a ROA from these
           parameters supplied:
 
             -r roadatafile where roadatafile is he name of a file containing
@@ -23,7 +23,7 @@ DESCRIPTION
             -c certfile where certfile is the name of the file containing
                the certificate of the entity that will sign the ROA
 
-            -k keyfile where keyfile is the name of a file containing the 
+            -k keyfile where keyfile is the name of a file containing the
                private key to be used for signing the ROA.
 
             -o outfile where outfile is the name of the file to which the ROA
@@ -31,10 +31,10 @@ DESCRIPTION
 
             -v vfile where human-readable version of outfile is to be written.
 
-        The parameters may be in any order.  
+        The parameters may be in any order.
 
             As an alternative, the program may be run with a single parameter
-        naming a file which contains the above-named parameters separated by 
+        naming a file which contains the above-named parameters separated by
         white space, e.g. the file might contain:
 
                 -c mycertificate -k mykey -o some.roa -r roa.txt -v some.raw
@@ -43,15 +43,15 @@ DESCRIPTION
 
                  Created outfile
 
-        If there is any error, the program terminates with one of several 
+        If there is any error, the program terminates with one of several
         messages:
 
-          Missing xxx 
+          Missing xxx
           invalid parameter yyy
           Couldn't open filename
           Error reading filename
           Error signing with filename
           Error writing wilename
-  
+
         where xxx is the name of a parameter, yyy is a parameter given, and
         filename is the name of a file in the parameter list.

@@ -90,7 +90,8 @@ set_state(const thread_state * statep) // warn if return value unused?
 {
   char * path;
   if (statep->state_path == NULL)
-    path = cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/thread", get_globally_unique_thread_id());
+    path = cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/thread",
+               get_globally_unique_thread_id());
   else
     path = statep->state_path;
 
@@ -129,20 +130,24 @@ get_state(thread_state *statep)
 
 get_dir_path(dir_type dtype, URI uri, char *buffer, size_t maxlen)
 {
-  buffer = cat(getenv("RPKI_ROOT"), "/", REPO_DIR, "/", dir_type_names[dtype], "/", normalize(uri));
+  buffer = cat(getenv("RPKI_ROOT"), "/", REPO_DIR, "/",
+               dir_type_names[dtype], "/", normalize(uri));
 }
 
 get_log_path(log_type ltype, URI uri, char *buffer, size_t maxlen)
 {
-  buffer = cat(getenv("RPKI_ROOT"), "/", LOG_DIR, "/", log_type_names[ltype], "/", normalize(uri));
+  buffer = cat(getenv("RPKI_ROOT"), "/", LOG_DIR, "/",
+               log_type_names[ltype], "/", normalize(uri));
   if (ltype == LOG_ARCHIVE)
   {
-    buffer = cat(buffer, "-", date and time, ".", host name, ".", random number);
+    buffer = cat(buffer, "-", date and time, ".", host name,
+                 ".", random number);
   }
   buffer = cat(buffer, ".log");
 }
 
-// PRECONDITION: recover_all() has finished successfully, i.e. cur_path is in good shape and the log is archived
+// PRECONDITION: recover_all() has finished successfully,
+// i.e. cur_path is in good shape and the log is archived
 start_directory_update(thread_state *statep)
 {
   get_dir_path(DIR_OLD, statep->rsync_uri, old_path, maxlen);
@@ -170,7 +175,8 @@ bool run_rsync(thread_state *statep)
   get_dir_path(DIR_CUR, statep->rsync_uri, cur_path, maxlen);
   get_log_path(LOG_CUR, statep->rsync_uri, logfile, maxlen);
 
-  call rsync to update cur_path from statep->rsync_uri, being aware of hardlinks and logging to logfile
+  call rsync to update cur_path from statep->rsync_uri, being aware of
+      hardlinks and logging to logfile
   if (rsync failed)
   {
     rm -r cur_path
@@ -206,7 +212,8 @@ bool run_aur(thread_state *statep)
   run rsync_aur on logfile
   flush rcli
   if (aur or rcli failed)
-    return false; // no rollback because AUR should be idempotent and read-only on logfile
+    return false; // no rollback because AUR should be idempotent and
+                  // read-only on logfile
 
   statep->aur_done = DIR_CUR;
   set_state(statep);
@@ -234,12 +241,14 @@ bool archive_log(thread_state *statep)
   else if (ret indicates cur_file didn't exist)
   {
     /*
-      This can only happen if somebody is messing with the filesystem or if this
-      is during a recovery, in which case the program crashed between archiving
-      the log and setting log_done to LOG_ARCHIVE.
+      This can only happen if somebody is messing with the filesystem
+      or if this is during a recovery, in which case the program
+      crashed between archiving the log and setting log_done to
+      LOG_ARCHIVE.
 
-      In the first case, we're screwed anyway. In the second case, it's better
-      to keep going because the log is already in the correct place.
+      In the first case, we're screwed anyway. In the second case,
+      it's better to keep going because the log is already in the
+      correct place.
     */
     log warning
   }
@@ -318,7 +327,8 @@ recover(thread_state *statep)
     // try to re-run an aborted AUR
     // NOTE: this relies on AUR being an idempotent operation
 
-    assert(statep->rsync_done == DIR_CUR); // assert because of the above if-statement
+    assert(statep->rsync_done == DIR_CUR); // assert because of the
+                                           // above if-statement
 
     if (statep->log_done != LOG_CUR)
     {
@@ -363,10 +373,14 @@ recover_all()
   free_thread_state(statep);
 }
 
-bool conflicts_with_currently_processing(ThreadSafeSet *currently_processing, URI uri)
+bool
+conflicts_with_currently_processing(
+    ThreadSafeSet *currently_processing,
+    URI uri)
 {
   assert(calling thread has a lock on currently_processing);
-  return (uri is equal to, a descendent of, or an ancestor of any member of currently_processing);
+  return (uri is equal to, a descendent of, or an ancestor of any
+          member of currently_processing);
 }
 
 bool ready_for_next_attempt(URI_attempt *uri_attemptp)
@@ -375,34 +389,51 @@ bool ready_for_next_attempt(URI_attempt *uri_attemptp)
 }
 
 /**
-  NOTE: This should be eventually replaced with a smarter function that looks
-  at URIs and picks the URI with the largest distance from currently_processing,
-  where "distance" somehow captures this notion:
+   NOTE: This should be eventually replaced with a smarter function
+   that looks at URIs and picks the URI with the largest distance from
+   currently_processing, where "distance" somehow captures this
+   notion:
 
-  If curently_processing has:
-    rsync://a.foo.com/a/b/c
-    rsync://b.foo.com/
-    rsync://bar.com/
-    rsync://foo.org/
+   If curently_processing has:
 
- The prefered ordering of to_process, from best next choice to worst, is:
-    rsync://quux.net/        because there are no URIs in the .net TLD
-    rsync://quux.org/        because there are fewer second-level domains in .org (foo.org) than .com (foo.com and bar.com)
-    rsync://quux.com/        because there are no URIs in the .quuz.com domain
-    rsync://c.foo.com/       because there are no URIs in the .c.foo.com domain
-    rsync://a.foo.com/e      because there are no paths begining with /e (top-level path) on a.foo.com
-    rsync://a.foo.com/a/b/d  because there are no paths begining with /a/b/d (third-level path) on a.foo.com
+       rsync://a.foo.com/a/b/c
+       rsync://b.foo.com/
+       rsync://bar.com/
+       rsync://foo.org/
 
-  I.e. for each domain name label from most- to least- significant, the least common labels are prefered, then
-  for each path directory from top to bottom, the least common directories are prefered.
+   The prefered ordering of to_process, from best next choice to
+   worst, is:
 
-  This is designed to minimize the chance of any one attacker blocking all rsync threads
-  at the same time.
+       rsync://quux.net/        because there are no URIs in the .net
+                                TLD
+       rsync://quux.org/        because there are fewer second-level
+                                domains in .org (foo.org) than .com
+                                (foo.com and bar.com)
+       rsync://quux.com/        because there are no URIs in the
+                                .quuz.com domain
+       rsync://c.foo.com/       because there are no URIs in the
+                                .c.foo.com domain
+       rsync://a.foo.com/e      because there are no paths begining
+                                with /e (top-level path) on a.foo.com
+       rsync://a.foo.com/a/b/d  because there are no paths begining
+                                with /a/b/d (third-level path) on
+                                a.foo.com
 
+   I.e. for each domain name label from most- to least- significant,
+   the least common labels are prefered, then for each path directory
+   from top to bottom, the least common directories are prefered.
 
-  @return the next URI_attempt to try, or NULL if there's nothing to be tried at this time
+   This is designed to minimize the chance of any one attacker
+   blocking all rsync threads at the same time.
+
+   @return
+       the next URI_attempt to try, or NULL if there's nothing to be
+       tried at this time
 */
-URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_container<URI_attempt *> to_process)
+URI_attempt *
+choose_next_uri(
+    ThreadSafeSet *currently_processing,
+    some_container<URI_attempt *> to_process)
 {
   assert(calling thread has lock on currently_processing);
   assert(calling thread has lock on to_process);
@@ -410,7 +441,8 @@ URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_containe
   for each URI_attempt * uri_attemptp in to_process
   {
     if (ready_for_next_attempt(uri_attemptp) &&
-      !conflicts_with_currently_processing(currently_processing, uri_attemptp->uri))
+        !conflicts_with_currently_processing(
+            currently_processing, uri_attemptp->uri))
     {
       return uri_attemptp;
     }
@@ -419,19 +451,29 @@ URI_attempt * choose_next_uri(ThreadSafeSet *currently_processing, some_containe
   return NULL;
 }
 
-/** @return the next URI_attempt to try, or NULL if the caller should stop processing URIs */
-URI_attempt * next_uri(ThreadSafeSet *currently_processing, some_container<URI_attempt *> to_process)
+/**
+ * @return
+ *     the next URI_attempt to try, or NULL if the caller should stop
+ *     processing URIs
+ */
+URI_attempt *
+next_uri(
+    ThreadSafeSet *currently_processing,
+    some_container<URI_attempt *> to_process)
 {
   lock(currently_processing);
   lock(to_process);
 
-  while (to_process is not empty || there's no special flag on to_process that indicates we should stop)
+  while (to_process is not empty ||
+         there's no special flag on to_process that indicates we should stop)
   {
     URI_attempt *uri_attemptp = NULL;
-    if ((uri_attemptp = choose_next_uri(currently_processing, to_process)) != NULL)
+    if ((uri_attemptp = choose_next_uri(currently_processing, to_process))
+        != NULL)
     {
       assert(ready_for_next_attempt(uri_attemptp));
-      assert(!conflicts_with_currently_processing(currently_processing, uri_attemptp->uri));
+      assert(!conflicts_with_currently_processing(
+                 currently_processing, uri_attemptp->uri));
 
       remove uri_attemptp from to_process
       add uri_attemptp->uri to currently_processing
@@ -454,7 +496,9 @@ URI_attempt * next_uri(ThreadSafeSet *currently_processing, some_container<URI_a
   return NULL;
 }
 
-failed_attempt(URI_attempt * uri_attemptp, some_container<URI_attempt *> to_process)
+failed_attempt(
+    URI_attempt * uri_attemptp,
+    some_container<URI_attempt *> to_process)
 {
   log failed uri_attemptp->uri, try number uri_attemptp->attempt at now
 
@@ -479,7 +523,8 @@ failed_attempt(URI_attempt * uri_attemptp, some_container<URI_attempt *> to_proc
 
 listen_thread(void *to_process_voidp)
 {
-  some_container<URI_attempt *> to_process = (some_container<URI_attempt *>)to_process_voidp;
+  some_container<URI_attempt *> to_process =
+      (some_container<URI_attempt *>)to_process_voidp;
 
   ...
   {
@@ -498,8 +543,10 @@ listen_thread(void *to_process_voidp)
 
 rsync_thread(void *to_process_voidp, void *currently_processing_voidp)
 {
-  some_container<URI_attempt *> to_process = (some_container<URI_attempt *>)to_process_voidp;
-  ThreadSafeSet *currently_processing = (ThreadSafeSet *)currently_processing_voidp;
+  some_container<URI_attempt *> to_process =
+      (some_container<URI_attempt *>)to_process_voidp;
+  ThreadSafeSet *currently_processing =
+      (ThreadSafeSet *)currently_processing_voidp;
 
   thread_state *statep = new_thread_state();
   URI_attempt *uri_attemptp;
@@ -541,11 +588,13 @@ main()
 
   if (!lock(cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/main.lock")))
   {
-     log error message that main is already running and delete lock file if it's not running
+     log error message that main is already running and delete lock
+         file if it's not running
      exit
   }
 
-  trap signals and on exit call unlock(cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/main.lock"))
+  trap signals and on exit call
+      unlock(cat(getenv("RPKI_ROOT"), "/", STATE_DIR, "/main.lock"))
 
   recover_all();
 
@@ -556,7 +605,8 @@ main()
   thread rsyncs[num_threads];
   for (int i = 0; i < num_threads; ++i)
   {
-    rsyncs[i] = start_thread(rsync_thread, (void*)to_process, (void*)currently_processing);
+    rsyncs[i] = start_thread(
+        rsync_thread, (void*)to_process, (void*)currently_processing);
   }
 
   listener.join();

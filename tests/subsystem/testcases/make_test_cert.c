@@ -1,8 +1,3 @@
-/*
- * $Id: make_cert.c 453 2008-05-28 15:30:40Z cgardiner $ 
- */
-
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -169,9 +164,9 @@ static void make_fullpath(
     struct stat stbuf;
 
     // certificate goes in issuer's directory, e.g.
-    // CM1.cer and C1.cer go nowhere else, 
-    // C1M1.cer and C12.cer go into C1/, 
-    // C12M1.cer and C123.cer go into C1/2 
+    // CM1.cer and C1.cer go nowhere else,
+    // C1M1.cer and C12.cer go into C1/,
+    // C12M1.cer and C123.cer go into C1/2
     // C123M1.cer goes into C1/2/3
     char *f = fullpath,
         *l = locpath;
@@ -472,7 +467,7 @@ static int write_family(
  * static void view_extensions(struct Extensions *extsp) { struct Extension
  * *extp; for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
  * extp = (struct Extension *)next_of(&extp->self)) { char id[20];
- * read_objid(&extp->extnID, id); printf("%s\n", id); } } 
+ * read_objid(&extp->extnID, id); printf("%s\n", id); } }
  */
 int main(
     int argc,
@@ -640,12 +635,12 @@ int main(
     }
     /*
      * IF this is not a root IF issuer has no subjectKeyId extension, error
-     * Create subject's authKeyId extension Write the issuer's subjectKeyID as 
+     * Create subject's authKeyId extension Write the issuer's subjectKeyID as
      * the subject's authKeyID IF this is a root, use the subject's
      * subjectKeyId field as a source ELSE IF the issuer's cert has no
      * subjectKeyId field, error ELSE use the issuer's subjKeyId filed as the
      * source Get or make subject's authKey Id extension Copy the source into
-     * subject's authKeyId 
+     * subject's authKeyId
      */
     if (issuerkeyfile)
     {

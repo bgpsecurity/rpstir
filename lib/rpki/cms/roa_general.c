@@ -1,8 +1,3 @@
-/*
- * $Id: roa_general.c 475 2008-04-11 13:17:55Z dmontana $ 
- */
-
-
 #include <assert.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
@@ -574,8 +569,8 @@ ssize_t roaGetPrefixes(
 
 int roaGenerateFilter(
     struct CMS *r,
-    uchar * cert,
-    FILE * fp,
+    uchar *cert,
+    FILE *fp,
     char *str,
     int strLen)
 {

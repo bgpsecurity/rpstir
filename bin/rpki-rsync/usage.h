@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
- * $Id$ 
- */
-
 void myusage(
     const char *);
 

@@ -59,7 +59,7 @@ static int fprintDate(
         int year;
         /*
          * Interpret UTCTime according to
-         * http://tools.ietf.org/html/rfc5280#section-4.1.2.5.1 
+         * http://tools.ietf.org/html/rfc5280#section-4.1.2.5.1
          */
         strncpy(year_str, date_str, 2);
         year_str[2] = '\0';
@@ -92,7 +92,7 @@ int main(
     int ret;                    /* return value */
 
     /*
-     * Parse command line arguments. 
+     * Parse command line arguments.
      */
     opterr = 0;
     while ((c = getopt(argc, argv, "bag")) != -1)
@@ -121,7 +121,7 @@ int main(
         }
     }
     /*
-     * If no selection, default to both dates. 
+     * If no selection, default to both dates.
      */
     if (option_notbefore == 0 && option_notafter == 0)
     {
@@ -136,7 +136,7 @@ int main(
     file = argv[optind];
 
     /*
-     * Parse certificate. 
+     * Parse certificate.
      */
     Certificate(&cert, (unsigned short)0);      /* constructor */
     ret = get_casn_file(&cert.self, (char *)file, 0);
@@ -147,7 +147,7 @@ int main(
     }
 
     /*
-     * Extract dates 
+     * Extract dates
      */
     if (option_notbefore)
         fprintDate(stdout, &cert.toBeSigned.validity.notBefore, option_gtime);
@@ -155,7 +155,7 @@ int main(
         fprintDate(stdout, &cert.toBeSigned.validity.notAfter, option_gtime);
 
     /*
-     * Clean up. 
+     * Clean up.
      */
     delete_casn(&cert.self);
     return 0;

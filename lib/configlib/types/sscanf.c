@@ -1,7 +1,8 @@
+#include "sscanf.h"
+
 #include <stdio.h>
 #include <inttypes.h>
 
-#include "sscanf.h"
 #include "util/stringutils.h"
 
 bool config_type_sscanf_converter(

@@ -1,7 +1,3 @@
-/*
- * $Id$ 
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,14 +40,14 @@ static int tdirlen = 0;         // length of tdir
  * save state in case operations leave db in bad state
  */
 static int saveState(
-    scmcon * conp,
-    scm * scmp)
+    scmcon *conp,
+    scm *scmp)
 {
     int i;
     int sta = 0;
     int leen;
-    char *name,
-       *stmt;
+    char *name;
+    char *stmt;
 
     for (i = 0; sta == 0 && i < scmp->ntables; i++)
     {
@@ -76,14 +72,14 @@ static int saveState(
  * restore state when operations leave db in bad state
  */
 static int restoreState(
-    scmcon * conp,
-    scm * scmp)
+    scmcon *conp,
+    scm *scmp)
 {
     int i;
     int sta = 0;
     int leen;
-    char *name,
-       *stmt;
+    char *name;
+    char *stmt;
 
     for (i = 0; sta == 0 && i < scmp->ntables; i++)
     {
@@ -108,13 +104,13 @@ static int restoreState(
 }
 
 /*
- * Perform the delete operation. Return 0 on success and a negative error code 
- * on failure. 
+ * Perform the delete operation. Return 0 on success and a negative error code
+ * on failure.
  */
 
 static int deleteop(
-    scmcon * conp,
-    scm * scmp)
+    scmcon *conp,
+    scm *scmp)
 {
     int sta;
 
@@ -135,13 +131,13 @@ static int deleteop(
 }
 
 /*
- * Perform the create operation. Return 0 on success and a negative error code 
- * on failure. 
+ * Perform the create operation. Return 0 on success and a negative error code
+ * on failure.
  */
 
 static int createop(
-    scmcon * conp,
-    scm * scmp)
+    scmcon *conp,
+    scm *scmp)
 {
     int sta;
 
@@ -172,8 +168,8 @@ static int createop(
 }
 
 static int create2op(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char *topdir)
 {
     scmkva aone;
@@ -222,7 +218,7 @@ static int create2op(
 
 /*
  * Safely print a message to stderr that we are out of memory. Cannot use
- * (f)printf since it can try to allocate memory. 
+ * (f)printf since it can try to allocate memory.
  */
 
 static void membail(
@@ -234,7 +230,7 @@ static void membail(
 }
 
 /*
- * Print a usage message. 
+ * Print a usage message.
  */
 
 static void usage(
@@ -262,7 +258,7 @@ static void usage(
 }
 
 /*
- * Ask a yes or no question. Returns 1 for yes, 0 for no, -1 for error. 
+ * Ask a yes or no question. Returns 1 for yes, 0 for no, -1 for error.
  */
 
 static int yorn(
@@ -371,31 +367,19 @@ static char *afterwhite(
     return (run);
 }
 
-/*******************
-static char *splitOnWhite(char *ptr) {
-  char *run = ptr;
-  while (*run && ! isspace((int)(unsigned char)*run)) run++;
-  if (! *run) return run;
-  *run = 0;
-  run++;
-  while (isspace((int)(unsigned char)*run)) run++;
-  return run;
-}
-********************/
-
 static char *hdir = NULL;
 
 static int aur(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     char what,
     char *valu)
 {
     char *outdir;
-    char *outfile,
-       *outfull;
-    int sta,
-        trusted = 0;
+    char *outfile;
+    char *outfull;
+    int sta;
+    int trusted = 0;
 
     sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
     if (sta != 0)
@@ -407,9 +391,6 @@ static int aur(
         free((void *)outfull);
         return sta;
     }
-    // trusted = strstr(outdir, "TRUST") != NULL;
-    if (sta < 0)
-        return (sta);
     switch (what)
     {
     case 'a':
@@ -458,12 +439,12 @@ static char *hasoneline(
 }
 
 /*
- * This function processes socket data line by line. First, it looks in "left" 
+ * This function processes socket data line by line. First, it looks in "left"
  * to see if this contains one or more lines. In such a case it returns a
  * pointer to the first such line, and modifies left so that that line is
  * deleted. If left does not contain a complete line this function will read
  * as much socket data as it can. It will stuff the first complete line (if
- * any) into 'line', and put the remaining stuff into left. 
+ * any) into 'line', and put the remaining stuff into left.
  */
 
 static int sock1line(
@@ -493,7 +474,7 @@ static int sock1line(
         return sta;
     /*
      * Blocking mode, by A. Chi, 3/18/11.  Even if no data is available yet,
-     * block until we can read at least one byte. 
+     * block until we can read at least one byte.
      */
     if (rd <= 0)
         rd = 1;
@@ -525,57 +506,57 @@ static int sock1line(
 
 /*
  * Receive one or more lines of data over the socket and process them.  The
- * lines received will look like TAG whitespace VALUE CRLF. The following tags 
+ * lines received will look like TAG whitespace VALUE CRLF. The following tags
  * are defined:
- * 
- * 
+ *
+ *
  * B (begin).  This is sent when the AUR program starts. Its VALUE is the
  * current date and time.
- * 
+ *
  * E (end).  Sent when the AUR program is done. VALUE is the current date and
  * time.  AUR may close its end of the socket immediately after sending this
  * message; it need not wait.
- * 
+ *
  * C (cd): Sent when the current directory is read or changed.
- * 
+ *
  * A (add). Sent when a file is added to the repository. VALUE is the full,
  * absolute path to the file.
- * 
+ *
  * U (update). Sent when a file is updated in the repository, e.g. the
  * contents change but the filename remains the same and is in the same
  * directory.
- * 
+ *
  * R (remove). Sent when a file is removed from the repository.  VALUE is the
  * full path to the file.
- * 
+ *
  * L (link). Sent when a link (hard or symbolic) is made between two files in
  * the repository. VALUE is formed as follows: "filename1" SP filename2.
  * Filename1 is a full pathname in double quotes; it is followed by a single
- * space, and then filename2 which is also a full pathname. The link direction 
+ * space, and then filename2 which is also a full pathname. The link direction
  * is filename1 -> filename2.
- * 
+ *
  * F (fatal error). Sent (if possible) when the AUR program detects an
  * unrecoverable error occurs. VALUE is the error text. It is expected that
- * AUR will immediately close its end of the socket when this happens (perhaps 
+ * AUR will immediately close its end of the socket when this happens (perhaps
  * even without being able to send an E message).
- * 
+ *
  * X (error). Sent when an error occurs. VALUE is error text.  This is an
  * optional message.
- * 
+ *
  * W (warning). Sent when a warning occurs. VALUE is warning text. Optional
  * message.
- * 
+ *
  * S (save state). Sent when it makes sense to save the state
- * 
+ *
  * V (restore state). Sent when it makes sense to restore the state
- * 
+ *
  * I (information). Sent to convey arbitrary information.  VALUE is the
- * informational text. Optional message. 
+ * informational text. Optional message.
  */
 
 static int sockline(
-    scm * scmp,
-    scmcon * conp,
+    scm *scmp,
+    scmcon *conp,
     int s)
 {
     char *left = NULL;
@@ -624,7 +605,7 @@ static int sockline(
         case 'a':
         case 'A':              /* add */
             LOG(LOG_INFO, "AUR add request: %s", valu);
-            sta = aur(scmp, conp, 'a', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -633,7 +614,7 @@ static int sockline(
         case 'u':
         case 'U':              /* update */
             LOG(LOG_INFO, "AUR update request: %s", valu);
-            sta = aur(scmp, conp, 'u', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -642,7 +623,7 @@ static int sockline(
         case 'r':
         case 'R':              /* remove */
             LOG(LOG_INFO, "AUR remove request: %s", valu);
-            sta = aur(scmp, conp, 'r', valu);   // , NULL);
+            sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -694,11 +675,10 @@ static int sockline(
 }
 
 static int fileline(
-    scm * scmp,
-    scmcon * conp,
-    FILE * s)
+    scm *scmp,
+    scmcon *conp,
+    FILE *s)
 {
-    // char *left = NULL;
     char ptr[1024];
     char *valu;
     char c;
@@ -743,7 +723,7 @@ static int fileline(
         case 'a':
         case 'A':              /* add */
             LOG(LOG_INFO, "AUR add request: %s", valu);
-            sta = aur(scmp, conp, 'a', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -752,7 +732,7 @@ static int fileline(
         case 'u':
         case 'U':              /* update */
             LOG(LOG_INFO, "AUR update request: %s", valu);
-            sta = aur(scmp, conp, 'u', valu);   // , splitOnWhite(valu));
+            sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -761,7 +741,7 @@ static int fileline(
         case 'r':
         case 'R':              /* remove */
             LOG(LOG_INFO, "AUR remove request: %s", valu);
-            sta = aur(scmp, conp, 'r', valu);   // , NULL);
+            sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
                 LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
             else
@@ -798,7 +778,6 @@ static int fileline(
             break;
         case 'y':
         case 'Y':              /* synchronize */
-            // (void)write(s, "Y", 1);
             break;
         case 0:
             break;
@@ -977,7 +956,7 @@ int main(
      * If a create or delete operation is being performed, then a test dsn
      * will be needed; create it now and defer the creation of the real dsn
      * until later. Otherwise, create the real dsn.
-     * 
+     *
      * A test dsn is needed for operations that operate on the overall
      * database state as opposed to the rpki tables, namely the create and
      * delete operations.
@@ -1021,14 +1000,14 @@ int main(
     }
     /*
      * Process command line options in the following order: delete, create,
-     * dofile, dodir, listener. 
+     * dofile, dodir, listener.
      */
     if (do_delete > 0)
         sta = deleteop(testconp, scmp);
     if ((do_create > 0) && (sta == 0))  /* first phase of create */
         sta = createop(testconp, scmp);
     /*
-     * Don't need the test connection any more 
+     * Don't need the test connection any more
      */
     if (testconp != NULL)
     {
@@ -1049,7 +1028,7 @@ int main(
         return (sta);
     }
     /*
-     * If a connection to the real DSN has not been opened yet, open it now. 
+     * If a connection to the real DSN has not been opened yet, open it now.
      */
     if (realconp == NULL)
     {
@@ -1065,13 +1044,13 @@ int main(
         }
     }
     /*
-     * If a create operation was requested, complete it now. 
+     * If a create operation was requested, complete it now.
      */
     if ((do_create > 0) && (sta == 0))
         sta = create2op(scmp, realconp, topdir);
     /*
      * If the top level repository directory is not set, then retrieve it from
-     * the database. 
+     * the database.
      */
     if ((tdir == NULL) && (sta == 0))
     {
@@ -1086,7 +1065,7 @@ int main(
         tdirlen = strlen(tdir);
     }
     /*
-     * Setup for actual SSL operations 
+     * Setup for actual SSL operations
      */
     OpenSSL_add_all_algorithms();
     ERR_load_crypto_strings();

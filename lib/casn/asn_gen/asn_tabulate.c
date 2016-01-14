@@ -1,6 +1,3 @@
-/*
- * $Id$ 
- */
 /*****************************************************************************
 File:     asn_tabulate.c
 Contents: functions to create the name table as part of the ASN_GEN program.
@@ -12,50 +9,52 @@ Remarks:
 
 *****************************************************************************/
 
-const char asn_tabulate_rcsid[] =
-    "$Header: /nfs/sub-rosa/u1/IOS_Project/ASN/Dev/rcs/cmd/asn_gen/asn_tabulate.c,v 1.1 1995/01/11 22:43:11 jlowry Exp $";
-char asn_tabulate_id[] = "@(#)asn_tabulate.c 737P";
-
 #include "asn_gen.h"
 
-static void massage_table(
-    struct name_table *),
-    mk_table_child(
+static void
+massage_table(
+    struct name_table *);
+static void
+mk_table_child(
     int,
     long,
-    int),
-    set_false(
+    int);
+static void
+set_false(
     struct name_table *,
-    struct name_table *),
-    sort_defineds(
-    struct name_table *),
-    tab_def(
+    struct name_table *);
+static void
+sort_defineds(
+    struct name_table *);
+static void
+tab_def(
     int,
-    struct name_table *),
-    tab_item(
+    struct name_table *);
+static void
+tab_item(
     int,
     int);
 
 void tabulate(
-    )
+    void)
 {
     /*
      * Function: Fills name_tab with info about the input file
-     * 
-     * 
+     *
+     *
      * Outputs: Name_tab filled in Procedure: WHILE there's a next token
      * Switch on state 1.  Case GLOBAL IF read_global returns < 0, break IF
      * token is '::=' Add object name to name_table IF position not yet set,
-     * set it to current position Save index as current parent Clear 'name' Go 
+     * set it to current position Save index as current parent Clear 'name' Go
      * to IN_DEFINITION state 2.  Case IN_DEFINITION Read the definition IF
      * not in GLOBAL state, tabulate the definition IF in GLOBAL state clear
      * classname 3.  Case IN_ITEM IF token is '::=' OR '{', exit with fatal
      * message IF read_item returns -1, return IF token is '}' OR ','
      * (indicating the end of an item) Tabulate the item Default: Exit with
-     * fatal message 
+     * fatal message
      */
-    int parent,
-        in_choice;
+    int parent;
+    int in_choice;
     struct name_table *ptbp;
     option = 0;
     if (state != SUB_ITEM)
@@ -67,7 +66,7 @@ void tabulate(
         switch (state)
         {
             /*
-             * step 1 
+             * step 1
              */
         case GLOBAL:
             if (read_global() < 0)
@@ -83,7 +82,7 @@ void tabulate(
             classcount++;
             break;
             /*
-             * step 2 
+             * step 2
              */
         case IN_DEFINITION:    /* got ::= */
             if (read_definition(parent) < 0)
@@ -100,7 +99,7 @@ void tabulate(
                 end_item();
             break;
             /*
-             * step 3 
+             * step 3
              */
         case IN_ITEM:          /* got '{' */
             if (*token == ':' || *token == '{')
@@ -150,7 +149,7 @@ static void tab_def(
     if (*defined_by)
         mk_table_child(parent, (long)0, option);
     /*
-     * in case name table moved! 
+     * in case name table moved!
      */
     ptbp = &((struct name_table *)name_area.area)[parent];
     if (tag >= 0)
@@ -162,7 +161,7 @@ static void tab_def(
     else
         tag = ptbp->type = type;
     /*
-     * step 2 
+     * step 2
      */
     if ((ptbp->max = max))
         ptbp->min = min;
@@ -179,7 +178,7 @@ static void tab_def(
     else if (subtype >= 0 && subtype < ASN_CONSTRUCTED)
         ptbp->subtype = subtype;
     /*
-     * step 3 
+     * step 3
      */
     if ((*token == '{' && (type == ASN_BITSTRING || type == ASN_INTEGER ||
                            type == ASN_ENUMERATED || type == ASN_OBJ_ID) &&
@@ -197,7 +196,7 @@ static void tab_def(
     add_name(classname, type, (option & ASN_OF_FLAG) ?
              (option &= ~(ASN_POINTER_FLAG)) : option);
     /*
-     * step 4 
+     * step 4
      */
     if ((option & ASN_TABLE_FLAG))
         ptbp->flags |= ASN_TABLE_FLAG;
@@ -256,7 +255,7 @@ static void tab_item(
     long loctag;
     struct name_table *ntbp;
     /*
-     * step 1 
+     * step 1
      */
     if (in_choice)
     {
@@ -273,7 +272,7 @@ static void tab_item(
     if (type == ASN_BOOLEAN)
         *subclass = 0;
     /*
-     * step 2 
+     * step 2
      */
     if ((type < 0 && *subclass) ||
         (in_choice && *itemname && !*tablename && type != ASN_FUNCTION))
@@ -335,7 +334,7 @@ static void tab_item(
         tell_pos(streams.str) >= real_start)
         warn(MSG_MISSING, "item name");
     /*
-     * step 3 
+     * step 3
      */
     if (*token == ',')
     {
@@ -400,7 +399,7 @@ Procedure:
        *oldtoken,
         segment[128];
     /*
-     * step 1 
+     * step 1
      */
     for (c = segment; *definername && *definername != '.';
          *c++ = *definername++);
@@ -416,7 +415,7 @@ Procedure:
     if (!ntbp || !ntbp->name)
     {
         /*
-         * step 2 
+         * step 2
          */
         for (c = testname; *c; c++);
         c = cat((oldclass = &c[1]), classname);
@@ -453,7 +452,7 @@ Procedure:
                 else
                     cat(inclass, b);
                 /*
-                 * step 3 
+                 * step 3
                  */
                 if (*definername)
                     ntbp = find_definer(definername, parent);
@@ -495,7 +494,7 @@ Procedure:
        *childp;
     int curr_parent = ptbp - table;
     /*
-     * for(ctbp = table; ctbp->name; ctbp++) 
+     * for(ctbp = table; ctbp->name; ctbp++)
      */
     for (childp = &ptbp->child; childp && childp->index >= 0;
          childp = childp->next)
@@ -570,19 +569,19 @@ Procedure:
 	IF it is a basic TABLE
             Set table's tag to parent's and parent's position to table's
 **/
-    struct name_table *ptbp,
-       *ctbp,
-       *lftbp;
-    int curr_parent,
-        generation,
-        last,
-        lth;
+    struct name_table *ptbp;
+    struct name_table *ctbp;
+    struct name_table *lftbp;
+    int curr_parent;
+    int generation;
+    int last;
+    int lth;
     char *func = "massage_table";
-    struct parent *pparentp,
-       *cparentp,
-       *childp;
+    struct parent *pparentp;
+    struct parent *cparentp;
+    struct parent *childp;
     /*
-     * step 1 
+     * step 1
      */
     for (ctbp = table; ctbp->name; ctbp++)
     {
@@ -592,7 +591,7 @@ Procedure:
         if (!(ctbp->flags & ASN_DEFINED_FLAG))
             continue;
         /*
-         * ctbp is a defined item 
+         * ctbp is a defined item
          */
         for (cparentp = &ctbp->parent; cparentp && cparentp->index >= 0;
              cparentp = cparentp->next)
@@ -601,23 +600,23 @@ Procedure:
             if (!(ptbp->flags & ASN_DEFINER_FLAG))
                 continue;
             /*
-             * ptbp is the (only) definer item 
+             * ptbp is the (only) definer item
              */
             /*
-             * cparentp is the item in the defined pointing to definer 
+             * cparentp is the item in the defined pointing to definer
              */
             for (lftbp = table; lftbp->name; lftbp++)
             {
                 if (!(lftbp->flags & ASN_TABLE_FLAG))
                     continue;
                 /*
-                 * lftbp is a table item 
+                 * lftbp is a table item
                  */
                 for (pparentp = &lftbp->parent; pparentp &&
                      pparentp->index != cparentp->index;
                      pparentp = pparentp->next);
                 /*
-                 * pparentp (if any) points to definer item 
+                 * pparentp (if any) points to definer item
                  */
                 if (pparentp)
                     break;
@@ -629,7 +628,7 @@ Procedure:
                 continue;
             }
             /*
-             * lftbp is the (only) TABLE child of definer 
+             * lftbp is the (only) TABLE child of definer
              */
             add_child(lftbp->name, (ctbp - table), 0, -1, 0);
             if (cparentp == &ctbp->parent)
@@ -656,7 +655,7 @@ Procedure:
         }
     }
     /*
-     * step 1.5 
+     * step 1.5
      */
     for (ctbp = table, lth = 0; ctbp->name; ctbp++, lth++)
     {
@@ -681,7 +680,7 @@ Procedure:
         }
     }
     /*
-     * step 2 
+     * step 2
      */
     for (ctbp = table, generation = 0; ctbp->name; ctbp++)
     {
@@ -701,7 +700,7 @@ Procedure:
     if (!generation && loop_test(table, table, 0))
         done(true, MSG_NESTING);
     /*
-     * step 3 
+     * step 3
      */
     for (generation = last = 0; generation <= last; generation++)
     {
@@ -717,7 +716,7 @@ Procedure:
                     break;
             }
             /*
-             * step 5 
+             * step 5
              */
             for (childp = &ptbp->child; childp && childp->index >= 0;
                  childp = childp->next)
@@ -806,7 +805,7 @@ Procedure:
                     break;
             }
             /*
-             * ptbp is child of lftbp, i.e. the non-false item 
+             * ptbp is child of lftbp, i.e. the non-false item
              */
             if (!ptbp->name)
                 done(true, MSG_NO_CHILD, lftbp->name);
@@ -836,7 +835,7 @@ static void mk_table_child(
      * once, fatal error 3. IF there's a table item that is a child of the
      * defining object Make that table item also a child of this defined
      * object ELSE make this defined object a child of the definer (this will
-     * be sorted out at the end when the table has been defined 
+     * be sorted out at the end when the table has been defined
      */
     int child;
     struct name_table *ntbp,
@@ -845,7 +844,7 @@ static void mk_table_child(
     struct parent *parentp;
     if (parent < 0)
         return;
-    child = add_child(defined_by, parent, offset, (ulong) ASN_CHOICE,   /* step 
+    child = add_child(defined_by, parent, offset, (ulong) ASN_CHOICE,   /* step
                                                                          * 1 */
                       (ASN_DEFINED_FLAG | (option & ASN_OPTIONAL_FLAG)));
     if (!(ntbp = find_definer(definer, parent)) || !ntbp->name)
@@ -855,7 +854,7 @@ static void mk_table_child(
     }
     tntbp = (struct name_table *)name_area.area;
     parent = ntbp - tntbp;
-    for (entbp = &tntbp[name_area.next]; tntbp < entbp; tntbp++)        /* step 
+    for (entbp = &tntbp[name_area.next]; tntbp < entbp; tntbp++)        /* step
                                                                          * 3 */
     {
         if (!(tntbp->flags & ASN_TABLE_FLAG))
@@ -914,10 +913,10 @@ static void copy_parent(
 static void sort_defineds(
     struct name_table *ntbp)
 {
-    struct parent tparent,
-       *parentp,
-       *nparentp,
-       *pparentp;
+    struct parent tparent;
+    struct parent *parentp;
+    struct parent *nparentp;
+    struct parent *pparentp;
     do
     {
         for (nparentp = (parentp = &ntbp->parent)->next;

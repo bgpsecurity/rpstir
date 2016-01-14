@@ -1,3 +1,5 @@
+#include "connection.h"
+
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -15,19 +17,18 @@
 #include "signals.h"
 #include "rpki-rtr/pdu.h"
 
-#include "connection.h"
 #include "db.h"
 
 
 #define ERROR_TEXT(str) (uint8_t *)str, strlen(str)
 
-#define CXN_LOG(run_statep, priority, format, ...) \
-	LOG((priority), "[%s]:%s: " format, \
-		(run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
+#define CXN_LOG(run_statep, priority, format, ...)                      \
+    LOG((priority), "[%s]:%s: " format,                                 \
+        (run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
 
-#define CXN_ERR_LOG(run_statep, err, format, ...) \
-	ERR_LOG((err), (run_statep)->errorbuf, "[%s]:%s: " format, \
-		(run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
+#define CXN_ERR_LOG(run_statep, err, format, ...)                       \
+    ERR_LOG((err), (run_statep)->errorbuf, "[%s]:%s: " format,          \
+            (run_statep)->host, (run_statep)->serv, ## __VA_ARGS__)
 
 
 struct run_state {
@@ -837,7 +838,7 @@ static bool wait_on_semaphore(
 
     if (use_timeout && run_state->state == READY)       // if we're
                                                         // RESPONDING, we
-                                                        // can't send a Notify 
+                                                        // can't send a Notify
                                                         // anyway
     {
         struct timespec abs_timeout = run_state->next_cache_state_check_time;

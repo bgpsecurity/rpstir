@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from time import time
-from Queue import Queue 
+from Queue import Queue
 from rpkirepo import *
 import ConfigParser
 from netaddr import IPAddress, IPNetwork, IPRange
@@ -52,7 +52,7 @@ def configuration_parser(factory_dict,fileName):
                         roav4l     = []
                         roav6l     = []
                         subjkeyfile= None
-                        
+
                         for opt in options:
                                 if opt == 'childspec':
                                         val = config.get(section,opt)
@@ -112,18 +112,18 @@ def configuration_parser(factory_dict,fileName):
                                 f = ROA_Factory(bluePrintName=name, ipv4List=ipv4, \
                                                 ipv6List=ipv6, asList=as_list, childSpec=child, \
                                                 serverName=server, breakAway=breakA, ttl=t, \
-                                                ROAipv4List =roav4l, ROAipv6List = roav6l,asid = a)  
+                                                ROAipv4List =roav4l, ROAipv6List = roav6l,asid = a)
                         else:
                                 print 'Unrecognized type included in name of section in the .ini'
-                                return 
+                                return
                         #Add our bluePrintName to the factory dictionary
                         factory_dict[name]=f
-                        
+
         except ValueError:
                 print 'A ValueError occurred, check the syntax of your config file'
         except:
                 print 'An error occurred'
-                        
+
 
 #Main create driver function used for creating directories and building them
 #into a fully functioning repository
@@ -137,10 +137,10 @@ def create_driver(iana):
     #locals to keep track of where we are in creation
     repo_depth = 0
     repo_size = 1
-    
+
     #check our conditionals
     while(not(ca_queue.empty()) and (MAX_DEPTH > repo_depth) and MAX_NODES > repo_size):
-        
+
         ca_node = ca_queue.get()
 
         #Check if this is the start of a new level
@@ -149,7 +149,7 @@ def create_driver(iana):
             if ca_queue.empty()== True:
                 break
             else:
-                #Otherwise add the falg back into the queue to 
+                #Otherwise add the falg back into the queue to
                 #track for the next level
                 ca_queue.put(ca_node)
                 repo_depth+= 1
@@ -176,7 +176,7 @@ def create_driver(iana):
         ca_node.manifests.append(new_manifest)
         repo_size+=1
 
-        
+
         #Add all of our children to the queue of CAs
         for child in child_list:
             if isinstance(child, CA_Object):
@@ -207,13 +207,13 @@ def create_children(ca_node, repo_size):
 # 		except:
 # 		    print "Child creation failed: type = %s" % ca_def[0]
             else:
-                return (child_list, repo_size)  
+                return (child_list, repo_size)
 
     return (child_list, repo_size)
 
 
-    
-    
+
+
 #
 # A testing function to help determine if above classes
 #   and functionality is correctly working. SPACED not TABBED function
@@ -231,12 +231,11 @@ def main():
         #House Keeping to clean up the old REPOSITORY
         #Should remove objects/keys,configs, and REPOSITORY
         os.system("rm -r "+OBJECT_PATH+"/*")
-        
+
         iana = CA_Object(FACTORIES['IANA'])
-        
+
         create_driver(iana)
-        
+
 #Fire off the test
 if __name__ == '__main__':
     main()
-   

@@ -1,7 +1,7 @@
-#include <pthread.h>
-
 #define COMPAT_NO_CLOBBER
 #include "cryptlib_compat.h"
+
+#include <pthread.h>
 
 
 static pthread_once_t cryptInit_called = PTHREAD_ONCE_INIT;

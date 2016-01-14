@@ -7,10 +7,6 @@
 #include "rpki-asn1/privkey.h"
 #include "util/logging.h"
 
-/*
- * $Id$ 
- */
-
 uchar *setmember(
     struct casn * mem,
     uchar * bufp,

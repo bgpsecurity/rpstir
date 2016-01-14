@@ -89,7 +89,7 @@ def update_one_TA(tal_file):
 
     # Compute local path to TA
     local_path = compute_local_path(rsync_uri, ta_repo_path)
-    
+
     # Copy existing TA (if any) to backup file
     is_existing_TA = False
     local_backup_path = None
@@ -163,7 +163,7 @@ def update_one_TA(tal_file):
 
     # Add new TA to database.
     ret = subprocess.call(['rcli', '-y', '-F', local_path])
-    
+
     # If failure, restore old TA in the filesystem and database.
     if ret != 0:
         syslog(LOG_WARNING,
@@ -327,7 +327,7 @@ def verify_TA_signature(cert_path):
         return ret
     if options.verbose:
         syslog(LOG_DEBUG, "Created temporary PEM version at: " + pemfilename)
-    
+
     # Invoke OpenSSL's verify
     p1 = subprocess.Popen([options.openssl_cmd, 'verify',
                            '-check_ss_sig', pemfilename],
@@ -339,10 +339,10 @@ def verify_TA_signature(cert_path):
         ret = 0
     else:
         ret = -1
-    
+
     # Clean up
     os.remove(pemfilename)
-    
+
     return ret
 
 def verify_SubjectPubKeyInfo(cert_path, pubkey_base64):
@@ -367,7 +367,7 @@ def remove_from_db(cert_path):
 if __name__ == "__main__":
 
     openlog("@PACKAGE_NAME@-updateTA", LOG_PERROR, LOG_USER)
-    
+
     # Parse command line arguments
     usage = "usage: %prog [options] file.tal [file2.tal ...]"
     parser = OptionParser(usage=usage)
@@ -385,7 +385,7 @@ if __name__ == "__main__":
     if len(args) == 0:
         parser.print_help()
         sys.exit(1)
-    
+
     # Get top-level RPKI directory, and compute local repository cache path
     repo_path = subprocess.Popen(["config_get", "RPKICacheDir"],
                                  stdout=subprocess.PIPE) \
@@ -393,5 +393,5 @@ if __name__ == "__main__":
     ta_repo_path = repo_path + "/trustanchors"
     syslog(LOG_INFO, "Using local repository path: " + repo_path)
     syslog(LOG_INFO, "Using local trust anchor path: " + ta_repo_path)
-    
+
     sys.exit(updateTA_main())

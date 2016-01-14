@@ -86,7 +86,7 @@ public class TestMain {
     }
   };
   private final File modelFile;
-  
+
   TestMain(File modelFile) throws IOException, JDOMException {
     this.modelFile = modelFile;
     if (modelFile != null && modelFile.canRead()) {
@@ -101,9 +101,9 @@ public class TestMain {
     TaskDescriptionsEditor tde = new TaskDescriptionsEditor(testModel);
     tabbedPane.add("Task Descriptions", tde.getComponent());
   }
-  
+
   /**
-   * 
+   *
    */
   protected void exit() {
     if (testModel.isModified()) {
@@ -130,8 +130,8 @@ public class TestMain {
   }
 
   /**
-   * @throws IOException 
-   * 
+   * @throws IOException
+   *
    */
   protected void save() throws IOException {
     Element rootElement = new Element("test-model");
@@ -147,7 +147,7 @@ public class TestMain {
   public Component getComponent() {
     return tabbedPane;
   }
-  
+
   /**
    * @return the menu bar
    */

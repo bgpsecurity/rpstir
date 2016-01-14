@@ -3,13 +3,13 @@
 #-------------------------------------------------------------------------------
 customdoxygen.css - the default css used by doxygen.
 
-def/ - 
+def/ -
 
 Doxyfile.config - the main configuration file.
 
 DoxygenLayout.xml - controls global structure of the generated output files.
 
-footer.html - 
+footer.html -
 
 header.html - deleted the contents of a header line.
 
@@ -17,9 +17,9 @@ header.html.orig - a backup.
 
 html/ - the output directory for the generated documentation.
 
-navtree.css - 
+navtree.css -
 
-tabs.css - 
+tabs.css -
 
 warnings.log - receives stderr of doxygen command.
 
@@ -84,4 +84,3 @@ takes less time, but no graphs.
     CALLER_GRAPH = YES
     GRAPHICAL_HIERARCHY = NO
     DOT_GRAPH_MAX_NODES = 90
-

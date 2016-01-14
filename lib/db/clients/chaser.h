@@ -6,6 +6,8 @@
 #define _UTILS_MYSQL_CHASE_H
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "db/connect.h"
 

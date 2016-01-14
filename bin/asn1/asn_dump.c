@@ -13,7 +13,6 @@ COPYRIGHT 1995 BBN Systems and Technologies, A Division of Bolt Beranek and
 Cambridge, Ma. 02140
 617-873-4000
 *****************************************************************************/
-char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -25,6 +24,16 @@ char asn_dump_sfcsid[] = "@(#)asn_dump.c 865p";
 #include "util/stringutils.h"
 
 extern int aflag;
+
+int
+make_asn_table(
+    struct asn **asnbase,
+    unsigned char *c,
+    unsigned long lth);
+
+unsigned char *
+asn_set(
+    struct asn *asnp);
 
 static int putform(
     FILE *,
@@ -41,23 +50,19 @@ int oidtable_size;
 int asn1dump(
     unsigned char *buf,
     int buflen,
-    FILE * outf)
+    FILE *outf)
 {
-    struct asn *asnbase,
-       *asnp;
+    struct asn *asnbase;
+    struct asn *asnp;
     struct typnames *tpnmp;
-    int ansr,
-        j,
-        k,
-        row,
-        make_asn_table(
-        );
-    unsigned char typ,
-        tag,
-       *b,
-       *ctmp,
-       *asn_set(
-        );
+    int ansr;
+    int j;
+    int k;
+    int row;
+    unsigned char typ;
+    unsigned char tag;
+    unsigned char *b;
+    unsigned char *ctmp;
     char *indef_msg = " /* indefinite length */\n";
 
     if (OIDTABLE != NULL)
@@ -171,7 +176,7 @@ static int putform(
     int mode,
     int row)
   /*
-   * mode 1= ASCII (maybe), 2 = obj_id, 3=hex 
+   * mode 1= ASCII (maybe), 2 = obj_id, 3=hex
    */
 {
     int j,

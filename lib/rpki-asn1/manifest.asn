@@ -1,4 +1,3 @@
--- $Id: roa.asn 453 2007-07-25 15:30:40Z mreynolds $
 -- Declaration for c->asn compatibility
 --
 --
@@ -7,8 +6,8 @@ DEFINITIONS IMPLICIT TAGS ::=
 -- imports
 IMPORTS AlgorithmIdentifier FROM Algorithms IN Algorithms.asn,
         Extensions IPAddressOrRangeA Attribute FROM extensions IN extensions.asn,
-	Certificate Version FROM certificate IN certificate.asn,
-	Name FROM name IN name.asn;
+        Certificate Version FROM certificate IN certificate.asn,
+        Name FROM name IN name.asn;
 
 -- Manifest Specification
 

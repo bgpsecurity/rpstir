@@ -1,6 +1,11 @@
-/****************
- * Functions and flags shared by query and server code
- ****************/
+/**
+ * @file
+ *
+ * @brief
+ *     Functions and flags shared by query and server code
+ */
+
+#include "querySupport.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +21,6 @@
 #include "scmf.h"
 #include "sqhl.h"
 #include "cms/roa_utils.h"
-#include "querySupport.h"
 #include "err.h"
 #include "myssl.h"
 #include "util/logging.h"
@@ -48,20 +52,21 @@ void addQueryFlagTests(
  */
 static scmtab *roaPrefixTable = NULL;
 static scmtab *validTable = NULL;
-static scmsrcha *validSrch = NULL,
-    *anySrch = NULL;
+static scmsrcha *validSrch = NULL;
+static scmsrcha *anySrch = NULL;
 char *validWhereStr;
 static char *whereInsertPtr;
 static int parentsFound;
 static char *nextSKI,
    *nextSubject;
 
-/*
- * callback to indicate that a parent was found
+/**
+ * @brief
+ *     callback to indicate that a parent was found
  */
 static int registerParent(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
@@ -80,61 +85,75 @@ static int registerParent(
     return 0;
 }
 
-/*
- * check the validity via the db of the cert whose ski or localID is given
+/**
+ * @brief set up main part of query
+ *
+ * Global variables are initialized only once, instead of once per
+ * object.
+ *
+ * @param[in] scmp
+ *     Database schema pointer.
  */
+static void
+initSearch(
+    scm *scmp)
+{
+    if (validTable)
+        return;
+
+    validTable = findtablescm(scmp, "certificate");
+    validSrch = newsrchscm(NULL, 3, 0, 1);
+    QueryField *field = findField("aki");
+    addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
+    char *now = LocalTimeToDBTime(NULL);
+    field = findField("issuer");
+    addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
+    validWhereStr = validSrch->wherestr;
+    validWhereStr[0] = 0;
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+        xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
+    free(now);
+    addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
+                !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
+    if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+        addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
+        addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
+        addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
+        addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
+    if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
+    {
+        int len = strlen(validWhereStr);
+        xsnprintf(&validWhereStr[len], WHERESTR_SIZE - len,
+                  " and ("
+                  "((flags%%%d)>=%d)"
+                  " or ((flags%%%d)<%d)"
+                  " or ((flags%%%d)>=%d)"
+                  ")",
+                  2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
+                  SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
+    }
+    whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
+    nextSKI = (char *)validSrch->vec[0].valptr;
+    nextSubject = (char *)validSrch->vec[1].valptr;
+
+    if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
+    {
+        anySrch = newsrchscm(NULL, 1, 0, 1);
+        field = findField("flags");
+        addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
+    }
+}
+
 int checkValidity(
     char *ski,
     unsigned int localID,
-    scm * scmp,
-    scmcon * connect)
+    scm *scmp,
+    scmcon *connect)
 {
-    int status;
-
-    // set up main part of query only once, instead of once per object
-    if (validTable == NULL)
-    {
-        validTable = findtablescm(scmp, "certificate");
-        validSrch = newsrchscm(NULL, 3, 0, 1);
-        QueryField *field = findField("aki");
-        addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
-        char *now = LocalTimeToDBTime(&status);
-        field = findField("issuer");
-        addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
-        validWhereStr = validSrch->wherestr;
-        validWhereStr[0] = 0;
-        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-            xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
-        free(now);
-        addFlagTest(validWhereStr, SCM_FLAG_VALIDATED, 1,
-                    !CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get());
-        if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-            addFlagTest(validWhereStr, SCM_FLAG_NOCHAIN, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
-            addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
-            addFlagTest(validWhereStr, SCM_FLAG_STALEMAN, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_NOT_YET_get())
-            addFlagTest(validWhereStr, SCM_FLAG_NOTYET, 0, 1);
-        if (!CONFIG_RPKI_ALLOW_NO_MANIFEST_get())
-        {
-            int len = strlen(validWhereStr);
-            xsnprintf(&validWhereStr[len], WHERESTR_SIZE - len,
-                      " and (((flags%%%d)>=%d) or ((flags%%%d)<%d) or ((flags%%%d)>=%d))",
-                      2 * SCM_FLAG_ONMAN, SCM_FLAG_ONMAN, 2 * SCM_FLAG_CA,
-                      SCM_FLAG_CA, 2 * SCM_FLAG_TRUSTED, SCM_FLAG_TRUSTED);
-        }
-        whereInsertPtr = &validWhereStr[strlen(validWhereStr)];
-        nextSKI = (char *)validSrch->vec[0].valptr;
-        nextSubject = (char *)validSrch->vec[1].valptr;
-
-        if (CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
-        {
-            anySrch = newsrchscm(NULL, 1, 0, 1);
-            field = findField("flags");
-            addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
-        }
-    }
+    initSearch(scmp);
 
     /* FIXME: This code assumes that is suffices to trace a single
      * parent until one arrives at a trust anchor.  This will not
@@ -149,7 +168,7 @@ int checkValidity(
     char prevSKI[128];
     // keep going until trust anchor, where either AKI = SKI or no AKI
     while (firstTime ||
-	   !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
+           !(strcmp(nextSKI, prevSKI) == 0 || strlen(nextSKI) == 0))
     {
         if (firstTime)
         {
@@ -178,22 +197,22 @@ int checkValidity(
             strncpy(prevSKI, nextSKI, 128);
         }
         parentsFound = 0;
-        status = searchscm(connect, validTable, validSrch, NULL,
-                           registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+        searchscm(connect, validTable, validSrch, NULL,
+                  registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (parentsFound > 1)
         {
             LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
                 parentsFound);
         }
         else if (parentsFound == 0)
-        {                       // no parent cert
+        {
+            // no parent cert
             if (!CONFIG_RPKI_ALLOW_STALE_VALIDATION_CHAIN_get())
                 return 0;
             xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                       whereInsertPtr + 5);
-            status =
-                searchscm(connect, validTable, anySrch, NULL, registerParent,
-                          SCM_SRCH_DOVALUE_ALWAYS, NULL);
+            searchscm(connect, validTable, anySrch, NULL, registerParent,
+                      SCM_SRCH_DOVALUE_ALWAYS, NULL);
             if (parentsFound > 1)
                 LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
                     parentsFound);
@@ -204,13 +223,14 @@ int checkValidity(
 }
 
 
-/*
- * combines dirname and filename into a pathname 
+/**
+ * @brief
+ *     combines dirname and filename into a pathname
  */
 static int pathnameDisplay(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -221,13 +241,14 @@ static int pathnameDisplay(
     return 2;
 }
 
-/*
- * create space-separated string of serial numbers 
+/**
+ * @brief
+ *     create space-separated string of serial numbers
  */
 static int displaySNList(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -264,33 +285,35 @@ static int displaySNList(
 }
 
 /**
- * @brief callback state for the display_ip_addrs_valuefunc()
- *     callback function
+ * @brief
+ *     callback state for the display_ip_addrs_valuefunc() callback
+ *     function
  */
 struct display_ip_addrs_context
 {
-    char const * separator;
+    char const *separator;
 
-    char * result;
+    char *result;
     size_t result_len;
     size_t result_idx;
 };
 
 /**
- * @brief searchscm() callback for display_ip_addrs(), called for each
+ * @brief
+ *     searchscm() callback for display_ip_addrs(), called for each
  *     prefix in a ROA
  */
 static int display_ip_addrs_valuefunc(
-    scmcon * conp,
-    scmsrcha * s,
+    scmcon *conp,
+    scmsrcha *s,
     ssize_t idx)
 {
     (void)conp;
     (void)idx;
 
-    struct display_ip_addrs_context * context = s->context;
+    struct display_ip_addrs_context *context = s->context;
 
-    unsigned char const * prefix = s->vec[0].valptr;
+    unsigned char const *prefix = s->vec[0].valptr;
     int_fast64_t const prefix_family_length = s->vec[0].avalsize;
     unsigned long const prefix_length =
         *(unsigned long const *)s->vec[1].valptr;
@@ -347,13 +370,14 @@ static int display_ip_addrs_valuefunc(
 }
 
 /**
- * @brief displayfunc to convert the list of prefixes in a ROA into a
+ * @brief
+ *     displayfunc to convert the list of prefixes in a ROA into a
  *     string, @p returnStr
  */
 static int display_ip_addrs(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -474,8 +498,9 @@ static int display_ip_addrs(
     return 1;
 }
 
-/*
- * helper function for displayFlags 
+/**
+ * @brief
+ *     helper function for displayFlags
  */
 static void addFlagIfSet(
     char *returnStr,
@@ -513,13 +538,14 @@ void setIsManifest(
     isManifest = val;
 }
 
-/*
- * create list of all flags set to true 
+/**
+ * @brief
+ *     create list of all flags set to true
  */
 static int displayFlags(
-    scm * scmp,
-    scmcon * connection,
-    scmsrcha * s,
+    scm *scmp,
+    scmcon *connection,
+    scmsrcha *s,
     int idx1,
     char *returnStr)
 {
@@ -550,210 +576,209 @@ static int displayFlags(
     return 1;
 }
 
-/*
- * the set of all query fields 
+/**
+ * @brief
+ *     the set of all query fields
  */
 static QueryField fields[] = {
     {
-     "filename",
-     "the filename where the data is stored in the repository",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
-     SQL_C_CHAR, FNAMESIZE,
-     NULL, NULL,
-     "Filename", NULL,
-     },
+        "filename",
+        "the filename where the data is stored in the repository",
+        Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
+        SQL_C_CHAR, FNAMESIZE,
+        NULL, NULL,
+        "Filename", NULL,
+    },
     {
-     "pathname",
-     "full pathname (directory plus filename) where the data is stored",
-     Q_JUST_DISPLAY | Q_FOR_ROA | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_MAN |
-     Q_FOR_GBR | Q_REQ_JOIN,
-     -1, 0,
-     "dirname", "filename",
-     "Pathname", pathnameDisplay,
-     },
+        "pathname",
+        "full pathname (directory plus filename) where the data is stored",
+        Q_JUST_DISPLAY | Q_FOR_ROA | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_MAN |
+        Q_FOR_GBR | Q_REQ_JOIN,
+        -1, 0,
+        "dirname", "filename",
+        "Pathname", pathnameDisplay,
+    },
     {
-     "dirname",
-     "the directory in the repository where the data is stored",
-     Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR | Q_REQ_JOIN,
-     SQL_C_CHAR, DNAMESIZE,
-     NULL, NULL,
-     "Directory", NULL,
-     },
+        "dirname",
+        "the directory in the repository where the data is stored",
+        Q_FOR_ROA | Q_FOR_CRL | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR | Q_REQ_JOIN,
+        SQL_C_CHAR, DNAMESIZE,
+        NULL, NULL,
+        "Directory", NULL,
+    },
     {
-     "ski",
-     "subject key identifier",
-     Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
-     SQL_C_CHAR, SKISIZE,
-     NULL, NULL,
-     "SKI", NULL,
-     },
+        "ski",
+        "subject key identifier",
+        Q_FOR_ROA | Q_FOR_CERT | Q_FOR_MAN | Q_FOR_GBR,
+        SQL_C_CHAR, SKISIZE,
+        NULL, NULL,
+        "SKI", NULL,
+    },
     {
-     "aki",
-     "authority key identifier",
-     Q_FOR_CRL | Q_FOR_CERT,
-     SQL_C_CHAR, SKISIZE,
-     NULL, NULL,
-     "AKI", NULL,
-     },
+        "aki",
+        "authority key identifier",
+        Q_FOR_CRL | Q_FOR_CERT,
+        SQL_C_CHAR, SKISIZE,
+        NULL, NULL,
+        "AKI", NULL,
+    },
     {
-     "sia",
-     "Subject Information Access",
-     Q_FOR_CERT,
-     SQL_C_CHAR, SIASIZE,
-     NULL, NULL,
-     "SIA", NULL,
-     },
+        "sia",
+        "Subject Information Access",
+        Q_FOR_CERT,
+        SQL_C_CHAR, SIASIZE,
+        NULL, NULL,
+        "SIA", NULL,
+    },
     {
-     "aia",
-     "Authority Information Access",
-     Q_FOR_CERT,
-     SQL_C_CHAR, SIASIZE,
-     NULL, NULL,
-     "AIA", NULL,
-     },
+        "aia",
+        "Authority Information Access",
+        Q_FOR_CERT,
+        SQL_C_CHAR, SIASIZE,
+        NULL, NULL,
+        "AIA", NULL,
+    },
     {
-     "crldp",
-     "CRL Distribution Points",
-     Q_FOR_CERT,
-     SQL_C_CHAR, SIASIZE,
-     NULL, NULL,
-     "CRLDP", NULL,
-     },
+        "crldp",
+        "CRL Distribution Points",
+        Q_FOR_CERT,
+        SQL_C_CHAR, SIASIZE,
+        NULL, NULL,
+        "CRLDP", NULL,
+    },
     {
-     "local_id",
-     NULL,
-     Q_JUST_DISPLAY | Q_FOR_ROA,
-     SQL_C_ULONG, sizeof(unsigned long),
-     NULL, NULL,
-     NULL, NULL,
-     },
+        "local_id",
+        NULL,
+        Q_JUST_DISPLAY | Q_FOR_ROA,
+        SQL_C_ULONG, sizeof(unsigned long),
+        NULL, NULL,
+        NULL, NULL,
+    },
     {
-     "ip_addrs",
-     "the set of IP addresses assigned by the ROA",
-     Q_JUST_DISPLAY | Q_FOR_ROA,
-     -1, 0,
-     "local_id",
-     NULL,
-     "IP Addresses",
-     display_ip_addrs,
-     },
+        "ip_addrs",
+        "the set of IP addresses assigned by the ROA",
+        Q_JUST_DISPLAY | Q_FOR_ROA,
+        -1, 0,
+        "local_id",
+        NULL,
+        "IP Addresses",
+        display_ip_addrs,
+    },
     {
-     "asn",
-     "autonomous system number",
-     Q_FOR_ROA,
-     SQL_C_ULONG, 8,
-     NULL, NULL,
-     "AS#", NULL,
-     },
+        "asn",
+        "autonomous system number",
+        Q_FOR_ROA,
+        SQL_C_ULONG, 8,
+        NULL, NULL,
+        "AS#", NULL,
+    },
     {
-     "issuer",
-     "system that issued the cert/crl",
-     Q_FOR_CERT | Q_FOR_CRL,
-     SQL_C_CHAR, SUBJSIZE,
-     NULL, NULL,
-     "Issuer", NULL,
-     },
+        "issuer",
+        "system that issued the cert/crl",
+        Q_FOR_CERT | Q_FOR_CRL,
+        SQL_C_CHAR, SUBJSIZE,
+        NULL, NULL,
+        "Issuer", NULL,
+    },
     {
-     "valfrom",
-     "date/time from which the cert is valid",
-     Q_FOR_CERT,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Valid From", NULL,
-     },
+        "valfrom",
+        "date/time from which the cert is valid",
+        Q_FOR_CERT,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Valid From", NULL,
+    },
     {
-     "valto",
-     "date/time to which the cert is valid",
-     Q_FOR_CERT,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Valid To", NULL,
-     },
+        "valto",
+        "date/time to which the cert is valid",
+        Q_FOR_CERT,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Valid To", NULL,
+    },
     {
-     "last_upd",
-     "last update time of the object",
-     Q_FOR_CRL,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Last Update", NULL,
-     },
+        "last_upd",
+        "last update time of the object",
+        Q_FOR_CRL,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Last Update", NULL,
+    },
     {
-     "this_upd",
-     "last update time of the object",
-     Q_FOR_MAN,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "This Update", NULL,
-     },
+        "this_upd",
+        "last update time of the object",
+        Q_FOR_MAN,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "This Update", NULL,
+    },
     {
-     "next_upd",
-     "next update time of the object",
-     Q_FOR_CRL | Q_FOR_MAN,
-     SQL_C_CHAR, 32,
-     NULL, NULL,
-     "Next Update", NULL,
-     },
+        "next_upd",
+        "next update time of the object",
+        Q_FOR_CRL | Q_FOR_MAN,
+        SQL_C_CHAR, 32,
+        NULL, NULL,
+        "Next Update", NULL,
+    },
     {
-     "crlno",
-     "CRL number",
-     Q_JUST_DISPLAY | Q_FOR_CRL,
-     SQL_C_BINARY, 20,
-     NULL, NULL,
-     "CRL#", NULL,
-     },
+        "crlno",
+        "CRL number",
+        Q_JUST_DISPLAY | Q_FOR_CRL,
+        SQL_C_BINARY, 20,
+        NULL, NULL,
+        "CRL#", NULL,
+    },
     {
-     "sn",
-     "serial number",
-     Q_JUST_DISPLAY | Q_FOR_CERT,
-     SQL_C_BINARY, 20,
-     NULL, NULL,
-     "Serial#", NULL,
-     },
+        "sn",
+        "serial number",
+        Q_JUST_DISPLAY | Q_FOR_CERT,
+        SQL_C_BINARY, 20,
+        NULL, NULL,
+        "Serial#", NULL,
+    },
     {
-     "snlen",
-     "number of serial numbers in crl",
-     Q_FOR_CRL,
-     SQL_C_ULONG, 8,
-     NULL, NULL,
-     "SNLength", NULL,
-     },
+        "snlen",
+        "number of serial numbers in crl",
+        Q_FOR_CRL,
+        SQL_C_ULONG, 8,
+        NULL, NULL,
+        "SNLength", NULL,
+    },
     {
-     "snlist",
-     NULL,
-     Q_JUST_DISPLAY | Q_FOR_CRL,
-     SQL_C_BINARY, 16000000,
-     NULL, NULL,
-     NULL, NULL,
-     },
+        "snlist",
+        NULL,
+        Q_JUST_DISPLAY | Q_FOR_CRL,
+        SQL_C_BINARY, 16000000,
+        NULL, NULL,
+        NULL, NULL,
+    },
     {
-     "files",
-     "All the filenames in the manifest",
-     Q_JUST_DISPLAY | Q_FOR_MAN,
-     SQL_C_BINARY, 160000,
-     NULL, NULL,
-     "FilesInMan", NULL,
-     },
+        "files",
+        "All the filenames in the manifest",
+        Q_JUST_DISPLAY | Q_FOR_MAN,
+        SQL_C_BINARY, 160000,
+        NULL, NULL,
+        "FilesInMan", NULL,
+    },
     {
-     "serial_nums",
-     "list of serials numbers",
-     Q_JUST_DISPLAY | Q_FOR_CRL,
-     -1, 0,
-     "snlen", "snlist",
-     "Serial#s", displaySNList,
-     },
+        "serial_nums",
+        "list of serials numbers",
+        Q_JUST_DISPLAY | Q_FOR_CRL,
+        -1, 0,
+        "snlen", "snlist",
+        "Serial#s", displaySNList,
+    },
     {
-     "flags",
-     "which flags are set in the database",
-     Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
-     SQL_C_ULONG, 8,
-     NULL, NULL,
-     "Flags Set", displayFlags,
-     }
+        "flags",
+        "which flags are set in the database",
+        Q_JUST_DISPLAY | Q_FOR_CERT | Q_FOR_CRL
+        | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
+        SQL_C_ULONG, 8,
+        NULL, NULL,
+        "Flags Set", displayFlags,
+    }
 };
 
-/*
- * look up particular query field in the list of all possible fields 
- */
 QueryField *findField(
     char *name)
 {

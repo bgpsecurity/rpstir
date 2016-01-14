@@ -1,8 +1,3 @@
-/*
- * $Id: sign_cert.c c 506 2008-06-03 21:20:05Z gardiner $ 
- */
-
-
 #include <stdio.h>
 #include <util/cryptlib_compat.h>
 #include <rpki-asn1/keyfile.h>
@@ -46,7 +41,7 @@ int main(
     char **argv)
 {
     /*
-     * Args are: file TBS, keyfile, [update] 
+     * Args are: file TBS, keyfile, [update]
      */
     struct Certificate cert;
     Certificate(&cert, (ushort) 0);

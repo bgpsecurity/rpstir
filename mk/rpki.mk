@@ -1604,7 +1604,7 @@ EXTRA_DIST += \
 	tests/conformance/raw/templates/goodEECertGBR.raw \
 	tests/conformance/raw/templates/goodGBR.raw \
 	tests/conformance/raw/templates/goodROA.raw \
-	tests/conformance/scripts/conformance.conf 
+	tests/conformance/scripts/conformance.conf
 
 check_SCRIPTS += tests/conformance/scripts/gen_all.sh
 MK_SUBST_FILES_EXEC += tests/conformance/scripts/gen_all.sh
@@ -1872,11 +1872,6 @@ EXTRA_DIST += \
 	tests/subsystem/testcases/makeM1111 \
 	tests/subsystem/testcases/makeM112 \
 	tests/subsystem/testcases/makeM231 \
-	tests/subsystem/testcases/queryIgnoreAll \
-	tests/subsystem/testcases/t1-1_actions \
-	tests/subsystem/testcases/t1-1_expect \
-	tests/subsystem/testcases/t1-1_flist \
-	tests/subsystem/testcases/t1-1_query \
 	tests/subsystem/testcases/test1.log \
 	tests/subsystem/testcases/tools/test.conf
 

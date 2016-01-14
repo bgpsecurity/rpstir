@@ -15,13 +15,13 @@
  *     mysql_stmt_errno(), nor mysql_stmt_error().
 ------------------------------------------------------------------------------*/
 int wrap_mysql_stmt_execute(
-    dbconn * conn,
-    MYSQL_STMT * stmt,
+    dbconn *conn,
+    MYSQL_STMT *stmt,
     const char *err_msg_in);
 
 int getStringByFieldname(
     char **out,
-    MYSQL_RES * result,
+    MYSQL_RES *result,
     MYSQL_ROW row,
     char field_name[]);
 
@@ -59,7 +59,7 @@ struct flag_tests
  * @brief Initialize flag tests to an empty set of tests.
  */
 void flag_tests_empty(
-    struct flag_tests * tests);
+    struct flag_tests *tests);
 
 /**
  * @brief Initialize flag tests to the runtime default.
@@ -69,7 +69,7 @@ void flag_tests_empty(
  * version of this.
  */
 void flag_tests_default(
-    struct flag_tests * tests);
+    struct flag_tests *tests);
 
 /**
  * @brief Add a single test to the flag tests.
@@ -79,7 +79,7 @@ void flag_tests_default(
  * @param[in] isset Whether the flag must be set (1) or clear (0).
  */
 void flag_tests_add_test_by_index(
-    struct flag_tests * tests,
+    struct flag_tests *tests,
     uint_fast16_t flag,
     bool isset);
 
@@ -91,7 +91,7 @@ void flag_tests_add_test_by_index(
  * @param[in] isset Whether the flags must be set (1) or clear (0).
  */
 void flag_tests_add_tests_by_mask(
-    struct flag_tests * tests,
+    struct flag_tests *tests,
     unsigned long long mask,
     bool isset);
 
@@ -104,8 +104,8 @@ void flag_tests_add_tests_by_mask(
  * parameters will be written to the binding array.
  */
 void flag_tests_bind(
-    MYSQL_BIND * parameters,
-    struct flag_tests const * tests);
+    MYSQL_BIND *parameters,
+    struct flag_tests const *tests);
 
 
 #endif                          // _DB_UTIL_H

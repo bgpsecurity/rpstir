@@ -13,7 +13,7 @@ struct SIA_request {
 
 /*
  * Command line options will request zero or more SIA URLs to be added to the
- * certificate.  sia_requests[] and num_sia_requests keep a record of these. 
+ * certificate.  sia_requests[] and num_sia_requests keep a record of these.
  */
 struct SIA_request sia_requests[MAX_SIA_ACC_DESCR];
 int num_sia_requests = 0;
@@ -39,10 +39,10 @@ static void usage(
 
 
 /*
- * Add SIA request (usually from command line) to the global list. Return 0 on 
+ * Add SIA request (usually from command line) to the global list. Return 0 on
  * success, -1 on failure.  NOTE: we copy the URI string, and never free it.
- * This is technically a memory leak, but it's only the command line arguments 
- * so we don't care.  
+ * This is technically a memory leak, but it's only the command line arguments
+ * so we don't care.
  */
 static int add_sia_request(
     char type,
@@ -97,7 +97,7 @@ int main(
     int ret;                    /* return value */
 
     /*
-     * Parse command line arguments. 
+     * Parse command line arguments.
      */
     opterr = 0;
     while ((c = getopt(argc, argv, "dr:m:s:h")) != -1)
@@ -154,7 +154,7 @@ int main(
     file = argv[optind];
 
     /*
-     * Parse certificate. 
+     * Parse certificate.
      */
     Certificate(&cert, (unsigned short)0);      /* constructor */
     ret = get_casn_file(&cert.self, (char *)file, 0);
@@ -165,7 +165,7 @@ int main(
     }
 
     /*
-     * Find or create SIA extension. 
+     * Find or create SIA extension.
      */
     extp = find_extension(&cert.toBeSigned.extensions,
                           id_pe_subjectInfoAccess, false);
@@ -183,7 +183,7 @@ int main(
     siap = &extp->extnValue.subjectInfoAccess;
 
     /*
-     * Optionally delete existing AccessDescriptions. 
+     * Optionally delete existing AccessDescriptions.
      */
     if (delete_existing)
     {
@@ -198,7 +198,7 @@ int main(
     }
 
     /*
-     * For each AccessDescription request, insert it. 
+     * For each AccessDescription request, insert it.
      */
     for (i = 0; i < num_sia_requests; i++)
     {
@@ -206,7 +206,7 @@ int main(
         struct AccessDescription *adp;  /* ASN.1 AccessDescription pointer */
 
         /*
-         * Append new entry. 
+         * Append new entry.
          */
         current_size = num_items(&siap->self);
         adp =
@@ -234,7 +234,7 @@ int main(
     }
 
     /*
-     * Check for non-empty SIA (RFC 5280) 
+     * Check for non-empty SIA (RFC 5280)
      */
     if (num_items(&siap->self) == 0)
     {
@@ -244,7 +244,7 @@ int main(
     }
 
     /*
-     * Write to file. 
+     * Write to file.
      */
     if (put_casn_file(&cert.self, (char *)file, 0) < 0)
     {
@@ -253,7 +253,7 @@ int main(
     }
 
     /*
-     * Clean up. 
+     * Clean up.
      */
     delete_casn(&cert.self);
     return 0;

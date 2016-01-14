@@ -18,14 +18,14 @@ public class ArgDescription {
   private String argName;
   private boolean isParameter;
   private String argValue;
-  
+
   /**
    * Default constructor
    */
   public ArgDescription() {
     // nada
   }
-  
+
   /**
    * Construct from xml
    * @param element
@@ -35,7 +35,7 @@ public class ArgDescription {
     argValue = element.getAttributeValue(ATTR_VALUE);
     isParameter = Boolean.TRUE.equals(element.getAttribute(ATTR_IS_PARAMETER));
   }
-  
+
   /**
    * @param element the element to configure
    */
@@ -44,7 +44,7 @@ public class ArgDescription {
     element.setAttribute(ATTR_VALUE, argValue);
     element.setAttribute(ATTR_IS_PARAMETER, Boolean.FALSE.toString());
   }
-  
+
   /**
    * @return the argName
    */

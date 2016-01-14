@@ -1,6 +1,4 @@
-/*
- * $Id: signCMS.c 453 2008-07-25 15:30:40Z cgardiner $ 
- */
+#include "cms.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -13,8 +11,6 @@
 #include <time.h>
 #include <rpki-asn1/certificate.h>
 #include <rpki-asn1/extensions.h>
-
-#include "cms.h"
 
 // find the SID for this CMS and return it
 static struct casn *findSID(
@@ -55,12 +51,12 @@ const char *signCMS(
     bool sigKeyContext_initialized = false;
     CRYPT_CONTEXT sigKeyContext;
     CRYPT_KEYSET cryptKeyset;
-    int signatureLength,
-        tbs_lth;
+    int signatureLength;
+    int tbs_lth;
     char *msg = (char *)0;
-    uchar *tbsp,
-       *signature,
-        hash[40];
+    uchar *tbsp;
+    uchar *signature;
+    uchar hash[40];
     struct casn *sidp;
     struct Attribute *attrp;
     struct AttrTableDefined *attrtdp;
@@ -78,7 +74,7 @@ const char *signCMS(
     // write the signature version (3) to the signer info
     write_casn_num(&sigInfop->version.self, 3);
 
-    // find the SID 
+    // find the SID
     if ((sidp = findSID(cms)) == NULL)
         return "finding SID";
 
@@ -324,7 +320,7 @@ const char *signCMSBlob(
 
         // DER-encode signedAttrs
         tbs_lth = encode_casn(&signerInfop->signedAttrs.self, tbsp);
-        *tbsp = ASN_SET;        /* replace ASN.1 identifier octet with ASN_SET 
+        *tbsp = ASN_SET;        /* replace ASN.1 identifier octet with ASN_SET
                                  * (0x31) */
     }
 

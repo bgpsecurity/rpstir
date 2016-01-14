@@ -1,8 +1,3 @@
-/*
- * $Id$ 
- */
-/*
- */
 /*****************************************************************************
 File:     casn_bits.c
 Contents: Functions to hanndle ASN.1 BIT STRING objects.
@@ -14,7 +9,6 @@ Remarks:
 
 *****************************************************************************/
 
-char casn_bits_sfcsid[] = "@(#)casn_bits.c 864P";
 #include "casn.h"
 
 extern struct casn *_go_up(

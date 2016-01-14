@@ -29,7 +29,7 @@ import com.bbn.rpki.test.model.XMLBase;
  */
 public class TaskDescriptionsEditor implements ListSelectionListener {
   /**
-   * 
+   *
    */
   private static final String ADD_VALUE = "Add...";
   private final DefaultListModel taskListModel = new DefaultListModel();
@@ -39,9 +39,9 @@ public class TaskDescriptionsEditor implements ListSelectionListener {
   private TaskDescription selectedTaskDescription;
   private final JPanel panel = new JPanel(new BorderLayout());
   private final TaskDescriptionEditor taskDescriptionEditor;
-  
+
   /**
-   * @param testModel 
+   * @param testModel
    * @throws IOException
    * @throws JDOMException
    */
@@ -55,7 +55,7 @@ public class TaskDescriptionsEditor implements ListSelectionListener {
   }
 
   /**
-   * 
+   *
    */
   private void initTaskList() {
     taskPane.setPreferredSize(new Dimension(200, taskPane.getPreferredSize().height));
@@ -64,7 +64,7 @@ public class TaskDescriptionsEditor implements ListSelectionListener {
   }
 
   /**
-   * 
+   *
    */
   void populateTaskList(XMLBase selectTaskDescription) {
     taskListModel.clear();
@@ -76,7 +76,7 @@ public class TaskDescriptionsEditor implements ListSelectionListener {
       taskList.setSelectedValue(selectTaskDescription, true);
     }
   }
-  
+
   /**
    * @return the UI component
    */

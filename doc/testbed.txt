@@ -26,11 +26,11 @@ specified:
 * parentkeyfile=[string] - The path/name of the file containing the
   parent's key pair.  Any field generated from this parameter can be
   overriden by a more specific parameter below.
-  
+
 * subjkeyfile=[string] - The path/name of the file containing the
   subject's key pair.  Any field generated from this parameter can be
   overriden by a more specific parameter below.
-  
+
 * type=[choice of string] - "CA" or "EE".  This affects the fields
   BasicConstraints, KeyUsage, and ExtendedKeyUsage.
 
@@ -140,7 +140,7 @@ must allow the following properties to be specified:
 * parentkeyfile=[string] - The path/name of the file containing the
   parent's key pair.  Any field generated from this parameter can be
   overriden by a more specific parameter below.
-  
+
 * issuer=[PrintableString plus optional PrintableString] - Issuer's
   commonName and (optionally) serialNumber attribute, separated by the
   percent sign (%). See "issuer" definition in Certificates.
@@ -236,8 +236,8 @@ to be specified:
 * nextupdate=[string] - GeneralizedTime ("YYYYMMDDHHMMSSZ").  See note
   on "notbefore" in Certificates.
 
-* manifestnum=[integer] - Manifest Number. Monotonically increasing 
-  sequence number for a given Manifest issuer, allowing users to 
+* manifestnum=[integer] - Manifest Number. Monotonically increasing
+  sequence number for a given Manifest issuer, allowing users to
   easily determine when a particular Manifest supersedes another
   Manifest.
 

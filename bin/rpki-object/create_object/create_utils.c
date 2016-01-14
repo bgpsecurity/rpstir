@@ -78,58 +78,58 @@ int write_EEkey(
 
     // read the EE certificate from file
     /*
-     * if( !(get_casn_file(&my_cert.self, (char*)value,0) < 0) ) 
+     * if( !(get_casn_file(&my_cert.self, (char*)value,0) < 0) )
      */
     /*
-     * { 
+     * {
      */
     /*
-     * struct SignedData *sgdp = &roa->content.signedData; 
+     * struct SignedData *sgdp = &roa->content.signedData;
      */
     /*
-     * //Clear the old one 
+     * //Clear the old one
      */
     /*
-     * clear_casn(&sgdp->certificates.self); 
+     * clear_casn(&sgdp->certificates.self);
      */
 
     /*
      * struct Certificate *sigcertp = (struct Certificate
-     * *)inject_casn(&sgdp->certificates.self, 0); 
+     * *)inject_casn(&sgdp->certificates.self, 0);
      */
 
     /*
-     * //copy the new one in 
+     * //copy the new one in
      */
     /*
-     * if(sigcertp != NULL) 
+     * if(sigcertp != NULL)
      */
     /*
-     * copy_casn(&sigcertp->self, &my_cert.self); 
+     * copy_casn(&sigcertp->self, &my_cert.self);
      */
     /*
-     * else 
+     * else
      */
     /*
-     * { 
+     * {
      */
     /*
-     * warn(1,"ERROR injecting EE cert"); 
+     * warn(1,"ERROR injecting EE cert");
      */
     /*
-     * return 1; 
+     * return 1;
      */
     /*
-     * } 
+     * }
      */
     /*
-     * } 
+     * }
      */
     /*
-     * else 
+     * else
      */
     /*
-     * return 1; 
+     * return 1;
      */
     return SUCCESS;
 }
@@ -185,7 +185,7 @@ char *stripQuotes(
 
 /*
  * Alloc memory, copy string and strip white space.
- * return new string. 
+ * return new string.
  */
 char *stripws(
     char *str)
@@ -302,7 +302,7 @@ int validate_table(
 }
 
 /*
- * utility to print object field table 
+ * utility to print object field table
  */
 void print_table(
     struct object_field *table)
