@@ -68,11 +68,11 @@ fully formed certificate, such as "C.cer" and modify its dates, IP address
 blocks and AS numbers.  To make changes to C.cer, the best way is to edit
 C.raw, keeping the indentations lined up, and then convert it like this:
 
-    ../cg/tools/rr <C.raw >C.cer
+    ../../../bin/asn1/rr <C.raw >C.cer
 
 To check the results, do
 
-    ../cg/tools/dump -a C.cer
+    ../../../bin/asn1/dump -a C.cer
 
 This will show a result similar to C.raw except that it will not "look inside"
 the OCTET STRING in each extension.
