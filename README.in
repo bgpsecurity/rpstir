@@ -78,9 +78,6 @@ you will know:
 We assume that you can operate your system's package manager, as well
 as build packages from source and do minor edits on Makefiles.
 
-Note that @PACKAGE_NAME@'s 64-bit support is in beta. It will probably work as
-expected, but there may be bugs that are not present on 32-bit systems.
-
 
 2.1 Prerequisites
 
