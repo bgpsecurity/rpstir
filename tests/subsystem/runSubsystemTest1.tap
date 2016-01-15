@@ -1,2 +1,2 @@
 #!/bin/sh -e
-exec "$TESTS_BUILDDIR/runSubsystemTest.tap" 1 9
+exec "$TESTS_BUILDDIR/runSubsystemTest.tap" 1 7

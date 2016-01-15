@@ -1940,7 +1940,7 @@ check_SCRIPTS += \
 	tests/subsystem/step1.4.tap \
 	tests/subsystem/step1.5.tap \
 	tests/subsystem/step1.6.tap \
-	tests/subsystem/step1.9.tap \
+	tests/subsystem/step1.7.tap \
 	tests/subsystem/step2.1.tap \
 	tests/subsystem/step2.2.tap \
 	tests/subsystem/step2.3.tap \
@@ -1955,7 +1955,7 @@ check_SCRIPTS += \
 	tests/subsystem/step3.4.tap \
 	tests/subsystem/step3.5.tap \
 	tests/subsystem/step3.6.tap \
-	tests/subsystem/step3.8.tap \
+	tests/subsystem/step3.7.tap \
 	tests/subsystem/step3.9.tap
 
 MK_SUBST_FILES_EXEC += \
@@ -1965,7 +1965,7 @@ MK_SUBST_FILES_EXEC += \
 	tests/subsystem/step1.4.tap \
 	tests/subsystem/step1.5.tap \
 	tests/subsystem/step1.6.tap \
-	tests/subsystem/step1.9.tap \
+	tests/subsystem/step1.7.tap \
 	tests/subsystem/step2.1.tap \
 	tests/subsystem/step2.2.tap \
 	tests/subsystem/step2.3.tap \
@@ -1980,7 +1980,7 @@ MK_SUBST_FILES_EXEC += \
 	tests/subsystem/step3.4.tap \
 	tests/subsystem/step3.5.tap \
 	tests/subsystem/step3.6.tap \
-	tests/subsystem/step3.8.tap \
+	tests/subsystem/step3.7.tap \
 	tests/subsystem/step3.9.tap
 
 tests/subsystem/step1.1.tap: $(srcdir)/tests/subsystem/step1.1.tap.in
@@ -1989,7 +1989,7 @@ tests/subsystem/step1.3.tap: $(srcdir)/tests/subsystem/step1.3.tap.in
 tests/subsystem/step1.4.tap: $(srcdir)/tests/subsystem/step1.4.tap.in
 tests/subsystem/step1.5.tap: $(srcdir)/tests/subsystem/step1.5.tap.in
 tests/subsystem/step1.6.tap: $(srcdir)/tests/subsystem/step1.6.tap.in
-tests/subsystem/step1.9.tap: $(srcdir)/tests/subsystem/step1.9.tap.in
+tests/subsystem/step1.7.tap: $(srcdir)/tests/subsystem/step1.7.tap.in
 tests/subsystem/step2.1.tap: $(srcdir)/tests/subsystem/step2.1.tap.in
 tests/subsystem/step2.2.tap: $(srcdir)/tests/subsystem/step2.2.tap.in
 tests/subsystem/step2.3.tap: $(srcdir)/tests/subsystem/step2.3.tap.in
@@ -2004,7 +2004,7 @@ tests/subsystem/step3.3.tap: $(srcdir)/tests/subsystem/step3.3.tap.in
 tests/subsystem/step3.4.tap: $(srcdir)/tests/subsystem/step3.4.tap.in
 tests/subsystem/step3.5.tap: $(srcdir)/tests/subsystem/step3.5.tap.in
 tests/subsystem/step3.6.tap: $(srcdir)/tests/subsystem/step3.6.tap.in
-tests/subsystem/step3.8.tap: $(srcdir)/tests/subsystem/step3.8.tap.in
+tests/subsystem/step3.7.tap: $(srcdir)/tests/subsystem/step3.7.tap.in
 tests/subsystem/step3.9.tap: $(srcdir)/tests/subsystem/step3.9.tap.in
 
 
