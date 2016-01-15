@@ -1,5 +1,13 @@
 0.12, not yet released
 
+	* Miscellaneous code clean-up and minor bug fixes.
+	* Adjust README to instruct users to build a shared version of
+	  OpenSSL.
+	* Bump copyright year to 2016.
+	* Fix unsafe use of snprintf().
+	* A compiler with C99 support is now required.
+	* Build system improvements.  Autoconf 2.60 is now required.
+	* Test suite improvements.
 
 0.11, released 2015-06-12
 
