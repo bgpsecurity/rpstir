@@ -7,7 +7,7 @@ t4s_setup
 @trap_errors@
 
 t4s_testcase "Loading data" '
-    rsync_aur -s -t -f "$TESTS_SRCDIR/test1.8.log" -w -e -i \
+    rsync_aur -s -t -f "$TESTS_SRCDIR/test1.6.log" -w -e -i \
         -d "$TESTS_BUILDDIR/testcases" || t4s_fatal "rsync_aur failed"
 '
 
