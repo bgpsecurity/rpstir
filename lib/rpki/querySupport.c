@@ -33,7 +33,6 @@ void addQueryFlagTests(
     // NOTE: This must be kept in sync with flag_tests_default.
 
     addFlagTest(whereStr, SCM_FLAG_VALID, 1, needAnd);
-    addFlagTest(whereStr, SCM_FLAG_NOTVALID, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
         addFlagTest(whereStr, SCM_FLAG_STALECRL, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
@@ -116,7 +115,6 @@ initSearch(
     xsnprintf(validWhereStr, WHERESTR_SIZE, "valto>\"%s\"", now);
     free(now);
     addFlagTest(validWhereStr, SCM_FLAG_VALID, 1, 1);
-    addFlagTest(validWhereStr, SCM_FLAG_NOTVALID, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
         addFlagTest(validWhereStr, SCM_FLAG_STALECRL, 0, 1);
     if (!CONFIG_RPKI_ALLOW_STALE_MANIFEST_get())
@@ -536,10 +534,7 @@ displayFlags(
     returnStr[0] = 0;
     addFlagIfSet(returnStr, flags, SCM_FLAG_CA, "CA");
     addFlagIfSet(returnStr, flags, SCM_FLAG_TRUSTED, "TRUSTED");
-    if (!(flags & SCM_FLAG_NOTVALID))
-    {
-        addFlagIfSet(returnStr, flags, SCM_FLAG_VALID, "VALID");
-    }
+    addFlagIfSet(returnStr, flags, SCM_FLAG_VALID, "VALID");
     addFlagIfSet(returnStr, flags, SCM_FLAG_NOTYET, "NOTYET");
     addFlagIfSet(returnStr, flags, SCM_FLAG_STALECRL, "STALECRL");
     addFlagIfSet(returnStr, flags, SCM_FLAG_STALEMAN, "STALEMAN");

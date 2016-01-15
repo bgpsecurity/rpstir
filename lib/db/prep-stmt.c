@@ -149,13 +149,12 @@ static const char *_queries_chaser[] = {
 
     // DB_PSTMT_CHASER_GET_SIA
     "select sia from rpki_cert "
-        " where flags & ? = ?"   // either SCM_FLAG_VALID, or 0
-        "   and flags & ? = 0",  // either SCM_FLAG_NOTVALID, or 0
+        " where flags & ? = ?",  // either SCM_FLAG_VALID, or 0
 
     // DB_PSTMT_CHASER_GET_AIA
     //
-    // don't limit the results based on the SCM_FLAG_VALID or
-    // SCM_FLAG_NOTVALID flags because:
+    // don't limit the results based on the SCM_FLAG_VALID flag
+    // because:
     //   - requiring an invalid cert might prevent walks that would
     //     yield an alternative valid certification path with expanded
     //     or different resources, which matters for descendants if

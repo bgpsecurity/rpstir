@@ -28,23 +28,8 @@ typedef enum {
 #define SCM_FLAG_TRUSTED      0x2
 /** @brief is valid */
 #define SCM_FLAG_VALID        0x4
-/**
- * @brief is not valid
- *
- * If ::SCM_FLAG_VALID and this are both set, this wins (it is not
- * valid even though ::SCM_FLAG_VALID is set).
- *
- * @deprecated
- *     This version of rpstir never sets this flag, but it might have
- *     been set by a previous version of rpstir.  This flag was
- *     previously named `SCM_FLAG_NOCHAIN`, and previously indicated
- *     that there is no path (valid or invalid) to a trust anchor.  It
- *     was deprecated because anyone can construct an invalid path to
- *     a TA, so there is no reason to treat certs without a path
- *     differently from certs with an invalid path.  (They are simply
- *     invalid either way.)
- */
-#define SCM_FLAG_NOTVALID     0x8
+// 0x8 was previously SCM_FLAG_NOTVALID/SCM_FLAG_NOCHAIN, but is now
+// unused
 /** @brief too early, not yet ready */
 #define SCM_FLAG_NOTYET       0x10
 /** @brief assoc crl of self or ancestor stale */

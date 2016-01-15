@@ -135,7 +135,6 @@ void flag_tests_default(
     flag_tests_empty(tests);
 
     flag_tests_add_tests_by_mask(tests, SCM_FLAG_VALID, true);
-    flag_tests_add_tests_by_mask(tests, SCM_FLAG_NOTVALID, false);
 
     if (!CONFIG_RPKI_ALLOW_STALE_CRL_get())
     {
