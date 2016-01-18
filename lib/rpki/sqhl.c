@@ -1175,7 +1175,8 @@ addCert2List(
  *     the given @p ski and @p subject.  Ownership of the structure is
  *     retained by this function; the caller MUST NOT attempt to free
  *     it.  The data in the structure will be overwritten during the
- *     next call to this function.
+ *     next call to this function.  Lack of matches is not considered
+ *     to be an error.
  */
 static struct cert_answers *
 find_certs(
@@ -1218,6 +1219,11 @@ find_certs(
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     LOG(LOG_DEBUG, "searchscm() returned %s: %s",
         err2name(sta), err2string(sta));
+    if (ERR_SCM_NODATA == sta)
+    {
+        assert(!found_certs->num_ansrs);
+        sta = 0;
+    }
 
 done:
     if (sta < 0)
