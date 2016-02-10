@@ -132,12 +132,12 @@ AC_ARG_WITH(
 
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
-  CPPFLAGS="$CPPFLAGS $($MYSQL_CONFIG --include)"
+  CPPFLAGS="$CPPFLAGS $("$MYSQL_CONFIG" --include)"
 
   # this is a bit of a hack because mysql_config --libs_r specifies
   # compiler flags, not linker flags
   mysql_config_LIBS=""
-  for flag in `$MYSQL_CONFIG --libs_r`; do
+  for flag in `"$MYSQL_CONFIG" --libs_r`; do
     case $flag in
       -L*)
         libpath="`echo $flag | $SED 's/^-L//'`"
