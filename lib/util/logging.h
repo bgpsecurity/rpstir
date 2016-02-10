@@ -234,9 +234,12 @@ extern const char *log_ident;
 #define ERROR_BUF_SIZE 256
 #define ERR_LOG(err, errorbuf, format, ...)                             \
     do {                                                                \
-        if (strerror_r((err), (errorbuf), ERROR_BUF_SIZE) == 0)         \
+        char err_log_dfl_buf[ERROR_BUF_SIZE];                           \
+        char *err_log_buf = (errorbuf);                                 \
+        err_log_buf = err_log_buf ? err_log_buf : err_log_dfl_buf;      \
+        if (strerror_r((err), err_log_buf, ERROR_BUF_SIZE) == 0)        \
         {                                                               \
-            LOG(LOG_ERR, format ": %s", ## __VA_ARGS__, (errorbuf));    \
+            LOG(LOG_ERR, format ": %s", ## __VA_ARGS__, err_log_buf);   \
         }                                                               \
         else                                                            \
         {                                                               \
