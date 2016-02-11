@@ -73,63 +73,14 @@ if test -z "$SHELL_BASH"; then
   AC_MSG_WARN([cannot find bash, which is needed by some scripts])
 fi
 
-
-AC_ARG_WITH(
-  [ssl-include],
-  [AS_HELP_STRING(
-    [--with-ssl-include],
-    [Path to OpenSSL library install location: Defaults to
-     /usr/local/ssl/include])],
-  [ssl_include=$withval],
-  [ssl_include=/usr/local/ssl/include])
-
-AC_ARG_WITH(
-  [ssl-lib],
-  [AS_HELP_STRING(
-    [--with-ssl-lib],
-    [Path to OpenSSL library install location: Defaults to
-     /usr/local/ssl/lib])],
-  [ssl_lib=$withval],
-  [ssl_lib=/usr/local/ssl/lib])
-
-AC_ARG_WITH(
-  [cryptlib-include],
-  [AS_HELP_STRING(
-    [--with-cryptlib-include],
-    [Path to cryptlib install location: Defaults to /usr/local/include])],
-  [cryptlib_include=$withval],
-  [cryptlib_include=/usr/local/include])
-
-AC_ARG_WITH(
-  [odbc-include],
-  [AS_HELP_STRING(
-    [--with-odbc-include],
-    [Path to odbc include files: Defaults to /usr/local/include])],
-  [odbc_include=$withval],
-  [odbc_include=/usr/local/include])
-
-AC_ARG_WITH(
-  [cryptlib-lib],
-  [AS_HELP_STRING(
-    [--with-cryptlib-lib],
-    [Path to cryptlib install location: Defaults to /usr/local/lib])],
-  [cryptlib_lib=$withval],
-  [cryptlib_lib=/usr/local/lib])
-
-AC_ARG_WITH(
-  [odbc-lib],
-  [AS_HELP_STRING(
-    [--with-odbc-lib],
-    [Path to odbc install location: Defaults to /usr/local/lib])],
-  [odbc_lib=$withval],
-  [odbc_lib=/usr/local/lib])
-
+######################################################################
+# MySQL
+######################################################################
 AC_ARG_WITH(
   [mysql-config],
   [AS_HELP_STRING([--with-mysql-config], [Path to mysql_config executable])],
   [mysql_config=$withval],
   [mysql_config=mysql_config])
-
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   CPPFLAGS="$CPPFLAGS $("$MYSQL_CONFIG" --include)"
@@ -165,25 +116,101 @@ AC_LINK_IFELSE(
  supplied by mysql_config])
   ])
 
-if test x${ssl_lib} != x; then
-  LDFLAGS="${LDFLAGS} -L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
-fi
-if test x${odbc_lib} != x; then
-  LDFLAGS="${LDFLAGS} -L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
-fi
-if test x${cryptlib_lib} != x; then
-  LDFLAGS="${LDFLAGS} -L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
-fi
-
-if test x${odbc_include} != x; then
-  CPPFLAGS="${CPPFLAGS} -I${odbc_include}"
-fi
-if test x${cryptlib_include} != x; then
-  CPPFLAGS="${CPPFLAGS} -I${cryptlib_include}"
-fi
+######################################################################
+# OpenSSL
+######################################################################
+AC_ARG_WITH(
+  [ssl-include],
+  [AS_HELP_STRING(
+    [--with-ssl-include],
+    [Path to OpenSSL library install location: Defaults to
+     /usr/local/ssl/include])],
+  [ssl_include=$withval],
+  [ssl_include=/usr/local/ssl/include])
 if test x${ssl_include} != x; then
   CPPFLAGS="${CPPFLAGS} -I${ssl_include}"
 fi
+AC_ARG_WITH(
+  [ssl-lib],
+  [AS_HELP_STRING(
+    [--with-ssl-lib],
+    [Path to OpenSSL library install location: Defaults to
+     /usr/local/ssl/lib])],
+  [ssl_lib=$withval],
+  [ssl_lib=/usr/local/ssl/lib])
+if test x${ssl_lib} != x; then
+  LDFLAGS="${LDFLAGS} -L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
+fi
+AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
+    AC_MSG_ERROR([OpenSSL is required for building this project])
+  ])
+AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [], [
+    AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
+  ])
+
+######################################################################
+# ODBC
+######################################################################
+AC_ARG_WITH(
+  [odbc-include],
+  [AS_HELP_STRING(
+    [--with-odbc-include],
+    [Path to odbc include files: Defaults to /usr/local/include])],
+  [odbc_include=$withval],
+  [odbc_include=/usr/local/include])
+if test x${odbc_include} != x; then
+  CPPFLAGS="${CPPFLAGS} -I${odbc_include}"
+fi
+AC_ARG_WITH(
+  [odbc-lib],
+  [AS_HELP_STRING(
+    [--with-odbc-lib],
+    [Path to odbc install location: Defaults to /usr/local/lib])],
+  [odbc_lib=$withval],
+  [odbc_lib=/usr/local/lib])
+if test x${odbc_lib} != x; then
+  LDFLAGS="${LDFLAGS} -L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
+fi
+AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [], [
+    AC_MSG_ERROR([ODBC is required for building this project])
+  ])
+AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [
+    AC_MSG_ERROR([ODBC is required for building this project])
+  ])
+
+######################################################################
+# cryptlib
+######################################################################
+AC_ARG_WITH(
+  [cryptlib-include],
+  [AS_HELP_STRING(
+    [--with-cryptlib-include],
+    [Path to cryptlib install location: Defaults to /usr/local/include])],
+  [cryptlib_include=$withval],
+  [cryptlib_include=/usr/local/include])
+if test x${cryptlib_include} != x; then
+  CPPFLAGS="${CPPFLAGS} -I${cryptlib_include}"
+fi
+AC_ARG_WITH(
+  [cryptlib-lib],
+  [AS_HELP_STRING(
+    [--with-cryptlib-lib],
+    [Path to cryptlib install location: Defaults to /usr/local/lib])],
+  [cryptlib_lib=$withval],
+  [cryptlib_lib=/usr/local/lib])
+if test x${cryptlib_lib} != x; then
+  LDFLAGS="${LDFLAGS} -L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
+fi
+AC_SEARCH_LIBS([cryptInit], [cl], [], [
+    AC_MSG_ERROR([cryptlib is required for building this project])
+  ])
+
+######################################################################
+# libdl
+######################################################################
+AC_SEARCH_LIBS([dlopen], [dl], [], [
+    AC_MSG_ERROR([libdl is required for building this project])
+  ])
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
 #  If --enable-stack-protector is specified: enable it
@@ -222,26 +249,6 @@ fi
 LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
-
-#Checks for libraries.
-AC_SEARCH_LIBS([dlopen], [dl], [], [
-    AC_MSG_ERROR([libdl is required for building this project])
-  ])
-AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [], [
-    AC_MSG_ERROR([ODBC is required for building this project])
-  ])
-AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [
-    AC_MSG_ERROR([ODBC is required for building this project])
-  ])
-AC_SEARCH_LIBS([cryptInit], [cl], [], [
-    AC_MSG_ERROR([cryptlib is required for building this project])
-  ])
-AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
-    AC_MSG_ERROR([OpenSSL is required for building this project])
-  ])
-AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [], [
-    AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
-  ])
 
 # Checks for header files.
 AC_HEADER_STDC
