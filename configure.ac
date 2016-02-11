@@ -137,7 +137,7 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --libs_r specifies
   # compiler flags, not linker flags
   mysql_config_LIBS=""
-  for flag in `"$MYSQL_CONFIG" --libs_r`; do
+  for flag in $("$MYSQL_CONFIG" --libs_r); do
     case $flag in
       -L*)
         libpath=${flag#-L}
