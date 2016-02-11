@@ -176,13 +176,13 @@ if test x${cryptlib_lib} != x; then
 fi
 
 if test x${odbc_include} != x; then
-  CFLAGS="${CFLAGS} -I${odbc_include}"
+  CPPFLAGS="${CPPFLAGS} -I${odbc_include}"
 fi
 if test x${cryptlib_include} != x; then
-  CFLAGS="${CFLAGS} -I${cryptlib_include}"
+  CPPFLAGS="${CPPFLAGS} -I${cryptlib_include}"
 fi
 if test x${ssl_include} != x; then
-  CFLAGS="${CFLAGS} -I${ssl_include}"
+  CPPFLAGS="${CPPFLAGS} -I${ssl_include}"
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
