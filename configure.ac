@@ -172,7 +172,11 @@ AC_MSG_CHECKING([whether mysql flags are useable])
 AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([[]], [[return 0;]])],
   [AC_MSG_RESULT([yes])],
-  [AC_MSG_RESULT([no]); AC_MSG_FAILURE([cannot compile and link a program with the flags supplied by mysql_config])])
+  [
+    AC_MSG_RESULT([no])
+    AC_MSG_FAILURE([cannot compile and link a program with the flags\
+ supplied by mysql_config])
+  ])
 
 if test x${ssl_lib} != x; then
   LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
