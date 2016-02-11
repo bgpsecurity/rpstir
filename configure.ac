@@ -140,7 +140,7 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   for flag in `"$MYSQL_CONFIG" --libs_r`; do
     case $flag in
       -L*)
-        libpath="`echo $flag | $SED 's/^-L//'`"
+        libpath=${flag#-L}
         LDFLAGS="${LDFLAGS} -L${libpath} -Wl,-rpath -Wl,${libpath}"
         ;;
       -l*)
