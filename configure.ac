@@ -138,10 +138,10 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
     case $flag in
       -I*)
         dir="`echo $flag | $SED 's/^-I//'`"
-        CPPFLAGS="-isystem${dir} $CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS -isystem${dir}"
         ;;
       *)
-        CPPFLAGS="$flag $CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $flag"
         ;;
     esac
   done
@@ -153,7 +153,7 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
     case $flag in
       -L*)
         libpath="`echo $flag | $SED 's/^-L//'`"
-        LDFLAGS="-L${libpath} -Wl,-rpath -Wl,${libpath} ${LDFLAGS}"
+        LDFLAGS="${LDFLAGS} -L${libpath} -Wl,-rpath -Wl,${libpath}"
         ;;
       -l*)
         mysql_config_LIBS="${mysql_config_LIBS} ${flag}"
@@ -178,23 +178,23 @@ AC_LINK_IFELSE(
   ])
 
 if test x${ssl_lib} != x; then
-  LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS}"
+  LDFLAGS="${LDFLAGS} -L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
 fi
 if test x${odbc_lib} != x; then
-  LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib} ${LDFLAGS}"
+  LDFLAGS="${LDFLAGS} -L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
 fi
 if test x${cryptlib_lib} != x; then
-  LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib} ${LDFLAGS}"
+  LDFLAGS="${LDFLAGS} -L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
 fi
 
 if test x${odbc_include} != x; then
-  CFLAGS="-isystem${odbc_include} ${CFLAGS}"
+  CFLAGS="${CFLAGS} -isystem${odbc_include}"
 fi
 if test x${cryptlib_include} != x; then
-  CFLAGS="-isystem${cryptlib_include} ${CFLAGS}"
+  CFLAGS="${CFLAGS} -isystem${cryptlib_include}"
 fi
 if test x${ssl_include} != x; then
-  CFLAGS="-isystem${ssl_include} ${CFLAGS}"
+  CFLAGS="${CFLAGS} -isystem${ssl_include}"
 fi
 
 #Check for GCC Stack-Smashing Protector and enable in some cases
