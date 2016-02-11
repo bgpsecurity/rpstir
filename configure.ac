@@ -22,18 +22,18 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_PATH_PROG([GIT], [git])
 AC_MSG_CHECKING([for extra version information])
 if test "x${GIT}" != x && test -x "${GIT}" && test -d "${srcdir}/.git"; then
-    PACKAGE_VERSION_FULL="$(
-        cd "${srcdir}" &&
-        ${GIT} describe --tags --long --always --dirty)"
-    if test -n "$PACKAGE_VERSION_FULL"; then
-        AC_MSG_RESULT([$PACKAGE_VERSION_FULL])
-    else
-        PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
-        AC_MSG_RESULT([failed])
-    fi
-else
+  PACKAGE_VERSION_FULL="$(
+    cd "${srcdir}" &&
+    ${GIT} describe --tags --long --always --dirty)"
+  if test -n "$PACKAGE_VERSION_FULL"; then
+    AC_MSG_RESULT([$PACKAGE_VERSION_FULL])
+  else
     PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
-    AC_MSG_RESULT([no])
+    AC_MSG_RESULT([failed])
+  fi
+else
+  PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
+  AC_MSG_RESULT([no])
 fi
 AC_SUBST([PACKAGE_VERSION_FULL])
 AC_DEFINE_UNQUOTED([PACKAGE_VERSION_FULL], ["$PACKAGE_VERSION_FULL"])
@@ -55,7 +55,7 @@ AM_MAINTAINER_MODE
 AC_PROG_CC
 AC_PROG_CC_C99
 AS_IF([test "x${ac_cv_prog_cc_c99}" = xno],
-      [AC_MSG_ERROR([C99 compiler is required])])
+  [AC_MSG_ERROR([C99 compiler is required])])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 AC_PROG_SED
@@ -76,67 +76,60 @@ fi
 
 
 AC_ARG_WITH(
-    [ssl-include],
-    [AS_HELP_STRING(
-        [--with-ssl-include],
-        [Path to OpenSSL library install location: Defaults to
-         /usr/local/ssl/include])],
-    [ ssl_include=$withval],
-    [ ssl_include=/usr/local/ssl/include]
-)
+  [ssl-include],
+  [AS_HELP_STRING(
+    [--with-ssl-include],
+    [Path to OpenSSL library install location: Defaults to
+     /usr/local/ssl/include])],
+  [ssl_include=$withval],
+  [ssl_include=/usr/local/ssl/include])
 
 AC_ARG_WITH(
-    [ssl-lib],
-    [AS_HELP_STRING(
-        [--with-ssl-lib],
-        [Path to OpenSSL library install location: Defaults to
-         /usr/local/ssl/lib])],
-    [ ssl_lib=$withval],
-    [ ssl_lib=/usr/local/ssl/lib]
-)
+  [ssl-lib],
+  [AS_HELP_STRING(
+    [--with-ssl-lib],
+    [Path to OpenSSL library install location: Defaults to
+     /usr/local/ssl/lib])],
+  [ssl_lib=$withval],
+  [ssl_lib=/usr/local/ssl/lib])
 
 AC_ARG_WITH(
-    [cryptlib-include],
-    [AS_HELP_STRING(
-        [--with-cryptlib-include],
-        [Path to cryptlib install location: Defaults to /usr/local/include])],
-    [ cryptlib_include=$withval],
-    [ cryptlib_include=/usr/local/include]
-)
+  [cryptlib-include],
+  [AS_HELP_STRING(
+    [--with-cryptlib-include],
+    [Path to cryptlib install location: Defaults to /usr/local/include])],
+  [cryptlib_include=$withval],
+  [cryptlib_include=/usr/local/include])
 
 AC_ARG_WITH(
-    [odbc-include],
-    [AS_HELP_STRING(
-        [--with-odbc-include],
-        [Path to odbc include files: Defaults to /usr/local/include])],
-    [ odbc_include=$withval],
-    [ odbc_include=/usr/local/include]
-)
+  [odbc-include],
+  [AS_HELP_STRING(
+    [--with-odbc-include],
+    [Path to odbc include files: Defaults to /usr/local/include])],
+  [odbc_include=$withval],
+  [odbc_include=/usr/local/include])
 
 AC_ARG_WITH(
-    [cryptlib-lib],
-    [AS_HELP_STRING(
-        [--with-cryptlib-lib],
-        [Path to cryptlib install location: Defaults to /usr/local/lib])],
-    [ cryptlib_lib=$withval],
-    [ cryptlib_lib=/usr/local/lib]
-)
+  [cryptlib-lib],
+  [AS_HELP_STRING(
+    [--with-cryptlib-lib],
+    [Path to cryptlib install location: Defaults to /usr/local/lib])],
+  [cryptlib_lib=$withval],
+  [cryptlib_lib=/usr/local/lib])
 
 AC_ARG_WITH(
-    [odbc-lib],
-    [AS_HELP_STRING(
-        [--with-odbc-lib],
-        [Path to odbc install location: Defaults to /usr/local/lib])],
-    [ odbc_lib=$withval],
-    [ odbc_lib=/usr/local/lib]
-)
+  [odbc-lib],
+  [AS_HELP_STRING(
+    [--with-odbc-lib],
+    [Path to odbc install location: Defaults to /usr/local/lib])],
+  [odbc_lib=$withval],
+  [odbc_lib=/usr/local/lib])
 
 AC_ARG_WITH(
-    [mysql-config],
-    [AS_HELP_STRING([--with-mysql-config],[Path to mysql_config executable ])],
-    [ mysql_config=$withval],
-    [ mysql_config=mysql_config]
-)
+  [mysql-config],
+  [AS_HELP_STRING([--with-mysql-config], [Path to mysql_config executable])],
+  [mysql_config=$withval],
+  [mysql_config=mysql_config])
 
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
@@ -177,11 +170,9 @@ else
 fi
 AC_MSG_CHECKING([whether mysql flags are useable])
 AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM(
-        [[]],
-        [[return 0;]])],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no]); AC_MSG_FAILURE([cannot compile and link a program with the flags supplied by mysql_config])])
+  [AC_LANG_PROGRAM([[]], [[return 0;]])],
+  [AC_MSG_RESULT([yes])],
+  [AC_MSG_RESULT([no]); AC_MSG_FAILURE([cannot compile and link a program with the flags supplied by mysql_config])])
 
 if test x${ssl_lib} != x; then
   LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib} ${LDFLAGS-}"
@@ -197,7 +188,7 @@ if test x${odbc_include} != x; then
   CFLAGS="-isystem${odbc_include} ${CFLAGS-}"
 fi
 if test x${cryptlib_include} != x; then
-  CFLAGS=" -isystem${cryptlib_include} ${CFLAGS-}"
+  CFLAGS="-isystem${cryptlib_include} ${CFLAGS-}"
 fi
 if test x${ssl_include} != x; then
   CFLAGS="-isystem${ssl_include} ${CFLAGS-}"
@@ -212,55 +203,54 @@ AC_MSG_CHECKING([whether C compiler supports -fstack-protector])
 CFLAGS_RESTORE="${CFLAGS-}"
 CFLAGS="${CFLAGS-} -fstack-protector"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
-    [AC_MSG_RESULT([yes]); HAVE_STACK_PROTECTOR=yes],
-    [AC_MSG_RESULT([no]);  HAVE_STACK_PROTECTOR=no])
+  [AC_MSG_RESULT([yes]); HAVE_STACK_PROTECTOR=yes],
+  [AC_MSG_RESULT([no]);  HAVE_STACK_PROTECTOR=no])
 CFLAGS="${CFLAGS_RESTORE-}"
 AC_ARG_ENABLE(
-    [stack-protector],
-    [AS_HELP_STRING(
-        [--enable-stack-protector],
-        [Whether or not to add -fstack-protector to CFLAGS: Defaults
-         to yes when using gcc and no otherwise])],
-    [
-        if test x"$enableval" != xno; then
-            CFLAGS="${CFLAGS-} -fstack-protector"
-        fi
-    ],
-    [
-        if test x"$HAVE_STACK_PROTECTOR" = xyes; then
-            CFLAGS="${CFLAGS-} -fstack-protector"
-        fi
-    ]
-)
+  [stack-protector],
+  [AS_HELP_STRING(
+    [--enable-stack-protector],
+    [Whether or not to add -fstack-protector to CFLAGS: Defaults
+     to yes when using gcc and no otherwise])],
+  [
+    if test x"$enableval" != xno; then
+      CFLAGS="${CFLAGS-} -fstack-protector"
+    fi
+  ],
+  [
+    if test x"$HAVE_STACK_PROTECTOR" = xyes; then
+      CFLAGS="${CFLAGS-} -fstack-protector"
+    fi
+  ])
 
 #Check for pthreads.
 AX_PTHREAD
 if test x"$ax_pthread_ok" != xyes; then
-	AC_MSG_ERROR([pthread support is required])
+  AC_MSG_ERROR([pthread support is required])
 fi
 LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
 #Checks for libraries.
-AC_SEARCH_LIBS([dlopen],[dl],[],[
+AC_SEARCH_LIBS([dlopen], [dl], [], [
     AC_MSG_ERROR([libdl is required for building this project])
-])
-AC_SEARCH_LIBS([SQLWriteDSNToIni],[odbcinst iodbcinst],[],[
+  ])
+AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [], [
     AC_MSG_ERROR([ODBC is required for building this project])
-])
-AC_SEARCH_LIBS([SQLConnect],[odbc iodbc],[], [
+  ])
+AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [
     AC_MSG_ERROR([ODBC is required for building this project])
-])
-AC_SEARCH_LIBS([cryptInit], [cl],[],[
+  ])
+AC_SEARCH_LIBS([cryptInit], [cl], [], [
     AC_MSG_ERROR([cryptlib is required for building this project])
-])
-AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto],[],[
+  ])
+AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
     AC_MSG_ERROR([OpenSSL is required for building this project])
-])
-AC_SEARCH_LIBS([v3_addr_validate_path], [crypto],[],[
+  ])
+AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [], [
     AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
-])
+  ])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -280,14 +270,14 @@ AC_STRUCT_TM
 # Checks for library functions.
 AC_CHECK_FUNCS([clock_gettime getline sem_timedwait])
 if test "$ac_cv_func_getline" != yes; then
-    AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
+  AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
 fi
 
 
 AC_CONFIG_FILES([
     Makefile
     README
-])
+  ])
 
 AC_CONFIG_LINKS([lib/rpki-asn1/casn.h:lib/casn/casn.h])
 
