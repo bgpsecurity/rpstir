@@ -615,12 +615,12 @@ static int getIPBlock(
     return ansr;
 }
 
-int getSKIBlock(
+err_code
+getSKIBlock(
     FILE *SKI,
     char *skibuf,
     int siz)
 {
-    int ansr = ERR_SCM_BADSKIBLOCK;
     int val;
     if ((val = next_cmd(skibuf, siz, SKI)) < 0)
         xsnprintf(errbuf, sizeof(errbuf), "Invalid IPv4 ");
@@ -645,12 +645,13 @@ int getSKIBlock(
         xsnprintf(errbuf, sizeof(errbuf), "Empty SKI block ");
     else
     {
-        ansr = 1;
+        return 0;
     }
-    return ansr;
+    return ERR_SCM_BADSKIBLOCK;
 }
 
-static int parse_privatekey(
+static err_code
+parse_privatekey(
     struct keyring *keyring,
     char *skibuf,
     const char *file_being_parsed)
@@ -671,13 +672,14 @@ static int parse_privatekey(
     return 0;
 }
 
-static int parse_topcert(
+static err_code
+parse_topcert(
     char *skibuf,
     int siz,
     FILE *SKI,
     const char *SKI_filename)
 {
-    int ansr = 0;
+    err_code ansr = 0;
     int val = next_cmd(skibuf, siz, SKI);
     char *c = NULL;
     if (val <= 0 || strncmp(skibuf, "TOPLEVELCERTIFICATE ", 20))
@@ -734,13 +736,14 @@ static int parse_topcert(
     return ansr;
 }
 
-static int parse_control_section(
+static err_code
+parse_control_section(
     char *skibuf,
     int siz,
     FILE *SKI,
     int *locflagsp)
 {
-    int ansr = 0;
+    err_code ansr = 0;
     int val = 0;
     char *c = skibuf;
     char *cc;
@@ -753,7 +756,7 @@ static int parse_control_section(
         {
             cc = nextword(cc);
             if (!trueOrFalse(cc))
-                ansr = -1;
+                ansr = ERR_SCM_UNSPECIFIED;
             else if (*cc == 'T')
                 *locflagsp |= TREEGROWTH;
         }
@@ -761,7 +764,7 @@ static int parse_control_section(
         {
             cc = nextword(cc);
             if (!trueOrFalse(cc))
-                ansr = -1;
+                ansr = ERR_SCM_UNSPECIFIED;
             else if (*cc == 'T')
                 *locflagsp |= RESOURCE_NOUNION;
         }
@@ -769,7 +772,7 @@ static int parse_control_section(
         {
             cc = nextword(cc);
             if (!trueOrFalse(cc))
-                ansr = -1;
+                ansr = ERR_SCM_UNSPECIFIED;
             else if (*cc == 'T')
                 *locflagsp |= INTERSECTION_ALWAYS;
         }
@@ -788,7 +791,7 @@ static int parse_control_section(
             }
         }
     }
-    if (ansr == -1)
+    if (ansr == ERR_SCM_UNSPECIFIED)
     {
         xsnprintf(errbuf, sizeof(errbuf), "No/not TRUE or FALSE in %s.",
                   skibuf);
@@ -797,7 +800,8 @@ static int parse_control_section(
     return ansr;
 }
 
-static int parse_validity_dates(
+static err_code
+parse_validity_dates(
     char *cc)
 {
     cc = nextword(cc);
@@ -806,10 +810,11 @@ static int parse_validity_dates(
     return 0;
 }
 
-static int parse_Xcrldp(
+static err_code
+parse_Xcrldp(
     char *cc)
 {
-    int ansr = 0;
+    err_code ansr = 0;
     cc = nextword(cc);
     if (!*cc || (*cc == 'R' && cc[1] <= ' ' &&
                  !find_extension(&myrootcert.toBeSigned.extensions,
@@ -825,11 +830,12 @@ static int parse_Xcrldp(
     return ansr;
 }
 
-static int parse_Xcp(
+static err_code
+parse_Xcp(
     char *cc,
     char *skibuf)
 {
-    int ansr = 0;
+    err_code ansr = 0;
     struct Extension *extp;
     cc = nextword(cc);
     if (!*cc ||
@@ -848,12 +854,13 @@ static int parse_Xcp(
     return ansr;
 }
 
-static int parse_tag_section(
+static err_code
+parse_tag_section(
     char *skibuf,
     int siz,
     FILE *SKI)
 {
-    int ansr = 0;
+    err_code ansr = 0;
     int val = 0;
     char *c;
     char *cc;
@@ -897,7 +904,8 @@ static int parse_tag_section(
     return ansr;
 }
 
-int parse_SKI_blocks(
+err_code
+parse_SKI_blocks(
     struct keyring *keyring,
     FILE *SKI,
     const char *SKI_filename,
@@ -923,9 +931,9 @@ int parse_SKI_blocks(
     char *c;
     char *cc;
     // step 1
-    int ansr = 0;
+    err_code ansr = 0;
     int val = 0;
-    if ((ansr = next_cmd(skibuf, siz, SKI)) <= 0)
+    if (next_cmd(skibuf, siz, SKI) <= 0)
     {
         ansr = ERR_SCM_BADSKIFILE;
         xsnprintf(errbuf, sizeof(errbuf), "No private key material");

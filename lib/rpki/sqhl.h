@@ -1,6 +1,8 @@
 #ifndef LIB_RPKI_SQHL_H
 #define LIB_RPKI_SQHL_H
 
+#include "err.h"
+
 #include <stdio.h>
 #include "db_constants.h"
 #include "scm.h"
@@ -12,40 +14,44 @@
  * @brief
  *     Object types
  */
+typedef enum {
+    OT_UNKNOWN = 0,
 
-#define OT_UNKNOWN      0
-/** @brief DER encoded certificate */
-#define OT_CER          1
-/** @brief DER encoded CRL */
-#define OT_CRL          2
-/** @brief DER encoded ROA */
-#define OT_ROA          3
-/** @brief manifests are only DER for now */
-#define OT_MAN          4
-#define OT_GBR          5
-/** @brief highest-valued DER type */
-#define OT_MAXBASIC     5
+    /** @brief DER encoded certificate */
+    OT_CER,
+    /** @brief DER encoded CRL */
+    OT_CRL,
+    /** @brief DER encoded ROA */
+    OT_ROA,
+    /** @brief manifests are only DER for now */
+    OT_MAN,
+    OT_GBR,
 
-/**
- * @brief
- *     difference between DER and PEM equivalent types
- *
- * The types that are less than ::OT_PEM_OFFSET are DER types and
- * the types that are greater than or equal to ::OT_PEM_OFFSET are
- * PEM types.  The PEM types are exactly ::OT_PEM_OFFSET greater
- * than their corresponding DER types (e.g., `OT_CRL_PEM == OT_CRL
- * + OT_PEM_OFFSET`).
- */
-#define OT_PEM_OFFSET   128
+    OT_MAXBASIC_PLUS_ONE,
+    /** @brief highest-valued DER type */
+    OT_MAXBASIC = OT_MAXBASIC_PLUS_ONE - 1,
+    /**
+     * @brief
+     *     difference between DER and PEM equivalent types
+     *
+     * The types that are less than ::OT_PEM_OFFSET are DER types and
+     * the types that are greater than or equal to ::OT_PEM_OFFSET are
+     * PEM types.  The PEM types are exactly ::OT_PEM_OFFSET greater
+     * than their corresponding DER types (e.g., `OT_CRL_PEM == OT_CRL
+     * + OT_PEM_OFFSET`).
+     */
+    OT_PEM_OFFSET,
 
-/** @brief PEM encoded certificate */
-#define OT_CER_PEM      (OT_CER+OT_PEM_OFFSET)
-/** @brief PEM encoded CRL */
-#define OT_CRL_PEM      (OT_CRL+OT_PEM_OFFSET)
-/** @brief PEM encoded ROA */
-#define OT_ROA_PEM      (OT_ROA+OT_PEM_OFFSET)
-/** @brief PEM encoded manifest */
-#define OT_MAN_PEM      (OT_MAN+OT_PEM_OFFSET)
+    /** @brief PEM encoded certificate */
+    OT_CER_PEM,
+    /** @brief PEM encoded CRL */
+    OT_CRL_PEM,
+    /** @brief PEM encoded ROA */
+    OT_ROA_PEM,
+    /** @brief PEM encoded manifest */
+    OT_MAN_PEM,
+
+} object_type;
 
 /*
  * Certificate types
@@ -68,8 +74,8 @@
  * Data types
  */
 
-typedef int (
-    *crlfunc)(
+typedef err_code
+crlfunc(
     scm *scmp,
     scmcon *conp,
     char *issuer,
@@ -80,7 +86,7 @@ typedef struct _crlinfo {
     scm *scmp;
     scmcon *conp;
     scmtab *tabp;
-    crlfunc cfunc;
+    crlfunc *cfunc;
 } crlinfo;
 
 struct goodoid {
@@ -100,7 +106,8 @@ struct goodoid {
  * It is assumed that the existence of the putative directory has already been
  * verified.
  */
-extern int findorcreatedir(
+err_code
+findorcreatedir(
     scm *scmp,
     scmcon *conp,
     char *dirname,
@@ -115,7 +122,8 @@ extern int findorcreatedir(
  *
  * This function returns 0 on success and a negative error code on failure.
  */
-extern int add_object(
+err_code
+add_object(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -132,7 +140,8 @@ extern int add_object(
  * dir_id) combination in the appropriate table and issue the delete
  * SQL call.
  */
-extern int delete_object(
+err_code
+delete_object(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -148,7 +157,7 @@ extern int delete_object(
  *     File pathname.  This MUST NOT be NULL.
  *
  * @return
- *     An object type code depending on the filename suffix:
+ *     A value from ::object_type depending on the filename suffix:
  *       - `.cer`: ::OT_CER
  *       - `.crl`: ::OT_CRL
  *       - `.roa`: ::OT_ROA
@@ -160,7 +169,8 @@ extern int delete_object(
  *       - `.man.pem`, `.mft.pem`, `.mnf.pem`: ::OT_MAN_PEM
  *       - all others: ::OT_UNKNOWN.
  */
-extern int infer_filetype(
+object_type
+infer_filetype(
     const char *fname);
 
 /*
@@ -169,14 +179,15 @@ extern int infer_filetype(
  *
  * This function returns 0 on success and a negative error code on failure.
  */
-extern int add_cert(
+err_code
+add_cert(
     scm *scmp,
     scmcon *conp,
     char *outfile,
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ,
+    object_type typ,
     unsigned int *cert_id,
     int constraining);
 
@@ -184,16 +195,18 @@ extern int add_cert(
  * Add a CRL to the DB.  This function returns 0 on success and a negative
  * error code on failure.
  */
-extern int add_crl(
+err_code
+add_crl(
     scm *scmp,
     scmcon *conp,
     char *outfile,
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
-extern int add_roa(
+err_code
+add_roa(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -201,12 +214,13 @@ extern int add_roa(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 /*
  * Add a manifest to the database
  */
-extern int add_manifest(
+err_code
+add_manifest(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -214,12 +228,13 @@ extern int add_manifest(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 /*
     Add a ghostbusters record to the database
 */
-extern int add_ghostbusters(
+err_code
+add_ghostbusters(
     scm *scmp,
     scmcon *conp,
     char *outfile,
@@ -227,7 +242,7 @@ extern int add_ghostbusters(
     char *outfull,
     unsigned int id,
     int utrust,
-    int typ);
+    object_type typ);
 
 extern int add_rta(
     scm *scmp,
@@ -251,10 +266,11 @@ extern int add_rta(
  *     On success this function returns 0.  On failure it returns a
  *     negative error code.
  */
-extern int iterate_crl(
+err_code
+iterate_crl(
     scm *scmp,
     scmcon *conp,
-    crlfunc cfunc);
+    crlfunc *cfunc);
 
 /**
  * @brief
@@ -270,18 +286,14 @@ extern int iterate_crl(
  *     1 if it deleted something, 0 if it deleted nothing and a
  *     negative error code on failure.
  */
-extern int revoke_cert_by_serial(
-    scm *scmp,
-    scmcon *conp,
-    char *issuer,
-    char *aki,
-    uint8_t *sn);
+crlfunc revoke_cert_by_serial;
 
 /**
  * @brief
  *     Delete a particular local_id from a table.
  */
-extern int deletebylid(
+err_code
+deletebylid(
     scmcon *conp,
     scmtab *tabp,
     unsigned int lid);
@@ -296,19 +308,22 @@ extern int deletebylid(
  * it marks them as NOTYET.  If it finds any where the end validity
  * date (valto) is in the past, it deletes them.
  */
-extern int certificate_validity(
+err_code
+certificate_validity(
     scm *scmp,
     scmcon *conp);
 
 /*
  * Update the metadata table to indicate when a particular client ran last.
  */
-extern int ranlast(
+err_code
+ranlast(
     scm *scmp,
     scmcon *conp,
     char *whichcli);
 
-extern int addStateToFlags(
+err_code
+addStateToFlags(
     unsigned int *flags,
     int isValid,
     char *filename,
@@ -316,7 +331,8 @@ extern int addStateToFlags(
     scm *scmp,
     scmcon *conp);
 
-extern int set_cert_flag(
+err_code
+set_cert_flag(
     scmcon *conp,
     unsigned int id,
     unsigned int flags);
@@ -366,8 +382,8 @@ extern struct cert_answers *find_cert_by_aKI(
  *     The certificates that match the given @p ski and @p subject.
  */
 extern struct cert_answers *find_parent_cert(
-    char *ski,
-    char *subject,
+    const char *ski,
+    const char *subject,
     scmcon *conp);
 
 /**
@@ -390,7 +406,8 @@ extern struct Extension *get_extension(
     char *idp,
     int *count);
 
-extern int read_SKI_blocks(
+err_code
+read_SKI_blocks(
     scm *scmp,
     scmcon *conp,
     char *skiblockfile);
@@ -398,7 +415,7 @@ extern int read_SKI_blocks(
 extern char *retrieve_tdir(
     scm *scmp,
     scmcon *conp,
-    int *stap);
+    err_code *stap);
 
 /**
  * @brief
@@ -408,13 +425,9 @@ extern char *retrieve_tdir(
  * @param[in] ski
  *     SKI of the ROA
  * @param[out] fn
- *     If non-NULL, this points to a pointer identifying the start of
- *     a buffer.  The full pathname of the parent certificate will be
- *     written to this buffer.  The buffer must have size at least @c
- *     PATH_MAX.  The value at this location is never changed.  This
- *     may be NULL.  WARNING:  This function does NOT allocate the
- *     buffer and return its location; the buffer must be provided by
- *     the caller.
+ *     If non-NULL, the full pathname of the parent certificate will
+ *     be written to the buffer at this location.  The buffer must
+ *     have size at least @c PATH_MAX.  This may be NULL.
  * @return
  *     an X509 * on success, NULL on error
  */
@@ -422,8 +435,8 @@ extern void *roa_parent(
     scm *scmp,
     scmcon *conp,
     char *ski,
-    char **fn,
-    int *stap);
+    char *fn,
+    err_code *stap);
 
 extern void startSyslog(
     char *appName);

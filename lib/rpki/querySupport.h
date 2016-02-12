@@ -23,8 +23,8 @@ extern void addQueryFlagTests(
  * @brief
  *     prototype for a function for displaying a field
  */
-typedef int (
-    *displayfunc)(
+typedef int
+displayfunc(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -53,7 +53,7 @@ typedef struct _QueryField {
     /** @brief name of column heading to use in printout */
     char *heading;
     /** @brief function for display string, NULL if std */
-    displayfunc displayer;
+    displayfunc *displayer;
 } QueryField;
 
 /**

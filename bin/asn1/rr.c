@@ -7,6 +7,7 @@
 #include <sys/file.h>
 #include <stdio.h>
 #include "casn/asn.h"
+#include "casn/casn_private.h"
 #include "util/logging.h"
 
 #define MSG_OK "RR finished OK. Wrote %d bytes"
@@ -153,11 +154,6 @@ static int
 adj_asn(
     int);
 
-int
-set_asn_lth(
-    uchar *,
-    uchar *);
-
 /* s1 is target */
 static int
 wdcmp(
@@ -233,7 +229,8 @@ int main(
     if (!isatty(0) && !isatty(1))
     {
         do_it(buf, 0, 0);
-        write(1, out_area.area, out_area.next);
+        if (write(1, out_area.area, out_area.next) != out_area.next)
+            abort();
         out_area.next = 0;
     }
     for (p = &argv[1]; p < &argv[argc]; p++)
@@ -250,7 +247,8 @@ int main(
                 FATAL(MSG_OPEN, buf);
             *buf = 0;
             do_it(buf, 0, 0);
-            write(1, out_area.area, out_area.next);
+            if (write(1, out_area.area, out_area.next) != out_area.next)
+                abort();
             out_area.next = 0;
         }
     }

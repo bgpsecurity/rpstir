@@ -1,6 +1,9 @@
 #ifndef LIB_RPKI_MYSSL_H
 #define LIB_RPKI_MYSSL_H
 
+#include "err.h"
+#include "sqhl.h"
+
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
@@ -27,21 +30,21 @@ extern int strict_profile_checks;
  * certificate in order to insert it into the DB.
  */
 
-#define CF_FIELD_FILENAME    0
-#define CF_FIELD_SUBJECT     1
-#define CF_FIELD_ISSUER      2
-#define CF_FIELD_SN          3
-#define CF_FIELD_FROM        4
-#define CF_FIELD_TO          5
-#define CF_FIELD_SIGNATURE   6
-
-#define CF_FIELD_SKI         7
-#define CF_FIELD_AKI         8
-#define CF_FIELD_SIA         9
-#define CF_FIELD_AIA        10
-#define CF_FIELD_CRLDP      11
-
-#define CF_NFIELDS          (CF_FIELD_CRLDP+1)
+typedef enum {
+    CF_FIELD_FILENAME,
+    CF_FIELD_SUBJECT,
+    CF_FIELD_ISSUER,
+    CF_FIELD_SN,
+    CF_FIELD_FROM,
+    CF_FIELD_TO,
+    CF_FIELD_SIGNATURE,
+    CF_FIELD_SKI,
+    CF_FIELD_AKI,
+    CF_FIELD_SIA,
+    CF_FIELD_AIA,
+    CF_FIELD_CRLDP,
+    CF_NFIELDS // this must be last
+} cf_field;
 
 #define CRL_MAX_SNUM_LTH    20  // maximum length of cert serial number in CRL
 #define CRL_MAX_CRLNUM_LTH  20
@@ -64,10 +67,10 @@ typedef struct _cert_fields {
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef char *(
-    *cf_get)(
+typedef char *
+cf_get(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /**
@@ -76,12 +79,12 @@ typedef char *(
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef void (
-    *cfx_get)(
+typedef void
+cfx_get(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     cert_fields *cf,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /*
@@ -94,7 +97,7 @@ typedef void (
  */
 
 typedef struct _cf_validator {
-    cf_get get_func;
+    cf_get *get_func;
     int fieldno;
     int need;
 } cf_validator;
@@ -107,7 +110,7 @@ typedef struct _cf_validator {
  */
 
 typedef struct _cfx_validator {
-    cfx_get get_func;
+    cfx_get *get_func;
     int fieldno;
     int tag;
     int need;
@@ -150,7 +153,7 @@ extern void freecf(
  */
 extern char *ASNTimeToDBTime(
     char *in,
-    int *stap,
+    err_code *stap,
     int only_gentime);
 
 /**
@@ -161,7 +164,7 @@ extern char *ASNTimeToDBTime(
  *     Error code.  This parameter may be NULL.
  */
 extern char *LocalTimeToDBTime(
-    int *stap);
+    err_code *stap);
 
 /**
  * @param[out] stap
@@ -169,26 +172,27 @@ extern char *LocalTimeToDBTime(
  */
 extern char *UnixTimeToDBTime(
     time_t clck,
-    int *stap);
+    err_code *stap);
 
 /*
  * This utility function just gets the SKI from an X509 data structure.
  */
 extern char *X509_to_ski(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 extern char *X509_to_subject(
     X509 *x,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /*
  * Perform all checks from http://tools.ietf.org/html/rfc6487 that can be done
  * on a single file.
  */
-extern int rescert_profile_chk(
+err_code
+rescert_profile_chk(
     X509 *x,
     struct Certificate *certp,
     int ct);
@@ -201,7 +205,8 @@ extern int rescert_profile_chk(
  *
  * Check CRL conformance with respect to RFCs 5280 and 6487.
   -----------------------------------------------------------------------------*/
-extern int crl_profile_chk(
+err_code
+crl_profile_chk(
     struct CertificateRevocationList *crlp);
 
 /*
@@ -226,9 +231,9 @@ extern int crl_profile_chk(
 extern cert_fields *cert2fields(
     char *fname,
     char *fullname,
-    int typ,
+    object_type typ,
     X509 **xp,
-    int *stap,
+    err_code *stap,
     int *x509stap);
 
 /*
@@ -267,10 +272,10 @@ typedef struct _crl_fields {
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef char *(
-    *crf_get)(
+typedef char *
+crf_get(
     X509_CRL *x,
-    int *stap,
+    err_code *stap,
     int *crlstap);
 
 /**
@@ -279,12 +284,12 @@ typedef char *(
  *     code.  On success, the value at this location may be set to 0
  *     or may be left alone.  This MUST NOT be NULL.
  */
-typedef void (
-    *crfx_get)(
+typedef void
+crfx_get(
     const X509V3_EXT_METHOD *meth,
     void *exts,
     crl_fields *cf,
-    int *stap,
+    err_code *stap,
     int *crlstap);
 
 /*
@@ -295,7 +300,7 @@ typedef void (
  */
 
 typedef struct _crf_validator {
-    crf_get get_func;
+    crf_get *get_func;
     int fieldno;
     int need;
 } crf_validator;
@@ -308,7 +313,7 @@ typedef struct _crf_validator {
  */
 
 typedef struct _crfx_validator {
-    crfx_get get_func;
+    crfx_get *get_func;
     int fieldno;
     int tag;
     int need;
@@ -337,9 +342,9 @@ extern void freecrf(
  *     or empty strings, the value at this location must point to an
  *     existing CRL structure.  This MUST NOT be NULL.
  * @param[out] stap
- *     On success the value at this location will be set to 0.  On
- *     failure the value at this location is set to a negative error
- *     code.  This MUST NOT be NULL.
+ *     The value at this location will be set to an error code
+ *     indicating the success of this function.  This MUST NOT be
+ *     NULL.
  * @param[out] crlstap
  *     On success the value at this location is set to 1.  If an X509
  *     error occured, the value at this location is set to indicate
@@ -353,9 +358,9 @@ extern void freecrf(
 extern crl_fields *crl2fields(
     char *fname,
     char *fullname,
-    int typ,
+    object_type typ,
     X509_CRL **xp,
-    int *stap,
+    err_code *stap,
     int *crlstap,
     void *goodoidp);
 

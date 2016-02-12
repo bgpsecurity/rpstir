@@ -63,13 +63,16 @@ void config_message(
        pointer itself must not be put in *data.  It can be NULL if the
        config file has no value for a non-array option.
    @param[out] data
-       A value of the correct type for the config item.  May be NULL.
+       On successful return, the value at this location will be set to
+       a pointer to a value of the correct type for the config item.
+       @p data MUST NOT be NULL, but the value written to @p data may
+       be NULL.
    @return
        True on success, false on failure.  This means that this
        function can be used to validate input.
 */
 typedef _Bool
-(*config_value_converter)(
+config_value_converter(
     const struct config_context *context,
     void *usr_arg,
     const char *input,
@@ -81,17 +84,19 @@ typedef _Bool
    @return
        a malloc() allocated string, or NULL on error
 */
-typedef char *(*config_value_converter_inverse)(
+typedef char *
+config_value_converter_inverse(
     void *usr_arg,
     void *input);
 
 /** Deep free data for a config item. */
-typedef void (*config_value_free) (
+typedef void
+config_value_free(
     void *data);
 
 /** Check an array of values for inter-value consistency/correctness. */
 typedef _Bool
-(*config_array_validator)(
+config_array_validator(
     const struct config_context *context,
     void *usr_arg,
     void const *const *input,

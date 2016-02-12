@@ -8,7 +8,8 @@
 
 // ROA_utils.h contains the headers for including these functions
 
-int roaFromConfig(
+err_code
+roaFromConfig(
     char *fname,
     int doval,
     struct CMS *rp)

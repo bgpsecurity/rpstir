@@ -39,12 +39,13 @@ static int tdirlen = 0;         // length of tdir
 /*
  * save state in case operations leave db in bad state
  */
-static int saveState(
+static err_code
+saveState(
     scmcon *conp,
     scm *scmp)
 {
     int i;
-    int sta = 0;
+    err_code sta = 0;
     int leen;
     char *name;
     char *stmt;
@@ -71,12 +72,13 @@ static int saveState(
 /*
  * restore state when operations leave db in bad state
  */
-static int restoreState(
+static err_code
+restoreState(
     scmcon *conp,
     scm *scmp)
 {
     int i;
-    int sta = 0;
+    err_code sta = 0;
     int leen;
     char *name;
     char *stmt;
@@ -89,6 +91,7 @@ static int restoreState(
         if (stmt == NULL)
             return (ERR_SCM_NOMEM);
         xsnprintf(stmt, leen, "delete from %s;", name);
+        /** @bug ignores error code without explanation */
         sta = statementscm_no_data(conp, stmt);
         xsnprintf(stmt, leen, "load data infile 'backup_%s' into table %s;",
                   name, name);
@@ -108,16 +111,17 @@ static int restoreState(
  * on failure.
  */
 
-static int deleteop(
+static err_code
+deleteop(
     scmcon *conp,
     scm *scmp)
 {
-    int sta;
+    err_code sta;
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
         LOG(LOG_ERR, "Internal error in deleteop()");
-        return (-1);
+        return ERR_SCM_UNSPECIFIED;
     }
     // drop the database, destroying all tables in the process
     sta = deletedbscm(conp, scmp->db);
@@ -135,16 +139,17 @@ static int deleteop(
  * on failure.
  */
 
-static int createop(
+static err_code
+createop(
     scmcon *conp,
     scm *scmp)
 {
-    int sta;
+    err_code sta;
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
         LOG(LOG_ERR, "Internal error in createop()");
-        return (-1);
+        return ERR_SCM_UNSPECIFIED;
     }
     // step 1: create the database itself
     sta = createdbscm(conp, scmp->db, scmp->dbuser);
@@ -167,7 +172,8 @@ static int createop(
     return (sta);
 }
 
-static int create2op(
+static err_code
+create2op(
     scm *scmp,
     scmcon *conp,
     char *topdir)
@@ -175,31 +181,31 @@ static int create2op(
     scmkva aone;
     scmkv one;
     scmtab *mtab;
-    int sta;
+    err_code sta;
 
     if (conp == NULL || scmp == NULL || scmp->db == NULL || scmp->db[0] == 0)
     {
         LOG(LOG_ERR, "Internal error in create2op()");
-        return (-1);
+        return ERR_SCM_UNSPECIFIED;
     }
     if (topdir == NULL || topdir[0] == 0)
     {
         LOG(LOG_ERR, "Must specify a top level repository directory");
-        return (-2);
+        return ERR_SCM_INVALARG;
     }
     // step 1: locate the metadata table
     mtab = findtablescm(scmp, "METADATA");
     if (mtab == NULL)
     {
         LOG(LOG_ERR, "Cannot find METADATA table");
-        return (-3);
+        return ERR_SCM_NOSUCHTAB;
     }
     // step 2: translate "topdir" into an absolute path
     tdir = r2adir(topdir);
     if (tdir == NULL)
     {
         LOG(LOG_ERR, "Invalid directory: %s", topdir);
-        return (-4);
+        return ERR_SCM_NOTADIR;
     }
     // step 3: init the metadata table
     one.column = "rootdir";
@@ -225,8 +231,10 @@ static void membail(
     void)
 {
     static char oom[] = "Out of memory!\n";
+    size_t len = strlen(oom);
 
-    (void)write(fileno(stderr), oom, strlen(oom));
+    if ((size_t)write(fileno(stderr), oom, len) != len)
+        abort();
 }
 
 /*
@@ -369,7 +377,8 @@ static char *afterwhite(
 
 static char *hdir = NULL;
 
-static int aur(
+static err_code
+aur(
     scm *scmp,
     scmcon *conp,
     char what,
@@ -378,14 +387,14 @@ static int aur(
     char *outdir;
     char *outfile;
     char *outfull;
-    int sta;
+    err_code sta;
     int trusted = 0;
 
     sta = splitdf(hdir, NULL, valu, &outdir, &outfile, &outfull);
     if (sta != 0)
     {
-        LOG(LOG_ERR, "Error loading file %s/%s: %s", hdir, valu,
-                err2string(sta));
+        LOG(LOG_ERR, "Error loading file %s/%s: %s (%s)",
+            hdir, valu, err2string(sta), err2name(sta));
         free((void *)outdir);
         free((void *)outfile);
         free((void *)outfull);
@@ -400,6 +409,7 @@ static int aur(
         sta = delete_object(scmp, conp, outfile, outdir, outfull, 0);
         break;
     case 'u':
+        /** @bug ignores error code without explanation */
         (void)delete_object(scmp, conp, outfile, outdir, outfull, 0);
         sta = add_object(scmp, conp, outfile, outdir, outfull, trusted);
         break;
@@ -447,7 +457,8 @@ static char *hasoneline(
  * any) into 'line', and put the remaining stuff into left.
  */
 
-static int sock1line(
+static err_code
+sock1line(
     int s,
     char **leftp,
     char **line)
@@ -471,7 +482,7 @@ static int sock1line(
         leen = strlen(left);
     sta = ioctl(s, FIONREAD, &rd);
     if (sta < 0)
-        return sta;
+        return ERR_SCM_UNSPECIFIED;
     /*
      * Blocking mode, by A. Chi, 3/18/11.  Even if no data is available yet,
      * block until we can read at least one byte.
@@ -481,12 +492,12 @@ static int sock1line(
     left2 = (char *)calloc(leen + rd + 1, sizeof(char));
     if (left2 == NULL)
     {
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     }
     (void)strncpy(left2, left, leen);
     sta = recv(s, left2 + leen, rd, MSG_WAITALL);
     if (sta <= 0)               // 0 indicates orderly connection shutdown
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
     left2[leen + sta] = 0;
     // free((void *)left);
     left = left2;
@@ -554,7 +565,8 @@ static int sock1line(
  * informational text. Optional message.
  */
 
-static int sockline(
+static err_code
+sockline(
     scm *scmp,
     scmcon *conp,
     int s)
@@ -564,7 +576,7 @@ static int sockline(
     char *valu;
     char c;
     int done = 0;
-    int sta = 0;
+    err_code sta = 0;
 
     for (done = 0; !done;)
     {
@@ -607,7 +619,8 @@ static int sockline(
             LOG(LOG_INFO, "AUR add request: %s", valu);
             sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -616,7 +629,8 @@ static int sockline(
             LOG(LOG_INFO, "AUR update request: %s", valu);
             sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -625,7 +639,8 @@ static int sockline(
             LOG(LOG_INFO, "AUR remove request: %s", valu);
             sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -652,15 +667,18 @@ static int sockline(
             break;
         case 's':
         case 'S':              /* save */
+            /** @bug ignores error code without explanation */
             (void)saveState(conp, scmp);
             break;
         case 'v':
         case 'V':              /* restore */
+            /** @bug ignores error code without explanation */
             (void)restoreState(conp, scmp);
             break;
         case 'y':
         case 'Y':              /* synchronize */
-            (void)write(s, "Y", 1);
+            if (write(s, "Y", 1) != 1)
+                abort();
             break;
         case 0:
             break;
@@ -674,7 +692,8 @@ static int sockline(
     return (sta);
 }
 
-static int fileline(
+static err_code
+fileline(
     scm *scmp,
     scmcon *conp,
     FILE *s)
@@ -683,7 +702,7 @@ static int fileline(
     char *valu;
     char c;
     int done = 0;
-    int sta = 0;
+    err_code sta = 0;
 
     for (done = 0; !done;)
     {
@@ -725,7 +744,8 @@ static int fileline(
             LOG(LOG_INFO, "AUR add request: %s", valu);
             sta = aur(scmp, conp, 'a', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -734,7 +754,8 @@ static int fileline(
             LOG(LOG_INFO, "AUR update request: %s", valu);
             sta = aur(scmp, conp, 'u', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -743,7 +764,8 @@ static int fileline(
             LOG(LOG_INFO, "AUR remove request: %s", valu);
             sta = aur(scmp, conp, 'r', valu);
             if (sta < 0)
-                LOG(LOG_ERR, "Status was %d (%s)", sta, err2string(sta));
+                LOG(LOG_ERR, "Status was %s (%s)",
+                    err2name(sta), err2string(sta));
             else
                 LOG(LOG_DEBUG, "Status was %d", sta);
             break;
@@ -770,10 +792,12 @@ static int fileline(
             break;
         case 's':
         case 'S':              /* save */
+            /** @bug ignores error code without explanation */
             (void)saveState(conp, scmp);
             break;
         case 'v':
         case 'V':              /* restore */
+            /** @bug ignores error code without explanation */
             (void)restoreState(conp, scmp);
             break;
         case 'y':
@@ -834,7 +858,7 @@ int main(
     int trusted = 0;
     int force = 0;
     int allowex = 0;
-    int sta = 0;
+    err_code sta = 0;
     int s;
     int c;
 
@@ -1105,8 +1129,8 @@ int main(
                 if (sta < 0)
                 {
                     LOG(LOG_ERR,
-                            "Add failed: %s: error %s (%d)",
-                            thefile, err2string(sta), sta);
+                            "Add failed: %s: error %s (%s)",
+                            thefile, err2string(sta), err2name(sta));
                     if (sta == ERR_SCM_SQL)
                     {
                         ne = geterrorscm(realconp);
@@ -1122,14 +1146,14 @@ int main(
             free((void *)outfull);
         }
         else
-            LOG(LOG_ERR, "%s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "%s (%s)", err2string(sta), err2name(sta));
     }
     if (use_filelist > 0 && sta == 0)
     {
         char *line = NULL;
         size_t len = 0;
         ssize_t read;
-        int status;
+        err_code status;
 
         setallowexpired(allowex);
         while ((read = getline(&line, &len, stdin)) != -1)
@@ -1147,7 +1171,7 @@ int main(
             status = splitdf(NULL, NULL, line, &outdir, &outfile, &outfull);
             if (status != 0)
             {
-                LOG(LOG_ERR, "%s (%d)", err2string(status), status);
+                LOG(LOG_ERR, "%s (%s)", err2string(status), err2name(status));
                 continue;
             }
 
@@ -1166,8 +1190,8 @@ int main(
             }
             else
             {
-                LOG(LOG_ERR, "Add failed: %s: error %s (%d)",
-                    line, err2string(status), status);
+                LOG(LOG_ERR, "Add failed: %s: error %s (%s)",
+                    line, err2string(status), err2name(status));
                 if (status == ERR_SCM_SQL)
                 {
                     ne = geterrorscm(realconp);
@@ -1191,8 +1215,8 @@ int main(
             if (sta < 0)
             {
                 LOG(LOG_ERR,
-                        "Could not delete file %s: error %s (%d)",
-                        thedelfile, err2string(sta), sta);
+                        "Could not delete file %s: error %s (%s)",
+                        thedelfile, err2string(sta), err2name(sta));
                 if (sta == ERR_SCM_SQL)
                 {
                     ne = geterrorscm(realconp);
@@ -1208,7 +1232,7 @@ int main(
             free((void *)outfull);
         }
         else
-            LOG(LOG_ERR, "Error: %s (%d)", err2string(sta), sta);
+            LOG(LOG_ERR, "Error: %s (%s)", err2string(sta), err2name(sta));
     }
     if ((do_sockopts + do_fileopts) > 0 && sta == 0)
     {
@@ -1233,7 +1257,7 @@ int main(
                         LOG(LOG_ERR,
                                 "%d failed attempts to create socket. Aborting.",
                                 max_makesock_attempts);
-                        sta = -1;
+                        sta = ERR_SCM_UNSPECIFIED;
                         break;
                     }
                 }
@@ -1241,6 +1265,7 @@ int main(
                 {
                     makesock_failures = 0;
                     FLUSH_LOG();
+                    /** @bug ignores error code without explanation */
                     sta = sockline(scmp, realconp, s);
                     LOG(LOG_INFO, "Socket connection closed");
                     FLUSH_LOG();
@@ -1276,8 +1301,8 @@ int main(
                 if (sta > 0)
                     sta = 0;
                 if (sta)
-                    LOG(LOG_ERR, "Error with skifile: %s (%d)",
-                            err2string(sta), sta);
+                    LOG(LOG_ERR, "Error with skifile: %s (%s)",
+                            err2string(sta), err2name(sta));
             }
         } while (perpetual > 0);
         if (protos >= 0)
@@ -1290,9 +1315,10 @@ int main(
         if (sta > 0)
             sta = 0;
         if (sta)
-            LOG(LOG_ERR, "Error with skifile: %s (%d)", err2string(sta),
-                    sta);
+            LOG(LOG_ERR, "Error with skifile: %s (%s)",
+                err2string(sta), err2name(sta));
     }
+    /** @bug ignores error code without explanation */
     (void)ranlast(scmp, realconp, "RSYNC");
     sqcleanup();
     if (realconp != NULL)

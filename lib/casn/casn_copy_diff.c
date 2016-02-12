@@ -13,70 +13,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 #include "casn.h"
-
-void
-_clear_casn(
-    struct casn *,
-    ushort);
-
-struct casn *
-_find_chosen(
-    struct casn *casnp);
-
-struct casn *
-_dup_casn(
-    struct casn *casnp);
-
-struct casn *
-_find_filled(
-    struct casn *casnp);
-
-struct casn *
-_find_filled_or_chosen(
-    struct casn *casnp,
-    int *errp);
-
-struct casn *
-_find_tag(
-    struct casn *casnp,
-    ulong tag);
-
-struct casn *
-_go_up(
-    struct casn *casnp);
-
-struct casn *
-_skip_casn(
-    struct casn *casnp,
-    int num);
-
-int
-_casn_obj_err(
-    struct casn *,
-    int);
-
-int
-_calc_lth_lth(
-    int);
-
-int
-_check_filled(
-    struct casn *,
-    int);
-
-int
-_clear_error(
-    struct casn *);
-
-int
-_encode_tag_lth(
-    uchar *to,
-    struct casn **casnpp);
-
-int
-_fill_upward(
-    struct casn *casnp,
-    int val);
+#include "casn_private.h"
 
 static int
 _copy_casn(
@@ -111,7 +48,7 @@ diff_casn(
     struct casn *casnp1,
     struct casn *casnp2)
 {
-    int diff;
+    int diff = 0;
     int neg;
 
     if (_clear_error(casnp1) < 0 || _clear_error(casnp2) < 0)
@@ -335,7 +272,7 @@ _diff_casn(
     int mode)
 {                               // mode = 0 if at top level; mode = 1 if at
                                 // lower level
-    int diff;
+    int diff = 0;
     int lth;
     int lth1;
     int lth2;

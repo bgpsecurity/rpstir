@@ -9,13 +9,13 @@
 
 static unsigned char *myreadfile(
     char *fn,
-    int *stap)
+    err_code *stap)
 {
     struct stat mystat;
     char *outptr = NULL;
     char *ptr;
     int outsz = 0;
-    int sta;
+    err_code sta;
     int fd;
     int rd;
 
@@ -90,7 +90,7 @@ int main(
     char *filename_cnf = NULL;
     char *ski;
     char fn[PATH_MAX];
-    int sta = 0;
+    err_code sta = 0;
 
     CMS(&roa, (ushort) 0);
     CMS(&roa2, (ushort) 0);
@@ -148,7 +148,7 @@ int main(
         freescm(scmp);
         return -4;
     }
-    cert = (X509 *)roa_parent(scmp, conp, ski, &fn, &sta);
+    cert = (X509 *)roa_parent(scmp, conp, ski, fn, &sta);
     disconnectscm(conp);
     freescm(scmp);
     free(ski);

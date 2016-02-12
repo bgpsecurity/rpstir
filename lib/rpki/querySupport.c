@@ -64,7 +64,9 @@ static char *nextSKI,
  * @brief
  *     callback to indicate that a parent was found
  */
-static int registerParent(
+static sqlvaluefunc registerParent;
+err_code
+registerParent(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -104,9 +106,12 @@ initSearch(
     validTable = findtablescm(scmp, "certificate");
     validSrch = newsrchscm(NULL, 3, 0, 1);
     QueryField *field = findField("aki");
+    /** @bug ignores error code without explanation */
     addcolsrchscm(validSrch, "aki", field->sqlType, field->maxSize);
+    /** @bug ignores error code without explanation */
     char *now = LocalTimeToDBTime(NULL);
     field = findField("issuer");
+    /** @bug ignores error code without explanation */
     addcolsrchscm(validSrch, "issuer", field->sqlType, field->maxSize);
     validWhereStr = validSrch->wherestr;
     validWhereStr[0] = 0;
@@ -143,6 +148,7 @@ initSearch(
     {
         anySrch = newsrchscm(NULL, 1, 0, 1);
         field = findField("flags");
+        /** @bug ignores error code without explanation */
         addcolsrchscm(anySrch, "flags", field->sqlType, field->maxSize);
     }
 }
@@ -197,8 +203,9 @@ int checkValidity(
             strncpy(prevSKI, nextSKI, 128);
         }
         parentsFound = 0;
+        /** @bug ignores error code without explanation */
         searchscm(connect, validTable, validSrch, NULL,
-                  registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
+                  &registerParent, SCM_SRCH_DOVALUE_ALWAYS, NULL);
         if (parentsFound > 1)
         {
             LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
@@ -211,7 +218,8 @@ int checkValidity(
                 return 0;
             xsnprintf(anySrch->wherestr, WHERESTR_SIZE, "%s",
                       whereInsertPtr + 5);
-            searchscm(connect, validTable, anySrch, NULL, registerParent,
+            /** @bug ignores error code without explanation */
+            searchscm(connect, validTable, anySrch, NULL, &registerParent,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
             if (parentsFound > 1)
                 LOG(LOG_WARNING, "multiple parents (%d) found; results suspect",
@@ -227,7 +235,9 @@ int checkValidity(
  * @brief
  *     combines dirname and filename into a pathname
  */
-static int pathnameDisplay(
+static displayfunc pathnameDisplay;
+int
+pathnameDisplay(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -245,7 +255,9 @@ static int pathnameDisplay(
  * @brief
  *     create space-separated string of serial numbers
  */
-static int displaySNList(
+static displayfunc displaySNList;
+int
+displaySNList(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -303,7 +315,9 @@ struct display_ip_addrs_context
  *     searchscm() callback for display_ip_addrs(), called for each
  *     prefix in a ROA
  */
-static int display_ip_addrs_valuefunc(
+static sqlvaluefunc display_ip_addrs_valuefunc;
+err_code
+display_ip_addrs_valuefunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t idx)
@@ -374,7 +388,9 @@ static int display_ip_addrs_valuefunc(
  *     displayfunc to convert the list of prefixes in a ROA into a
  *     string, @p returnStr
  */
-static int display_ip_addrs(
+static displayfunc display_ip_addrs;
+int
+display_ip_addrs(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -391,7 +407,7 @@ static int display_ip_addrs(
         roaPrefixTable = findtablescm(scmp, "ROA_PREFIX");
     }
 
-    int sta;
+    err_code sta;
 
     unsigned long roa_local_id =
         *((unsigned long *)(s->vec[idx1].valptr));
@@ -463,7 +479,7 @@ static int display_ip_addrs(
         roaPrefixTable,
         &srch,
         NULL,
-        display_ip_addrs_valuefunc,
+        &display_ip_addrs_valuefunc,
         SCM_SRCH_DOVALUE_ANN | SCM_SRCH_BREAK_VERR,
         order);
     if (sta == ERR_SCM_TRUNCATED)
@@ -542,7 +558,9 @@ void setIsManifest(
  * @brief
  *     create list of all flags set to true
  */
-static int displayFlags(
+static displayfunc displayFlags;
+int
+displayFlags(
     scm *scmp,
     scmcon *connection,
     scmsrcha *s,
@@ -596,7 +614,7 @@ static QueryField fields[] = {
         Q_FOR_GBR | Q_REQ_JOIN,
         -1, 0,
         "dirname", "filename",
-        "Pathname", pathnameDisplay,
+        "Pathname", &pathnameDisplay,
     },
     {
         "dirname",
@@ -662,7 +680,7 @@ static QueryField fields[] = {
         "local_id",
         NULL,
         "IP Addresses",
-        display_ip_addrs,
+        &display_ip_addrs,
     },
     {
         "asn",
@@ -766,7 +784,7 @@ static QueryField fields[] = {
         Q_JUST_DISPLAY | Q_FOR_CRL,
         -1, 0,
         "snlen", "snlist",
-        "Serial#s", displaySNList,
+        "Serial#s", &displaySNList,
     },
     {
         "flags",
@@ -775,7 +793,7 @@ static QueryField fields[] = {
         | Q_FOR_ROA | Q_FOR_MAN | Q_FOR_GBR,
         SQL_C_ULONG, 8,
         NULL, NULL,
-        "Flags Set", displayFlags,
+        "Flags Set", &displayFlags,
     }
 };
 

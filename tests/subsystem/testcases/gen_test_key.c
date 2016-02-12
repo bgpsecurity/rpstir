@@ -5,10 +5,6 @@
 #include "util/cryptlib_compat.h"
 #include <string.h>
 
-/*
- * int fatal(char *msg) { if (msg && *msg) fprintf(stderr, "%s\n", msg);
- * exit(0); }
- */
 int main(
     int argc,
     char **argv)
@@ -33,7 +29,7 @@ int main(
             } \
         } while (false)
 
-    CRYPT_CALL(cryptInit());
+    CRYPT_CALL(cryptInit_wrapper());
     CRYPT_CALL(cryptCreateContext(&privKeyContext, CRYPT_UNUSED, CRYPT_ALGO_RSA));
     CRYPT_CALL(cryptSetAttributeString(privKeyContext, CRYPT_CTXINFO_LABEL, "label", 5));
     CRYPT_CALL(cryptSetAttribute(privKeyContext, CRYPT_CTXINFO_KEYSIZE, 1024 / 8));
@@ -43,7 +39,6 @@ int main(
     CRYPT_CALL(cryptAddPrivateKey(cryptKeyset, privKeyContext, "password"));
     CRYPT_CALL(cryptKeysetClose(cryptKeyset));
     CRYPT_CALL(cryptDestroyContext(privKeyContext));
-    CRYPT_CALL(cryptEnd());
 
     #undef CRYPT_CALL
 

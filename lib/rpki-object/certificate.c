@@ -111,7 +111,7 @@ bool check_signature(
     encode_casn(locertp, buf);
 
     // (re)init the crypt library
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
     {
         LOG(LOG_ERR, "error initializing cryptlib");
         ret = false;

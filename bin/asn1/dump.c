@@ -51,7 +51,7 @@ dump_asn1(
 static char ibuf[BSIZE];
 static char obuf[80] = "     0  ";
 static char *fname;
-static char hex[] = "0123456789ABCDEF";
+static const char hex[] = "0123456789ABCDEF";
 
 static char *
 hexit(
@@ -193,7 +193,8 @@ int main(
                             *b = '.';
                     while (d < &obuf[66])
                         *d++ = ' ';
-                    write(1, obuf, 67);
+                    if (write(1, obuf, 67) != 67)
+                        abort();
                     pos += did;
                     lth -= did;
                     left -= did;
@@ -238,7 +239,8 @@ int main(
                             *b = '.';
                     while (d < &obuf[66])
                         *d++ = ' ';
-                    write(1, obuf, 67);
+                    if (write(1, obuf, 67) != 67)
+                        abort();
                     pos += did;
                     lth -= did;
                     left -= did;

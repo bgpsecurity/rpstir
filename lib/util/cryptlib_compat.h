@@ -8,14 +8,12 @@
  * Prototype copied from cryptInit() in cryptlib.h.
  *
  * This wrapper handles multiple calls and will return CRYPT_OK even if
- * cryptlib has already been initialized.
+ * cryptlib has already been initialized.  It also registers an
+ * atexit() handler that calls cryptEnd() as recommended in the
+ * cryptlib documentation.
  */
 C_CHECK_RETVAL \
 C_RET cryptInit_wrapper();
-
-#ifndef COMPAT_NO_CLOBBER
-#define cryptInit cryptInit_wrapper
-#endif
 
 
 #endif

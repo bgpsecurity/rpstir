@@ -250,7 +250,8 @@ int main(
     rawp = (char *)calloc(1, lth + 4);
     dump_casn(&cms.self, rawp);
     int fd = open(manifestfile, (O_WRONLY | O_CREAT | O_TRUNC), (S_IRWXU));
-    write(fd, rawp, lth);
+    if (write(fd, rawp, lth) != lth)
+        abort();
     close(fd);
     free(rawp);
     DONE(MSG_OK, manifestfile);

@@ -57,8 +57,8 @@ static scmcon *connection = NULL;
 
 
 struct {
-    char *objectName;
-    char *tableName;
+    const char *objectName;
+    const char *tableName;
 } tableNames[] = {
     {"cert", "certificate"},
     {"roa", "roa"},
@@ -72,7 +72,9 @@ struct {
  * @brief
  *     callback function for searchscm() that prints the output
  */
-static int handleResults(
+static sqlvaluefunc handleResults;
+err_code
+handleResults(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -98,7 +100,7 @@ static int handleResults(
         QueryField *field = globalFields[display];
         if (field->displayer != NULL)
         {
-            result += field->displayer(
+            result += (*field->displayer)(
                 scmp, conp, s, result, resultStr);
         }
         else if (s->vec[result].avalsize != SQL_NULL_DATA)
@@ -156,8 +158,9 @@ static int handleResults(
 /*
  * caller which table to search
  */
-static char *tableName(
-    char *objType)
+static const char *
+tableName(
+    const char *objType)
 {
     size_t i;
     for (i = 0; i < countof(tableNames); ++i)
@@ -171,7 +174,8 @@ static char *tableName(
 /*
  * sets up and performs the database query, and handles the results
  */
-static int doQuery(
+static err_code
+doQuery(
     char **displays,
     char **filters,
     char *orderp)
@@ -185,7 +189,7 @@ static int doQuery(
     unsigned long blah = 0;
     int i;
     int j;
-    int status;
+    err_code status;
     QueryField *field;
     QueryField *field2;
     char *name;
@@ -295,6 +299,7 @@ static int doQuery(
         while (name != NULL)
         {
             field2 = findField(name);
+            /** @bug ignores error code without explanation */
             addcolsrchscm(&srch, name, field2->sqlType, field2->maxSize);
             if (field->flags & Q_REQ_JOIN)
                 srchFlags = srchFlags | SCM_SRCH_DO_JOIN;
@@ -318,17 +323,19 @@ static int doQuery(
                 ski = "ski";
             }
             field2 = findField(ski);
+            /** @bug ignores error code without explanation */
             addcolsrchscm(&srch, ski, field2->sqlType, field2->maxSize);
         }
         else if (isCert)
+            /** @bug ignores error code without explanation */
             addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
     }
 
     /*
      * do query
      */
-    status = searchscm(connection, table, &srch, NULL, handleResults, srchFlags,
-                       orderp);
+    status = searchscm(connection, table, &srch, NULL, &handleResults,
+                       srchFlags, orderp);
     for (i = 0; i < srch.nused; i++)
     {
         free(srch.vec[i].colname);
@@ -340,7 +347,8 @@ static int doQuery(
 /*
  * show what options the user has for fields for display and filtering
  */
-static int listOptions(
+static err_code
+listOptions(
     void)
 {
     int i,
@@ -452,7 +460,7 @@ int main(
     char *clauses[MAX_CONDS];
     char *orderp = NULL;
     int i;
-    int status;
+    err_code status;
     int numDisplays = 0;
     int numClauses = 0;
 

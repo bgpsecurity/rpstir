@@ -567,7 +567,8 @@ ssize_t roaGetPrefixes(
     return prefixes_length;
 }
 
-int roaGenerateFilter(
+err_code
+roaGenerateFilter(
     struct CMS *r,
     uchar *cert,
     FILE *fp,
@@ -599,7 +600,7 @@ int roaGenerateFilter(
     iAS_ID = roaAS_ID(r);
     sta = snprintf(cAS_ID, sizeof(cAS_ID), "%" PRIu32, iAS_ID);
     if (sta < 0 || sta >= (int)sizeof(cAS_ID))
-        return -1;
+        return ERR_SCM_UNSPECIFIED;
 
     cSID = roaSKI(r);
     if (NULL == cSID)

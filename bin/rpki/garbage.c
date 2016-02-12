@@ -25,7 +25,7 @@ static char *prevTimestamp,
 static char *theIssuer,
    *theAKI;                     // for passing to callback
 static unsigned int theID;      // for passing to callback
-static sqlcountfunc countHandler;       // used by countCurrentCRLs
+static sqlcountfunc *countHandler;       // used by countCurrentCRLs
 static scmtab *certTable,
    *crlTable,
    *gbrTable,
@@ -36,7 +36,9 @@ static scmtab *certTable,
  * @brief
  *     callback function for searchscm() that records the timestamps
  */
-static int handleTimestamps(
+static sqlvaluefunc handleTimestamps;
+err_code
+handleTimestamps(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -54,7 +56,9 @@ static int handleTimestamps(
  *
  * check if count == 0, and if so then do the setting of certs' flags
  */
-static int handleIfStale(
+static sqlcountfunc handleIfStale;
+err_code
+handleIfStale(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt)
@@ -83,7 +87,9 @@ static int handleIfStale(
  *
  * check if count > 0, and if so then remove unknown flag from cert
  */
-static int handleIfCurrent(
+static sqlcountfunc handleIfCurrent;
+err_code
+handleIfCurrent(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt)
@@ -107,7 +113,9 @@ static int handleIfCurrent(
  */
 static scmsrcha *cntSrch = NULL;
 
-static int countCurrentCRLs(
+static sqlvaluefunc countCurrentCRLs;
+err_code
+countCurrentCRLs(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -116,6 +124,7 @@ static int countCurrentCRLs(
     if (cntSrch == NULL)
     {
         cntSrch = newsrchscm(NULL, 1, 0, 1);
+        /** @bug ignores error code without explanation */
         addcolsrchscm(cntSrch, "local_id", SQL_C_ULONG, 8);
     }
     theIssuer = (char *)s->vec[0].valptr;
@@ -145,7 +154,8 @@ static char staleManStmt[MANFILES_SIZE];
 static char *staleManFiles[10000];
 static int numStaleManFiles = 0;
 
-static int handleStaleMan2(
+static err_code
+handleStaleMan2(
     scmcon *conp,
     scmtab *tab,
     char *files)
@@ -159,7 +169,9 @@ static int handleStaleMan2(
     return statementscm_no_data(conp, staleManStmt);
 }
 
-static int handleStaleMan(
+static sqlvaluefunc handleStaleMan;
+err_code
+handleStaleMan(
     scmcon *conp,
     scmsrcha *s,
     ssize_t numLine)
@@ -178,7 +190,8 @@ static int handleStaleMan(
  * callback function for non-stale manifest search that marks accordingly
  * all objects referenced by manifest that is non-stale
  */
-static int handleFreshMan2(
+static err_code
+handleFreshMan2(
     scmcon *conp,
     scmtab *tab,
     char *files)
@@ -203,7 +216,7 @@ int main(
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
     unsigned long blah = 0;
-    int status;
+    err_code status;
     int i;
 
     // initialize
@@ -242,9 +255,11 @@ int main(
     srch.nused = 0;
     srch.vald = 0;
     srch.wherestr = NULL;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
-    status = searchscm(connect, metaTable, &srch, NULL, handleTimestamps,
+    status = searchscm(connect, metaTable, &srch, NULL, &handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0)
     {
@@ -254,10 +269,11 @@ int main(
     }
 
     // check for expired certs
+    /** @bug ignores error code without explanation */
     certificate_validity(scmp, connect);
 
     // check for revoked certs
-    status = iterate_crl(scmp, connect, revoke_cert_by_serial);
+    status = iterate_crl(scmp, connect, &revoke_cert_by_serial);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error checking for revoked certificates: %s\n",
@@ -274,10 +290,12 @@ int main(
     srch.vald = 0;
     xsnprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
     srch.wherestr = msg;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
-    countHandler = handleIfStale;
-    status = searchscm(connect, crlTable, &srch, NULL, countCurrentCRLs,
+    countHandler = &handleIfStale;
+    status = searchscm(connect, crlTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(srch1[0].valptr);
     free(srch1[1].valptr);
@@ -293,10 +311,12 @@ int main(
     // are referenced by both stale and non-stale manifests, set to not stale
     srch.nused = 0;
     srch.vald = 0;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "fileslen", SQL_C_ULONG, sizeof(unsigned int));
     numStaleManFiles = 0;
-    status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
+    status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
@@ -306,16 +326,20 @@ int main(
     }
     for (i = 0; i < numStaleManFiles; i++)
     {
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, certTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, crlTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, gbrTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleStaleMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
     srch.vald = 0;
     xsnprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
-    status = searchscm(connect, manifestTable, &srch, NULL, handleStaleMan,
+    status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
@@ -325,9 +349,13 @@ int main(
     }
     for (i = 0; i < numStaleManFiles; i++)
     {
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, certTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, crlTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, gbrTable, staleManFiles[i]);
+        /** @bug ignores error code without explanation */
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
@@ -341,11 +369,14 @@ int main(
     msg[0] = 0;
     addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
     srch.wherestr = msg;
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, 512);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
+    /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
-    countHandler = handleIfCurrent;
-    status = searchscm(connect, certTable, &srch, NULL, countCurrentCRLs,
+    countHandler = &handleIfCurrent;
+    status = searchscm(connect, certTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(srch1[0].valptr);
     free(srch1[1].valptr);

@@ -255,7 +255,8 @@ int getrowsscm(
     return (r);
 }
 
-int statementscm(
+err_code
+statementscm(
     scmcon *conp,
     char *stm)
 {
@@ -285,7 +286,8 @@ int statementscm(
     return (0);
 }
 
-int statementscm_no_data(
+err_code
+statementscm_no_data(
     scmcon *conp,
     char *stm)
 {
@@ -302,13 +304,14 @@ int statementscm_no_data(
     return ret;
 }
 
-int createdbscm(
+err_code
+createdbscm(
     scmcon *conp,
     char *dbname,
     char *dbuser)
 {
     char *mk;
-    int sta;
+    err_code sta;
     int leen;
 
     if (dbname == NULL || dbname[0] == 0 || conp == NULL ||
@@ -324,12 +327,13 @@ int createdbscm(
     return (sta);
 }
 
-int deletedbscm(
+err_code
+deletedbscm(
     scmcon *conp,
     char *dbname)
 {
     char *mk;
-    int sta;
+    err_code sta;
     int leen;
 
     if (dbname == NULL || dbname[0] == 0 || conp == NULL ||
@@ -349,12 +353,13 @@ int deletedbscm(
  * Create a single table.
  */
 
-static int createonetablescm(
+static err_code
+createonetablescm(
     scmcon *conp,
     scmtab *tabp)
 {
     char *mk;
-    int sta;
+    err_code sta;
     int leen;
 
     if (tabp->tstr == NULL || tabp->tstr[0] == 0)
@@ -371,12 +376,13 @@ static int createonetablescm(
     return (sta);
 }
 
-int createalltablesscm(
+err_code
+createalltablesscm(
     scmcon *conp,
     scm *scmp)
 {
     char *mk;
-    int sta = 0;
+    err_code sta = 0;
     int leen;
     int i;
 
@@ -434,7 +440,8 @@ static int findcol(
  * @return
  *     0 on success and a negative error code on failure.
  */
-static int valcols(
+static err_code
+valcols(
     scmcon *conp,
     scmtab *tabp,
     scmkva *arr)
@@ -475,7 +482,8 @@ static int valcols(
  *
  * @return 0 on success, error code on error
  */
-static int quote_value(
+static err_code
+quote_value(
     const char *input,
     char **output)
 {
@@ -527,16 +535,17 @@ static int quote_value(
     }
 }
 
-int insertscm(
+err_code
+insertscm(
     scmcon *conp,
     scmtab *tabp,
     scmkva *arr)
 {
     char *stmt;
     char *quoted = NULL;
-    int sta;
+    err_code sta;
     int leen = 128;
-    int wsta = (-1);
+    int wsta = ERR_SCM_UNSPECIFIED;
     int i;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
@@ -620,7 +629,8 @@ int insertscm(
     return (sta);
 }
 
-int getuintscm(
+err_code
+getuintscm(
     scmcon *conp,
     unsigned int *ival)
 {
@@ -651,7 +661,8 @@ int getuintscm(
         return (0);
 }
 
-int getmaxidscm(
+err_code
+getmaxidscm(
     scm *scmp,
     scmcon *conp,
     char *field,
@@ -659,12 +670,13 @@ int getmaxidscm(
     unsigned int *ival)
 {
     char stmt[160];
-    int sta;
+    err_code sta;
+    SQLRETURN sqlsta;
 
     if (scmp == NULL || conp == NULL || conp->connected == 0 || ival == NULL)
         return (ERR_SCM_INVALARG);
-    sta = newhstmt(conp);
-    if (!SQLOK(sta))
+    sqlsta = newhstmt(conp);
+    if (!SQLOK(sqlsta))
         return ERR_SCM_SQL;
     xsnprintf(stmt, sizeof(stmt),
               "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
@@ -684,13 +696,14 @@ int getmaxidscm(
  * @brief
  *     Validate a search array struct
  */
-static int validsrchscm(
+static err_code
+validsrchscm(
     scmcon *conp,
     scmtab *tabp,
     scmsrcha *srch)
 {
     scmsrch *vecp;
-    int sta;
+    err_code sta;
     int i;
 
     if (srch == NULL || srch->vec == NULL || srch->nused <= 0)
@@ -715,12 +728,13 @@ static int validsrchscm(
     return (0);
 }
 
-int searchscm(
+err_code
+searchscm(
     scmcon *conp,
     scmtab *tabp,
     scmsrcha *srch,
-    sqlcountfunc cnter,
-    sqlvaluefunc valer,
+    sqlcountfunc *cnter,
+    sqlvaluefunc *valer,
     int what,
     char *orderp)
 {
@@ -731,7 +745,7 @@ int searchscm(
     char *quoted = NULL;
     int docall;
     int leen = 100;
-    int sta = 0;
+    err_code sta = 0;
     int nfnd = 0;
     int bset = 0;
     ssize_t ridx = 0;
@@ -885,6 +899,7 @@ int searchscm(
             pophstmt(conp);
             return (ERR_SCM_SQL);
         }
+        /** @bug ignores error code without explanation */
         sta = (*cnter)(conp, srch, nrows);
         if (sta < 0 && (what & SCM_SRCH_BREAK_CERR))
         {
@@ -943,7 +958,7 @@ int searchscm(
                 docall++;
             if (docall > 0)
             {
-                sta = (valer)(conp, srch, ridx);
+                sta = (*valer)(conp, srch, ridx);
                 if ((sta < 0) && (what & SCM_SRCH_BREAK_VERR))
                     break;
             }
@@ -1078,7 +1093,8 @@ scmsrcha *newsrchscm(
     return (newp);
 }
 
-int addcolsrchscm(
+err_code
+addcolsrchscm(
     scmsrcha *srch,
     char *colname,
     int sqltype,
@@ -1113,7 +1129,9 @@ int addcolsrchscm(
  * @brief
  *     value function callback for searchorcreatescm()
  */
-static int socvaluefunc(
+static sqlvaluefunc socvaluefunc;
+err_code
+socvaluefunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t idx)
@@ -1127,10 +1145,11 @@ static int socvaluefunc(
         memcpy(s->context, s->vec[0].valptr, sizeof(unsigned int));
         return (0);
     }
-    return (-1);
+    return ERR_SCM_UNSPECIFIED;
 }
 
-int searchorcreatescm(
+err_code
+searchorcreatescm(
     scm *scmp,
     scmcon *conp,
     scmtab *tabp,
@@ -1140,7 +1159,7 @@ int searchorcreatescm(
 {
     unsigned int mid = 0;
     char *tmp;
-    int sta;
+    err_code sta;
 
     if (idp == NULL || scmp == NULL || conp == NULL || conp->connected == 0 ||
         tabp == NULL || tabp->hname == NULL || srch == NULL || ins == NULL)
@@ -1154,7 +1173,8 @@ int searchorcreatescm(
         return (ERR_SCM_INVALARG);
     *idp = (unsigned int)(-1);
     *(unsigned int *)(srch->context) = (unsigned int)(-1);
-    sta = searchscm(conp, tabp, srch, NULL, socvaluefunc,
+    /** @bug ignores error code without explanation */
+    sta = searchscm(conp, tabp, srch, NULL, &socvaluefunc,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta == 0)
     {
@@ -1187,15 +1207,16 @@ int searchorcreatescm(
     return (0);
 }
 
-int deletescm(
+err_code
+deletescm(
     scmcon *conp,
     scmtab *tabp,
     scmkva *deld)
 {
     char *stmt = NULL;
     int leen = 128;
-    int sta = 0;
-    int wsta = (-1);
+    err_code sta = 0;
+    int wsta = ERR_SCM_UNSPECIFIED;
     int i;
 
     // validate arguments
@@ -1270,7 +1291,8 @@ int deletescm(
     return (sta);
 }
 
-int setflagsscm(
+err_code
+setflagsscm(
     scmcon *conp,
     scmtab *tabp,
     scmkva *where,
@@ -1278,8 +1300,8 @@ int setflagsscm(
 {
     char *stmt;
     int leen = 128;
-    int wsta = (-1);
-    int sta;
+    int wsta = ERR_SCM_UNSPECIFIED;
+    err_code sta;
     int i;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
@@ -1417,7 +1439,8 @@ void *unhexify(
     return oot;
 }
 
-int updateblobscm(
+err_code
+updateblobscm(
     scmcon *conp,
     scmtab *tabp,
     uint8_t *snlist,
@@ -1428,7 +1451,7 @@ int updateblobscm(
     char *stmt;
     char *hexi;
     int leen = 128;
-    int sta;
+    err_code sta;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
         tabp->tabname == NULL)
@@ -1450,7 +1473,8 @@ int updateblobscm(
     return (sta);
 }
 
-int updateranlastscm(
+err_code
+updateranlastscm(
     scmcon *conp,
     scmtab *mtab,
     char what,
@@ -1458,7 +1482,7 @@ int updateranlastscm(
 {
     char stmt[256];
     char *ent;
-    int sta;
+    err_code sta;
 
     if (conp == NULL || conp->connected == 0 || now == NULL || now[0] == 0)
         return (ERR_SCM_INVALARG);

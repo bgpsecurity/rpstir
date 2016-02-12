@@ -84,26 +84,31 @@ static int format_aKI(
     return (c - namep);
 }
 
-static int add_paracert2DB(
+static err_code
+add_paracert2DB(
     struct done_cert *done_certp)
 {
-    int ansr;
+    err_code ansr;
     char fullname[PATH_MAX];
     char ski[80];
     ulong flags;
     struct cert_answers *cert_answersp;
     struct cert_ansr *cert_ansrp;
     unsigned int dbid;
+    /** @bug ignores error code without explanation */
     ansr = findorcreatedir(locscmp, locconp, Xrpdir, &dbid);
     sprintf(fullname, "%s/%s", Xrpdir, done_certp->filename);
+    /** @bug ignores error code without explanation */
     ansr = delete_object(locscmp, locconp, done_certp->filename, Xrpdir,
                          fullname, dbid);
-    if ((ansr = put_casn_file(&done_certp->paracertp->self, fullname, 0)) < 0)
-        return ansr;
+    if (put_casn_file(&done_certp->paracertp->self, fullname, 0) < 0)
+        /** @bug use a better error code */
+        return ERR_SCM_UNSPECIFIED;
     ansr = add_cert(locscmp, locconp, done_certp->filename, fullname, XrpdirId,
                     0, OT_CER, &dbid, 1);
     if (ansr >= 0)
     {
+        /** @bug should the SCM_FLAG_VALIDATED flag be set here? */
         flags = done_certp->origflags & ~(SCM_FLAG_NOCHAIN);
         struct Extension *extp = find_extension(
             &done_certp->paracertp->toBeSigned.extensions,
@@ -111,7 +116,8 @@ static int add_paracert2DB(
         format_aKI(ski, &extp->extnValue.subjectKeyIdentifier);
         cert_answersp = find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
         if (!cert_answersp || cert_answersp->num_ansrs < 0)
-            return -1;
+            /** @bug should return cert_answersp->num_ansrs */
+            return ERR_SCM_UNSPECIFIED;
         int i = 0;
         for (cert_ansrp = &cert_answersp->cert_ansrp[0];
              i < cert_answersp->num_ansrs; i++, cert_ansrp++)
@@ -120,7 +126,7 @@ static int add_paracert2DB(
                 break;
         }
         if (i >= cert_answersp->num_ansrs)
-            ansr = -1;
+            ansr = ERR_SCM_UNSPECIFIED;
     }
     if (ansr >= 0)
     {
@@ -131,11 +137,11 @@ static int add_paracert2DB(
                                   done_certp->origflags)))
             return ansr;
         LOG(LOG_INFO, "Added %s to DB", fullname);
-        return 1;
+        return 0;
     }
     else
-        LOG(LOG_ERR, "Adding %s to DB failed with error %d",
-                fullname, -ansr);
+        LOG(LOG_ERR, "Adding %s to DB failed with %s: %s",
+            fullname, err2name(ansr), err2string(ansr));
     return ansr;
 }
 
@@ -333,7 +339,8 @@ static void fill_done_cert(
     done_certp->perf = 0;
 }
 
-int get_CAcert(
+err_code
+get_CAcert(
     char *ski,
     struct done_cert **done_certpp)
 {
@@ -344,21 +351,18 @@ int get_CAcert(
     if (ski && (done_certp = have_already(ski)))
     {
         *done_certpp = done_certp;
-        i = 0;
     }
     else
     {
         // no, get it from DB as certp
-        int ansr;
         struct cert_answers *cert_answersp =
             find_cert_by_aKI(ski, (char *)0, locscmp, locconp);
-        if (!cert_answersp && cert_answersp->num_ansrs < 0)
-            return -1;
+        if (!cert_answersp)
+            return ERR_SCM_UNSPECIFIED;
         struct cert_ansr *cert_ansrp,
            *this_cert_ansrp;
-        ansr = cert_answersp->num_ansrs;
-        if (ansr < 0)
-            return ansr;
+        if (cert_answersp->num_ansrs < 0)
+            return cert_answersp->num_ansrs;
         i = j = 0;
         int have_para = 0;
         for (cert_ansrp = &cert_answersp->cert_ansrp[0];
@@ -373,8 +377,7 @@ int get_CAcert(
             certp =
                 (struct Certificate *)calloc(1, sizeof(struct Certificate));
             Certificate(certp, (ushort) 0);
-            if ((ansr =
-                 get_casn_file(&certp->self, cert_ansrp->fullname, 0)) < 0)
+            if (get_casn_file(&certp->self, cert_ansrp->fullname, 0) < 0)
                 return ERR_SCM_COFILE;
             this_cert_ansrp = cert_ansrp;
             j++;
@@ -383,38 +386,34 @@ int get_CAcert(
         {
             xsnprintf(errbuf, sizeof(errbuf),
                       "No CA certificate found for SKI %s\n", ski);
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         }
         else if (j > 2 || (j == 2 && !have_para))
         {
             xsnprintf(errbuf, sizeof(errbuf),
                       "Found %d certificates for SKI %s\n", j, ski);
-            return -1;
+            return ERR_SCM_UNSPECIFIED;
         }
         get_casn_file(&certp->self, this_cert_ansrp->fullname, 0);
         struct Certificate *paracertp =
             mk_paracert(certp, this_cert_ansrp->flags);
         if (!paracertp)
-            ansr = ERR_SCM_BADSKIFILE;
+            return ERR_SCM_BADSKIFILE;
         else
         {
             struct done_cert done_cert;
             fill_done_cert(&done_cert, ski, this_cert_ansrp->filename, certp,
                            this_cert_ansrp->local_id, this_cert_ansrp->flags);
-            if ((ansr = add_done_cert(&done_cert)) >= 0)
-            {
-                done_certp = &done_certs.done_certp[ansr];
-                *done_certpp = done_certp;
-            }
+            int ansr = add_done_cert(&done_cert);
+            done_certp = &done_certs.done_certp[ansr];
+            *done_certpp = done_certp;
         }
-        if (ansr < 0)
-            return ansr;
-        i = 1;
     }
-    return i;
+    return 0;
 }
 
-static int sign_cert(
+static err_code
+sign_cert(
     struct keyring *keyring,
     struct Certificate *certp)
 {
@@ -436,7 +435,7 @@ static int sign_cert(
     signstring = (uchar *) calloc(1, sign_lth);
     sign_lth = encode_casn(&certp->toBeSigned.self, signstring);
     memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
         return ERR_SCM_CRYPTLIB;
     if ((ansr =
          cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2)) != 0
@@ -511,11 +510,11 @@ static int sign_cert(
         free(signature);
     if (ansr)
     {
-        ansr = ERR_SCM_SIGNINGERR;
         xsnprintf(errbuf, sizeof(errbuf), "Error %s\n", msg);
         fflush(stderr);
+        return ERR_SCM_SIGNINGERR;
     }
-    return ansr;
+    return 0;
 }
 
 static void save_cert_answers(
@@ -525,10 +524,16 @@ static void save_cert_answers(
     int numkid;
     int numkids = from_cert_answersp->num_ansrs;
     to_cert_answersp->num_ansrs = numkids;
+    /**
+     * @bug
+     *     ignores error code without explanation (numkids might be
+     *     negative)
+     */
     to_cert_answersp->cert_ansrp =
         (struct cert_ansr *)calloc(numkids, sizeof(struct cert_ansr));
     for (numkid = 0; numkid < numkids; numkid++)
     {
+        /** @bug possible null pointer dereference if calloc() failed */
         to_cert_answersp->cert_ansrp[numkid] =
             from_cert_answersp->cert_ansrp[numkid];
     }
@@ -614,7 +619,7 @@ static int expand(
         if (ansr < 0)
         {
             if (flag)
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             certrangep = inject_range(certrangesp, ++lastcert);
             certrangep->typ = rulerangep->typ;
             memcpy(certrangep->lolim, rulerangep->lolim, lth);
@@ -628,7 +633,7 @@ static int expand(
         else if (!ansr)
         {
             if (flag)
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             memcpy(certrangep->lolim, rulerangep->lolim, lth);
             if (memcmp(certrangep->hilim, rulerangep->hilim, lth) >= 0)
                 rulerangep = next_range(rulerangesp, rulerangep);
@@ -646,14 +651,14 @@ static int expand(
             if (memcmp(certrangep->lolim, rulerangep->lolim, lth) > 0)
             {
                 if (flag)
-                    return -1;
+                    return ERR_SCM_UNSPECIFIED;
                 memcpy(certrangep->lolim, rulerangep->lolim, lth);
                 did++;
             }
             if (memcmp(rulerangep->hilim, certrangep->hilim, lth) > 0)
             {
                 if (flag)
-                    return -1;
+                    return ERR_SCM_UNSPECIFIED;
                 memcpy(certrangep->hilim, rulerangep->hilim, lth);
                 rulerangep = next_range(rulerangesp, rulerangep);
                 did++;
@@ -670,7 +675,7 @@ static int expand(
         else if ((ansr = touches(certrangep, rulerangep, lth)) >= 0)
         {
             if (flag)
-                return -1;
+                return ERR_SCM_UNSPECIFIED;
             memcpy(certrangep->hilim, rulerangep->hilim, lth);
             lastcert = certrangep - certrangesp->iprangep;
             certrangep = next_range(certrangesp, certrangep);
@@ -907,6 +912,7 @@ static int conflict_test(
         // "subtract" new fromranges from old
 
         // diff shows where it occurred
+        /** @bug ignores error code without explanation */
         perf_A_from_B(&fromranges, &savranges);
         // find where
         int jj;
@@ -1154,6 +1160,7 @@ static int modify_paracert(
     int typ;
     int changes = 0;
     int did = 0;
+    err_code err;
     // start at beginning of SKI list and IPv4 family in certificate
     // beginning of SKI list
     struct iprange *rulerangep = ruleranges.iprangep;
@@ -1192,9 +1199,8 @@ static int modify_paracert(
             return did;
         remake_cert_ranges(paracertp);
     }
-    did = sign_cert(keyring, paracertp);
-    if (did < 0)
-        return did;
+    if ((err = sign_cert(keyring, paracertp)) < 0)
+        return err;
     return changes;
 }
 
@@ -1215,14 +1221,15 @@ static int modify_paracert(
  *         ELSE add the cert & paracert to the done list
  * 4.    IF something was done, call this function with this child
  */
-static int search_downward(
+static err_code
+search_downward(
     struct keyring *keyring,
     struct Certificate *topcertp)
 {
     struct Extension *extp = find_extension(&topcertp->toBeSigned.extensions,
                                             id_subjectKeyIdentifier, 0);
     struct Certificate *childcertp;
-    int ansr;
+    err_code err = 0;
     int numkid;
     int numkids;
     char pSKI[64];
@@ -1235,17 +1242,18 @@ static int search_downward(
         find_cert_by_aKI((char *)0, pSKI, locscmp, locconp);
     numkids = cert_answersp->num_ansrs;
     if (numkids <= 0)
+        /** @bug ignores error code without explanation */
         return 0;
     childcertp = (struct Certificate *)calloc(1, sizeof(struct Certificate));
     Certificate(childcertp, (ushort)0);
     struct cert_answers mycert_answers;
     save_cert_answers(&mycert_answers, cert_answersp);
     // step 1
-    for (ansr = numkid = 0; numkid < numkids && ansr >= 0; numkid++)
+    for (numkid = 0; numkid < numkids; numkid++)
     {
         struct cert_ansr *cert_ansrp = &mycert_answers.cert_ansrp[numkid];
-        if ((ansr =
-             get_casn_file(&childcertp->self, cert_ansrp->fullname, 0)) < 0)
+        if (get_casn_file(&childcertp->self, cert_ansrp->fullname, 0) < 0)
+            /** @bug memory leak in mycert_answers.cert_ansrp */
             return ERR_SCM_COFILE;
         extp = find_extension(&childcertp->toBeSigned.extensions,
                               id_authKeyId, 0);
@@ -1272,7 +1280,7 @@ static int search_downward(
                 continue;
         }
         // step 2
-        ansr = modify_paracert(keyring, 1, done_certp->paracertp);
+        int ansr = modify_paracert(keyring, 1, done_certp->paracertp);
         done_certp->perf |= (WASPERFORATED | WASPERFORATEDTHISBLK);
         if (have == 0)
         {
@@ -1288,19 +1296,25 @@ static int search_downward(
             }
         }
         if (ansr > 0)
-            ansr = search_downward(keyring, done_certp->origcertp);
+            err = search_downward(keyring, done_certp->origcertp);
+        else if (ansr < 0)
+            err = ansr;
+        if (err)
+            break;
     }
     free(mycert_answers.cert_ansrp);
     delete_casn(&childcertp->self);
-    return ansr;
+    return err;
 }
 
-static int process_trust_anchors(
+static err_code
+process_trust_anchors(
     struct keyring *keyring)
 {
     struct cert_answers *cert_answersp = find_trust_anchors(locscmp, locconp);
     if (cert_answersp->num_ansrs < 0)
-        return -1;
+        /** @bug should return cert_answersp->num_ansrs */
+        return ERR_SCM_UNSPECIFIED;
     int ansr = 0;
     int numkids = cert_answersp->num_ansrs;
     int numkid;
@@ -1346,8 +1360,10 @@ static int process_trust_anchors(
             format_aKI(cSKI, &extp->extnValue.subjectKeyIdentifier);
             fill_done_cert(&done_cert, cSKI, cert_ansrp->filename, childcertp,
                            cert_ansrp->local_id, cert_ansrp->flags);
+            /** @bug ignores error code without explanation */
             sign_cert(keyring, done_cert.paracertp);
             add_done_cert(&done_cert);
+            /** @bug ignores error code without explanation */
             search_downward(keyring, done_cert.origcertp);
         }
     }
@@ -1370,7 +1386,8 @@ static int process_trust_anchors(
  *      them
  *    Return 0
  */
-static int process_control_block(
+static err_code
+process_control_block(
     struct keyring *keyring,
     struct done_cert *done_certp)
 {
@@ -1381,9 +1398,16 @@ static int process_control_block(
     for (run = 0; 1; run++)
     {
         int ansr;
+        err_code err;
         if (((done_certp->perf & WASPERFORATED) && !run) ||
             ((done_certp->perf & WASEXPANDED) && run))
         {
+            /**
+             * @bug
+             *     ignores error code without explanation?  (unclear
+             *     without return value documentation for
+             *     conflict_test())
+             */
             if (conflict_test(run, done_certp))
             {
                 // trim CR
@@ -1407,12 +1431,13 @@ static int process_control_block(
         extp = find_extension(&done_certp->origcertp->toBeSigned.extensions,
                               id_authKeyId, 0);
         format_aKI(skibuf, &extp->extnValue.authKeyId.keyIdentifier);
-        if ((ansr = get_CAcert(skibuf, &ndone_certp)) < 0)
-            return ansr;
+        if ((err = get_CAcert(skibuf, &ndone_certp)) < 0)
+            return err;
         done_certp = ndone_certp;
     }
     // oldcert is at a self-signed cert
     // for all ss certs
+    /** @bug ignores error code without explanation */
     search_downward(keyring, done_certp->origcertp);
     return 0;
 }
@@ -1432,12 +1457,13 @@ static int process_control_block(
  *      Process the trust anchors with these constraints
  *    WHILE skibuf has anything
  */
-static int process_control_blocks(
+static err_code
+process_control_blocks(
     struct keyring *keyring,
     FILE *SKI)
 {
     struct done_cert *done_certp;
-    int ansr = 1;
+    err_code ansr;
     do
     {
         char *cc;
@@ -1505,9 +1531,10 @@ static int process_control_blocks(
                 }
             }
         }
-        int err;
+        err_code err;
 
         err = process_control_block(keyring, done_certp);
+        /** @bug ignores error code without explanation */
         process_trust_anchors(keyring);
         clear_ipranges(&ruleranges);
         if (err < 0)
@@ -1523,11 +1550,12 @@ static int process_control_blocks(
         strcpy(currskibuf, nextskibuf);
         strcpy(skibuf, nextskibuf);
     }
-    while (ansr);
+    while (1);
     return 0;
 }
 
-int read_SKI_blocks(
+err_code
+read_SKI_blocks(
     scm *scmp,
     scmcon *conp,
     char *skiblockfile)
@@ -1545,10 +1573,10 @@ int read_SKI_blocks(
      */
     Certificate(&myrootcert, (ushort) 0);
     int numcert;
-    int locansr = 0;
+    err_code locansr = 0;
     char locfilename[128];
     *locfilename = 0;
-    int ansr = 0;
+    err_code ansr = 0;
     struct keyring keyring = { NULL, NULL, NULL };
     // step 1
     FILE *SKI = fopen(skiblockfile, "r");

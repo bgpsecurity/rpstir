@@ -168,7 +168,8 @@ int main(
         int lth = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);
         buf = (char *)calloc(1, lth + 1);
-        read(fd, buf, lth);
+        if (read(fd, buf, lth) != lth)
+            abort();
         int numargs;
         for (e = buf; *e; e++)
             if (*e <= ' ')

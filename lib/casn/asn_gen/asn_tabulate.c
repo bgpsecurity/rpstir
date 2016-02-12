@@ -53,9 +53,9 @@ void tabulate(
      * (indicating the end of an item) Tabulate the item Default: Exit with
      * fatal message
      */
-    int parent;
-    int in_choice;
-    struct name_table *ptbp;
+    int parent = 0;
+    int in_choice = 0;
+    struct name_table *ptbp = NULL;
     option = 0;
     if (state != SUB_ITEM)
         end_definition();
@@ -104,7 +104,7 @@ void tabulate(
         case IN_ITEM:          /* got '{' */
             if (*token == ':' || *token == '{')
                 syntax(classname);
-            if (read_item(parent, 0) < 0)
+            if (read_item(parent, NULL) < 0)
                 return;
             if (*token == ',' || *token == '}') /* end of item */
                 tab_item(parent, in_choice);
@@ -122,7 +122,7 @@ static void tab_def(
     int parent,
     struct name_table *ptbp)
 {
-/**
+/*
 1. IF have a tag,
         IF type is constructed, put constructed bit in tag
         Put tag in name table
@@ -145,7 +145,7 @@ static void tab_def(
    IF table flag is set, set it in object table
    Clear assorted variables
    Set state to IN_ITEM
-**/
+*/
     if (*defined_by)
         mk_table_child(parent, (long)0, option);
     /*
@@ -210,7 +210,7 @@ static void tab_item(
     int parent,
     int in_choice)
 {
-/**
+/*
 1. IF in a choice, make an "in-name"
    IF it's a DEFINED BY, make a table entry
    IF it's a boolean, clear subclass (in case it's a BOOLEAN DEFINED BY)
@@ -244,7 +244,7 @@ static void tab_item(
 	    Copy all its contents to main stream
 	    Mark new stream emptied
         Go to GLOBAL state
-**/
+*/
     int child,
         tmp;
     static long did = 0;
@@ -441,7 +441,7 @@ Procedure:
                 cat(itemname, token);
                 *itemname = 0;
                 parent = ntbp - (struct name_table *)name_area.area;
-                read_item(parent, 0);
+                read_item(parent, NULL);
                 ntbp = &((struct name_table *)name_area.area)
                     [add_child(testname, parent, numitems, -1, 0)];
                 ntbp->pos = tell_pos(streams.str);
@@ -569,7 +569,7 @@ Procedure:
 	IF it is a basic TABLE
             Set table's tag to parent's and parent's position to table's
 **/
-    struct name_table *ptbp;
+    struct name_table *ptbp = NULL;
     struct name_table *ctbp;
     struct name_table *lftbp;
     int curr_parent;
@@ -914,9 +914,9 @@ static void sort_defineds(
     struct name_table *ntbp)
 {
     struct parent tparent;
-    struct parent *parentp;
+    struct parent *parentp = NULL;
     struct parent *nparentp;
-    struct parent *pparentp;
+    struct parent *pparentp = NULL;
     do
     {
         for (nparentp = (parentp = &ntbp->parent)->next;

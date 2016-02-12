@@ -48,7 +48,7 @@ struct cert_ansr {
 
 struct cert_answers {
     /**
-     * If negative, this is an `ERR_SCM_*` error code.
+     * If negative, this is an error code value from ::err_code.
      */
     int num_ansrs;
     struct cert_ansr *cert_ansrp;
@@ -150,7 +150,7 @@ nextword(
 
 char myrootfullname[PATH_MAX];
 
-int
+err_code
 parse_SKI_blocks(
     struct keyring *,
     FILE *,
@@ -159,12 +159,12 @@ parse_SKI_blocks(
     int,
     int *);
 
-int
+err_code
 get_CAcert(
     char *,
     struct done_cert **);
 
-int
+err_code
 getSKIBlock(
     FILE *,
     char *,

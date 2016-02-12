@@ -1,6 +1,8 @@
 #ifndef LIB_RPKI_SCMF_H
 #define LIB_RPKI_SCMF_H
 
+#include "err.h"
+
 #include <inttypes.h>
 #include <unistd.h>
 #include <sql.h>
@@ -69,8 +71,8 @@ typedef struct _scmsrcha        /* used for a search (select) */
  * @brief
  *     callback function signature for a count of search results
  */
-typedef int (
-    *sqlcountfunc)(
+typedef err_code
+sqlcountfunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t cnt);
@@ -79,8 +81,8 @@ typedef int (
  * @brief
  *     callback function signature for a single search result
  */
-typedef int (
-    *sqlvaluefunc)(
+typedef err_code
+sqlvaluefunc(
     scmcon *conp,
     scmsrcha *s,
     ssize_t idx);
@@ -191,7 +193,8 @@ extern int getrowsscm(
  * After calling statementscm and using its statement handle: You must call
  * pophstmt(conp).
  */
-extern int statementscm(
+err_code
+statementscm(
     scmcon *conp,
     char *stm);
 
@@ -199,7 +202,8 @@ extern int statementscm(
  * @brief
  *     Execute a SQL statement, ignoring any returned rows.
  */
-extern int statementscm_no_data(
+err_code
+statementscm_no_data(
     scmcon *conp,
     char *stm);
 
@@ -207,7 +211,8 @@ extern int statementscm_no_data(
  * Create a database and grant the mysql default user the standard set of
  * privileges for that database.
  */
-extern int createdbscm(
+err_code
+createdbscm(
     scmcon *conp,
     char *dbname,
     char *dbuser);
@@ -215,7 +220,8 @@ extern int createdbscm(
 /*
  * Delete a database.
  */
-extern int deletedbscm(
+err_code
+deletedbscm(
     scmcon *conp,
     char *dbname);
 
@@ -223,7 +229,8 @@ extern int deletedbscm(
  * Create all the tables listed in scmp. This assumes that the database has
  * already been created through a call to createdbscm().
  */
-extern int createalltablesscm(
+err_code
+createalltablesscm(
     scmcon *conp,
     scm *scmp);
 
@@ -231,7 +238,8 @@ extern int createalltablesscm(
  * @brief
  *     Insert an entry into a database table.
  */
-extern int insertscm(
+err_code
+insertscm(
     scmcon *conp,
     scmtab *tabp,
     scmkva *arr);
@@ -240,14 +248,16 @@ extern int insertscm(
  * Get the maximum of the specified id field of the given table.  If table is
  * empty, then sets *ival to 0.
  */
-extern int getmaxidscm(
+err_code
+getmaxidscm(
     scm *scmp,
     scmcon *conp,
     char *field,
     scmtab *mtab,
     unsigned int *ival);
 
-extern int getuintscm(
+err_code
+getuintscm(
     scmcon *conp,
     unsigned int *ival);
 
@@ -261,12 +271,13 @@ extern int getuintscm(
  * searchscm() must create its own STMT and then destroy it when it is
  * done.
  */
-extern int searchscm(
+err_code
+searchscm(
     scmcon *conp,
     scmtab *tabp,
     scmsrcha *srch,
-    sqlcountfunc cnter,
-    sqlvaluefunc valer,
+    sqlcountfunc *cnter,
+    sqlvaluefunc *valer,
     int what,
     char *orderp);
 
@@ -275,7 +286,8 @@ extern int searchscm(
  * the size of the column array, so enough space must have already been
  * allocated when the array was created.
  */
-extern int addcolsrchscm(
+err_code
+addcolsrchscm(
     scmsrcha *srch,
     char *colname,
     int sqltype,
@@ -311,7 +323,8 @@ extern int addcolsrchscm(
  * max ids in the metadata table and so all of them have to be managed using
  * this (sadly prolix) function.
  */
-extern int searchorcreatescm(
+err_code
+searchorcreatescm(
     scm *scmp,
     scmcon *conp,
     scmtab *tabp,
@@ -323,7 +336,8 @@ extern int searchorcreatescm(
  * @brief
  *     deletes entries in a database table that match the stated search criteria
  */
-extern int deletescm(
+err_code
+deletescm(
     scmcon *conp,
     scmtab *tabp,
     scmkva *deld);
@@ -333,7 +347,8 @@ extern int deletescm(
  *
  * This function returns 0 on success and a negative error code on failure.
  */
-extern int setflagsscm(
+err_code
+setflagsscm(
     scmcon *conp,
     scmtab *tabp,
     scmkva *where,
@@ -343,7 +358,8 @@ extern int setflagsscm(
  * This very specific function updates the sninuse and snlist entries on a CRL
  * using the local_id as the where criterion.
  */
-extern int updateblobscm(
+err_code
+updateblobscm(
     scmcon *conp,
     scmtab *tabp,
     uint8_t *snlist,
@@ -355,7 +371,8 @@ extern int updateblobscm(
  * This specialized function updates the appropriate xx_last field in the
  * metadata table for the indicated time when the client completed.
  */
-extern int updateranlastscm(
+err_code
+updateranlastscm(
     scmcon *conp,
     scmtab *mtab,
     char what,

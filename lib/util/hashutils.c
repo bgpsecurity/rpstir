@@ -19,7 +19,7 @@ int gen_hash(
     if (alg != CRYPT_ALGO_SHA1 && alg != CRYPT_ALGO_SHA2)
         return -1;
     memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
         return -1;
 
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, alg) != CRYPT_OK)

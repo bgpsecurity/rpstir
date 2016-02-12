@@ -52,7 +52,7 @@ int main(
         FATAL("Can't get table");
     if (argc != 2)
         FATAL("Need name of control file");
-    int ansr = read_SKI_blocks(scmp, conp, argv[1]);
+    err_code ansr = read_SKI_blocks(scmp, conp, argv[1]);
     if (ansr < 0)
         fprintf(stderr, "Had error %d: %s\n", ansr, err2string(ansr));
     config_unload();

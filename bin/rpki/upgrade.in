@@ -117,7 +117,7 @@ ALTER TABLE rtr_incremental
 EOF
 
     log "Re-adding ROAs with new schema."
-    find "`config_get RPKICacheDir`" -type f -name \*.roa -print \
+    find "${RPKICacheDir}" -type f -name \*.roa -print \
         | rcli -l || fatal "Failed to re-add ROAs."
 
     log "Re-initializing rpki-rtr data."

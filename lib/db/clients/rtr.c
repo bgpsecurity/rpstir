@@ -13,7 +13,6 @@
 #include <string.h>
 #include <limits.h>
 
-#include <my_global.h>
 #include <mysql.h>
 
 #include "config/config.h"

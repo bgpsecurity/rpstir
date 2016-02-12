@@ -210,7 +210,7 @@ void cconstruct(
              */
         case IN_ITEM:          /* got '{' */
         case SUB_ITEM:
-            if (read_item(-1, cconstruct) < 0)
+            if (read_item(-1, &cconstruct) < 0)
                 return;
             if ((*token == ',' || *token == '}') &&     /* end of item */
                 !constr_item(classgeneration, parenttype))

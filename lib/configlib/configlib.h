@@ -41,12 +41,12 @@ struct config_option {
     // free(3). array_validate (and its usr_arg) can be NULL if no inter-value
     // validation is needed.
     bool is_array;
-    config_value_converter value_convert;
+    config_value_converter *value_convert;
     void *value_convert_usr_arg;
-    config_value_converter_inverse value_convert_inverse;
+    config_value_converter_inverse *value_convert_inverse;
     void *value_convert_inverse_usr_arg;
-    config_value_free value_free;
-    config_array_validator array_validate;
+    config_value_free *value_free;
+    config_array_validator *array_validate;
     void *array_validate_usr_arg;
 
     // Default value, as if it came from the config file. NULL indicates that

@@ -176,7 +176,7 @@ Procedure:
     }
 }
 
-static void
+void
 print_hdr(
     void)
 {
@@ -193,7 +193,7 @@ print_hdr(
      * with fatal message
      */
     int dup_ansr;
-    int numdefineds;
+    int numdefineds = 0;
     for (end_item(); get_token(0, token);)
     {
         switch (state)
@@ -211,7 +211,7 @@ print_hdr(
              */
         case IN_ITEM:
         case SUB_ITEM:
-            if (read_item(-1, print_hdr) < 0)
+            if (read_item(-1, &print_hdr) < 0)
                 return;
             if ((*token == ',' || *token == '}') &&     /* end of item */
                 !hdr_item(dup_ansr, numdefineds))

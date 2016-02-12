@@ -651,7 +651,7 @@ Procedure:
         syntax(components_w);
     state = SUB_ITEM;
     if (func)
-        func();                /* step 3 */
+        (*func)();                /* step 3 */
     curr_pos = pos;
     fseek(streams.str, pos, 0);
     state = IN_ITEM;

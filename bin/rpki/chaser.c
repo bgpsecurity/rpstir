@@ -388,7 +388,7 @@ static int handle_uri_string(
     int ret;
     size_t i;
     size_t j;
-    size_t next_i;
+    size_t next_i = 0;
 
     section = (char *)malloc(sizeof(char) * (DB_URI_LEN + 1));
     if (!section)

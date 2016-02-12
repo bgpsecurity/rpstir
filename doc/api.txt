@@ -106,7 +106,7 @@ This function returns a human-readable name for the last database table that was
 accessed over the database connection conp.  If no tables have ever been accessed,
 or if there is an error on the connection, NULL is returned.
 
-2.1.5 int createdbscm(scmcon *conp, char *dbname, char *dbuser)
+2.1.5 err_code createdbscm(scmcon *conp, char *dbname, char *dbuser)
 
 This function creates a database named "dbname" with nominal access rights for
 user "dbuser" in the Resource PKI database, using the database connection "conp".
@@ -114,7 +114,7 @@ user "dbuser" in the Resource PKI database, using the database connection "conp"
 that has root access to the MySQL database. Typical user applications should never
 have to call this function.
 
-2.1.6 int deletedbscm(scmcon *conp, char *dbname)
+2.1.6 err_code deletedbscm(scmcon *conp, char *dbname)
 
 This function deletes the database named "dbname" in the Resource PKI database,
 using the database connection "conp". "dbname" must not be NULL. "conp" mus be
@@ -135,7 +135,7 @@ the caller.
 
 This function is used to free the memory allocated by initscm().
 
-2.1.9 int createalltablesscm(scmcon *conp, scm *scmp)
+2.1.9 err_code createalltablesscm(scmcon *conp, scm *scmp)
 
 This function creates all the tables within the default Resource PKI database. It
 uses a database connection "conp" which must have root access to the MySQL database.
@@ -212,9 +212,9 @@ specified by "tabp" over the database connection "conp". The value of
 the columns to be deleted is specified using the same structure as in
 insertscm(), above.
 
-2.1.14 int searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
-	             sqlcountfunc cnter, sqlvaluefunc valer,
-	             int what, char *orderp)
+2.1.14 err_code searchscm(scmcon *conp, scmtab *tabp, scmsrcha *srch,
+                          sqlcountfunc *cnter, sqlvaluefunc *valer,
+                          int what, char *orderp)
 
 This function performs an SQL SELECT operation on the database table
 specified by "tabp" over the database connection "conp". The search
@@ -281,7 +281,7 @@ If the user desires to only obtain a count of the number of rows that
 matched the search criteria, then the "cnter" callback function should be
 specified. The signature for this function is:
 
-     int (*sqlcountfunc)(scmcon *conp, scmsrcha *s, int cnt);
+     err_code sqlcountfunc(scmcon *conp, scmsrcha *s, int cnt);
 
 It is called with the connection parameter "conp", the search parameter "s"
 (with the matching results filled in, of course) and also a total count
@@ -296,7 +296,7 @@ the callback function "valer" should be specified. This function will then
 be called for each row that matches the search criteria. The signature for
 this callback function is:
 
-    int (*sqlvaluefunc)(scmcon *conp, scmsrcha *s, int idx);
+    err_code sqlvaluefunc(scmcon *conp, scmsrcha *s, int idx);
 
 The first two arguments are the same as with the count callback function.
 The third argument is a 0-based index indicating which row of the total
@@ -392,8 +392,8 @@ returns that representation; on failure it returns NULL.
 
 2.2 High level database functions
 
-2.2.1 int add_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-	             char *outfull, int utrust)
+2.2.1 err_code add_object(scm *scmp, scmcon *conp, char *outfile,
+                          char *outdir, char *outfull, int utrust)
 
 This function is used to add an arbitrary object (certificate, CRL or ROA)
 into the database. "scmp" is the database schema object returned by initscm();
@@ -407,15 +407,15 @@ trusted certificate, which must be self-signed. If "utrust" is 0 then this
 function performs a heuristic test to determine if the object is a trust anchor
 certificate.
 
-2.2.2 int delete_object(scm *scmp, scmcon *conp, char *outfile, char *outdir,
-	                char *outfull)
+2.2.2 err_code delete_object(scm *scmp, scmcon *conp, char *outfile,
+                             char *outdir, char *outfull)
 
 This function is used to delete an object from the database. Its arguments are
 the same as those of add_object(). Note that it is not an error to delete something
 that is not present in the database.
 
-2.2.3 int findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
-	                  char *dirname, unsigned int *idp)
+2.2.3 err_code findorcreatedir(scm *scmp, scmcon *conp, scmtab *mtab,
+                               char *dirname, unsigned int *idp)
 
 This function is used to find or create a directory in the directory table,
 or create one if it is not already present. "scmp" and "conp" are the usual
@@ -425,7 +425,7 @@ added.  mtab and dirname may not be NULL. If the operation succeeds then 0 is
 returned, and the directory id of the directory is returned in "idp". If the
 operation fails then a negative error code, defined in err.h, is returned.
 
-2.2.4 int iterate_crl(scm *scmp, scmcon *conp, crlfunc cfunc)
+2.2.4 err_code iterate_crl(scm *scmp, scmcon *conp, crlfunc *cfunc)
 
 This function is used to iterate over all CRLs in the database and perform
 the revocations implied by their issuer/aki/serial-number lists. "scmp" and
@@ -433,19 +433,19 @@ the revocations implied by their issuer/aki/serial-number lists. "scmp" and
 function that is called to process each individual revocation. The function
 signature for this callback is:
 
-    typedef int (*crlfunc)(scm *scmp, scmcon *conp, char *issuer, char *aki,
-		           unsigned long long sn)
+    typedef err_code crlfunc(scm *scmp, scmcon *conp, char *issuer,
+                             char *aki, unsigned long long sn)
 
 In almost every case, the global function revoke_cert_by_serial()
 should be used as the "cfunc" argument to iterate_crl.
 
-2.2.5 int certificate_validity(scm *scmp, scmcon *conp)
+2.2.5 err_code certificate_validity(scm *scmp, scmcon *conp)
 
 This function is used to iterate over all certificates in the database and
 expire those whose notAfter date is in the part. "scmp" and "conp" are the
 usual schema and database pointers.
 
-2.2.6 char *retrieve_tdir(scm *scmp, scmcon *conp, int *stap)
+2.2.6 char *retrieve_tdir(scm *scmp, scmcon *conp, err_code *stap)
 
 This utility function is used to retrieve the name for the repository root
 directory from the database. "scmp" and "conp" are the usual schema and
@@ -463,16 +463,17 @@ name "appName".
 
 This utility function is used to turn off syslogging.
 
-2.2.9 void *roa_parent(scm *scmp, scmcon *conp, char *ski, char **fn, int *stap)
+2.2.9 void *roa_parent(scm *scmp, scmcon *conp, char *ski,
+                       char *fn, err_code *stap)
 
 This utility function is used to look up the end-entity certificate that
 signed a ROA.  "ski" denotes the SKI contained within the ROA. "scmp" and
 "conp" are the usual schema and connection pointers. On success this function
 returns an X509 pointer (cast to a void * for convenience), writes the
 full pathname of the underlying certificate file to the buffer of size
-PATH_LEN at *fn (if "fn" is non-NULL), and sets "stap" to zero.  On
-failure NULL is returned and "stap" is set to a negative error code
-defined in err.h.
+PATH_LEN at "fn" (if non-NULL), and sets "stap" to zero.  On failure
+NULL is returned and "stap" is set to a negative error code defined in
+err.h.
 
 2.3 OpenSSL utility functions
 
@@ -485,8 +486,8 @@ will be returned and stap will be set to a negative error code defined in err.h.
 Note that is this function succeeds it returns allocated memory that must be
 freed by the caller.
 
-2.3.2 cert_fields *cert2fields(char *fname, char *fullname, int typ,
-			       X509 **xp, int *stap, int *x509stap)
+2.3.2 cert_fields *cert2fields(char *fname, char *fullname, object_type typ,
+                               X509 **xp, err_code *stap, int *x509stap)
 
 This function is used to tear apart an X509 certificate, obtained either from
 a file or from OpenSSL, and place the fields of interest to the database in a
@@ -519,8 +520,8 @@ members of cert_fields should be opaque to the user and not used.
 This function is used to free all the memory allocated by a call to the
 cert2fields() function.
 
-2.3.4 crl_fields *crl2fields(char *fname, char *fullname, int typ,
-			     X509_CRL **xp, int *stap, int *crlstap)
+2.3.4 crl_fields *crl2fields(char *fname, char *fullname, object_type typ,
+                             X509_CRL **xp, err_code *stap, int *crlstap)
 
 This function does for CRLs what cert2fields() does for certificates. It
 extracts those fields in a CRL that are meaningful for database insert. The
@@ -548,7 +549,7 @@ This function is used to free all the memory allocated by crl2fields().
 
 2.4 ROA utility functions
 
-2.4.1 int roaFromConfig(char *fname, int doval, struct ROA **rp)
+2.4.1 err_code roaFromConfig(char *fname, int doval, struct ROA** rp)
 
 This function reads the file at "fname" and parses it.  Presuming the file
 represents a ROA in syntactically correct OpenSSL conf file format,
@@ -573,7 +574,7 @@ error code.
 This function is optional and may not be implemented in the delivered
 version.
 
-2.4.3 int roaFromFile(char *fname, int fmt, int doval, struct ROA **rp);
+2.4.3 err_code roaFromFile(char *fname, int fmt, int doval, struct ROA **rp);
 
 This is a more generalized function for similar purposes.  It
 reads in a ROA from a file and potentially perform validation.
@@ -594,7 +595,7 @@ set to a negative error code.
 The non-NULL return from this function is allocated memory that
 must be freed by a call to roaFree().
 
-2.4.4 int roaToFile(struct ROA *r, char *fname, int fmt)
+2.4.4 err_code roaToFile(struct ROA *r, char *fname, int fmt)
 
 This function is the inverse of the previous function.  The ROA
 defined by "r" is written to the file named "fname" using the format
@@ -603,7 +604,7 @@ defined by "r" is written to the file named "fname" using the format
 On success this function returns 0; on failure it returns a negative
 error code.
 
-2.4.5 int roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
+2.4.5 err_code roaGenerateFilter(struct ROA *r, X509 *cert, FILE *fp)
 
 This function is used to create BGP filter tables from a ROA and its
 certificate.  The contents of "r" and "cert" are examined, the AS-number
@@ -681,8 +682,8 @@ document may be particularly helpful in locating the source of problems.
 This function returns 1 if "indir" is a directory, 0 if it is not a
 directory, and a negative error code defined in err.h on any error.
 
-2.6.2 int splitdf(char *dirprefix, char *dirname, char *fname,
-		  char **outdir, char **outfile, char **outfull)
+2.6.2 err_code splitdf(char *dirprefix, char *dirname, char *fname,
+                       char **outdir, char **outfile, char **outfull)
 
 This function is responsible for converting an arbitrary filename
 directory name combination into an absolute path, as well as splitting
@@ -697,7 +698,7 @@ The function produces a full absolute pathname in "outfull" as well
 as the directory part of that absolute pathname in "outdir" and the
 file part of the absolute pathname in "outfile".
 
-2.6.3 int isokfile(char *fname)
+2.6.3 err_code isokfile(char *fname)
 
 This function returns 0 if the indicated file is a regular file
 (symlinks, sockets, pipes and device files are not considered to

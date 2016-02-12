@@ -26,7 +26,8 @@ int strict_profile_checks_cms = 0;
 
 #define MANIFEST_NUMBER_MAX_SIZE 20 /* in bytes */
 
-int check_sig(
+err_code
+check_sig(
     struct CMS *rp,
     struct Certificate *certp)
 {
@@ -68,7 +69,7 @@ int check_sig(
     *buf = ASN_SET;
 
     // (re)init the crypt library
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
         return ERR_SCM_CRYPTLIB;
     if (cryptCreateContext(&hashContext, CRYPT_UNUSED, CRYPT_ALGO_SHA2))
         return ERR_SCM_CRYPTLIB;
@@ -141,7 +142,6 @@ int check_sig(
     // all done, clean up
     cryptDestroyContext(pubkeyContext);
     cryptDestroyContext(hashContext);
-    // cryptEnd();
     delete_casn(&rsapubkey.self);
     delete_casn(&sigInfo.self);
 
@@ -168,7 +168,8 @@ static int getTime(
 }
 
 
-static int check_cert(
+static err_code
+check_cert(
     struct Certificate *certp,
     int isEE)
 {
@@ -231,7 +232,7 @@ int check_fileAndHash(
     int inhashtotlen)
 {
     uchar *contentsp;
-    int err = 0;
+    err_code err = 0;
     int hash_lth;
     int bit_lth;
     int name_lth = lseek(ffd, 0, SEEK_END);
@@ -326,7 +327,8 @@ static struct Attribute *find_unique_attr(
     return ch_attrp;
 }
 
-static int setup_cert_minmax(
+static err_code
+setup_cert_minmax(
     struct IPAddressOrRangeA *rpAddrRangep,
     uchar *cmin,
     uchar *cmax,
@@ -361,7 +363,8 @@ static int setup_cert_minmax(
     return 0;
 }
 
-static int setup_roa_minmax(
+static err_code
+setup_roa_minmax(
     struct IPAddress *ripAddrp,
     uchar *rmin,
     uchar *rmax,
@@ -385,7 +388,8 @@ static int setup_roa_minmax(
     return 0;
 }
 
-static int test_maxLength(
+static err_code
+test_maxLength(
     struct ROAIPAddress *roaAddrp,
     int familyMaxLength)
 {
@@ -410,7 +414,8 @@ static int test_maxLength(
     return 0;
 }
 
-static int validateIPContents(
+static err_code
+validateIPContents(
     struct ROAIPAddrBlocks *ipAddrBlockp)
 {
     // check that addressFamily is IPv4 OR IPv6
@@ -421,7 +426,7 @@ static int validateIPContents(
     struct ROAIPAddress *roaAddrp;
     struct ROAIPAddressFamily *roaipfamp;
     int i;
-    int err = 0;
+    err_code err = 0;
     int num = 0;
 
     if ((i = num_items(&ipAddrBlockp->self)) == 0 || i > 2)
@@ -461,13 +466,14 @@ static int validateIPContents(
     return 0;
 }
 
-static int cmsValidate(
+static err_code
+cmsValidate(
     struct CMS *rp)
 {
     // validates general CMS things common to ROAs and manifests
 
     int num_certs;
-    int ret = 0;
+    err_code ret = 0;
     int tbs_lth;
     struct SignerInfo *sigInfop;
     uchar digestbuf[40];
@@ -657,7 +663,8 @@ static int cmsValidate(
     return 0;
 }
 
-static int check_mft_version(
+static err_code
+check_mft_version(
     struct casn *casnp)
 {
     long val = 0;
@@ -676,7 +683,8 @@ static int check_mft_version(
     return 0;
 }
 
-static int check_mft_number(
+static err_code
+check_mft_number(
     struct casn *casnp)
 {
     int lth = vsize_casn(casnp);
@@ -704,7 +712,8 @@ static int check_mft_number(
     return 0;
 }
 
-static int check_mft_dates(
+static err_code
+check_mft_dates(
     struct Manifest *manp,
     struct Certificate *certp,
     int *stalep)
@@ -779,7 +788,8 @@ static int check_mft_dates(
     return 0;
 }
 
-static int check_mft_filenames(
+static err_code
+check_mft_filenames(
     struct FileListInManifest *fileListp)
 {
     struct FileAndHash *fahp;
@@ -819,12 +829,13 @@ static int strcmp_ptr(
     return strcmp(*(char const *const *)s1, *(char const *const *)s2);
 }
 
-static int check_mft_duplicate_filenames(
+static err_code
+check_mft_duplicate_filenames(
     struct Manifest *manp)
 {
     struct FileAndHash *fahp;
     char **filenames;
-    int ret = 0;
+    err_code ret = 0;
     int file_length;
     int total;
     int i;
@@ -868,11 +879,12 @@ static int check_mft_duplicate_filenames(
     return ret;
 }
 
-int manifestValidate(
+err_code
+manifestValidate(
     struct CMS *cmsp,
     int *stalep)
 {
-    int iRes;
+    err_code iRes;
 
     // Check that content type is id-ct-rpkiManifest
     if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
@@ -984,7 +996,8 @@ static int certrangeBefore(
     return memcmp(range1->hi, range2->lo, sizeof(range1->hi)) < 0;
 }
 
-static int checkIPAddrs(
+static err_code
+checkIPAddrs(
     struct Certificate *certp,
     struct ROAIPAddrBlocks *roaIPAddrBlocksp)
 {
@@ -1112,10 +1125,11 @@ static int checkIPAddrs(
     return 0;
 }
 
-int roaValidate(
+err_code
+roaValidate(
     struct CMS *rp)
 {
-    int iRes = 0;
+    err_code iRes = 0;
     intmax_t iAS_ID = 0;
 
     // ///////////////////////////////////////////////////////////
@@ -1175,11 +1189,12 @@ int roaValidate(
 #define HAS_EXTN_ASN 0x02
 #define HAS_EXTN_IPADDR 0x04
 
-int roaValidate2(
+err_code
+roaValidate2(
     struct CMS *rp)
 {
-    int iRes;
-    int sta;
+    err_code iRes;
+    err_code sta;
     long ii;
     long ij;
     struct Extension *extp;
@@ -1323,7 +1338,8 @@ int roaValidate2(
     return iRes;
 }
 
-static int check_ghostbusters_cms(
+static err_code
+check_ghostbusters_cms(
     struct CMS *cms)
 {
     if (diff_objid(&cms->content.signedData.encapContentInfo.eContentType,
@@ -1336,7 +1352,8 @@ static int check_ghostbusters_cms(
     return 0;
 }
 
-static int check_ghostbusters_cert(
+static err_code
+check_ghostbusters_cert(
     struct CMS *cms)
 {
     struct Certificate *cert =
@@ -1352,12 +1369,13 @@ static int check_ghostbusters_cert(
     return 0;
 }
 
-static int check_ghostbusters_content(
+static err_code
+check_ghostbusters_content(
     struct CMS *cms)
 {
     unsigned char *content = NULL;
     int content_len = 0;
-    int sta = 0;
+    err_code sta = 0;
 
     content_len = readvsize_casn(
         &cms->content.signedData.encapContentInfo.eContent.ghostbusters,
@@ -1418,10 +1436,11 @@ done:
     return sta;
 }
 
-int ghostbustersValidate(
+err_code
+ghostbustersValidate(
     struct CMS *cms)
 {
-    int sta;
+    err_code sta;
 
     sta = cmsValidate(cms);
     if (sta < 0)

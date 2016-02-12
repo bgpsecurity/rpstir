@@ -370,7 +370,7 @@ long _dumpread(
     long type = (casnp->type == ASN_ANY) ? casnp->tag : casnp->type;
     long ansr = 0;
     long i;
-    long j;
+    long j = 0;
     long count = 80 - offset - 2;        // # of printable spaces less "" or 0x
     long lth;
 
@@ -682,7 +682,7 @@ char *find_label(
     int oidtable_size)
 {
     int num;
-    struct oidtable *curr_oidp;
+    struct oidtable *curr_oidp = NULL;
     for (num = 0; num < oidtable_size; num++)
     {
         curr_oidp = &oidtable[num];

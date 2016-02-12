@@ -55,7 +55,7 @@ const char *signCMS(
     int tbs_lth;
     char *msg = (char *)0;
     uchar *tbsp;
-    uchar *signature;
+    uchar *signature = NULL;
     uchar hash[40];
     struct casn *sidp;
     struct Attribute *attrp;
@@ -109,7 +109,7 @@ const char *signCMS(
 
     // set up the context, initialize crypt
     memset(hash, 0, 40);
-    if (cryptInit() != CRYPT_OK)
+    if (cryptInit_wrapper() != CRYPT_OK)
         return "initializing cryptlib";
 
     // the following calls function f, and if f doesn't return 0 sets

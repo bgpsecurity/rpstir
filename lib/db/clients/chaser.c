@@ -7,7 +7,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#include <my_global.h>
 #include <mysql.h>
 
 #include "db/connect.h"
@@ -426,7 +425,6 @@ int64_t db_chaser_read_sia(
 {
     MYSQL_STMT *stmt;
     stmt = conn->stmts[DB_CLIENT_TYPE_CHASER][DB_PSTMT_CHASER_GET_SIA];
-    unsigned int validated_flag = SCM_FLAG_VALIDATED;
     uint64_t num_rows;
     uint64_t num_rows_used = 0;
     unsigned int flag;
@@ -435,7 +433,7 @@ int64_t db_chaser_read_sia(
     if (chase_not_yet_validated)
         flag = 0;
     else
-        flag = validated_flag;
+        flag = SCM_FLAG_VALIDATED;
     MYSQL_BIND bind_in[2];
     memset(bind_in, 0, sizeof(bind_in));
     // the flag

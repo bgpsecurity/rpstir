@@ -1,6 +1,8 @@
 #ifndef LIB_RPKI_DIRU_H
 #define LIB_RPKI_DIRU_H
 
+#include "err.h"
+
 /*
  * Directory utility functions
  */
@@ -19,7 +21,11 @@
  *     calculated.
  * @return
  *     the new length of the string on success (non-negative) and an
- *     ERR_SCM_* error code on failure (negative).
+ *     ERR_SCM_* error code on failure (negative).  The @c err_code
+ *     type is not used as the return value type because the C
+ *     standard allows enum types to be smaller than @c int (even
+ *     though the enumeration constants themselves always have type @c
+ *     int), which would limit the maximum supported string length.
  */
 extern int strwillfit(
     char *inbuf,
@@ -39,7 +45,8 @@ extern int isadir(
  * allocates memory for both returned values. On success it returns 0 and on
  * failure it returns a negative error code.
  */
-extern int splitdf(
+extern err_code
+splitdf(
     char *dirprefix,
     char *dirname,
     char *fname,
@@ -52,7 +59,8 @@ extern int splitdf(
  * means a regular file that is also not a symlink, and a negative error code
  * otherwise.
  */
-extern int isokfile(
+err_code
+isokfile(
     char *fname);
 
 /*

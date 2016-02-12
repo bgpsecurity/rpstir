@@ -335,7 +335,7 @@ scm *initscm(
 
 scmtab *findtablescm(
     scm *scmp,
-    char *hname)
+    const char *hname)
 {
     char *ptr;
     int i;
