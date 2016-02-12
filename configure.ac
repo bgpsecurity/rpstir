@@ -73,9 +73,23 @@ if test -z "$SHELL_BASH"; then
   AC_MSG_WARN([cannot find bash, which is needed by some scripts])
 fi
 
+# List of user flag variables used in this configure.ac.
+m4_define([flagvars], [[CPPFLAGS] [CFLAGS] [LIBS] [LDFLAGS]])
+
+# For each user variable foo, unset PREFIXfoo and mark PREFIXfoo for
+# substitution where where PREFIX is the first argument passed to the
+# macro.
+m4_define([flags_declare_addons], [
+    m4_foreach_w([flagvar], flagvars, [
+        [unset ]$1[]flagvar
+        AC_SUBST($1[]flagvar)
+      ])
+  ])
+
 ######################################################################
 # MySQL
 ######################################################################
+flags_declare_addons([[MYSQL_]])
 AC_ARG_WITH(
   [mysql-config],
   [AS_HELP_STRING([--with-mysql-config], [Path to mysql_config executable])],
@@ -83,25 +97,25 @@ AC_ARG_WITH(
   [mysql_config=mysql_config])
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
 if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
-  CPPFLAGS="$CPPFLAGS $("$MYSQL_CONFIG" --include)"
+  MYSQL_CPPFLAGS=$("$MYSQL_CONFIG" --include)
+  CPPFLAGS="${CPPFLAGS} ${MYSQL_CPPFLAGS}"
 
   # this is a bit of a hack because mysql_config --libs_r specifies
   # compiler flags, not linker flags
-  mysql_config_LIBS=""
   for flag in $("$MYSQL_CONFIG" --libs_r); do
     case $flag in
       -L*)
         libpath=${flag#-L}
-        LDFLAGS="${LDFLAGS} -L${libpath} -Wl,-rpath -Wl,${libpath}"
+        MYSQL_LDFLAGS="${MYSQL_LDFLAGS} -L${libpath} -Wl,-rpath -Wl,${libpath}"
         ;;
       -l*)
-        mysql_config_LIBS="${mysql_config_LIBS} ${flag}"
+        MYSQL_LIBS="${MYSQL_LIBS} ${flag}"
         ;;
       *)
         ;;
     esac
   done
-  LIBS="${mysql_config_LIBS} ${LIBS}"
+  LIBS="${MYSQL_LIBS} ${LIBS}"
 else
   AC_MSG_ERROR(
     [cannot find or execute mysql_config, make sure MySQL client is installed])
@@ -119,6 +133,7 @@ AC_LINK_IFELSE(
 ######################################################################
 # OpenSSL
 ######################################################################
+flags_declare_addons([[OPENSSL_]])
 AC_ARG_WITH(
   [ssl-include],
   [AS_HELP_STRING(
@@ -128,7 +143,8 @@ AC_ARG_WITH(
   [ssl_include=$withval],
   [ssl_include=/usr/local/ssl/include])
 if test x${ssl_include} != x; then
-  CPPFLAGS="${CPPFLAGS} -I${ssl_include}"
+  OPENSSL_CPPFLAGS="-I${ssl_include}"
+  CPPFLAGS="${CPPFLAGS} ${OPENSSL_CPPFLAGS}"
 fi
 AC_ARG_WITH(
   [ssl-lib],
@@ -139,18 +155,22 @@ AC_ARG_WITH(
   [ssl_lib=$withval],
   [ssl_lib=/usr/local/ssl/lib])
 if test x${ssl_lib} != x; then
-  LDFLAGS="${LDFLAGS} -L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
+  OPENSSL_LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
+  LDFLAGS="${LDFLAGS} ${OPENSSL_LDFLAGS}"
 fi
 AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
     AC_MSG_ERROR([OpenSSL is required for building this project])
   ])
-AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [], [
+AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [
+    OPENSSL_LIBS="-lcrypto"
+  ], [
     AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
   ])
 
 ######################################################################
 # ODBC
 ######################################################################
+flags_declare_addons([[ODBC_]])
 AC_ARG_WITH(
   [odbc-include],
   [AS_HELP_STRING(
@@ -159,7 +179,8 @@ AC_ARG_WITH(
   [odbc_include=$withval],
   [odbc_include=/usr/local/include])
 if test x${odbc_include} != x; then
-  CPPFLAGS="${CPPFLAGS} -I${odbc_include}"
+  ODBC_CPPFLAGS="-I${odbc_include}"
+  CPPFLAGS="${CPPFLAGS} ${ODBC_CPPFLAGS}"
 fi
 AC_ARG_WITH(
   [odbc-lib],
@@ -169,18 +190,24 @@ AC_ARG_WITH(
   [odbc_lib=$withval],
   [odbc_lib=/usr/local/lib])
 if test x${odbc_lib} != x; then
-  LDFLAGS="${LDFLAGS} -L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
+  ODBC_LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
+  LDFLAGS="${LDFLAGS} ${ODBC_LDFLAGS}"
 fi
-AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [], [
+AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [
+    ODBC_LIBS="-l${ac_lib}"
+  ], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
-AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [
+AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [
+    ODBC_LIBS="-l${ac_lib} ${ODBC_LIBS}"
+  ], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
 
 ######################################################################
 # cryptlib
 ######################################################################
+flags_declare_addons([[CRYPTLIB_]])
 AC_ARG_WITH(
   [cryptlib-include],
   [AS_HELP_STRING(
@@ -189,7 +216,8 @@ AC_ARG_WITH(
   [cryptlib_include=$withval],
   [cryptlib_include=/usr/local/include])
 if test x${cryptlib_include} != x; then
-  CPPFLAGS="${CPPFLAGS} -I${cryptlib_include}"
+  CRYPTLIB_CPPFLAGS="-I${cryptlib_include}"
+  CPPFLAGS="${CPPFLAGS} ${CRYPTLIB_CPPFLAGS}"
 fi
 AC_ARG_WITH(
   [cryptlib-lib],
@@ -199,16 +227,22 @@ AC_ARG_WITH(
   [cryptlib_lib=$withval],
   [cryptlib_lib=/usr/local/lib])
 if test x${cryptlib_lib} != x; then
-  LDFLAGS="${LDFLAGS} -L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
+  CRYPTLIB_LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
+  LDFLAGS="${LDFLAGS} ${CRYPTLIB_LDFLAGS}"
 fi
-AC_SEARCH_LIBS([cryptInit], [cl], [], [
+AC_SEARCH_LIBS([cryptInit], [cl], [
+    CRYPTLIB_LIBS="-lcl"
+  ], [
     AC_MSG_ERROR([cryptlib is required for building this project])
   ])
 
 ######################################################################
 # libdl
 ######################################################################
-AC_SEARCH_LIBS([dlopen], [dl], [], [
+flags_declare_addons([[LIBDL_]])
+AC_SEARCH_LIBS([dlopen], [dl], [
+    LIBDL_LIBS="-ldl"
+  ], [
     AC_MSG_ERROR([libdl is required for building this project])
   ])
 
