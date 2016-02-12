@@ -150,7 +150,7 @@ m4_define([flags_load_addons], [
 # macro.
 m4_define([flags_declare_addons], [
     m4_foreach_w([flagvar], flagvars, [
-        [unset ]$1[]flagvar
+        AS_UNSET($1[]flagvar)
         AC_SUBST($1[]flagvar)
       ])
   ])
