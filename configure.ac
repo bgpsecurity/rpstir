@@ -73,6 +73,39 @@ AS_IF([test -z "$SHELL_BASH"], [
     AC_MSG_WARN([cannot find bash, which is needed by some scripts])
   ])
 
+# RPSTIR_SEARCH_LIBS is a wrapper around AC_SEARCH_LIBS to make it
+# easier to put the -l<library> flag in a variable other than LIBS.
+# Arguments:
+#   1. function:  same as in AC_SEARCH_LIBS
+#   2. search-libs:  same as in AC_SEARCH_LIBS
+#   3. [prefix]:  rather than prepend -l<library> to LIBS as in
+#      AC_SEARCH_LIBS, this macro prepends to prefixLIBS.  Defaults to
+#      "CONFIGURE_".
+#   4. [ignored-flag]:  if the -l<library> flag to prepend to
+#      prefixLIBS matches this shell 'case' statement pattern, the
+#      flag is not prepended
+#   5. [action-if-found]:  same as in AC_SEARCH_LIBS
+#   6. [action-if-not-found]:  same as in AC_SEARCH_LIBS
+#   7. [other-libraries]:  same as in AC_SEARCH_LIBS
+AC_DEFUN([RPSTIR_SEARCH_LIBS], [
+    # RPSTIR_SEARCH_LIBS
+    rpstir_save_LIBS=${LIBS}
+    AC_SEARCH_LIBS([$1], [$2], [
+        AS_VAR_PUSHDEF([rpstir_LIBS],
+          [m4_default([$3], [[CONFIGURE_]])LIBS])
+        AS_CASE([${ac_cv_search_$1}],
+          [no|""], [AC_MSG_FAILURE([assertion error])],
+          ["none required"|m4_default([$4], [""])], [],
+          [
+            AS_VAR_COPY([rpstir_tmp], [rpstir_LIBS])
+            AS_VAR_SET([rpstir_LIBS], ["${ac_cv_search_$1} ${rpstir_tmp}"])
+          ])
+        AS_VAR_POPDEF([rpstir_LIBS])
+        $5
+      ], [$6], [$7])
+    LIBS=${rpstir_save_LIBS}
+  ])
+
 ######################################################################
 # The following are helper macros to back up and restore user flag
 # variables.  User flag variables should only be temporarily modified;
@@ -228,14 +261,13 @@ AS_IF([test x${ssl_lib} != x], [
     OPENSSL_LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
   ])
 flags_load_addons([[OPENSSL_]])
-AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
+RPSTIR_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [OPENSSL_], [], [], [
     AC_MSG_ERROR([OpenSSL is required for building this project])
   ])
 flags_restore
 flags_load_addons([[OPENSSL_]])
-AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [
-    OPENSSL_LIBS="-lcrypto"
-  ], [
+RPSTIR_SEARCH_LIBS([v3_addr_validate_path], [crypto], [OPENSSL_],
+  ["${ac_cv_search_X509_VERIFY_PARAM_free}"], [], [
     AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
   ])
 flags_restore
@@ -263,16 +295,12 @@ AS_IF([test x${odbc_lib} != x], [
     ODBC_LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
   ])
 flags_load_addons([[ODBC_]])
-AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [
-    ODBC_LIBS="-l${ac_lib}"
-  ], [
+RPSTIR_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [ODBC_], [], [], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
 flags_restore
 flags_load_addons([[ODBC_]])
-AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [
-    ODBC_LIBS="-l${ac_lib} ${ODBC_LIBS}"
-  ], [
+RPSTIR_SEARCH_LIBS([SQLConnect], [odbc iodbc], [ODBC_], [], [], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
 flags_restore
@@ -302,9 +330,7 @@ AS_IF([test x${cryptlib_lib} != x], [
     CRYPTLIB_LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
   ])
 flags_load_addons([[CRYPTLIB_]])
-AC_SEARCH_LIBS([cryptInit], [cl], [
-    CRYPTLIB_LIBS="-lcl"
-  ], [
+RPSTIR_SEARCH_LIBS([cryptInit], [cl], [CRYPTLIB_], [], [], [
     AC_MSG_ERROR([cryptlib is required for building this project])
   ])
 flags_restore
@@ -313,12 +339,9 @@ flags_restore
 # libdl
 ######################################################################
 flags_declare_addons([[LIBDL_]])
-AC_SEARCH_LIBS([dlopen], [dl], [
-    LIBDL_LIBS="-ldl"
-  ], [
+RPSTIR_SEARCH_LIBS([dlopen], [dl], [LIBDL_], [], [], [
     AC_MSG_ERROR([libdl is required for building this project])
   ])
-flags_restore
 
 # add all of the library-specific flags to the CONFIGURE_* flags
 #
