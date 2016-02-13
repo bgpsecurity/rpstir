@@ -178,17 +178,13 @@ if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
   # this is a bit of a hack because mysql_config --libs_r specifies
   # compiler flags, not linker flags
   for flag in $("$MYSQL_CONFIG" --libs_r); do
-    case $flag in
-      -L*)
+    AS_CASE([$flag],
+      [-L*], [
         libpath=${flag#-L}
         MYSQL_LDFLAGS="${MYSQL_LDFLAGS} -L${libpath} -Wl,-rpath -Wl,${libpath}"
-        ;;
-      -l*)
-        MYSQL_LIBS="${MYSQL_LIBS} ${flag}"
-        ;;
-      *)
-        ;;
-    esac
+      ],
+      [-l*], [MYSQL_LIBS="${MYSQL_LIBS} ${flag}"],
+      [])
   done
 else
   AC_MSG_ERROR(
