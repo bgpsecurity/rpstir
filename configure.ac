@@ -237,6 +237,14 @@ AC_LINK_IFELSE(
 flags_restore
 
 ######################################################################
+# libdl
+######################################################################
+flags_declare_addons([[LIBDL_]])
+RPSTIR_SEARCH_LIBS([dlopen], [dl], [LIBDL_], [], [], [
+    AC_MSG_ERROR([libdl is required for building this project])
+  ])
+
+######################################################################
 # OpenSSL
 ######################################################################
 flags_declare_addons([[OPENSSL_]])
@@ -260,11 +268,13 @@ AC_ARG_WITH(
 AS_IF([test x${ssl_lib} != x], [
     OPENSSL_LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
   ])
+flags_load_addons([[LIBDL_]])
 flags_load_addons([[OPENSSL_]])
 RPSTIR_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [OPENSSL_], [], [], [
     AC_MSG_ERROR([OpenSSL is required for building this project])
   ])
 flags_restore
+flags_load_addons([[LIBDL_]])
 flags_load_addons([[OPENSSL_]])
 RPSTIR_SEARCH_LIBS([v3_addr_validate_path], [crypto], [OPENSSL_],
   ["${ac_cv_search_X509_VERIFY_PARAM_free}"], [], [
@@ -335,20 +345,12 @@ RPSTIR_SEARCH_LIBS([cryptInit], [cl], [CRYPTLIB_], [], [], [
   ])
 flags_restore
 
-######################################################################
-# libdl
-######################################################################
-flags_declare_addons([[LIBDL_]])
-RPSTIR_SEARCH_LIBS([dlopen], [dl], [LIBDL_], [], [], [
-    AC_MSG_ERROR([libdl is required for building this project])
-  ])
-
 # add all of the library-specific flags to the CONFIGURE_* flags
 #
 # TODO: delete this and instead reference the library-specific flag
 # variables from the appropriate *_LDFLAGS, *_LIBADD, *_LDADD,
 # *_CPPFLAGS variables in Makefile.am
-m4_foreach_w([lib], [[MYSQL] [OPENSSL] [ODBC] [CRYPTLIB] [LIBDL]], [
+m4_foreach_w([lib], [[MYSQL] [LIBDL] [OPENSSL] [ODBC] [CRYPTLIB]], [
     flags_load_addons([lib[_]], [[CONFIGURE_]])
   ])
 
