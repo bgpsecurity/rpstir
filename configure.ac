@@ -170,7 +170,7 @@ m4_define([flags_restore], [
 # the macro, append (or prepend) to $2foo instead of foo.
 m4_define([flags_load_addons], [
     m4_foreach_w([flagvar], flagvars, [
-        m4_if([flagvar], [[LIBS]], [
+        m4_if(flagvar, [LIBS], [
             $2[]flagvar[="${]$1[]flagvar[} ${]$2[]flagvar[}"]
           ], [
             $2[]flagvar[="${]$2[]flagvar[} ${]$1[]flagvar[}"]
