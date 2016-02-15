@@ -102,7 +102,11 @@ static int gen_sha2(
     }
     cryptEncrypt(hashContext, inbufp, bsize);
     cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
+    if (cryptGetAttributeString(
+            hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr) != CRYPT_OK)
+    {
+        FATAL(MSG_ERROR, "calling cryptGetAttributeString()");
+    }
     cryptDestroyContext(hashContext);
     memcpy(outbufp, hash, ansr);
     return ansr;

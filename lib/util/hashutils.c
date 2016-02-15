@@ -26,7 +26,11 @@ int gen_hash(
         return -1;
     cryptEncrypt(hashContext, inbufp, bsize);
     cryptEncrypt(hashContext, inbufp, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr);
+    if (cryptGetAttributeString(
+            hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ansr) != CRYPT_OK)
+    {
+        return -1;
+    }
     cryptDestroyContext(hashContext);
     if (ansr > 0)
         memcpy(outbufp, hash, ansr);

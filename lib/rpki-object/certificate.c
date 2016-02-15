@@ -131,7 +131,14 @@ bool check_signature(
 
     cryptEncrypt(hashContext, buf, bsize);
     cryptEncrypt(hashContext, buf, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &hash_length);
+    if (cryptGetAttributeString(
+            hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &hash_length)
+        != CRYPT_OK)
+    {
+        LOG(LOG_ERR, "cryptGetAttributeString() failed");
+        ret = false;
+        goto done;
+    }
     free(buf);
 
     // get the public key from the certificate and decode it into an RSAPubKey
