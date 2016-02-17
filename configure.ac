@@ -21,20 +21,20 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_PATH_PROG([GIT], [git])
 AC_MSG_CHECKING([for extra version information])
-if test "x${GIT}" != x && test -x "${GIT}" && test -d "${srcdir}/.git"; then
-  PACKAGE_VERSION_FULL="$(
-    cd "${srcdir}" &&
-    ${GIT} describe --tags --long --always --dirty)"
-  if test -n "$PACKAGE_VERSION_FULL"; then
-    AC_MSG_RESULT([$PACKAGE_VERSION_FULL])
-  else
+AS_IF([test "x${GIT}" != x && test -x "${GIT}" && test -d "${srcdir}/.git"], [
+    PACKAGE_VERSION_FULL="$(
+      cd "${srcdir}" &&
+      ${GIT} describe --tags --long --always --dirty)"
+    AS_IF([test -n "$PACKAGE_VERSION_FULL"], [
+        AC_MSG_RESULT([$PACKAGE_VERSION_FULL])
+      ], [
+        PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
+        AC_MSG_RESULT([failed])
+      ])
+  ], [
     PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
-    AC_MSG_RESULT([failed])
-  fi
-else
-  PACKAGE_VERSION_FULL="$PACKAGE_VERSION"
-  AC_MSG_RESULT([no])
-fi
+    AC_MSG_RESULT([no])
+  ])
 AC_SUBST([PACKAGE_VERSION_FULL])
 AC_DEFINE_UNQUOTED([PACKAGE_VERSION_FULL], ["$PACKAGE_VERSION_FULL"])
 
@@ -69,9 +69,42 @@ AC_SUBST([MKTEMP])
 AC_SUBST([MKTEMP_DIR])
 
 AC_PATH_PROG([SHELL_BASH], [bash])
-if test -z "$SHELL_BASH"; then
-  AC_MSG_WARN([cannot find bash, which is needed by some scripts])
-fi
+AS_IF([test -z "$SHELL_BASH"], [
+    AC_MSG_WARN([cannot find bash, which is needed by some scripts])
+  ])
+
+# RPSTIR_SEARCH_LIBS is a wrapper around AC_SEARCH_LIBS to make it
+# easier to put the -l<library> flag in a variable other than LIBS.
+# Arguments:
+#   1. function:  same as in AC_SEARCH_LIBS
+#   2. search-libs:  same as in AC_SEARCH_LIBS
+#   3. [prefix]:  rather than prepend -l<library> to LIBS as in
+#      AC_SEARCH_LIBS, this macro prepends to prefixLIBS.  Defaults to
+#      "CONFIGURE_".
+#   4. [ignored-flag]:  if the -l<library> flag to prepend to
+#      prefixLIBS matches this shell 'case' statement pattern, the
+#      flag is not prepended
+#   5. [action-if-found]:  same as in AC_SEARCH_LIBS
+#   6. [action-if-not-found]:  same as in AC_SEARCH_LIBS
+#   7. [other-libraries]:  same as in AC_SEARCH_LIBS
+AC_DEFUN([RPSTIR_SEARCH_LIBS], [
+    # RPSTIR_SEARCH_LIBS
+    rpstir_save_LIBS=${LIBS}
+    AC_SEARCH_LIBS([$1], [$2], [
+        AS_VAR_PUSHDEF([rpstir_LIBS],
+          [m4_default([$3], [[CONFIGURE_]])LIBS])
+        AS_CASE([${ac_cv_search_$1}],
+          [no|""], [AC_MSG_FAILURE([assertion error])],
+          ["none required"|m4_default([$4], [""])], [],
+          [
+            AS_VAR_COPY([rpstir_tmp], [rpstir_LIBS])
+            AS_VAR_SET([rpstir_LIBS], ["${ac_cv_search_$1} ${rpstir_tmp}"])
+          ])
+        AS_VAR_POPDEF([rpstir_LIBS])
+        $5
+      ], [$6], [$7])
+    LIBS=${rpstir_save_LIBS}
+  ])
 
 ######################################################################
 # The following are helper macros to back up and restore user flag
@@ -137,7 +170,7 @@ m4_define([flags_restore], [
 # the macro, append (or prepend) to $2foo instead of foo.
 m4_define([flags_load_addons], [
     m4_foreach_w([flagvar], flagvars, [
-        m4_if([flagvar], [[LIBS]], [
+        m4_if(flagvar, [LIBS], [
             $2[]flagvar[="${]$1[]flagvar[} ${]$2[]flagvar[}"]
           ], [
             $2[]flagvar[="${]$2[]flagvar[} ${]$1[]flagvar[}"]
@@ -150,7 +183,7 @@ m4_define([flags_load_addons], [
 # macro.
 m4_define([flags_declare_addons], [
     m4_foreach_w([flagvar], flagvars, [
-        [unset ]$1[]flagvar
+        AS_UNSET($1[]flagvar)
         AC_SUBST($1[]flagvar)
       ])
   ])
@@ -172,28 +205,25 @@ AC_ARG_WITH(
   [mysql_config=$withval],
   [mysql_config=mysql_config])
 AC_PATH_PROG([MYSQL_CONFIG], [${mysql_config}])
-if test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"; then
-  MYSQL_CPPFLAGS=$("$MYSQL_CONFIG" --include)
+AS_IF([test "x${MYSQL_CONFIG}" != x && test -x "${MYSQL_CONFIG}"], [
+    MYSQL_CPPFLAGS=$("$MYSQL_CONFIG" --include)
 
-  # this is a bit of a hack because mysql_config --libs_r specifies
-  # compiler flags, not linker flags
-  for flag in $("$MYSQL_CONFIG" --libs_r); do
-    case $flag in
-      -L*)
-        libpath=${flag#-L}
-        MYSQL_LDFLAGS="${MYSQL_LDFLAGS} -L${libpath} -Wl,-rpath -Wl,${libpath}"
-        ;;
-      -l*)
-        MYSQL_LIBS="${MYSQL_LIBS} ${flag}"
-        ;;
-      *)
-        ;;
-    esac
-  done
-else
-  AC_MSG_ERROR(
-    [cannot find or execute mysql_config, make sure MySQL client is installed])
-fi
+    # this is a bit of a hack because mysql_config --libs_r specifies
+    # compiler flags, not linker flags
+    for flag in $("$MYSQL_CONFIG" --libs_r); do
+      AS_CASE([$flag],
+        [-L*], [
+          libpath=${flag#-L}
+          MYSQL_LDFLAGS="${MYSQL_LDFLAGS} -L${libpath}\
+ -Wl,-rpath -Wl,${libpath}"
+        ],
+        [-l*], [MYSQL_LIBS="${MYSQL_LIBS} ${flag}"],
+        [])
+    done
+  ], [
+    AC_MSG_ERROR([cannot find or execute mysql_config,\
+ make sure MySQL client is installed])
+  ])
 AC_MSG_CHECKING([whether mysql flags are useable])
 flags_load_addons([[MYSQL_]])
 AC_LINK_IFELSE(
@@ -207,43 +237,12 @@ AC_LINK_IFELSE(
 flags_restore
 
 ######################################################################
-# OpenSSL
+# libdl
 ######################################################################
-flags_declare_addons([[OPENSSL_]])
-AC_ARG_WITH(
-  [ssl-include],
-  [AS_HELP_STRING(
-    [--with-ssl-include],
-    [Path to OpenSSL library install location: Defaults to
-     /usr/local/ssl/include])],
-  [ssl_include=$withval],
-  [ssl_include=/usr/local/ssl/include])
-if test x${ssl_include} != x; then
-  OPENSSL_CPPFLAGS="-I${ssl_include}"
-fi
-AC_ARG_WITH(
-  [ssl-lib],
-  [AS_HELP_STRING(
-    [--with-ssl-lib],
-    [Path to OpenSSL library install location: Defaults to
-     /usr/local/ssl/lib])],
-  [ssl_lib=$withval],
-  [ssl_lib=/usr/local/ssl/lib])
-if test x${ssl_lib} != x; then
-  OPENSSL_LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
-fi
-flags_load_addons([[OPENSSL_]])
-AC_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [], [
-    AC_MSG_ERROR([OpenSSL is required for building this project])
+flags_declare_addons([[LIBDL_]])
+RPSTIR_SEARCH_LIBS([dlopen], [dl], [LIBDL_], [], [], [
+    AC_MSG_ERROR([libdl is required for building this project])
   ])
-flags_restore
-flags_load_addons([[OPENSSL_]])
-AC_SEARCH_LIBS([v3_addr_validate_path], [crypto], [
-    OPENSSL_LIBS="-lcrypto"
-  ], [
-    AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
-  ])
-flags_restore
 
 ######################################################################
 # ODBC
@@ -256,9 +255,7 @@ AC_ARG_WITH(
     [Path to odbc include files: Defaults to /usr/local/include])],
   [odbc_include=$withval],
   [odbc_include=/usr/local/include])
-if test x${odbc_include} != x; then
-  ODBC_CPPFLAGS="-I${odbc_include}"
-fi
+AS_IF([test x${odbc_include} != x], [ODBC_CPPFLAGS="-I${odbc_include}"])
 AC_ARG_WITH(
   [odbc-lib],
   [AS_HELP_STRING(
@@ -266,20 +263,16 @@ AC_ARG_WITH(
     [Path to odbc install location: Defaults to /usr/local/lib])],
   [odbc_lib=$withval],
   [odbc_lib=/usr/local/lib])
-if test x${odbc_lib} != x; then
-  ODBC_LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
-fi
+AS_IF([test x${odbc_lib} != x], [
+    ODBC_LDFLAGS="-L${odbc_lib} -Wl,-rpath -Wl,${odbc_lib}"
+  ])
 flags_load_addons([[ODBC_]])
-AC_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [
-    ODBC_LIBS="-l${ac_lib}"
-  ], [
+RPSTIR_SEARCH_LIBS([SQLWriteDSNToIni], [odbcinst iodbcinst], [ODBC_], [], [], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
 flags_restore
 flags_load_addons([[ODBC_]])
-AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [
-    ODBC_LIBS="-l${ac_lib} ${ODBC_LIBS}"
-  ], [
+RPSTIR_SEARCH_LIBS([SQLConnect], [odbc iodbc], [ODBC_], [], [], [
     AC_MSG_ERROR([ODBC is required for building this project])
   ])
 flags_restore
@@ -295,9 +288,9 @@ AC_ARG_WITH(
     [Path to cryptlib install location: Defaults to /usr/local/include])],
   [cryptlib_include=$withval],
   [cryptlib_include=/usr/local/include])
-if test x${cryptlib_include} != x; then
-  CRYPTLIB_CPPFLAGS="-I${cryptlib_include}"
-fi
+AS_IF([test x${cryptlib_include} != x], [
+    CRYPTLIB_CPPFLAGS="-I${cryptlib_include}"
+  ])
 AC_ARG_WITH(
   [cryptlib-lib],
   [AS_HELP_STRING(
@@ -305,25 +298,50 @@ AC_ARG_WITH(
     [Path to cryptlib install location: Defaults to /usr/local/lib])],
   [cryptlib_lib=$withval],
   [cryptlib_lib=/usr/local/lib])
-if test x${cryptlib_lib} != x; then
-  CRYPTLIB_LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
-fi
+AS_IF([test x${cryptlib_lib} != x], [
+    CRYPTLIB_LDFLAGS="-L${cryptlib_lib} -Wl,-rpath -Wl,${cryptlib_lib}"
+  ])
 flags_load_addons([[CRYPTLIB_]])
-AC_SEARCH_LIBS([cryptInit], [cl], [
-    CRYPTLIB_LIBS="-lcl"
-  ], [
+RPSTIR_SEARCH_LIBS([cryptInit], [cl], [CRYPTLIB_], [], [], [
     AC_MSG_ERROR([cryptlib is required for building this project])
   ])
 flags_restore
 
 ######################################################################
-# libdl
+# OpenSSL
 ######################################################################
-flags_declare_addons([[LIBDL_]])
-AC_SEARCH_LIBS([dlopen], [dl], [
-    LIBDL_LIBS="-ldl"
-  ], [
-    AC_MSG_ERROR([libdl is required for building this project])
+flags_declare_addons([[OPENSSL_]])
+AC_ARG_WITH(
+  [ssl-include],
+  [AS_HELP_STRING(
+    [--with-ssl-include],
+    [Path to OpenSSL library install location: Defaults to
+     /usr/local/ssl/include])],
+  [ssl_include=$withval],
+  [ssl_include=/usr/local/ssl/include])
+AS_IF([test x${ssl_include} != x], [OPENSSL_CPPFLAGS="-I${ssl_include}"])
+AC_ARG_WITH(
+  [ssl-lib],
+  [AS_HELP_STRING(
+    [--with-ssl-lib],
+    [Path to OpenSSL library install location: Defaults to
+     /usr/local/ssl/lib])],
+  [ssl_lib=$withval],
+  [ssl_lib=/usr/local/ssl/lib])
+AS_IF([test x${ssl_lib} != x], [
+    OPENSSL_LDFLAGS="-L${ssl_lib} -Wl,-rpath -Wl,${ssl_lib}"
+  ])
+flags_load_addons([[LIBDL_]])
+flags_load_addons([[OPENSSL_]])
+RPSTIR_SEARCH_LIBS([X509_VERIFY_PARAM_free], [crypto], [OPENSSL_], [], [], [
+    AC_MSG_ERROR([OpenSSL is required for building this project])
+  ])
+flags_restore
+flags_load_addons([[LIBDL_]])
+flags_load_addons([[OPENSSL_]])
+RPSTIR_SEARCH_LIBS([v3_addr_validate_path], [crypto], [OPENSSL_],
+  ["${ac_cv_search_X509_VERIFY_PARAM_free}"], [], [
+    AC_MSG_ERROR([OpenSSL with RFC 3779 is required for building this project])
   ])
 flags_restore
 
@@ -332,7 +350,7 @@ flags_restore
 # TODO: delete this and instead reference the library-specific flag
 # variables from the appropriate *_LDFLAGS, *_LIBADD, *_LDADD,
 # *_CPPFLAGS variables in Makefile.am
-m4_foreach_w([lib], [[MYSQL] [OPENSSL] [ODBC] [CRYPTLIB] [LIBDL]], [
+m4_foreach_w([lib], [[MYSQL] [LIBDL] [ODBC] [CRYPTLIB] [OPENSSL]], [
     flags_load_addons([lib[_]], [[CONFIGURE_]])
   ])
 
@@ -354,21 +372,21 @@ AC_ARG_ENABLE(
     [Whether or not to add -fstack-protector to CFLAGS: Defaults
      to yes when using gcc and no otherwise])],
   [
-    if test x"$enableval" != xno; then
-      CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} -fstack-protector"
-    fi
+    AS_IF([test x"$enableval" != xno], [
+        CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} -fstack-protector"
+      ])
   ],
   [
-    if test x"$HAVE_STACK_PROTECTOR" = xyes; then
-      CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} -fstack-protector"
-    fi
+    AS_IF([test x"$HAVE_STACK_PROTECTOR" = xyes], [
+        CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} -fstack-protector"
+      ])
   ])
 
 #Check for pthreads.
 AX_PTHREAD
-if test x"$ax_pthread_ok" != xyes; then
-  AC_MSG_ERROR([pthread support is required])
-fi
+AS_IF([test x"$ax_pthread_ok" != xyes], [
+    AC_MSG_ERROR([pthread support is required])
+  ])
 CONFIGURE_LIBS="$PTHREAD_LIBS $CONFIGURE_LIBS"
 CONFIGURE_CFLAGS="$CONFIGURE_CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
@@ -390,9 +408,9 @@ AC_STRUCT_TM
 
 # Checks for library functions.
 AC_CHECK_FUNCS([clock_gettime getline sem_timedwait])
-if test "$ac_cv_func_getline" != yes; then
-  AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
-fi
+AS_IF([test "$ac_cv_func_getline" != yes], [
+    AC_MSG_ERROR([The getline() function from POSIX 2008 is required.])
+  ])
 
 
 AC_CONFIG_FILES([
