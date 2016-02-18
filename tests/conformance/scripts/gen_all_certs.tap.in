@@ -1,0 +1,288 @@
+#!@SHELL_BASH@
+#
+
+# create all certificates for RPKI syntax conformance test
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+# Safe bash shell scripting practices
+@trap_errors@
+
+CONFORMANCE_ROOT_BUILDDIR="$TESTS_TOP_BUILDDIR/tests/conformance"
+CONFORMANCE_ROOT_SRCDIR="$TESTS_TOP_SRCDIR/tests/conformance"
+
+# Usage
+usage ( ) {
+    usagestr="
+Usage: $0 [options]
+
+Options:
+  -P        \tApply patches instead of prompting user to edit (default = false)
+  -h        \tDisplay this help file
+
+This script creates a large number of certificates, and for each one
+prompts the user multiple times to interactively edit (e.g., in order
+to introduce errors), and captures those edits in '.patch' files
+(output of diff -u).  Later, running $0 with the -P option can replay
+the creation process by automatically applying those patch files
+instead of prompting for user intervention.
+
+This tool assumes the repository structure in the diagram below.  It
+creates a ton of certificates in the position of the certificate
+labeled 'Child'.  In the Child's SIA, the accessMethod
+id-ad-rpkiManifest will have an accessLocation of
+rsync://rpki.bbn.com/conformance/root/empty/doesNotExist.mft, and that
+manifest will be intentionally omitted from the directory named
+'empty'.  This allows us to reuse the same empty directory as the SIA
+for the large number of certificates that we will generate using this
+script.
+
+
+               +-----------------------------------+
+               | rsync://rpki.bbn.com/conformance/ |
+               |     +--------+                    |
+         +---------->|  Root  |                    |
+         |     |     |  cert  |                    |
+         |  +---------- SIA   |                    |
+         |  |  |     +--------+                    |
+         |  |  +-----------------------------------+
+         |  |
+         |  |
+         |  |  +----------------------------------------+
+         |  |  | rsync://rpki.bbn.com/conformance/root/ |
+         |  +->|   +--------+     +------------+        |
+         |     |   | *Child |     | CRL issued |        |
+         |     |   | CRLDP------->| by Root    |        |
+         +----------- AIA   |     | root.crl   |        |
+               |   |  SIA------+  +------------+        |
+               |   +--------+  |  +-----------------+   |
+               |               |  | Manifest issued |   |
+               |               |  | by Root         |   |
+               | Root's Repo   |  | root.mft        |   |
+               | Directory     |  +-----------------+   |
+               +---------------|------------------------+
+                               |
+                               V
+               +----------------------------------------------+
+               | rsync://rpki.bbn.com/conformance/root/empty/ |
+               |                                              |
+               | Empty Directory (MFT intentionally omitted)  |
+               +----------------------------------------------+
+
+Inputs:
+  -P - (optional) use patch mode for automatic insertion of errors
+
+Outputs:
+  child CA certificates - AS/IP is hardcoded in goodCert.raw template
+  patch files - manual edits are saved as diff output in
+                'badCert<filestem>.stageN.patch' (N=0..1) in the patch
+                directory
+    "
+    printf "${usagestr}\n"
+    exit 1
+}
+
+# NOTES
+
+# 1. Variable naming convention -- preset constants and command line
+# arguments are in ALL_CAPS.  Derived/computed values are in
+# lower_case.
+
+# 2. Assumes write-access to current directory even though the output
+# directory will be different.
+
+
+# Options and defaults
+OUTPUT_DIR="$CONFORMANCE_ROOT_BUILDDIR/raw/root"
+USE_EXISTING_PATCHES=
+
+# Process command line arguments.
+while getopts Ph opt
+do
+  case $opt in
+      P)
+	  USE_EXISTING_PATCHES=1
+	  ;;
+      h)
+	  usage
+	  ;;
+  esac
+done
+shift $((OPTIND - 1))
+if [ $# != "0" ]
+then
+    usage
+fi
+
+###############################################################################
+# Computed Variables
+###############################################################################
+
+if [ $USE_EXISTING_PATCHES ]
+then
+    patch_option="-P"
+else
+    patch_option=
+fi
+
+single_cert_script="$CONFORMANCE_ROOT_BUILDDIR/scripts/make_test_cert.sh"
+single_cert_cmd="${single_cert_script} ${patch_option} -o ${OUTPUT_DIR}"
+
+###############################################################################
+# Check for prerequisite tools and files
+###############################################################################
+
+ensure_file_exists ( ) {
+    if [ ! -e "$1" ]
+    then
+	echo "Error: file not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists ( ) {
+    if [ ! -d "$1" ]
+    then
+	echo "Error: directory not found - $1" 1>&2
+	exit 1
+    fi
+}
+
+ensure_dir_exists "$OUTPUT_DIR"
+ensure_file_exists "${single_cert_script}"
+
+###############################################################################
+# Generate Child certificates
+###############################################################################
+
+single_cert() {
+    eval "single_cert_testname=\${$#}"
+    t4s_testcase -- "${single_cert_testname}" '
+        ${single_cert_cmd} "$@"
+    ' "$@"
+}
+
+single_cert -x good 101 AIA2AccessDescHtRs
+single_cert -x good 195 AIA2AccessDescRsRs
+single_cert 102 AIABadAccess
+single_cert 103 AIAAccessLoc
+single_cert 104 AIACrit
+single_cert 105 AKIHash
+single_cert 106 AKIShort
+single_cert 196 AKILong
+single_cert 197 AKIHasACIACSN
+single_cert 209 AKIHasACI
+single_cert 210 AKIHasACSN
+single_cert 107 UnkExtension
+single_cert 215 UnkExtensionCrit
+single_cert 109 BasicConstrNoCA
+single_cert 110 BasicConstrNoCrit
+single_cert 111 BasicConstrPathLth
+single_cert 112 Cpol2oid1correct
+single_cert 211 Cpol2oid2correct
+single_cert 198 CpolBadOid
+single_cert 113 CpolNoCrit
+single_cert -x good 212 CpolQualCps
+single_cert 213 CpolQualCpsUnotice
+single_cert 214 CpolQualUnotice
+single_cert -x good 114 CRLDP2DistPt
+single_cert 115 CRLDPCrit
+single_cert 116 CRLDPCrlIssuer
+single_cert 118 CRLDPReasons
+single_cert 119 EKU
+single_cert 120 InnerSigAlg
+single_cert 216 BothSigAlg
+single_cert 121 IssuerOID
+single_cert 122 Issuer2ComName
+single_cert 123 IssuerUtf
+single_cert 124 Issuer2SetComName
+single_cert 125 IssuerSerNum
+single_cert 126 IssUID
+single_cert 127 KUsageExtra
+single_cert 217 KUsageDigitalSig
+single_cert 128 KUsageNoCertSign
+single_cert 129 KUsageNoCrit
+single_cert 131 KUsageNoCRLSign
+single_cert 134 OuterSigAlg
+single_cert 135 PubKeyAlg
+single_cert 136 PubKeyExp
+single_cert 137 PubKeyShort
+single_cert 199 PubKeyLong
+single_cert 138 ResourcesASNoCrit
+single_cert 139 ResourcesBadAFI
+single_cert 140 ResourcesBadASOrder
+single_cert 141 ResourcesBadV4Order
+single_cert 142 ResourcesBadV6Order
+single_cert 143 ResourcesIPNoCrit
+single_cert 144 ResourcesNone
+single_cert 145 ResourcesSAFI
+single_cert -x good 218 ResourcesIP6Inherit
+single_cert -x good 219 ResourcesIP4Inherit
+single_cert -x good 220 ResourcesASInherit
+single_cert -x good 221 ResourcesAllInherit
+single_cert -x good 222 ResourcesIP6InhOnly
+single_cert -x good 223 ResourcesIP4InhOnly
+single_cert -x good 224 ResourcesASInhOnly
+single_cert 147 SIARepoNoRsync
+single_cert 200 SIAMFTNoRsync
+single_cert -x good 201 SIARepo2Rsync
+single_cert -x good 202 SIAMFT2Rsync
+single_cert -x good 203 SIARepoHtRs
+single_cert -x good 204 SIAMFTHtRs
+single_cert -x good 225 SIARepoHasNonURI
+single_cert -x good 226 SIAMFTHasNonURI
+single_cert 148 SIAAccessMethod
+single_cert 205 SIANoMFT
+single_cert 206 SIANoRepo
+single_cert 150 SKIHash
+single_cert 151 SKILong
+single_cert 194 SKIShort
+single_cert 152 SubjectOID
+single_cert 153 Subject2ComName
+single_cert 154 SubjectUtf
+single_cert 155 Subject2SetComName
+single_cert 156 SubjectSerNum
+single_cert 157 SubjUID
+single_cert 158 ValCrossed
+single_cert 159 ValFromFuture
+single_cert 160 ValFromTyp
+single_cert 162 ValToPast
+single_cert 163 ValToTyp
+single_cert 164 VersionNeg
+single_cert 165 Version1
+single_cert 166 Version2
+single_cert 167 Version4
+single_cert 168 SerNum
+single_cert 207 SerNum0
+single_cert 169 AIA2x
+single_cert 170 SIA2x
+single_cert 171 NoAIA
+single_cert 172 NoSIA
+single_cert 173 NoBasicConstr
+single_cert 174 2BasicConstr
+single_cert 175 NoSKI
+single_cert 176 2SKI
+single_cert 177 NoAKI
+single_cert 178 2AKI
+single_cert 179 NoKeyUsage
+single_cert 180 2KeyUsage
+single_cert 181 2CRLDP
+single_cert 182 NoCRLDP
+single_cert 183 NoCpol
+single_cert 184 2Cpol
+single_cert 185 2IPAddr
+single_cert 186 2ASNum
+single_cert 187 CRLDPNoRsyncDistPt
+single_cert 188 IssuerSet2SerNums
+single_cert 189 SubjectSet2SerNums
+single_cert 228 IssuerSeq2SerNums
+single_cert 229 SubjectSeq2SerNums
+single_cert 208 BadSig
+single_cert -x good 190 SerNumMax
+single_cert 191 SerNumTooBig
+single_cert 192 ResourcesIPEmpty
+single_cert 193 ResourcesASEmpty
+
+t4s_done

@@ -185,6 +185,13 @@ int main(
     int num;
     for (num = 0; fgets(curr_file, 128, stdin) && curr_file[0] > ' '; num++)
     {
+        // skip comments
+        if ('#' == curr_file[0])
+        {
+            --num;
+            continue;
+        }
+
         char *a;
         int bad = 0;
         for (a = curr_file; *a && *a > ' '; a++);

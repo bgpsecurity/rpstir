@@ -1,0 +1,13 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+t4s_testcase "Running the garbage collector" '
+    run "step4.garbage" garbage || t4s_fatal "garbage failed"
+'
+
+t4s_done

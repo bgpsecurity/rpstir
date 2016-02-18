@@ -388,6 +388,10 @@ static void write_ASNums(
         num;
     for (ansr = num = 0; fgets(nbuf, 100, stdin) && nbuf[0] > ' ';)
     {
+        // skip comments
+        if ('#' == nbuf[0])
+            continue;
+
         struct ASNumberOrRangeA *asNumorRangep = NULL;
         if (ansr >= 0)
             asNumorRangep =
@@ -439,6 +443,10 @@ static int write_family(
     int num;
     for (num = 0; fgets(nbuf, 100, stdin) && nbuf[0] > ' ';)
     {
+        // skip comments
+        if ('#' == nbuf[0])
+            continue;
+
         struct IPAddressOrRangeA *ipAorRp = NULL;
         if (ansr >= 0)
             ipAorRp =

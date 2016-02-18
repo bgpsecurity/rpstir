@@ -1,0 +1,13 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+t4s_testcase "Making C2 expired" '
+    "$TESTS_BUILDDIR/makeC2Expired" || t4s_fatal "makeC2Expired failed"
+'
+
+t4s_done

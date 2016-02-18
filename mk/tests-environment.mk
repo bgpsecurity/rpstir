@@ -3,9 +3,19 @@
 LOG_COMPILER_DEPS = \
 	tests/setup_test_environment.sh \
 	tests/test.include
-
 LOG_COMPILER = $(abs_top_builddir)/tests/setup_test_environment.sh
+TEST_EXTENSIONS =
 
+## TAP (test anything protocol) tests
+TEST_EXTENSIONS += .tap
+TAP_LOG_COMPILER = $(LOG_COMPILER)
+# *_LOG_DRIVER variables are only supported with automake 1.12+, but
+# the TAP test scripts still work with automake 1.11 (it just doesn't
+# show the individual TAP test cases; the return value of the TAP test
+# scripts determine pass or fail as usual)
+TAP_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+	$(top_srcdir)/build-aux/tap-driver.sh --ignore-exit --merge
+EXTRA_DIST += tests/tap4sh.sh
 
 EXTRA_DIST += etc/test.conf
 

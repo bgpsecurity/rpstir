@@ -1,0 +1,79 @@
+#!@SHELL_BASH@
+#
+
+# Usage: ./runSubsystemTest.tap <testID> <numsteps>
+#
+# This script runs a subsystem test by clearing the database, starting
+# a loader, and then successively running the scripts ./stepN.M where
+# N=<testID> and M ranges from 1..<numsteps>.  It exits with return
+# code 0 if successful, nonzero otherwise.
+
+if [ "$#" -ne "2" ]; then
+    echo "Usage: $0 <testID> <numsteps>"
+    echo
+    echo "This script runs a subsystem test by clearing the database, starting"
+    echo "a loader, and then successively running the scripts ./stepN.M where"
+    echo "N=<testID> and M ranges from 1..<numsteps>.  It exits with return"
+    echo "code 0 if successful, nonzero otherwise."
+    exit 1
+fi
+
+TESTID=$1
+NUM_STEPS=$2
+
+@SETUP_ENVIRONMENT@
+
+@trap_errors@
+
+kill_loader() { :; }
+
+t4s_setup --exit-hook=kill_loader
+
+# for the run and run_bg functions
+export TEST_LOG_NAME="subsys$TESTID"
+
+cd "$TESTS_BUILDDIR"
+
+# clear database
+./initDB || t4s_bailout "initDB failed!"
+
+# check for existing loader and fail if so
+port=$(config_get RPKIPort) || t4s_bailout "unable to get RPKIPort"
+! port_open "${port}" || t4s_bailout "port ${port} is already in use"
+
+unset LOADER_PID
+kill_loader() {
+    [ -n "${LOADER_PID+set}" ] || return 0
+    kill "${LOADER_PID}"
+    # TODO: make rcli close cleanly so its return value can be checked
+    # reliably
+    wait "${LOADER_PID}" || true
+    ret=$?
+    unset LOADER_PID
+    return "${ret}"
+}
+
+# start loader
+run_bg "rcli-w" rcli -w -p
+LOADER_PID=$!
+timeout=15
+while ! port_open "${port}"; do
+    [ "${timeout}" -gt 0 ] || t4s_bailout "timed out waiting for rcli to start"
+    sleep 1
+    timeout=$((timeout-1))
+done
+t4s_log "Loader started (pid = $LOADER_PID)..."
+
+# run all steps
+N=1
+while [ $N -le $NUM_STEPS ]; do
+    t4s_subtests "./step${TESTID}.${N}.tap"
+    N=$(( $N + 1 ))
+done
+
+kill_loader || t4s_bailout "rcli exited with non-0 status"
+
+# echo Socket state from netstat
+# netstat -ant | grep `config_get RPKIPort`
+
+t4s_done

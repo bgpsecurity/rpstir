@@ -12,12 +12,23 @@ CONFIG_ENV_VAR="RPSTIR_CONFIG"
 AC_SUBST([CONFIG_ENV_VAR])
 AC_DEFINE_UNQUOTED([CONFIG_ENV_VAR], ["$CONFIG_ENV_VAR"])
 AC_CONFIG_AUX_DIR([build-aux])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
+# if this is bumped to 1.12 or later, remove build-aux/tap-driver.sh
+# from the repository.  automake 1.12+ comes with tap-driver.sh, and
+# autoreconf will copy in the version distributed with automake.
+# (automake 1.11 and older don't come with tap-driver.sh, so
+# build-aux/tap-driver.sh is checked in to keep the above
+# AC_REQUIRE_AUX_FILE line from causing configure to complain about a
+# mising file if the user has automake 1.11.)
 AM_INIT_AUTOMAKE([1.11 foreign])
 AM_SILENT_RULES
 # The following would default to silent, but depends on GNU make behavior.
 # AM_SILENT_RULES([yes])
 AC_CONFIG_SRCDIR([bin/asn1/rr.c])
 AC_CONFIG_MACRO_DIR([m4])
+
+# for tap-driver.sh
+AC_PROG_AWK
 
 AC_PATH_PROG([GIT], [git])
 AC_MSG_CHECKING([for extra version information])

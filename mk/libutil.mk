@@ -61,6 +61,11 @@ lib_util_tests_stringutils_test_LDADD = \
 TESTS += lib/util/tests/stringutils-test
 
 
+check_PROGRAMS += lib/util/tests/logging-test
+lib_util_tests_logging_test_LDADD = lib/util/libutildebug.a
+TESTS += lib/util/tests/logging-test
+
+
 dist_pkgdata_DATA += lib/util/shell_utils
 
 

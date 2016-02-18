@@ -1,0 +1,36 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+mkgbr() {
+    eval "fn=\${$#}"
+    t4s_testcase "${fn}" './make_test_gbr "$@"' "$@"
+}
+
+mkgbr    -o G111.gbr
+mkgbr    -o G1111.gbr
+mkgbr    -o G1112.gbr
+mkgbr    -o G1113.gbr
+mkgbr    -o G11111.gbr
+mkgbr    -o G1121.gbr
+mkgbr    -o G1131.gbr
+mkgbr    -o G1211.gbr
+mkgbr    -o G1311.gbr
+mkgbr    -o G1321.gbr
+mkgbr    -o G1322.gbr
+mkgbr    -o G2111.gbr
+mkgbr    -o G221.gbr
+mkgbr    -o G2211.gbr
+mkgbr    -o G22111.gbr
+mkgbr    -o G22121.gbr
+mkgbr -b -o G22122.gbr
+mkgbr    -o G231.gbr
+mkgbr    -o G2311.gbr
+mkgbr    -o G2312.gbr
+mkgbr    -o G2321.gbr
+mkgbr    -o G2331.gbr
+mkgbr    -o G2339.gbr
+
+t4s_done

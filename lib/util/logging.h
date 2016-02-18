@@ -151,8 +151,16 @@ extern struct log_custom_backend {
         }                                                               \
     } while (false)
 
-/** Don't read or write this directly, use SET_LOG_LEVEL() below. */
+/**
+ * Don't read or write this directly, use GET_LOG_LEVEL() and
+ * SET_LOG_LEVEL() below.
+ */
 volatile sig_atomic_t LOG_LEVEL;
+
+/**
+ * @brief expands to the current log level
+ */
+#define GET_LOG_LEVEL() (LOG_LEVEL)
 
 #define SET_LOG_LEVEL(level)                                            \
     do {                                                                \

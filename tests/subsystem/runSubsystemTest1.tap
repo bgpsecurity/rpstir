@@ -1,0 +1,2 @@
+#!/bin/sh -e
+exec "$TESTS_BUILDDIR/runSubsystemTest.tap" 1 9

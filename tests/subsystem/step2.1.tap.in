@@ -1,0 +1,14 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+t4s_testcase "Loading data" '
+    rsync_aur -s -t -f "$TESTS_SRCDIR/test2.1.log" -w -e -i \
+        -d "$TESTS_BUILDDIR/testcases" || t4s_fatal "rsync_aur failed"
+'
+
+t4s_done

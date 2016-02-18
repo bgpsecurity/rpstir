@@ -1,0 +1,17 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+t4s_testcase "Loading data" '
+    rsync_aur -s -t -f "$TESTS_SRCDIR/test3.7.log" -w -e -i \
+        -d "$TESTS_BUILDDIR/testcases" || t4s_fatal "rsync_aur failed"
+'
+t4s_testcase "Running garbage collector" '
+    run "step8.garbage" garbage || t4s_fatal "garbage failed"
+'
+
+t4s_done

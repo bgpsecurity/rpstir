@@ -1,0 +1,192 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+mkmanifest() {
+    t4s_testcase "$1" './make_test_manifest "$@"' "$@"
+}
+
+mkmanifest M1 <<EOF
+C1
+C2
+EOF
+mkmanifest M11 <<EOF
+C11
+C12
+C13
+# Bug or intentional?  C22 was issued by C2, while this manifest was
+# issued by C1
+C22 x
+# Bug or intentional?  C23 was issued by C2, while this manifest was
+# issued by C1
+C23
+EOF
+mkmanifest M111 <<EOF
+C112
+C113
+# Bug or intentional?  C121 was issued by C12, while this manifest was
+# issued by C11
+C121
+# Bug or intentional?  C131 was issued by C13, while this manifest was
+# issued by C11
+C131
+# Bug or intentional?  C132 was issued by C13, while this manifest was
+# issued by C11
+C132
+# Bug or intentional?  C211 was issued by C21, while this manifest was
+# issued by C11
+C211
+# Bug or intentional?  C232 was issued by C23, while this manifest was
+# issued by C11
+C232 X
+L111
+G111
+# Bug or intentional?  G221 was issued by C22, while this manifest was
+# issued by C11
+G221
+# Bug or intentional?  G231 was issued by C23, while this manifest was
+# issued by C11
+G231
+R111
+# Bug or intentional?  R221 was issued by C22, while this manifest was
+# issued by C11
+R221
+# Bug or intentional?  R231 was issued by C23, while this manifest was
+# issued by C11
+R231
+# Bug or intentional?  L21 was issued by C2, while this manifest was
+# issued by C11
+L21
+EOF
+mkmanifest M112 <<EOF
+C112
+C113
+# Bug or intentional?  C121 was issued by C12, while this manifest was
+# issued by C11
+C121
+# Bug or intentional?  C131 was issued by C13, while this manifest was
+# issued by C11
+C131
+# Bug or intentional?  C132 was issued by C13, while this manifest was
+# issued by C11
+C132
+# Bug or intentional?  C211 was issued by C21, while this manifest was
+# issued by C11
+C211
+# Bug or intentional?  C232 was issued by C23, while this manifest was
+# issued by C11
+C232 x
+G111
+# Bug or intentional?  G221 was issued by C22, while this manifest was
+# issued by C11
+G221
+# Bug or intentional?  G231 was issued by C23, while this manifest was
+# issued by C11
+G231
+R111
+# Bug or intentional?  R221 was issued by C22, while this manifest was
+# issued by C11
+R221
+# Bug or intentional?  R231 was issued by C23, while this manifest was
+# issued by C11
+R231
+# Bug or intentional?  L21 was issued by C2, while this manifest was
+# issued by C11
+L21
+# Bug or intentional?  C221 was issued by C22, while this manifest was
+# issued by C11
+C221
+EOF
+mkmanifest M231 <<EOF
+# Bug or intentional?  C111 was issued by C11, while this manifest was
+# issued by C23
+C111
+EOF
+mkmanifest M1111 <<EOF
+C1111
+# Bug or intentional?  C2211 was issued by C221, while this manifest
+# was issued by C111
+C2211
+G1111
+G1112
+G1113
+# Bug or intentional?  G1121 was issued by C112, while this manifest
+# was issued by C111
+G1121
+# Bug or intentional?  G1131 was issued by C113, while this manifest
+# was issued by C111
+G1131
+# Bug or intentional?  G1211 was issued by C121, while this manifest
+# was issued by C111
+G1211
+# Bug or intentional?  G1311 was issued by C131, while this manifest
+# was issued by C111
+G1311 x
+# Bug or intentional?  G1321 was issued by C132, while this manifest
+# was issued by C111
+G1321
+# Bug or intentional?  G1322 was issued by C132, while this manifest
+# was issued by C111
+G1322
+# Bug or intentional?  G2111 was issued by C211, while this manifest
+# was issued by C111
+G2111
+# Bug or intentional?  G2211 was issued by C221, while this manifest
+# was issued by C111
+G2211
+# Bug or intentional?  G2311 was issued by C231, while this manifest
+# was issued by C111
+G2311
+# Bug or intentional?  G2312 was issued by C231, while this manifest
+# was issued by C111
+G2312
+# Bug or intentional?  G2321 was issued by C232, while this manifest
+# was issued by C111
+G2321
+# Bug or intentional?  G22111 was issued by C2211, while this manifest
+# was issued by C111
+G22111
+R1111
+R1112
+R1113
+# Bug or intentional?  R1121 was issued by C112, while this manifest
+# was issued by C111
+R1121
+# Bug or intentional?  R1131 was issued by C113, while this manifest
+# was issued by C111
+R1131
+# Bug or intentional?  R1211 was issued by C121, while this manifest
+# was issued by C111
+R1211
+# Bug or intentional?  R1311 was issued by C131, while this manifest
+# was issued by C111
+R1311 x
+# Bug or intentional?  R1321 was issued by C132, while this manifest
+# was issued by C111
+R1321
+# Bug or intentional?  R1322 was issued by C132, while this manifest
+# was issued by C111
+R1322
+# Bug or intentional?  R2111 was issued by C211, while this manifest
+# was issued by C111
+R2111
+# Bug or intentional?  R2211 was issued by C221, while this manifest
+# was issued by C111
+R2211
+# Bug or intentional?  R2311 was issued by C231, while this manifest
+# was issued by C111
+R2311
+# Bug or intentional?  R2312 was issued by C231, while this manifest
+# was issued by C111
+R2312
+# Bug or intentional?  R2321 was issued by C232, while this manifest
+# was issued by C111
+R2321
+# Bug or intentional?  R22111 was issued by C2211, while this manifest
+# was issued by C111
+R22111
+EOF
+
+t4s_done

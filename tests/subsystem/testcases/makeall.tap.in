@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+cd "$TESTS_BUILDDIR"
+
+t4s_subtests ./makecerts.tap
+t4s_subtests ./makecrls.tap
+t4s_subtests ./makegbrs.tap
+t4s_subtests ./makeroas.tap
+t4s_subtests ./makemanifests.tap
+
+t4s_done

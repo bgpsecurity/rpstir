@@ -1,0 +1,165 @@
+#!@SHELL_BASH@ -e
+
+shopt -s nullglob
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+cd "$TESTS_BUILDDIR"
+
+TEST_LOG_DIR="$TESTS_BUILDDIR"
+TEST_LOG_NAME=`basename "$0"`
+STRICT_CHECKS=0
+
+use_config_file "$TESTS_SRCDIR/conformance.conf"
+
+t4s_subtests -p "gen_all: " ./gen_all.tap
+
+cd ../output
+OUTPUT_DIR="`pwd`"
+
+add_file () {
+	TYPE="$1" # "good" or "bad"
+	FLAGS="$2" # -f or -F
+	FILE="$3" # file to add
+
+	FILEBASENAME=`basename "$FILE"`
+
+	case "$FILEBASENAME" in
+		*.cer)
+			FILETYPE=cert
+			;;
+		*.roa)
+			FILETYPE=roa
+			;;
+		*.crl)
+			FILETYPE=crl
+			;;
+		*.mft|*.man|*.mnf)
+			FILETYPE=man
+			;;
+		*.gbr)
+			FILETYPE=gbr
+			;;
+		*)
+			echo >&2 "Error: unknown filetype for file $FILE"
+			exit 1
+	esac
+
+	if test x"$TYPE" = x"bad"; then
+		if ! run "rcli-$FILEBASENAME" rcli -s -y $FLAGS "$FILE"; then
+			return
+		fi
+
+		FILECOUNT=`run "query-$FILEBASENAME" query -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		if test "$FILECOUNT" -ne 0; then
+			echo >&2 "Error: adding bad file $FILE succeeded"
+			query -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
+			return 1
+		fi
+	else
+		if ! run "rcli-$FILEBASENAME" rcli -s -y $FLAGS "$FILE"; then
+			echo >&2 "Error: adding good file $FILE failed"
+			return 1
+		fi
+
+		FILECOUNT=`run "query-$FILEBASENAME" query -t "$FILETYPE" -d filename -f "filename.eq.$FILEBASENAME" | wc -l`
+		if test "$FILECOUNT" -ne 1; then
+			echo >&2 "Error: adding good file $FILE failed"
+			query -i -t "$FILETYPE" -d flags -f "filename.eq.$FILEBASENAME" 2> /dev/null
+			return 1
+		fi
+	fi
+}
+
+reset_db () {
+	run "rcli-x-t" rcli -x -t "$OUTPUT_DIR" -y
+	run "rcli-root.cer" rcli -s -y -F "$OUTPUT_DIR"/root.cer
+	run "rcli-root.crl" rcli -s -y -f "$OUTPUT_DIR"/root/root.crl
+	run "rcli-root.mft" rcli -s -y -f "$OUTPUT_DIR"/root/root.mft
+}
+
+
+for BAD_ROOT in badRoot*.cer; do
+	reset_db
+	t4s_testcase "BAD_ROOT=${BAD_ROOT}" '
+	    add_file bad -F "$BAD_ROOT"'
+done
+
+for GOOD_ROOT in goodRoot*.cer; do
+	reset_db
+	t4s_testcase "GOOD_ROOT=${GOOD_ROOT}" '
+	    add_file good -F "$GOOD_ROOT"'
+done
+
+cd root
+
+for GOOD_SINGLE_FILE in good*; do
+	reset_db
+	t4s_testcase "GOOD_SINGLE_FILE=${GOOD_SINGLE_FILE}" '
+	    add_file good -f "$GOOD_SINGLE_FILE"'
+done
+
+for BAD_SINGLE_FILE in bad*; do
+	reset_db
+	xfail=--xfail=ignored
+	case ${BAD_SINGLE_FILE} in
+	    badGBRExtraProperty.gbr);;
+	    badGBRNoContact.gbr);;
+	    *) xfail=;;
+	esac
+	t4s_testcase ${xfail:+"${xfail}"} "BAD_SINGLE_FILE=${BAD_SINGLE_FILE}" '
+	    add_file bad -f "$BAD_SINGLE_FILE"'
+done
+
+for CRL_CERT in CRL*.cer; do
+	CRL_NAME=`basename "$CRL_CERT" .cer`
+	reset_db
+	t4s_testcase "CRL_CERT=${CRL_CERT}" '
+	    add_file good -f "$CRL_CERT"'
+	t4s_testcase "CRL_CERT=${CRL_CERT} (mft)" '
+	    add_file good -f "$CRL_NAME/$CRL_NAME.mft"'
+	if test -f "$CRL_NAME/good$CRL_NAME.crl"; then
+	    t4s_testcase "CRL_CERT=${CRL_CERT} (good crl)" '
+		add_file good -f "$CRL_NAME/good$CRL_NAME.crl"'
+	fi
+	if test -f "$CRL_NAME/bad$CRL_NAME.crl"; then
+	    t4s_testcase "CRL_CERT=${CRL_CERT} (bad crl)" '
+		add_file bad -f "$CRL_NAME/bad$CRL_NAME.crl"'
+	fi
+done
+
+for MFT_CERT in MFT*.cer; do
+	MFT_NAME=`basename "$MFT_CERT" .cer`
+	reset_db
+	t4s_testcase "MFT_CERT=${MFT_CERT}" '
+	    add_file good -f "$MFT_CERT"'
+	t4s_testcase "MFT_CERT=${MFT_CERT} (crl)" '
+	    add_file good -f "$MFT_NAME/$MFT_NAME.crl"'
+	if test -f "$MFT_NAME/good$MFT_NAME.mft"; then
+	    t4s_testcase "MFT_CERT=${MFT_CERT} (good mft)" '
+		add_file good -f "$MFT_NAME/good$MFT_NAME.mft"'
+	fi
+	if test -f "$MFT_NAME/bad$MFT_NAME.mft"; then
+	    t4s_testcase "MFT_CERT=${MFT_CERT} (bad mft)" '
+		add_file bad -f "$MFT_NAME/bad$MFT_NAME.mft"'
+	fi
+done
+
+for NAM_CERT in NAM*.cer; do
+	NAM_NAME=`basename "$NAM_CERT" .cer`
+	reset_db
+	t4s_testcase "NAM_CERT=${NAM_CERT}" '
+	    add_file good -f "$NAM_CERT"'
+	for file in "$NAM_NAME"/good*; do
+	    t4s_testcase "NAM_CERT=${NAM_CERT} (good ${file})" '
+		add_file good -f "$file"'
+	done
+	for file in "$NAM_NAME"/bad*; do
+	    t4s_testcase "NAM_CERT=${NAM_CERT} (bad ${file})" '
+		add_file bad -f "$file"'
+	done
+done
+
+t4s_done

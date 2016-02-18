@@ -1,0 +1,48 @@
+#!@SHELL_BASH@
+
+@SETUP_ENVIRONMENT@
+
+t4s_setup
+
+@trap_errors@
+
+usage () {
+    echo >&2 "Usage: $0 [options]"
+    echo >&2
+    echo >&2 "Options:"
+    echo >&2 "  -P        Apply patches instead of prompting user to edit (default = false)"
+    echo >&2 "  -h        Display this help message"
+}
+
+X="$TESTS_BUILDDIR/make_test_name.sh"
+
+while getopts Ph opt
+do
+    case $opt in
+        P)
+            X="$X -P"
+            ;;
+
+        h)
+            usage
+            exit 0
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+if [ $# != "0" ]
+then
+    usage
+    exit 1
+fi
+
+x() {
+    t4s_testcase -- "$2" '$X "$@"' "$@"
+}
+
+# Generate name cases
+x 900 NAMSeqNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+x 901 NAMSeqSerName goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+x 902 NAMSetNameSer goodMFTMatch.mft goodCRLMatch.crl goodCertMatch.cer
+
+t4s_done
