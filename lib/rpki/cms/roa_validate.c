@@ -75,7 +75,14 @@ check_sig(
         return ERR_SCM_CRYPTLIB;
     cryptEncrypt(hashContext, buf, bsize);
     cryptEncrypt(hashContext, buf, 0);
-    cryptGetAttributeString(hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ret);
+    if (cryptGetAttributeString(
+            hashContext, CRYPT_CTXINFO_HASHVALUE, hash, &ret) != CRYPT_OK)
+    {
+        LOG(LOG_ERR, "cryptGetAttributeString() failed");
+        free(buf);
+        cryptDestroyContext(hashContext);
+        return ERR_SCM_CRYPTLIB;
+    }
     assert(ret == 32);          /* size of hash; should never fail */
     free(buf);
 
