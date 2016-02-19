@@ -67,8 +67,10 @@ t4s_log "Loader started (pid = $LOADER_PID)..."
 # run all steps
 N=1
 while [ $N -le $NUM_STEPS ]; do
-    t4s_subtests "./step${TESTID}.${N}.tap"
+    stepscript=./step${TESTID}.${N}.tap
     N=$(( $N + 1 ))
+    [ -f "${stepscript}" ] || continue
+    t4s_subtests "${stepscript}"
 done
 
 kill_loader || t4s_bailout "rcli exited with non-0 status"
