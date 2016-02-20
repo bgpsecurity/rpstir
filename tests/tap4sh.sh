@@ -671,7 +671,7 @@ EOF
                     [ -z "${plan_on_last+set}" ] || \
                         t4s_subtests_bailout "${pfx}plan in middle of test\
  results"
-                    : "${t4s_tap_testnum=$((t4s_testnum+1))}"
+                    : ${t4s_tap_testnum=$((t4s_testnum+1))}
                     [ "${t4s_tap_testnum}" -eq $((t4s_testnum+1)) ] || \
                         t4s_subtests_bailout "${pfx}out-of-order test numbers\
  (got ${t4s_tap_testnum} expected $((t4s_testnum+1)))"
