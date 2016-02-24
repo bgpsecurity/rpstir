@@ -31,8 +31,13 @@ case "$PROG_DIR" in
         ;;
 esac
 
-case "$PROG" in
-    *.sh)
+shebang=$(printf %s "#!" | od -t x1 -A n) || exit 1
+magic=$(od -N 2 -t x1 -A n "${PROG}") || exit 1
+case ${magic} in
+    # don't run valgrind on the interpreter, as that is unlikely to be
+    # useful, will unnecessarily slow down the tests, and will produce
+    # lots of uninteresting log output
+    "${shebang}")
         "$PROG" "$@" || exit $?
         ;;
 
