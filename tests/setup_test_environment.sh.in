@@ -1,7 +1,13 @@
-#!/bin/sh -e
+#!/bin/sh
 
-export TESTS_TOP_BUILDDIR="$(cd "@abs_top_builddir@" && pwd)"
-export TESTS_TOP_SRCDIR="$(cd "@abs_top_srcdir@" && pwd)"
+# These commands don't use try/fatal because they need to be run
+# before @SETUP_ENVIRONMENT@.
+TESTS_TOP_BUILDDIR=$(cd "@abs_top_builddir@" && pwd) \
+    && export TESTS_TOP_BUILDDIR \
+    || { printf %s\\n "Error getting TESTS_TOP_BUILDDIR" >&2; exit 1; }
+TESTS_TOP_SRCDIR=$(cd "@abs_top_srcdir@" && pwd) \
+    && export TESTS_TOP_SRCDIR \
+    || { printf %s\\n "Error getting TESTS_TOP_SRCDIR" >&2; exit 1; }
 
 @SETUP_ENVIRONMENT@
 
@@ -9,12 +15,19 @@ export TESTS_INCLUDE_CONFIG="$TESTS_TOP_BUILDDIR/tests/test.conf"
 
 use_config_file "$TESTS_INCLUDE_CONFIG"
 
+usage() {
+    cat <<EOF
+Usage:  $0 <command> [<arg>...]
+EOF
+}
+
 PROG="$1"
-shift
+shift || usage_fatal "missing command"
 
 # Determine and export TESTS_BUILDDIR and TESTS_SRCDIR, which are the paths to
 # $PROG's directory in builddir and srcdir respectively.
-PROG_DIR="$(cd "$(dirname "$PROG")" && pwd)"
+PROG_DIR=$(try dirname "${PROG}") || exit 1
+PROG_DIR=$(try cd "${PROG_DIR}"; try pwd) || exit 1
 case "$PROG_DIR" in
     "$TESTS_TOP_BUILDDIR" | "$TESTS_TOP_SRCDIR")
         export TESTS_BUILDDIR="$TESTS_TOP_BUILDDIR"
@@ -22,30 +35,34 @@ case "$PROG_DIR" in
         ;;
     "$TESTS_TOP_BUILDDIR"/*)
         export TESTS_BUILDDIR="$PROG_DIR"
-        export TESTS_SRCDIR="$(echo "$PROG_DIR" | \
-            sed "s,^$TESTS_TOP_BUILDDIR,$TESTS_TOP_SRCDIR,")"
+        TESTS_SRCDIR=$(printf %s\\n "$PROG_DIR" |
+            try sed "s,^$TESTS_TOP_BUILDDIR,$TESTS_TOP_SRCDIR,") || exit 1
+        export TESTS_SRCDIR
         ;;
     "$TESTS_TOP_SRCDIR"/*)
-        export TESTS_BUILDDIR="$(echo "$PROG_DIR" | \
-            sed "s,^$TESTS_TOP_SRCDIR,$TESTS_TOP_BUILDDIR,")"
+        TESTS_BUILDDIR=$(printf %s\\n "$PROG_DIR" |
+            try sed "s,^$TESTS_TOP_SRCDIR,$TESTS_TOP_BUILDDIR,") || exit 1
+        export TESTS_BUILDDIR
         export TESTS_SRCDIR="$PROG_DIR"
         ;;
 esac
 
-shebang=$(printf %s "#!" | od -t x1 -A n) || exit 1
-magic=$(od -N 2 -t x1 -A n "${PROG}") || exit 1
+shebang=$(printf %s "#!" | try od -t x1 -A n) || exit 1
+magic=$(try od -N 2 -t x1 -A n "${PROG}") || exit 1
 case ${magic} in
     # don't run valgrind on the interpreter, as that is unlikely to be
     # useful, will unnecessarily slow down the tests, and will produce
     # lots of uninteresting log output
     "${shebang}")
-        "$PROG" "$@" || exit $?
+        "${PROG}" "$@"
         ;;
 
     *)
         test -n "$TEST_LOG_NAME" || TEST_LOG_NAME=check
-        test -n "$TEST_LOG_DIR" || TEST_LOG_DIR=`dirname "$PROG"`
+        test -n "$TEST_LOG_DIR" || TEST_LOG_DIR=$(try dirname "$PROG") \
+            || exit 1
         test -n "$STRICT_CHECKS" || STRICT_CHECKS=1
-        run `basename "$PROG"` "$PROG" "$@" || exit $?
+        basename_PROG=$(try basename "$PROG") || exit 1
+        run "${basename_PROG}" "$PROG" "$@"
         ;;
-esac
+esac || { ret=$?; error "'${PROG} $@' failed"; exit "${ret}"; }

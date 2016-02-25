@@ -56,7 +56,7 @@ check_num_output_lines()
 
 run_bg () {
     LOG="$1"
-    shift || exit 1
+    shift || fatal "run_bg() usage error: log tag missing"
     [ "$#" -gt 0 ] || {
         printf %s\\n "ERROR: run_bg(): must specify command to run" >&2
         exit 1

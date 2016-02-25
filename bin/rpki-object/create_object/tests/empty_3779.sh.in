@@ -1,10 +1,10 @@
-#!/bin/sh -e
+#!/bin/sh
 
 @SETUP_ENVIRONMENT@
 
 OUTDIR="$TESTS_BUILDDIR/empty_3779"
-rm -rf "$OUTDIR"
-mkdir "$OUTDIR"
+try rm -rf "$OUTDIR"
+try mkdir "$OUTDIR"
 
 TEST_LOG_NAME=empty_3779
 TEST_LOG_DIR="$OUTDIR"
