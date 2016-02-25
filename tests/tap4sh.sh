@@ -35,7 +35,7 @@
 # https://github.com/rhansen/tap4sh
 
 t4s_version_major=1
-t4s_version_minor=5
+t4s_version_minor=6
 t4s_version=${t4s_version_major}.${t4s_version_minor}
 
 t4s_usage() {
@@ -112,6 +112,17 @@ t4s_discard_last_args() {
     printf \\n
 }
 
+# Work around a bug in old versions of the NetBSD shell:
+#     http://gnats.netbsd.org/49595
+# NetBSD's unset command has non-zero exit status if the variable is
+# already unset.  If 'set -e' is in effect, this causes the shell to
+# immediately exit without an error message.  To work around this,
+# ensure that the variable is set before unsetting it.
+t4s_unset() {
+    eval "$1="
+    unset "$1"
+}
+
 ## setup and cleanup
 
 # internal helper
@@ -133,19 +144,19 @@ t4s_finalize() {
     exit "${t4s_ret}"
 }
 
-unset t4s_setup_done
+t4s_unset t4s_setup_done
 
 # prepare to run tests
 #
 t4s_setup() {
     t4s_testnum=0
     t4s_ret=0
-    unset t4s_is_done
-    unset t4s_bailout_msg
+    t4s_unset t4s_is_done
+    t4s_unset t4s_bailout_msg
     t4s_do_bailout=true
     t4s_setup_done=true
-    unset t4s_exit_hook
-    unset t4s_exit_reason
+    t4s_unset t4s_exit_hook
+    t4s_unset t4s_exit_reason
     trap 't4s_finalize' EXIT
     for t4s_setup_sig in HUP INT TERM; do
         trap "t4s_exit_reason=SIG${t4s_setup_sig}; exit 1" "${t4s_setup_sig}"
@@ -159,7 +170,7 @@ t4s_setup() {
                 shift
                 set -- "${t4s_arg%%=*}" "${t4s_arg#*=}" "$@"
                 continue;;
-            -h|--help) unset t4s_do_bailout; t4s_usage; exit 0;;
+            -h|--help) t4s_unset t4s_do_bailout; t4s_usage; exit 0;;
             --exit-hook) shift; t4s_exit_hook=$1;;
             --) shift; break;;
             -*) t4s_usage_fatal "unknown option: '$1'";;
@@ -170,7 +181,7 @@ t4s_setup() {
     [ "$#" -eq 0 ] || t4s_usage_fatal "unknown argument: '$1'"
 }
 
-unset t4s_in_test_script
+t4s_unset t4s_in_test_script
 
 # abort the test script
 #
@@ -262,9 +273,9 @@ EOF
         }
 
         type=pass
-        unset t4s_needs
-        unset t4s_gives
-        unset t4s_skipmsg
+        t4s_unset t4s_needs
+        t4s_unset t4s_gives
+        t4s_unset t4s_skipmsg
         while [ "$#" -gt 0 ]; do
             arg=$1
             case $1 in
@@ -453,6 +464,7 @@ t rmnum2
 b error
 :rmnum2
 h
+b skip
 
 # extract the skip message
 :skip
@@ -518,11 +530,11 @@ s/.*/t4s_tap_error=&/p
 # variable for each component
 #
 t4s_parse_tap_line() {
-    unset t4s_tap_status
-    unset t4s_tap_testnum
-    unset t4s_tap_skip
-    unset t4s_tap_todo
-    unset t4s_tap_desc
+    t4s_unset t4s_tap_status
+    t4s_unset t4s_tap_testnum
+    t4s_unset t4s_tap_skip
+    t4s_unset t4s_tap_todo
+    t4s_unset t4s_tap_desc
     while IFS= read -r t4s_ptl_line; do
         case ${t4s_ptl_line} in
             t4s_tap_line=*) continue;;
@@ -556,7 +568,7 @@ t4s_subtests() {
         || t4s_fatal "must run t4s_setup first"
 
     exec 3>&1
-    unset t4s_subtests_bailout
+    t4s_unset t4s_subtests_bailout
     t4s_subtests_failed=0
     t4s_to_eval=$(
         exec 4>&1 1>&3
@@ -631,12 +643,12 @@ EOF
         }
         testnum_offset=${t4s_testnum}
         {
-            unset t4s_setup_done
+            t4s_unset t4s_setup_done
             ("$@") 3>&- 4>&-
         } | {
-            unset plan
+            t4s_unset plan
             firstline=true
-            unset plan_on_last
+            t4s_unset plan_on_last
             t4s_testnum=0
 
             s='[[:space:]]'
@@ -695,7 +707,7 @@ EOF
                     t4s_debug "t4s_subtests: misc line: ${line}"
                     t4s_pecho "${line}"
                 fi
-                unset firstline
+                t4s_unset firstline
             done
             t4s_debug "t4s_subtests: done parsing subtest output"
             [ -n "${plan+set}" ] || t4s_subtests_bailout "${pfx}no TAP plan"
