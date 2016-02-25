@@ -2,9 +2,10 @@
 
 export TESTS_TOP_BUILDDIR="$(cd "@abs_top_builddir@" && pwd)"
 export TESTS_TOP_SRCDIR="$(cd "@abs_top_srcdir@" && pwd)"
-export TESTS_INCLUDE_CONFIG="$TESTS_TOP_BUILDDIR/tests/test.conf"
 
-. "$TESTS_TOP_BUILDDIR/tests/test.include"
+@SETUP_ENVIRONMENT@
+
+export TESTS_INCLUDE_CONFIG="$TESTS_TOP_BUILDDIR/tests/test.conf"
 
 use_config_file "$TESTS_INCLUDE_CONFIG"
 

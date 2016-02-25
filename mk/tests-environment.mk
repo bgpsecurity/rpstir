@@ -1,6 +1,8 @@
 ## Anything that uses $(LOG_COMPILER) before "make all" finishes should
 ## depend on this.
 LOG_COMPILER_DEPS = \
+	etc/envir.setup \
+	lib/util/shell_utils \
 	tests/setup_test_environment.sh \
 	tests/test.include
 LOG_COMPILER = $(abs_top_builddir)/tests/setup_test_environment.sh

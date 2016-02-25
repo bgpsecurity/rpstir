@@ -2,8 +2,7 @@
 # envir.setup that are not correct for tests (e.g. $PATH mangling).
 #
 # This file should not be included directly by regular scripts. It should only
-# be included via @SETUP_ENVIRONMENT@ or by setup_test_environment.sh, which
-# does bootstrapping for @SETUP_ENVIRONMENT@.
+# be included via @SETUP_ENVIRONMENT@.
 
 # add all binaries to the path
 BIN_DIRS="`@MKTEMP@`"
