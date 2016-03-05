@@ -19,8 +19,8 @@
  */
 
 static void heer(
-    SQLHANDLE h,
     SQLSMALLINT what,
+    SQLHANDLE h,
     char *errmsg,
     int emlen)
 {
@@ -187,7 +187,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer(conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+            heer(SQL_HANDLE_ENV, conp->henv, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -195,7 +195,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer(conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+            heer(SQL_HANDLE_ENV, conp->henv, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -205,7 +205,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer(conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
+            heer(SQL_HANDLE_DBC, conp->hdbc, errmsg, emlen);
         // disconnectscm(conp); # if not connected, cannot disconnect
         return (NULL);
     }
@@ -215,7 +215,7 @@ scmcon *connectscm(
     {
         if (errmsg != NULL && emlen > 0 && conp->hstmtp != NULL &&
             conp->hstmtp->hstmt != NULL)
-            heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT, errmsg, emlen);
+            heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -265,7 +265,7 @@ statementscm(
     ret = SQLExecDirect(conp->hstmtp->hstmt, (SQLCHAR *) stm, istm);
     if (!SQLOK(ret))
     {
-        heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT,
+        heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt,
              conp->mystat.errmsg, conp->mystat.emlen);
         return (ERR_SCM_SQL);
     }
@@ -273,7 +273,7 @@ statementscm(
     ret = SQLRowCount(conp->hstmtp->hstmt, &len);
     if (!SQLOK(ret))
     {
-        heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT,
+        heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt,
              conp->mystat.errmsg, conp->mystat.emlen);
         return (ERR_SCM_SQL);
     }
@@ -888,7 +888,7 @@ searchscm(
         rc = SQLRowCount(conp->hstmtp->hstmt, &nrows);
         if (!SQLOK(rc) && (what & SCM_SRCH_BREAK_CERR))
         {
-            heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT,
+            heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt,
                  conp->mystat.errmsg, conp->mystat.emlen);
             SQLCloseCursor(conp->hstmtp->hstmt);
             pophstmt(conp);
