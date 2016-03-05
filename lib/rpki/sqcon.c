@@ -284,17 +284,18 @@ statementscm_no_data(
     scmcon *conp,
     char *stm)
 {
+    err_code sta = 0;
     SQLRETURN ret;
 
     ret = newhstmt(conp);
     if (!SQLOK(ret))
         return ERR_SCM_SQL;
 
-    ret = statementscm(conp, stm);
+    sta = statementscm(conp, stm);
 
     pophstmt(conp);
 
-    return ret;
+    return sta;
 }
 
 err_code
