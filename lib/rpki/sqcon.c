@@ -218,13 +218,6 @@ scmcon *connectscm(
         disconnectscm(conp);
         return (NULL);
     }
-    /*
-     * ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt); if ( !
-     * SQLOK(ret) ) { if ( errmsg != NULL && emlen > 0 ) heer((void
-     * *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen); disconnectscm(conp);
-     * return(NULL); } ret = SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN,
-     * (SQLPOINTER)SQL_NOSCAN_ON, SQL_IS_UINTEGER);
-     */
     return (conp);
 }
 
