@@ -26,7 +26,9 @@ static void heer(
 {
     SQLINTEGER nep;
     SQLSMALLINT tl;
-    SQLCHAR state[24];
+    // ODBC docs say that state gets a 5-character SQLSTATE code plus
+    // a terminating nul byte
+    SQLCHAR state[6];
 
     SQLGetDiagRec(what, h, 1, state, &nep,
                   (SQLCHAR *) errmsg, emlen, &tl);
