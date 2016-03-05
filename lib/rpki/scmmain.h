@@ -157,7 +157,6 @@ static scmtab scmtabbuilder[] = {
      "hash     VARCHAR(256),"
      "this_upd DATETIME NOT NULL,"
      "next_upd DATETIME NOT NULL,"
-     "cert_id  INT UNSIGNED NOT NULL,"
      "files    MEDIUMBLOB,"
      "fileslen INT UNSIGNED DEFAULT 0,"
      "flags    INT UNSIGNED DEFAULT 0,"
