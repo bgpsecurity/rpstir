@@ -19,16 +19,16 @@
  */
 
 static void heer(
-    void *h,
-    int what,
+    SQLHANDLE h,
+    SQLSMALLINT what,
     char *errmsg,
     int emlen)
 {
     SQLINTEGER nep;
     SQLSMALLINT tl;
-    char state[24];
+    SQLCHAR state[24];
 
-    SQLGetDiagRec(what, h, 1, (SQLCHAR *) & state[0], &nep,
+    SQLGetDiagRec(what, h, 1, state, &nep,
                   (SQLCHAR *) errmsg, emlen, &tl);
 }
 
@@ -185,7 +185,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer((void *)conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+            heer(conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -193,7 +193,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer((void *)conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+            heer(conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -203,7 +203,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer((void *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
+            heer(conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
         // disconnectscm(conp); # if not connected, cannot disconnect
         return (NULL);
     }
@@ -213,8 +213,7 @@ scmcon *connectscm(
     {
         if (errmsg != NULL && emlen > 0 && conp->hstmtp != NULL &&
             conp->hstmtp->hstmt != NULL)
-            heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT, errmsg,
-                 emlen);
+            heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -264,7 +263,7 @@ statementscm(
     ret = SQLExecDirect(conp->hstmtp->hstmt, (SQLCHAR *) stm, istm);
     if (!SQLOK(ret))
     {
-        heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
+        heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT,
              conp->mystat.errmsg, conp->mystat.emlen);
         return (ERR_SCM_SQL);
     }
@@ -272,7 +271,7 @@ statementscm(
     ret = SQLRowCount(conp->hstmtp->hstmt, &len);
     if (!SQLOK(ret))
     {
-        heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
+        heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT,
              conp->mystat.errmsg, conp->mystat.emlen);
         return (ERR_SCM_SQL);
     }
@@ -887,7 +886,7 @@ searchscm(
         rc = SQLRowCount(conp->hstmtp->hstmt, &nrows);
         if (!SQLOK(rc) && (what & SCM_SRCH_BREAK_CERR))
         {
-            heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
+            heer(conp->hstmtp->hstmt, SQL_HANDLE_STMT,
                  conp->mystat.errmsg, conp->mystat.emlen);
             SQLCloseCursor(conp->hstmtp->hstmt);
             pophstmt(conp);
