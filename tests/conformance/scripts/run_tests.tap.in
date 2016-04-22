@@ -104,13 +104,16 @@ done
 for BAD_SINGLE_FILE in bad*; do
 	reset_db
 	xfail=--xfail=ignored
+	skip=
 	case ${BAD_SINGLE_FILE} in
 	    badGBRExtraProperty.gbr);;
 	    badGBRNoContact.gbr);;
+	    badGBRNotVCard.gbr) xfail=; skip="--skip=see issue #41";;
 	    *) xfail=;;
 	esac
-	t4s_testcase ${xfail:+"${xfail}"} "BAD_SINGLE_FILE=${BAD_SINGLE_FILE}" '
-	    add_file bad -f "$BAD_SINGLE_FILE"'
+	t4s_testcase ${xfail:+"${xfail}"} ${skip:+"${skip}"} \
+	    "BAD_SINGLE_FILE=${BAD_SINGLE_FILE}" \
+	    'add_file bad -f "$BAD_SINGLE_FILE"'
 done
 
 for CRL_CERT in CRL*.cer; do

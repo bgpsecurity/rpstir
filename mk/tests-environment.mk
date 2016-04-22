@@ -1,6 +1,8 @@
 ## Anything that uses $(LOG_COMPILER) before "make all" finishes should
 ## depend on this.
 LOG_COMPILER_DEPS = \
+	etc/envir.setup \
+	lib/util/shell_utils \
 	tests/setup_test_environment.sh \
 	tests/test.include
 LOG_COMPILER = $(abs_top_builddir)/tests/setup_test_environment.sh
@@ -14,7 +16,7 @@ TAP_LOG_COMPILER = $(LOG_COMPILER)
 # show the individual TAP test cases; the return value of the TAP test
 # scripts determine pass or fail as usual)
 TAP_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
-	$(top_srcdir)/build-aux/tap-driver.sh --ignore-exit --merge
+	$(top_srcdir)/build-aux/tap-driver.sh --ignore-exit
 EXTRA_DIST += tests/tap4sh.sh
 
 EXTRA_DIST += etc/test.conf
