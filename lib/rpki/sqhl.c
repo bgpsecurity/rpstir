@@ -905,7 +905,6 @@ checkit(
         conp, cert_store, cert, intermediate_path, tchain, purpose);
 
     X509_STORE_CTX *ctx = NULL;
-    int i;
     err_code sta = 0;
 
     ctx = X509_STORE_CTX_new();
@@ -930,11 +929,11 @@ checkit(
     old_vfunc = cert_store->verify;
     thecon = conp;
     ctx->verify = &our_verify;
-    i = X509_verify_cert(ctx);
+    int ret = X509_verify_cert(ctx);
     ctx->verify = old_vfunc;
     old_vfunc = NULL;
     thecon = NULL;
-    if (!i)
+    if (!ret)
     {
         sta = ERR_SCM_NOTVALID;
     }
