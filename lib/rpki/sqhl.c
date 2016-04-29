@@ -1565,7 +1565,7 @@ verify_cert(
     purpose = X509_PURPOSE_get_id(xptmp);
     // setup the verification parameters
     /** @bug ignores error code (NULL) without explanation */
-    vpm = (X509_VERIFY_PARAM *)X509_VERIFY_PARAM_new();
+    vpm = X509_VERIFY_PARAM_new();
     /** @bug ignores error codes (not 1) without explanation */
     X509_VERIFY_PARAM_set_purpose(vpm, purpose);
     /** @bug ignores error codes (not 1) without explanation */
