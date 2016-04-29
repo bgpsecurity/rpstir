@@ -898,15 +898,15 @@ static err_code
 checkit(
     scmcon *conp,
     X509_STORE *ctx,
-    X509 *x,
+    X509 *cert,
     STACK_OF(X509) *uchain,
     STACK_OF(X509) *tchain,
     int purpose,
     ENGINE *e)
 {
-    LOG(LOG_DEBUG, "checkit(conp=%p, ctx=%p, x=%p"
+    LOG(LOG_DEBUG, "checkit(conp=%p, ctx=%p, cert=%p"
         ", uchain=%p, tchain=%p, purpose=%d, e=%p)",
-        conp, ctx, x, uchain, tchain, purpose, e);
+        conp, ctx, cert, uchain, tchain, purpose, e);
 
     X509_STORE_CTX *csc = NULL;
     int i;
@@ -921,7 +921,7 @@ checkit(
         goto done;
     }
     X509_STORE_set_flags(ctx, 0);
-    if (!X509_STORE_CTX_init(csc, ctx, x, uchain))
+    if (!X509_STORE_CTX_init(csc, ctx, cert, uchain))
     {
         LOG(LOG_DEBUG, "X509_STORE_CTX_init() returned 0");
         sta = ERR_SCM_STOREINIT;
@@ -1522,14 +1522,14 @@ done:
 static err_code
 verify_cert(
     scmcon *conp,
-    X509 *x,
+    X509 *cert,
     int isTrusted,
     const char *aki,
     const char *issuer)
 {
-    LOG(LOG_DEBUG, "verify_cert(conp=%p, x=%p, isTrusted=%d, aki=\"%s\""
-        ", issuer=\"%s\")",
-        conp, x, isTrusted, aki, issuer);
+    LOG(LOG_DEBUG, "verify_cert(conp=%p, cert=%p, isTrusted=%d"
+        ", aki=\"%s\", issuer=\"%s\")",
+        conp, cert, isTrusted, aki, issuer);
 
     STACK_OF(X509) *sk_trusted = NULL;
     STACK_OF(X509) *sk_untrusted = NULL;
@@ -1620,7 +1620,7 @@ verify_cert(
     {
         complete_chain = 1;
         /** @bug ignores error code without explanation */
-        sk_X509_push(sk_trusted, x);
+        sk_X509_push(sk_trusted, cert);
     }
     else
     {
@@ -1672,7 +1672,7 @@ verify_cert(
     if (complete_chain)
     {
         sta =
-            checkit(conp, cert_ctx, x, sk_untrusted, sk_trusted, purpose,
+            checkit(conp, cert_ctx, cert, sk_untrusted, sk_trusted, purpose,
                     NULL);
         LOG(LOG_DEBUG, "checkit() returned %s: %s",
             err2name(sta), err2string(sta));
@@ -1681,9 +1681,9 @@ done:
     sk_X509_pop_free(sk_untrusted, X509_free);
     if (sk_trusted && isTrusted)
     {
-        // the caller retains ownership of x
+        // the caller retains ownership of cert
         X509 *tmp = sk_X509_pop(sk_trusted);
-        assert(tmp == x);
+        assert(tmp == cert);
         assert(!sk_X509_num(sk_trusted));
     }
     sk_X509_pop_free(sk_trusted, X509_free);
