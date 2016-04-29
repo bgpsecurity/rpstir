@@ -934,6 +934,7 @@ checkit(
     if (tchain != NULL)
         X509_STORE_CTX_trusted_stack(csc, tchain);
     if (purpose >= 0)
+        /** @bug ignores error codes (not 1) without explanation */
         X509_STORE_CTX_set_purpose(csc, purpose);
     old_vfunc = ctx->verify;
     thecon = conp;
@@ -1081,6 +1082,7 @@ struct cert_answers *find_parent_cert(
     err_code sta;
     if (certSrch == NULL)
     {
+        /** @bug ignores error code (NULL) without explanation */
         certSrch = newsrchscm(NULL, 6, 0, 1);
         ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
@@ -1282,6 +1284,7 @@ struct cert_answers *find_cert_by_aKI(
     initTables(scmp);
     if (certSrch == NULL)
     {
+        /** @bug ignores error code (NULL) without explanation */
         certSrch = newsrchscm(NULL, 6, 0, 1);
         ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
@@ -1316,6 +1319,7 @@ struct cert_answers *find_trust_anchors(
 {
     err_code sta;
     initTables(scmp);
+    /** @bug ignores error code (NULL) without explanation */
     certSrch = newsrchscm(NULL, 6, 0, 1);
     ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
     ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
@@ -1466,16 +1470,53 @@ verify_cert(
     // set the verify callback
     X509_STORE_set_verify_cb_func(cert_ctx, verify_callback);
     // initialize the purpose
+    /**
+     * @bug ignores error codes from X509_PURPOSE_get_by_sname() (< 0)
+     * without explanation
+     */
     i = X509_PURPOSE_get_by_sname("any");
+    /**
+     * @bug ignores error code from X509_PURPOSE_get0() (NULL) without
+     * explanation
+     */
     xptmp = X509_PURPOSE_get0(i);
     purpose = X509_PURPOSE_get_id(xptmp);
     // setup the verification parameters
+    /** @bug ignores error code (NULL) without explanation */
     vpm = (X509_VERIFY_PARAM *)X509_VERIFY_PARAM_new();
+    /** @bug ignores error codes (not 1) without explanation */
     X509_VERIFY_PARAM_set_purpose(vpm, purpose);
+    /** @bug ignores error codes (not 1) without explanation */
     X509_STORE_set1_param(cert_ctx, vpm);
+    /**
+     * @bug presumably X509_LOOKUP_file() could return NULL on error,
+     * but that's unclear because the current implementation will
+     * never return non-NULL
+     */
+    /**
+     * @bug ignores error code from X509_STORE_add_lookup() (NULL)
+     * without explanation
+     */
     lookup = X509_STORE_add_lookup(cert_ctx, X509_LOOKUP_file());
+    /**
+     * @bug ignores error codes from X509_LOOKUP_load_file() (not 1)
+     * without explanation
+     */
     X509_LOOKUP_load_file(lookup, NULL, X509_FILETYPE_DEFAULT);
+    /**
+     * @bug presumably X509_LOOKUP_hash_dir() could return NULL on
+     * error, but that's unclear because the current implementation
+     * will never return non-NULL
+     */
+    /**
+     * @bug ignores error code from X509_STORE_add_lookup() (NULL)
+     * without explanation
+     */
     lookup = X509_STORE_add_lookup(cert_ctx, X509_LOOKUP_hash_dir());
+    /**
+     * @bug ignores error codes from X509_LOOKUP_add_dir() (not 1)
+     * without explanation
+     */
     X509_LOOKUP_add_dir(lookup, NULL, X509_FILETYPE_DEFAULT);
     ERR_clear_error();
     // set up certificate stacks
@@ -1504,6 +1545,7 @@ verify_cert(
     if (isTrusted)
     {
         *chainOK = 1;
+        /** @bug ignores error code without explanation */
         sk_X509_push(sk_trusted, x);
     }
     else
@@ -1528,11 +1570,13 @@ verify_cert(
             if (flags & SCM_FLAG_TRUSTED)
             {
                 *chainOK = 1;
+                /** @bug ignores error code without explanation */
                 sk_X509_push(sk_trusted, parent);
                 break;
             }
             else
             {
+                /** @bug ignores error code without explanation */
                 sk_X509_push(sk_untrusted, parent);
                 /**
                  * @bug
