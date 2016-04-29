@@ -899,14 +899,14 @@ checkit(
     scmcon *conp,
     X509_STORE *ctx,
     X509 *cert,
-    STACK_OF(X509) *uchain,
+    STACK_OF(X509) *intermediate_path,
     STACK_OF(X509) *tchain,
     int purpose,
     ENGINE *e)
 {
     LOG(LOG_DEBUG, "checkit(conp=%p, ctx=%p, cert=%p"
-        ", uchain=%p, tchain=%p, purpose=%d, e=%p)",
-        conp, ctx, cert, uchain, tchain, purpose, e);
+        ", intermediate_path=%p, tchain=%p, purpose=%d, e=%p)",
+        conp, ctx, cert, intermediate_path, tchain, purpose, e);
 
     X509_STORE_CTX *csc = NULL;
     int i;
@@ -921,7 +921,7 @@ checkit(
         goto done;
     }
     X509_STORE_set_flags(ctx, 0);
-    if (!X509_STORE_CTX_init(csc, ctx, cert, uchain))
+    if (!X509_STORE_CTX_init(csc, ctx, cert, intermediate_path))
     {
         LOG(LOG_DEBUG, "X509_STORE_CTX_init() returned 0");
         sta = ERR_SCM_STOREINIT;
