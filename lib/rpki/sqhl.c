@@ -890,9 +890,6 @@ our_verify(
  *
  * This function is modified from check() in apps/verify.c of the
  * OpenSSL source
- *
- * @param[in] e
- *     unused
  */
 static err_code
 checkit(
@@ -901,18 +898,16 @@ checkit(
     X509 *cert,
     STACK_OF(X509) *intermediate_path,
     STACK_OF(X509) *tchain,
-    int purpose,
-    ENGINE *e)
+    int purpose)
 {
     LOG(LOG_DEBUG, "checkit(conp=%p, ctx=%p, cert=%p"
-        ", intermediate_path=%p, tchain=%p, purpose=%d, e=%p)",
-        conp, ctx, cert, intermediate_path, tchain, purpose, e);
+        ", intermediate_path=%p, tchain=%p, purpose=%d)",
+        conp, ctx, cert, intermediate_path, tchain, purpose);
 
     X509_STORE_CTX *csc = NULL;
     int i;
     err_code sta = 0;
 
-    UNREFERENCED_PARAMETER(e);
     csc = X509_STORE_CTX_new();
     if (csc == NULL)
     {
@@ -1672,8 +1667,7 @@ verify_cert(
     if (complete_chain)
     {
         sta =
-            checkit(conp, cert_ctx, cert, sk_untrusted, sk_trusted, purpose,
-                    NULL);
+            checkit(conp, cert_ctx, cert, sk_untrusted, sk_trusted, purpose);
         LOG(LOG_DEBUG, "checkit() returned %s: %s",
             err2name(sta), err2string(sta));
     }
