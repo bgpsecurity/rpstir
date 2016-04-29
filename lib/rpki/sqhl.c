@@ -933,7 +933,7 @@ checkit(
     ctx->verify = old_vfunc;
     old_vfunc = NULL;
     thecon = NULL;
-    if (!ret)
+    if (ret <= 0)
     {
         sta = ERR_SCM_NOTVALID;
     }
