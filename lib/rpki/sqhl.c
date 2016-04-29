@@ -904,34 +904,34 @@ checkit(
         ", intermediate_path=%p, tchain=%p, purpose=%d)",
         conp, cert_store, cert, intermediate_path, tchain, purpose);
 
-    X509_STORE_CTX *csc = NULL;
+    X509_STORE_CTX *ctx = NULL;
     int i;
     err_code sta = 0;
 
-    csc = X509_STORE_CTX_new();
-    if (csc == NULL)
+    ctx = X509_STORE_CTX_new();
+    if (ctx == NULL)
     {
         LOG(LOG_DEBUG, "X509_STORE_CTX_new() returned NULL");
         sta = ERR_SCM_STORECTX;
         goto done;
     }
     X509_STORE_set_flags(cert_store, 0);
-    if (!X509_STORE_CTX_init(csc, cert_store, cert, intermediate_path))
+    if (!X509_STORE_CTX_init(ctx, cert_store, cert, intermediate_path))
     {
         LOG(LOG_DEBUG, "X509_STORE_CTX_init() returned 0");
         sta = ERR_SCM_STOREINIT;
         goto done;
     }
     if (tchain != NULL)
-        X509_STORE_CTX_trusted_stack(csc, tchain);
+        X509_STORE_CTX_trusted_stack(ctx, tchain);
     if (purpose >= 0)
         /** @bug ignores error codes (not 1) without explanation */
-        X509_STORE_CTX_set_purpose(csc, purpose);
+        X509_STORE_CTX_set_purpose(ctx, purpose);
     old_vfunc = cert_store->verify;
     thecon = conp;
-    csc->verify = &our_verify;
-    i = X509_verify_cert(csc);
-    csc->verify = old_vfunc;
+    ctx->verify = &our_verify;
+    i = X509_verify_cert(ctx);
+    ctx->verify = old_vfunc;
     old_vfunc = NULL;
     thecon = NULL;
     if (!i)
@@ -939,7 +939,7 @@ checkit(
         sta = ERR_SCM_NOTVALID;
     }
 done:
-    X509_STORE_CTX_free(csc);
+    X509_STORE_CTX_free(ctx);
     LOG(LOG_DEBUG, "checkit() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
