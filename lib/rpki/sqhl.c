@@ -908,7 +908,7 @@ checkit(
         ", uchain=%p, tchain=%p, purpose=%d, e=%p)",
         conp, ctx, x, uchain, tchain, purpose, e);
 
-    X509_STORE_CTX *csc;
+    X509_STORE_CTX *csc = NULL;
     int i;
     err_code sta = 0;
 
@@ -924,7 +924,6 @@ checkit(
     if (!X509_STORE_CTX_init(csc, ctx, x, uchain))
     {
         LOG(LOG_DEBUG, "X509_STORE_CTX_init() returned 0");
-        X509_STORE_CTX_free(csc);
         sta = ERR_SCM_STOREINIT;
         goto done;
     }
@@ -940,12 +939,12 @@ checkit(
     csc->verify = old_vfunc;
     old_vfunc = NULL;
     thecon = NULL;
-    X509_STORE_CTX_free(csc);
     if (!i)
     {
         sta = ERR_SCM_NOTVALID;
     }
 done:
+    X509_STORE_CTX_free(csc);
     LOG(LOG_DEBUG, "checkit() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
@@ -1607,8 +1606,6 @@ verify_cert(
     if (sk_trusted == NULL)
     {
         LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_trusted) returned NULL");
-        X509_STORE_free(cert_ctx);
-        X509_VERIFY_PARAM_free(vpm);
         sta = ERR_SCM_X509STACK;
         goto done;
     }
@@ -1616,9 +1613,6 @@ verify_cert(
     if (sk_untrusted == NULL)
     {
         LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_untrusted) returned NULL");
-        sk_X509_free(sk_trusted);
-        X509_STORE_free(cert_ctx);
-        X509_VERIFY_PARAM_free(vpm);
         sta = ERR_SCM_X509STACK;
         goto done;
     }
@@ -1686,8 +1680,9 @@ verify_cert(
         LOG(LOG_DEBUG, "checkit() returned %s: %s",
             err2name(sta), err2string(sta));
     }
+done:
     sk_X509_pop_free(sk_untrusted, X509_free);
-    if (isTrusted)
+    if (sk_trusted && isTrusted)
     {
         // the caller retains ownership of x
         X509 *tmp = sk_X509_pop(sk_trusted);
@@ -1697,7 +1692,6 @@ verify_cert(
     sk_X509_pop_free(sk_trusted, X509_free);
     X509_STORE_free(cert_ctx);
     X509_VERIFY_PARAM_free(vpm);
-done:
     LOG(LOG_DEBUG, "verify_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
