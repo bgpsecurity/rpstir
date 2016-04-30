@@ -980,8 +980,7 @@ checkit(
         sta = ERR_SCM_STOREINIT;
         goto done;
     }
-    if (tchain != NULL)
-        X509_STORE_CTX_trusted_stack(ctx, tchain);
+    X509_STORE_CTX_trusted_stack(ctx, tchain);
     if (purpose >= 0)
         /** @bug ignores error codes (not 1) without explanation */
         X509_STORE_CTX_set_purpose(ctx, purpose);
