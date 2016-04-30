@@ -896,12 +896,13 @@ checkit(
     scmcon *conp,
     X509 *cert,
     STACK_OF(X509) *intermediate_path,
-    STACK_OF(X509) *sk_trusted)
+    X509 *trust_anchor)
 {
     LOG(LOG_DEBUG, "checkit(conp=%p, cert=%p"
-        ", intermediate_path=%p, sk_trusted=%p)",
-        conp, cert, intermediate_path, sk_trusted);
+        ", intermediate_path=%p, trust_anchor=%p)",
+        conp, cert, intermediate_path, trust_anchor);
 
+    STACK_OF(X509) *sk_trusted = NULL;
     X509_VERIFY_PARAM *vpm = NULL;
     X509_STORE *cert_store = NULL;
     X509_STORE_CTX *ctx = NULL;
@@ -966,6 +967,18 @@ checkit(
         X509_STORE_add_lookup(cert_store, X509_LOOKUP_hash_dir()),
         NULL, X509_FILETYPE_DEFAULT);
 
+    ERR_clear_error();
+    // set up certificate stacks
+    sk_trusted = sk_X509_new_null();
+    if (sk_trusted == NULL)
+    {
+        LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_trusted) returned NULL");
+        sta = ERR_SCM_X509STACK;
+        goto done;
+    }
+    /** @bug ignores error code without explanation */
+    sk_X509_push(sk_trusted, trust_anchor);
+
     ctx = X509_STORE_CTX_new();
     if (ctx == NULL)
     {
@@ -997,6 +1010,14 @@ checkit(
     }
 done:
     X509_STORE_CTX_free(ctx);
+    if (sk_trusted)
+    {
+        // the caller retains ownership of trust_anchor
+        X509 *tmp = sk_X509_pop(sk_trusted);
+        assert(tmp == trust_anchor);
+        assert(!sk_X509_num(sk_trusted));
+    }
+    sk_X509_pop_free(sk_trusted, X509_free);
     X509_STORE_free(cert_store);
     X509_VERIFY_PARAM_free(vpm);
     LOG(LOG_DEBUG, "checkit() returning %s: %s",
@@ -1585,20 +1606,11 @@ verify_cert(
         ", aki=\"%s\", issuer=\"%s\")",
         conp, cert, isTrusted, aki, issuer);
 
-    STACK_OF(X509) *sk_trusted = NULL;
     STACK_OF(X509) *sk_untrusted = NULL;
     X509 *parent = NULL;
+    X509 *trust_anchor = NULL;
     err_code sta = 0;
 
-    ERR_clear_error();
-    // set up certificate stacks
-    sk_trusted = sk_X509_new_null();
-    if (sk_trusted == NULL)
-    {
-        LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_trusted) returned NULL");
-        sta = ERR_SCM_X509STACK;
-        goto done;
-    }
     sk_untrusted = sk_X509_new_null();
     if (sk_untrusted == NULL)
     {
@@ -1612,8 +1624,7 @@ verify_cert(
     if (isTrusted)
     {
         complete_chain = 1;
-        /** @bug ignores error code without explanation */
-        sk_X509_push(sk_trusted, cert);
+        trust_anchor = cert;
     }
     else
     {
@@ -1636,8 +1647,7 @@ verify_cert(
             if (flags & SCM_FLAG_TRUSTED)
             {
                 complete_chain = 1;
-                /** @bug ignores error code without explanation */
-                sk_X509_push(sk_trusted, parent);
+                trust_anchor = parent;
                 break;
             }
             else
@@ -1664,20 +1674,12 @@ verify_cert(
     sta = ERR_SCM_NOTVALID;
     if (complete_chain)
     {
-        sta = checkit(conp, cert, sk_untrusted, sk_trusted);
+        sta = checkit(conp, cert, sk_untrusted, trust_anchor);
         LOG(LOG_DEBUG, "checkit() returned %s: %s",
             err2name(sta), err2string(sta));
     }
 done:
     sk_X509_pop_free(sk_untrusted, X509_free);
-    if (sk_trusted && isTrusted)
-    {
-        // the caller retains ownership of cert
-        X509 *tmp = sk_X509_pop(sk_trusted);
-        assert(tmp == cert);
-        assert(!sk_X509_num(sk_trusted));
-    }
-    sk_X509_pop_free(sk_trusted, X509_free);
     LOG(LOG_DEBUG, "verify_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
