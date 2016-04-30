@@ -1291,7 +1291,8 @@ done:
  *     multiple matches.  To distinguish an error from no matches,
  *     check the value at @p stap after this function returns.
  */
-static X509 *parent_cert(
+static X509 *
+find_cert(
     scmcon *conp,
     char *ski,
     char *subject,
@@ -1299,7 +1300,7 @@ static X509 *parent_cert(
     char *pathname,
     int *flagsp)
 {
-    LOG(LOG_DEBUG, "parent_cert(conp=%p, ski=%s, subject=%s, stap=%p"
+    LOG(LOG_DEBUG, "find_cert(conp=%p, ski=%s, subject=%s, stap=%p"
         ", pathname=%s, flagsp=%p)",
         conp, ski, subject, stap, pathname, flagsp);
 
@@ -1367,7 +1368,7 @@ done:
         free(cert_answersp->cert_ansrp);
         free(cert_answersp);
     }
-    LOG(LOG_DEBUG, "parent_cert() returning %s: %s",
+    LOG(LOG_DEBUG, "find_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     if (stap)
     {
@@ -1678,17 +1679,16 @@ verify_cert(
         int flags;
         /**
          * @bug
-         *     parent_cert()'s error code is not checked, so this
-         *     logic does not distinguish an error from a parentless
-         *     cert
+         *     find_cert()'s error code is not checked, so this logic
+         *     does not distinguish an error from a parentless cert
          */
         parent =
-            parent_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
-        LOG(LOG_DEBUG, "parent_cert() (for SKI/subject) error code is %s: %s",
+            find_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
+        LOG(LOG_DEBUG, "find_cert() (for SKI/subject) error code is %s: %s",
             err2name(sta), err2string(sta));
         if (!parent)
         {
-            LOG(LOG_DEBUG, "parent_cert() returned NULL");
+            LOG(LOG_DEBUG, "find_cert() returned NULL");
         }
         while (parent != NULL)
         {
@@ -1705,17 +1705,17 @@ verify_cert(
                 sk_X509_push(sk_untrusted, parent);
                 /**
                  * @bug
-                 *     parent_cert()'s error code is not checked, so
+                 *     find_cert()'s error code is not checked, so
                  *     this logic does not distinguish an error from a
                  *     parentless cert
                  */
-                parent = parent_cert(conp, parentAKI, parentIssuer, &sta, NULL,
+                parent = find_cert(conp, parentAKI, parentIssuer, &sta, NULL,
                                      &flags);
-                LOG(LOG_DEBUG, "parent_cert() (for AKI/issuer) error code is"
+                LOG(LOG_DEBUG, "find_cert() (for AKI/issuer) error code is"
                     " %s: %s", err2name(sta), err2string(sta));
                 if (!parent)
                 {
-                    LOG(LOG_DEBUG, "parent_cert() returned NULL");
+                    LOG(LOG_DEBUG, "find_cert() returned NULL");
                 }
             }
         }
@@ -1780,11 +1780,11 @@ verify_crl(
      */
     /**
      * @bug
-     *     parent_cert() only returns one match.  What if there are
+     *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = parent_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
+    parent = find_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -1918,11 +1918,11 @@ verify_roa(
         return (sta);
     /**
      * @bug
-     *     parent_cert() only returns one match.  What if there are
+     *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
+    cert = find_cert(conp, ski, NULL, &sta, fn, NULL);
     if (cert == NULL)
     {
         *chainOK = 0;
