@@ -894,18 +894,77 @@ our_verify(
 static err_code
 checkit(
     scmcon *conp,
-    X509_STORE *cert_store,
     X509 *cert,
     STACK_OF(X509) *intermediate_path,
-    STACK_OF(X509) *tchain,
-    int purpose)
+    STACK_OF(X509) *tchain)
 {
-    LOG(LOG_DEBUG, "checkit(conp=%p, cert_store=%p, cert=%p"
-        ", intermediate_path=%p, tchain=%p, purpose=%d)",
-        conp, cert_store, cert, intermediate_path, tchain, purpose);
+    LOG(LOG_DEBUG, "checkit(conp=%p, cert=%p"
+        ", intermediate_path=%p, tchain=%p)",
+        conp, cert, intermediate_path, tchain);
 
+    X509_VERIFY_PARAM *vpm = NULL;
+    X509_STORE *cert_store = NULL;
     X509_STORE_CTX *ctx = NULL;
     err_code sta = 0;
+
+    // create X509 store
+    cert_store = X509_STORE_new();
+    if (cert_store == NULL)
+    {
+        LOG(LOG_DEBUG, "X509_STORE_new() returned NULL");
+        sta = ERR_SCM_CERTCTX;
+        goto done;
+    }
+    // initialize the purpose
+    /**
+     * @bug ignores error codes from X509_PURPOSE_get_by_sname() (< 0)
+     * without explanation
+     */
+    /**
+     * @bug ignores error code from X509_PURPOSE_get0() (NULL) without
+     * explanation
+     */
+    int purpose = X509_PURPOSE_get_id(
+        X509_PURPOSE_get0(X509_PURPOSE_get_by_sname("any")));
+    // setup the verification parameters
+    /** @bug ignores error code (NULL) without explanation */
+    vpm = X509_VERIFY_PARAM_new();
+    /** @bug ignores error codes (not 1) without explanation */
+    X509_VERIFY_PARAM_set_purpose(vpm, purpose);
+    /** @bug ignores error codes (not 1) without explanation */
+    X509_STORE_set1_param(cert_store, vpm);
+    /**
+     * @bug presumably X509_LOOKUP_file() could return NULL on error,
+     * but that's unclear because the current implementation will
+     * never return non-NULL
+     */
+    /**
+     * @bug ignores error code from X509_STORE_add_lookup() (NULL)
+     * without explanation
+     */
+    /**
+     * @bug ignores error codes from X509_LOOKUP_load_file() (not 1)
+     * without explanation
+     */
+    X509_LOOKUP_load_file(
+        X509_STORE_add_lookup(cert_store, X509_LOOKUP_file()),
+        NULL, X509_FILETYPE_DEFAULT);
+    /**
+     * @bug presumably X509_LOOKUP_hash_dir() could return NULL on
+     * error, but that's unclear because the current implementation
+     * will never return non-NULL
+     */
+    /**
+     * @bug ignores error code from X509_STORE_add_lookup() (NULL)
+     * without explanation
+     */
+    /**
+     * @bug ignores error codes from X509_LOOKUP_add_dir() (not 1)
+     * without explanation
+     */
+    X509_LOOKUP_add_dir(
+        X509_STORE_add_lookup(cert_store, X509_LOOKUP_hash_dir()),
+        NULL, X509_FILETYPE_DEFAULT);
 
     ctx = X509_STORE_CTX_new();
     if (ctx == NULL)
@@ -939,6 +998,8 @@ checkit(
     }
 done:
     X509_STORE_CTX_free(ctx);
+    X509_STORE_free(cert_store);
+    X509_VERIFY_PARAM_free(vpm);
     LOG(LOG_DEBUG, "checkit() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
@@ -1527,70 +1588,9 @@ verify_cert(
 
     STACK_OF(X509) *sk_trusted = NULL;
     STACK_OF(X509) *sk_untrusted = NULL;
-    X509_VERIFY_PARAM *vpm = NULL;
-    X509_STORE *cert_store = NULL;
     X509 *parent = NULL;
-    int purpose;
     err_code sta = 0;
 
-    // create X509 store
-    cert_store = X509_STORE_new();
-    if (cert_store == NULL)
-    {
-        LOG(LOG_DEBUG, "X509_STORE_new() returned NULL");
-        sta = ERR_SCM_CERTCTX;
-        goto done;
-    }
-    // initialize the purpose
-    /**
-     * @bug ignores error codes from X509_PURPOSE_get_by_sname() (< 0)
-     * without explanation
-     */
-    /**
-     * @bug ignores error code from X509_PURPOSE_get0() (NULL) without
-     * explanation
-     */
-    purpose = X509_PURPOSE_get_id(X509_PURPOSE_get0(
-                                      X509_PURPOSE_get_by_sname("any")));
-    // setup the verification parameters
-    /** @bug ignores error code (NULL) without explanation */
-    vpm = X509_VERIFY_PARAM_new();
-    /** @bug ignores error codes (not 1) without explanation */
-    X509_VERIFY_PARAM_set_purpose(vpm, purpose);
-    /** @bug ignores error codes (not 1) without explanation */
-    X509_STORE_set1_param(cert_store, vpm);
-    /**
-     * @bug presumably X509_LOOKUP_file() could return NULL on error,
-     * but that's unclear because the current implementation will
-     * never return non-NULL
-     */
-    /**
-     * @bug ignores error code from X509_STORE_add_lookup() (NULL)
-     * without explanation
-     */
-    /**
-     * @bug ignores error codes from X509_LOOKUP_load_file() (not 1)
-     * without explanation
-     */
-    X509_LOOKUP_load_file(
-        X509_STORE_add_lookup(cert_store, X509_LOOKUP_file()),
-        NULL, X509_FILETYPE_DEFAULT);
-    /**
-     * @bug presumably X509_LOOKUP_hash_dir() could return NULL on
-     * error, but that's unclear because the current implementation
-     * will never return non-NULL
-     */
-    /**
-     * @bug ignores error code from X509_STORE_add_lookup() (NULL)
-     * without explanation
-     */
-    /**
-     * @bug ignores error codes from X509_LOOKUP_add_dir() (not 1)
-     * without explanation
-     */
-    X509_LOOKUP_add_dir(
-        X509_STORE_add_lookup(cert_store, X509_LOOKUP_hash_dir()),
-        NULL, X509_FILETYPE_DEFAULT);
     ERR_clear_error();
     // set up certificate stacks
     sk_trusted = sk_X509_new_null();
@@ -1665,8 +1665,7 @@ verify_cert(
     sta = ERR_SCM_NOTVALID;
     if (complete_chain)
     {
-        sta =
-            checkit(conp, cert_store, cert, sk_untrusted, sk_trusted, purpose);
+        sta = checkit(conp, cert, sk_untrusted, sk_trusted);
         LOG(LOG_DEBUG, "checkit() returned %s: %s",
             err2name(sta), err2string(sta));
     }
@@ -1680,8 +1679,6 @@ done:
         assert(!sk_X509_num(sk_trusted));
     }
     sk_X509_pop_free(sk_trusted, X509_free);
-    X509_STORE_free(cert_store);
-    X509_VERIFY_PARAM_free(vpm);
     LOG(LOG_DEBUG, "verify_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
