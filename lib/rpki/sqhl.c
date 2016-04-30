@@ -896,11 +896,11 @@ checkit(
     scmcon *conp,
     X509 *cert,
     STACK_OF(X509) *intermediate_path,
-    STACK_OF(X509) *tchain)
+    STACK_OF(X509) *sk_trusted)
 {
     LOG(LOG_DEBUG, "checkit(conp=%p, cert=%p"
-        ", intermediate_path=%p, tchain=%p)",
-        conp, cert, intermediate_path, tchain);
+        ", intermediate_path=%p, sk_trusted=%p)",
+        conp, cert, intermediate_path, sk_trusted);
 
     X509_VERIFY_PARAM *vpm = NULL;
     X509_STORE *cert_store = NULL;
@@ -980,7 +980,7 @@ checkit(
         sta = ERR_SCM_STOREINIT;
         goto done;
     }
-    X509_STORE_CTX_trusted_stack(ctx, tchain);
+    X509_STORE_CTX_trusted_stack(ctx, sk_trusted);
     if (purpose >= 0)
         /** @bug ignores error codes (not 1) without explanation */
         X509_STORE_CTX_set_purpose(ctx, purpose);
