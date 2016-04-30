@@ -1543,12 +1543,12 @@ verify_cert(
     X509 *x,
     int isTrusted,
     char *aki,
-    char *parentSubject,
+    char *issuer,
     int *chainOK)
 {
     LOG(LOG_DEBUG, "verify_cert(conp=%p, x=%p, isTrusted=%d, aki=\"%s\""
-        ", parentSubject=\"%s\", chainOK=%p)",
-        conp, x, isTrusted, aki, parentSubject, chainOK);
+        ", issuer=\"%s\", chainOK=%p)",
+        conp, x, isTrusted, aki, issuer, chainOK);
 
     STACK_OF(X509) *sk_trusted = NULL;
     STACK_OF(X509) *sk_untrusted = NULL;
@@ -1659,7 +1659,7 @@ verify_cert(
          *     does not distinguish an error from a parentless cert
          */
         parent =
-            find_cert(conp, aki, parentSubject, &sta, NULL, &flags);
+            find_cert(conp, aki, issuer, &sta, NULL, &flags);
         LOG(LOG_DEBUG, "find_cert() (for SKI/subject) error code is %s: %s",
             err2name(sta), err2string(sta));
         if (!parent)
@@ -1742,7 +1742,7 @@ verify_crl(
     scmcon *conp,
     X509_CRL *x,
     char *aki,
-    char *parentSubject,
+    char *issuer,
     int *chainOK)
 {
     int x509sta = 0;
@@ -1755,7 +1755,7 @@ verify_crl(
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = find_cert(conp, aki, parentSubject, NULL, NULL, NULL);
+    parent = find_cert(conp, aki, issuer, NULL, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
