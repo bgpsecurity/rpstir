@@ -1163,6 +1163,8 @@ addCert2List(
  *     call to this function overwrites the results returned from a
  *     previous call to this function.
  *
+ * @param[in] conp
+ *     Database connection.  This MUST NOT be NULL.
  * @param[in] ski
  *     The subject key identifier (SKI) of each parent certificate
  *     (the child's AKI).  This MUST NOT be NULL.
@@ -1170,19 +1172,17 @@ addCert2List(
  *     The subject of each parent certificate (the child's issuer).
  *     This may be NULL, in which case only @p ski is used to perform
  *     the search.
- * @param[in] conp
- *     Database connection.  This MUST NOT be NULL.
  * @return
  *     The certificates that match the given @p ski and @p subject.
  */
 static struct cert_answers *
 find_certs(
+    scmcon *conp,
     const char *ski,
-    const char *subject,
-    scmcon *conp)
+    const char *subject)
 {
-    LOG(LOG_DEBUG, "find_certs(ski=\"%s\", subject=\"%s\", conp=%p)",
-        ski, subject, conp);
+    LOG(LOG_DEBUG, "find_certs(conp=%p, ski=\"%s\", subject=\"%s\")",
+        conp, ski, subject);
 
     err_code sta = 0;
     static struct cert_answers cert_answers;
@@ -1281,7 +1281,7 @@ static X509 *parent_cert(
     X509 *ret = NULL;
     err_code sta = 0;
 
-    struct cert_answers *cert_answersp = find_certs(ski, subject, conp);
+    struct cert_answers *cert_answersp = find_certs(conp, ski, subject);
     struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
     int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
     if (!cert_answersp || cert_answersp->num_ansrs <= 0)
