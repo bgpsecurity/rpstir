@@ -1153,12 +1153,13 @@ addCert2List(
     return 0;
 }
 
-struct cert_answers *find_parent_cert(
+struct cert_answers *
+find_certs(
     const char *ski,
     const char *subject,
     scmcon *conp)
 {
-    LOG(LOG_DEBUG, "find_parent_cert(ski=\"%s\", subject=\"%s\", conp=%p)",
+    LOG(LOG_DEBUG, "find_certs(ski=\"%s\", subject=\"%s\", conp=%p)",
         ski, subject, conp);
 
     err_code sta = 0;
@@ -1198,12 +1199,12 @@ done:
     if (sta < 0)
     {
         found_certs->num_ansrs = sta;
-        LOG(LOG_DEBUG, "find_parent_cert() returning %s: %s",
+        LOG(LOG_DEBUG, "find_certs() returning %s: %s",
             err2name(sta), err2string(sta));
     }
     else
     {
-        LOG(LOG_DEBUG, "find_parent_cert() returning %i answers",
+        LOG(LOG_DEBUG, "find_certs() returning %i answers",
             found_certs->num_ansrs);
     }
 
@@ -1258,7 +1259,7 @@ static X509 *parent_cert(
     X509 *ret = NULL;
     err_code sta = 0;
 
-    struct cert_answers *cert_answersp = find_parent_cert(ski, subject, conp);
+    struct cert_answers *cert_answersp = find_certs(ski, subject, conp);
     struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
     int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
     if (!cert_answersp || cert_answersp->num_ansrs <= 0)

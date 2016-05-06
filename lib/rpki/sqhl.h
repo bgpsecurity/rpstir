@@ -371,7 +371,8 @@ extern struct cert_answers *find_cert_by_aKI(
  * @return
  *     The certificates that match the given @p ski and @p subject.
  */
-extern struct cert_answers *find_parent_cert(
+struct cert_answers *
+find_certs(
     const char *ski,
     const char *subject,
     scmcon *conp);
