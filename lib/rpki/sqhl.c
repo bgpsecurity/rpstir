@@ -1170,22 +1170,27 @@ addCert2List(
  * @param[in] subject
  *     The subject of the certificate(s) to find.  This may be NULL,
  *     in which case only @p ski is used to perform the search.
+ * @param[out] found_certsp
+ *     On success, the value at this location will be set to point to
+ *     a structure containing the certificates that match the given @p
+ *     ski and @p subject.  Ownership of the structure is retained by
+ *     this function; the caller MUST NOT attempt to free it.  The
+ *     data in the structure will be overwritten during the next call
+ *     to this function.  This parameter may be NULL.
  * @return
- *     A pointer to a structure containing the certificates that match
- *     the given @p ski and @p subject.  Ownership of the structure is
- *     retained by this function; the caller MUST NOT attempt to free
- *     it.  The data in the structure will be overwritten during the
- *     next call to this function.  Lack of matches is not considered
- *     to be an error.
+ *     0 on success, a non-zero error code otherwise.  Lack of matches
+ *     is not considered to be an error.
  */
-static struct cert_answers *
+static err_code
 find_certs(
     scmcon *conp,
     const char *ski,
-    const char *subject)
+    const char *subject,
+    struct cert_answers **found_certsp)
 {
-    LOG(LOG_DEBUG, "find_certs(conp=%p, ski=\"%s\", subject=\"%s\")",
-        conp, ski, subject);
+    LOG(LOG_DEBUG, "find_certs(conp=%p, ski=\"%s\", subject=\"%s\""
+        ", found_certsp=%p)",
+        conp, ski, subject, found_certsp);
 
     err_code sta = 0;
     static struct cert_answers cert_answers;
@@ -1224,21 +1229,22 @@ find_certs(
         assert(!found_certs->num_ansrs);
         sta = 0;
     }
-
-done:
     if (sta < 0)
     {
-        found_certs->num_ansrs = sta;
-        LOG(LOG_DEBUG, "find_certs() returning %s: %s",
-            err2name(sta), err2string(sta));
+        goto done;
     }
-    else
+    assert(found_certs->num_ansrs >= 0);
+    LOG(LOG_DEBUG, "found %i matches", found_certs->num_ansrs);
+
+    if (found_certsp)
     {
-        LOG(LOG_DEBUG, "find_certs() returning %i answers",
-            found_certs->num_ansrs);
+        *found_certsp = found_certs;
     }
 
-    return found_certs;
+done:
+    LOG(LOG_DEBUG, "find_certs() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -1289,29 +1295,19 @@ static X509 *parent_cert(
     X509 *ret = NULL;
     err_code sta = 0;
 
-    struct cert_answers *cert_answersp = find_certs(conp, ski, subject);
-    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
-    int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
-    if (!cert_answersp || cert_answersp->num_ansrs <= 0)
+    struct cert_answers *cert_answersp = NULL;
+    sta = find_certs(conp, ski, subject, &cert_answersp);
+    LOG(LOG_DEBUG, "find_certs() returned %s: %s",
+        err2name(sta), err2string(sta));
+    if (sta)
     {
-        if (!cert_answersp)
-        {
-            LOG(LOG_DEBUG, "cert_answersp is NULL");
-        }
-        else
-        {
-            LOG(LOG_DEBUG, "cert_answersp->num_ansrs is %s: %s",
-                err2name(cert_answersp->num_ansrs),
-                err2string(cert_answersp->num_ansrs));
-        }
-        /**
-         * @bug
-         *     ignores error code without explanation (num_ansrs might
-         *     be negative)
-         */
         goto done;
     }
+    assert(cert_answersp);
+    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
+    int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
     LOG(LOG_DEBUG, "got %i answers", cert_answersp->num_ansrs);
+    assert(cert_answersp->num_ansrs >= 0);
     if (LOG_DEBUG <= LOG_LEVEL)
     {
         for (int i = 0; i < cert_answersp->num_ansrs; ++i)
