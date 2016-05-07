@@ -1301,10 +1301,12 @@ struct cert_answers *find_cert_by_aKI(
         ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
                NULL);
-        ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
         ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
+        ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
         ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
                NULL);
+        parentAKI = (char *)certSrch->vec[3].valptr;
+        parentIssuer = (char *)certSrch->vec[4].valptr;
     }
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
@@ -1343,10 +1345,12 @@ struct cert_answers *find_trust_anchors(
         ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
                NULL);
-        ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
         ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
+        ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
         ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
                NULL);
+        parentAKI = (char *)certSrch->vec[3].valptr;
+        parentIssuer = (char *)certSrch->vec[4].valptr;
     }
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
