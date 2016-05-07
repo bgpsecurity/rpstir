@@ -1018,7 +1018,64 @@ static X509 *readCertFromFile(
     return (px);
 }
 
+/**
+ * @brief
+ *     static variables for efficiency, so only need to set up query
+ *     once
+ */
 static scmsrcha *certSrch = NULL;
+static char *parentAKI;
+static char *parentIssuer;
+
+/**
+ * @brief
+ *     initialize the global certSrch variable for certificate searches
+ *
+ * @return
+ *     0 on success, a non-zero error code otherwise.
+ */
+static err_code
+init_certSrch()
+{
+    LOG(LOG_DEBUG, "init_certSrch()");
+
+    err_code sta = 0;
+    /** @bug ignores error code (NULL) without explanation */
+    certSrch = newsrchscm(NULL, 6, 0, 1);
+    /**
+     * @bug
+     *     if one of these ADDCOL()s fails then future calls to
+     *     find_parent_cert(), find_cert_by_aKI(), and
+     *     find_trust_anchors() will use partially-initialized state
+     */
+    ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
+    ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
+    ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, sta);
+    ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, sta);
+    ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    parentAKI = (char *)certSrch->vec[3].valptr;
+    parentIssuer = (char *)certSrch->vec[4].valptr;
+
+    LOG(LOG_DEBUG, "init_certSrch() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
+}
+
+#define INIT_CERTSRCH(sta, erraction)                                   \
+    do {                                                                \
+        if (certSrch == NULL)                                           \
+        {                                                               \
+            sta = init_certSrch();                                      \
+            LOG(LOG_DEBUG, "init_certSrch() returned %s: %s",           \
+                err2name(sta), err2string(sta));                        \
+            if (sta)                                                    \
+            {                                                           \
+                erraction;                                              \
+            }                                                           \
+            assert(certSrch);                                           \
+        }                                                               \
+    } while (0)
 
 struct cert_answers cert_answers;
 
@@ -1063,14 +1120,6 @@ addCert2List(
     return 0;
 }
 
-/**
- * @brief
- *     static variables for efficiency, so only need to set up query
- *     once
- */
-static char *parentAKI;
-static char *parentIssuer;
-
 struct cert_answers *find_parent_cert(
     const char *ski,
     const char *subject,
@@ -1080,27 +1129,7 @@ struct cert_answers *find_parent_cert(
         ski, subject, conp);
 
     err_code sta = 0;
-    if (certSrch == NULL)
-    {
-        /** @bug ignores error code (NULL) without explanation */
-        certSrch = newsrchscm(NULL, 6, 0, 1);
-        /**
-         * @bug
-         *     if one of these ADDCOL()s fails then future calls to
-         *     find_parent_cert() and find_cert_by_aKI() will use
-         *     partially-initialized state
-         */
-        ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
-               sta, NULL);
-        ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-        ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
-        ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        parentAKI = (char *)certSrch->vec[3].valptr;
-        parentIssuer = (char *)certSrch->vec[4].valptr;
-    }
+    INIT_CERTSRCH(sta, goto done);
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
     if (subject != NULL){
@@ -1121,6 +1150,8 @@ struct cert_answers *find_parent_cert(
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     LOG(LOG_DEBUG, "searchscm() returned %s: %s",
         err2name(sta), err2string(sta));
+
+done:
     if (sta < 0)
     {
         cert_answers.num_ansrs = sta;
@@ -1287,27 +1318,7 @@ struct cert_answers *find_cert_by_aKI(
 {
     err_code sta = 0;
     initTables(scmp);
-    if (certSrch == NULL)
-    {
-        /** @bug ignores error code (NULL) without explanation */
-        certSrch = newsrchscm(NULL, 6, 0, 1);
-        /**
-         * @bug
-         *     if one of these ADDCOL()s fails then future calls to
-         *     find_parent_cert() and find_cert_by_aKI() will use
-         *     partially-initialized state
-         */
-        ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-        ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
-        ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        parentAKI = (char *)certSrch->vec[3].valptr;
-        parentIssuer = (char *)certSrch->vec[4].valptr;
-    }
+    INIT_CERTSRCH(sta, return NULL);
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
@@ -1331,27 +1342,7 @@ struct cert_answers *find_trust_anchors(
 {
     err_code sta = 0;
     initTables(scmp);
-    if (!certSrch)
-    {
-        /** @bug ignores error code (NULL) without explanation */
-        certSrch = newsrchscm(NULL, 6, 0, 1);
-        /**
-         * @bug
-         *     if one of these ADDCOL()s fails then future calls to
-         *     find_parent_cert() and find_cert_by_aKI() will use
-         *     partially-initialized state
-         */
-        ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-        ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
-        ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        parentAKI = (char *)certSrch->vec[3].valptr;
-        parentIssuer = (char *)certSrch->vec[4].valptr;
-    }
+    INIT_CERTSRCH(sta, return NULL);
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
     /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
