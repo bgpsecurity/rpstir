@@ -350,34 +350,6 @@ extern struct cert_answers *find_cert_by_aKI(
     scmcon *conp);
 
 /**
- * @brief
- *     Get parent certificates by looking up the cert's issuer and AKI
- *     in the db.
- *
- * @warning
- *     This function uses static memory and is not thread-safe.  Any
- *     call to this function overwrites the results returned from a
- *     previous call to this function.
- *
- * @param[in] ski
- *     The subject key identifier (SKI) of each parent certificate
- *     (the child's AKI).  This MUST NOT be NULL.
- * @param[in] subject
- *     The subject of each parent certificate (the child's issuer).
- *     This may be NULL, in which case only @p ski is used to perform
- *     the search.
- * @param[in] conp
- *     Database connection.  This MUST NOT be NULL.
- * @return
- *     The certificates that match the given @p ski and @p subject.
- */
-struct cert_answers *
-find_certs(
-    const char *ski,
-    const char *subject,
-    scmcon *conp);
-
-/**
  * @warning
  *     This function uses static memory and is not thread-safe.  Any
  *     call to this function overwrites the results returned from a
