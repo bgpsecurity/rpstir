@@ -1155,8 +1155,7 @@ addCert2List(
 
 /**
  * @brief
- *     Get parent certificates by looking up the cert's issuer and AKI
- *     in the db.
+ *     find certificate(s) matching a SKI/subject
  *
  * @warning
  *     This function uses static memory and is not thread-safe.  Any
@@ -1166,14 +1165,17 @@ addCert2List(
  * @param[in] conp
  *     Database connection.  This MUST NOT be NULL.
  * @param[in] ski
- *     The subject key identifier (SKI) of each parent certificate
- *     (the child's AKI).  This MUST NOT be NULL.
+ *     The subject key identifier (SKI) of the certificate(s) to find.
+ *     This MUST NOT be NULL.
  * @param[in] subject
- *     The subject of each parent certificate (the child's issuer).
- *     This may be NULL, in which case only @p ski is used to perform
- *     the search.
+ *     The subject of the certificate(s) to find.  This may be NULL,
+ *     in which case only @p ski is used to perform the search.
  * @return
- *     The certificates that match the given @p ski and @p subject.
+ *     A pointer to a structure containing the certificates that match
+ *     the given @p ski and @p subject.  Ownership of the structure is
+ *     retained by this function; the caller MUST NOT attempt to free
+ *     it.  The data in the structure will be overwritten during the
+ *     next call to this function.
  */
 static struct cert_answers *
 find_certs(
