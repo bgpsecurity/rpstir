@@ -1084,6 +1084,12 @@ struct cert_answers *find_parent_cert(
     {
         /** @bug ignores error code (NULL) without explanation */
         certSrch = newsrchscm(NULL, 6, 0, 1);
+        /**
+         * @bug
+         *     if one of these ADDCOL()s fails then future calls to
+         *     find_parent_cert() and find_cert_by_aKI() will use
+         *     partially-initialized state
+         */
         ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
@@ -1286,6 +1292,12 @@ struct cert_answers *find_cert_by_aKI(
     {
         /** @bug ignores error code (NULL) without explanation */
         certSrch = newsrchscm(NULL, 6, 0, 1);
+        /**
+         * @bug
+         *     if one of these ADDCOL()s fails then future calls to
+         *     find_parent_cert() and find_cert_by_aKI() will use
+         *     partially-initialized state
+         */
         ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
         ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
@@ -1319,8 +1331,15 @@ struct cert_answers *find_trust_anchors(
 {
     err_code sta;
     initTables(scmp);
+    /** @bug leaks memory if certSrch is already non-NULL */
     /** @bug ignores error code (NULL) without explanation */
     certSrch = newsrchscm(NULL, 6, 0, 1);
+    /**
+     * @bug
+     *     if one of these ADDCOL()s fails then future calls to
+     *     find_parent_cert() and find_cert_by_aKI() will use
+     *     partially-initialized state
+     */
     ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
     ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
     ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
