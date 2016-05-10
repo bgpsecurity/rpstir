@@ -28,9 +28,15 @@
 
 
 #define ADDCOL(a, b, c, d, e, f)                                        \
+    ADDCOL2((a), (b), (c), (d), (e), return (f))
+
+#define ADDCOL2(a, b, c, d, e, f)                                       \
     do {                                                                \
         e = addcolsrchscm((a), (b), (c), (d));                          \
-        if ((e) < 0) return (f);                                        \
+        if ((e) < 0)                                                    \
+        {                                                               \
+            f;                                                          \
+        }                                                               \
     } while (0)
 
 /*
@@ -1044,19 +1050,22 @@ init_certSrch()
     certSrch = newsrchscm(NULL, 6, 0, 1);
     /**
      * @bug
-     *     if one of these ADDCOL()s fails then future calls to
+     *     if one of these ADDCOL2()s fails then future calls to
      *     find_parent_cert(), find_cert_by_aKI(), and
      *     find_trust_anchors() will use partially-initialized state
      */
-    ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, sta);
-    ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, sta);
-    ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
-    ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, sta);
-    ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, sta);
-    ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, sta);
+    ADDCOL2(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, goto done);
+    ADDCOL2(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, goto done);
+    ADDCOL2(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
+            goto done);
+    ADDCOL2(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, goto done);
+    ADDCOL2(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, goto done);
+    ADDCOL2(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
+            goto done);
     parentAKI = (char *)certSrch->vec[3].valptr;
     parentIssuer = (char *)certSrch->vec[4].valptr;
 
+done:
     LOG(LOG_DEBUG, "init_certSrch() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
