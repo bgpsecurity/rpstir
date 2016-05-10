@@ -1046,8 +1046,13 @@ init_certSrch()
     LOG(LOG_DEBUG, "init_certSrch()");
 
     err_code sta = 0;
-    /** @bug ignores error code (NULL) without explanation */
     certSrch = newsrchscm(NULL, 6, 0, 1);
+    if (!certSrch)
+    {
+        LOG(LOG_ERR, "Unable to allocate memory to construct an SQL query");
+        sta = ERR_SCM_NOMEM;
+        goto done;
+    }
     ADDCOL2(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, goto done);
     ADDCOL2(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, goto done);
     ADDCOL2(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
