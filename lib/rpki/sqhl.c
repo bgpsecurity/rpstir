@@ -1048,12 +1048,6 @@ init_certSrch()
     err_code sta = 0;
     /** @bug ignores error code (NULL) without explanation */
     certSrch = newsrchscm(NULL, 6, 0, 1);
-    /**
-     * @bug
-     *     if one of these ADDCOL2()s fails then future calls to
-     *     find_parent_cert(), find_cert_by_aKI(), and
-     *     find_trust_anchors() will use partially-initialized state
-     */
     ADDCOL2(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, goto done);
     ADDCOL2(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, goto done);
     ADDCOL2(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
@@ -1066,6 +1060,11 @@ init_certSrch()
     parentIssuer = (char *)certSrch->vec[4].valptr;
 
 done:
+    if (sta && certSrch)
+    {
+        freesrchscm(certSrch);
+        certSrch = NULL;
+    }
     LOG(LOG_DEBUG, "init_certSrch() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
