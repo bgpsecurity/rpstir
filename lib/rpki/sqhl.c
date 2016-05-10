@@ -1329,21 +1329,25 @@ struct cert_answers *find_trust_anchors(
 {
     err_code sta = 0;
     initTables(scmp);
-    /** @bug leaks memory if certSrch is already non-NULL */
-    /** @bug ignores error code (NULL) without explanation */
-    certSrch = newsrchscm(NULL, 6, 0, 1);
-    /**
-     * @bug
-     *     if one of these ADDCOL()s fails then future calls to
-     *     find_parent_cert() and find_cert_by_aKI() will use
-     *     partially-initialized state
-     */
-    ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-    ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-    ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
-    ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
-    ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-    ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
+    if (!certSrch)
+    {
+        /** @bug ignores error code (NULL) without explanation */
+        certSrch = newsrchscm(NULL, 6, 0, 1);
+        /**
+         * @bug
+         *     if one of these ADDCOL()s fails then future calls to
+         *     find_parent_cert() and find_cert_by_aKI() will use
+         *     partially-initialized state
+         */
+        ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
+        ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
+        ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
+               NULL);
+        ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
+        ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
+        ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
+               NULL);
+    }
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
     /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
