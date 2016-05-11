@@ -1029,7 +1029,6 @@ static X509 *readCertFromFile(
  *     static variables for efficiency, so only need to set up query
  *     once
  */
-static scmsrcha *certSrch = NULL;
 static char *parentAKI;
 static char *parentIssuer;
 
@@ -1157,6 +1156,7 @@ struct cert_answers *find_parent_cert(
         ski, subject, conp);
 
     err_code sta = 0;
+    static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, goto done);
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
@@ -1346,6 +1346,7 @@ struct cert_answers *find_cert_by_aKI(
 {
     err_code sta = 0;
     initTables(scmp);
+    static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, return NULL);
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
@@ -1370,6 +1371,7 @@ struct cert_answers *find_trust_anchors(
 {
     err_code sta = 0;
     initTables(scmp);
+    static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, return NULL);
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
