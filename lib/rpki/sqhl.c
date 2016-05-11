@@ -1133,16 +1133,16 @@ addCert2List(
     struct cert_ansr *this_ansrp =
         &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
     memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
-    strcpy(this_ansrp->dirname, (char *)certSrch->vec[1].valptr);
+    strcpy(this_ansrp->dirname, (char *)s->vec[1].valptr);
     memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
-    strcpy(this_ansrp->filename, (char *)certSrch->vec[0].valptr);
+    strcpy(this_ansrp->filename, (char *)s->vec[0].valptr);
     memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
     xsnprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
-              (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
+              (char *)s->vec[1].valptr, (char *)s->vec[0].valptr);
     memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
-    strcpy(this_ansrp->issuer, (char *)certSrch->vec[4].valptr);
+    strcpy(this_ansrp->issuer, (char *)s->vec[4].valptr);
     memset(this_ansrp->aki, 0, sizeof(this_ansrp->aki));
-    strcpy(this_ansrp->aki, (char *)certSrch->vec[3].valptr);
+    strcpy(this_ansrp->aki, (char *)s->vec[3].valptr);
     this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
     this_ansrp->local_id = *(unsigned int *)s->vec[5].valptr;
     return 0;
