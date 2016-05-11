@@ -1035,18 +1035,23 @@ static char *parentIssuer;
 
 /**
  * @brief
- *     initialize the global certSrch variable for certificate searches
+ *     initialize an SQL search structure for certificate searches
  *
+ * @param[out] certSrchp
+ *     On success the value at this location will be set to the
+ *     location of an initialized SQL search structure.  The caller is
+ *     responsible for freeing the structure via freesrchscm().
  * @return
  *     0 on success, a non-zero error code otherwise.
  */
 static err_code
-init_certSrch()
+init_certSrch(
+    scmsrcha **certSrchp)
 {
-    LOG(LOG_DEBUG, "init_certSrch()");
+    LOG(LOG_DEBUG, "init_certSrch(certSrchp=%p)", certSrchp);
 
     err_code sta = 0;
-    certSrch = newsrchscm(NULL, 6, 0, 1);
+    scmsrcha *certSrch = newsrchscm(NULL, 6, 0, 1);
     if (!certSrch)
     {
         LOG(LOG_ERR, "Unable to allocate memory to construct an SQL query");
@@ -1064,29 +1069,39 @@ init_certSrch()
     parentAKI = (char *)certSrch->vec[3].valptr;
     parentIssuer = (char *)certSrch->vec[4].valptr;
 
+    assert(!sta);
+    if (certSrchp)
+    {
+        *certSrchp = certSrch;
+    }
+    else
+    {
+        freesrchscm(certSrch);
+    }
+    certSrch = NULL;
+
 done:
     if (sta && certSrch)
     {
         freesrchscm(certSrch);
-        certSrch = NULL;
     }
     LOG(LOG_DEBUG, "init_certSrch() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
 }
 
-#define INIT_CERTSRCH(sta, erraction)                                   \
+#define INIT_CERTSRCH(certSrch, sta, erraction)                         \
     do {                                                                \
-        if (certSrch == NULL)                                           \
+        if ((certSrch) == NULL)                                         \
         {                                                               \
-            sta = init_certSrch();                                      \
+            sta = init_certSrch(&(certSrch));                           \
             LOG(LOG_DEBUG, "init_certSrch() returned %s: %s",           \
                 err2name(sta), err2string(sta));                        \
             if (sta)                                                    \
             {                                                           \
                 erraction;                                              \
             }                                                           \
-            assert(certSrch);                                           \
+            assert((certSrch));                                         \
         }                                                               \
     } while (0)
 
@@ -1142,7 +1157,7 @@ struct cert_answers *find_parent_cert(
         ski, subject, conp);
 
     err_code sta = 0;
-    INIT_CERTSRCH(sta, goto done);
+    INIT_CERTSRCH(certSrch, sta, goto done);
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
     if (subject != NULL){
@@ -1331,7 +1346,7 @@ struct cert_answers *find_cert_by_aKI(
 {
     err_code sta = 0;
     initTables(scmp);
-    INIT_CERTSRCH(sta, return NULL);
+    INIT_CERTSRCH(certSrch, sta, return NULL);
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
@@ -1355,7 +1370,7 @@ struct cert_answers *find_trust_anchors(
 {
     err_code sta = 0;
     initTables(scmp);
-    INIT_CERTSRCH(sta, return NULL);
+    INIT_CERTSRCH(certSrch, sta, return NULL);
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
     /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
