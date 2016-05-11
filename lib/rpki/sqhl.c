@@ -1079,7 +1079,7 @@ struct cert_answers *find_parent_cert(
     LOG(LOG_DEBUG, "find_parent_cert(ski=\"%s\", subject=\"%s\", conp=%p)",
         ski, subject, conp);
 
-    err_code sta;
+    err_code sta = 0;
     if (certSrch == NULL)
     {
         /** @bug ignores error code (NULL) without explanation */
@@ -1101,7 +1101,6 @@ struct cert_answers *find_parent_cert(
         parentAKI = (char *)certSrch->vec[3].valptr;
         parentIssuer = (char *)certSrch->vec[4].valptr;
     }
-    sta = 0;
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
     if (subject != NULL){
@@ -1286,7 +1285,7 @@ struct cert_answers *find_cert_by_aKI(
     scm *scmp,
     scmcon *conp)
 {
-    err_code sta;
+    err_code sta = 0;
     initTables(scmp);
     if (certSrch == NULL)
     {
@@ -1307,7 +1306,6 @@ struct cert_answers *find_cert_by_aKI(
         ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
                NULL);
     }
-    sta = 0;
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
@@ -1329,7 +1327,7 @@ struct cert_answers *find_trust_anchors(
     scm *scmp,
     scmcon *conp)
 {
-    err_code sta;
+    err_code sta = 0;
     initTables(scmp);
     /** @bug leaks memory if certSrch is already non-NULL */
     /** @bug ignores error code (NULL) without explanation */
@@ -1346,7 +1344,6 @@ struct cert_answers *find_trust_anchors(
     ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
     ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
     ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
-    sta = 0;
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
     /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
