@@ -1104,8 +1104,6 @@ done:
         }                                                               \
     } while (0)
 
-struct cert_answers cert_answers;
-
 static sqlvaluefunc addCert2List;
 err_code
 addCert2List(
@@ -1162,6 +1160,7 @@ struct cert_answers *find_parent_cert(
         ski, subject, conp);
 
     err_code sta = 0;
+    static struct cert_answers cert_answers;
     struct cert_answers *found_certs = NULL;
     static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, goto done);
@@ -1359,6 +1358,7 @@ struct cert_answers *find_cert_by_aKI(
     scmcon *conp)
 {
     err_code sta = 0;
+    static struct cert_answers cert_answers;
     struct cert_answers *found_certs = NULL;
     initTables(scmp);
     static scmsrcha *certSrch = NULL;
@@ -1394,6 +1394,7 @@ struct cert_answers *find_trust_anchors(
     scmcon *conp)
 {
     err_code sta = 0;
+    static struct cert_answers cert_answers;
     struct cert_answers *found_certs = NULL;
     initTables(scmp);
     static scmsrcha *certSrch = NULL;

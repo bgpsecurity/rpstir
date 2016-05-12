@@ -339,14 +339,9 @@ set_cert_flag(
 
 /**
  * @warning
- *     The following functions all use the same static memory and must
- *     not be called concurrently (including multiple concurrent
- *     invocations of the same function):
- *       * find_parent_cert()
- *       * find_cert_by_aKI()
- *       * find_trust_anchors()
- *     Any call to any of these functions overwrites the results
- *     returned from a previous call to any of these functions.
+ *     This function uses static memory and is not thread-safe.  Any
+ *     call to this function overwrites the results returned from a
+ *     previous call to this function.
  */
 extern struct cert_answers *find_cert_by_aKI(
     char *ski,
@@ -360,14 +355,9 @@ extern struct cert_answers *find_cert_by_aKI(
  *     in the db.
  *
  * @warning
- *     The following functions all use the same static memory and must
- *     not be called concurrently (including multiple concurrent
- *     invocations of the same function):
- *       * find_parent_cert()
- *       * find_cert_by_aKI()
- *       * find_trust_anchors()
- *     Any call to any of these functions overwrites the results
- *     returned from a previous call to any of these functions.
+ *     This function uses static memory and is not thread-safe.  Any
+ *     call to this function overwrites the results returned from a
+ *     previous call to this function.
  *
  * @param[in] ski
  *     The subject key identifier (SKI) of each parent certificate
@@ -388,14 +378,9 @@ extern struct cert_answers *find_parent_cert(
 
 /**
  * @warning
- *     The following functions all use the same static memory and must
- *     not be called concurrently (including multiple concurrent
- *     invocations of the same function):
- *       * find_parent_cert()
- *       * find_cert_by_aKI()
- *       * find_trust_anchors()
- *     Any call to any of these functions overwrites the results
- *     returned from a previous call to any of these functions.
+ *     This function uses static memory and is not thread-safe.  Any
+ *     call to this function overwrites the results returned from a
+ *     previous call to this function.
  */
 extern struct cert_answers *find_trust_anchors(
     scm *sscmp,
