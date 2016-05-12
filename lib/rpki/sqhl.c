@@ -1104,8 +1104,6 @@ done:
         }                                                               \
     } while (0)
 
-struct cert_answers cert_answers;
-
 static sqlvaluefunc addCert2List;
 err_code
 addCert2List(
@@ -1115,22 +1113,28 @@ addCert2List(
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
-    if (!cert_answers.num_ansrs)
-        cert_answers.cert_ansrp =
-            (struct cert_ansr *)calloc(1, sizeof(struct cert_ansr));
+    assert(s);
+    struct cert_answers *found_certs = s->context;
+    assert(found_certs);
+    assert(found_certs->num_ansrs >= 0);
+    if (!found_certs->num_ansrs)
+    {
+        found_certs->cert_ansrp = calloc(1, sizeof(struct cert_ansr));
+    }
     else
+    {
         /**
          * @bug
          *     ignores error code without explanation (num_ansrs might
          *     be negative)
          */
-        cert_answers.cert_ansrp =
-            (struct cert_ansr *)realloc(cert_answers.cert_ansrp,
-                                        sizeof(struct cert_ansr) *
-                                        (cert_answers.num_ansrs + 1));
+        found_certs->cert_ansrp =
+            realloc(found_certs->cert_ansrp,
+                    sizeof(struct cert_ansr) * (found_certs->num_ansrs + 1));
+    }
     /** @bug possible null pointer dereference if realloc() failed */
     struct cert_ansr *this_ansrp =
-        &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
+        &found_certs->cert_ansrp[found_certs->num_ansrs++];
     memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
     strcpy(this_ansrp->dirname, (char *)s->vec[1].valptr);
     memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
@@ -1156,8 +1160,20 @@ struct cert_answers *find_parent_cert(
         ski, subject, conp);
 
     err_code sta = 0;
+    static struct cert_answers cert_answers;
+    struct cert_answers *found_certs = NULL;
     static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, goto done);
+
+    found_certs = &cert_answers;
+    if (found_certs->cert_ansrp)
+    {
+        free(found_certs->cert_ansrp);
+    }
+    found_certs->cert_ansrp = NULL;
+    found_certs->num_ansrs = 0;
+    certSrch->context = found_certs;
+
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
     if (subject != NULL){
@@ -1170,10 +1186,7 @@ struct cert_answers *find_parent_cert(
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
-    cert_answers.num_ansrs = 0;
-    if (cert_answers.cert_ansrp)
-        free(cert_answers.cert_ansrp);
-    cert_answers.cert_ansrp = NULL;
+
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     LOG(LOG_DEBUG, "searchscm() returned %s: %s",
@@ -1182,17 +1195,17 @@ struct cert_answers *find_parent_cert(
 done:
     if (sta < 0)
     {
-        cert_answers.num_ansrs = sta;
+        found_certs->num_ansrs = sta;
         LOG(LOG_DEBUG, "find_parent_cert() returning %s: %s",
             err2name(sta), err2string(sta));
     }
     else
     {
         LOG(LOG_DEBUG, "find_parent_cert() returning %i answers",
-            cert_answers.num_ansrs);
+            found_certs->num_ansrs);
     }
 
-    return &cert_answers;
+    return found_certs;
 }
 
 /**
@@ -1345,24 +1358,35 @@ struct cert_answers *find_cert_by_aKI(
     scmcon *conp)
 {
     err_code sta = 0;
+    static struct cert_answers cert_answers;
+    struct cert_answers *found_certs = NULL;
     initTables(scmp);
     static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, return NULL);
+
+    found_certs = &cert_answers;
+    if (found_certs->cert_ansrp)
+    {
+        free(found_certs->cert_ansrp);
+    }
+    found_certs->cert_ansrp = NULL;
+    found_certs->num_ansrs = 0;
+    certSrch->context = found_certs;
+
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "aki=\'%s\'", aki);
     addFlagTest(certSrch->wherestr, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(certSrch->wherestr, SCM_FLAG_NOCHAIN, 0, 1);
-    cert_answers.num_ansrs = 0;
-    if (cert_answers.cert_ansrp)
-        free(cert_answers.cert_ansrp);
-    cert_answers.cert_ansrp = NULL;
+
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
-        cert_answers.num_ansrs = sta;
-    return &cert_answers;
+    {
+        found_certs->num_ansrs = sta;
+    }
+    return found_certs;
 }
 
 struct cert_answers *find_trust_anchors(
@@ -1370,17 +1394,30 @@ struct cert_answers *find_trust_anchors(
     scmcon *conp)
 {
     err_code sta = 0;
+    static struct cert_answers cert_answers;
+    struct cert_answers *found_certs = NULL;
     initTables(scmp);
     static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, return NULL);
+
+    found_certs = &cert_answers;
+    if (found_certs->cert_ansrp)
+    {
+        free(found_certs->cert_ansrp);
+    }
+    found_certs->cert_ansrp = NULL;
+    found_certs->num_ansrs = 0;
+    certSrch->context = found_certs;
+
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
-    cert_answers.num_ansrs = 0;
-    /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
+
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
-        cert_answers.num_ansrs = sta;
-    return &cert_answers;
+    {
+        found_certs->num_ansrs = sta;
+    }
+    return found_certs;
 }
 
 // static variables for efficiency, so only need to set up query once
