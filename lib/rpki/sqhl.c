@@ -1123,11 +1123,6 @@ addCert2List(
     }
     else
     {
-        /**
-         * @bug
-         *     ignores error code without explanation (num_ansrs might
-         *     be negative)
-         */
         found_certs->cert_ansrp =
             realloc(found_certs->cert_ansrp,
                     sizeof(struct cert_ansr) * (found_certs->num_ansrs + 1));
