@@ -1377,7 +1377,11 @@ struct cert_answers *find_trust_anchors(
     INIT_CERTSRCH(certSrch, sta, return NULL);
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
-    /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
+    if (cert_answers.cert_ansrp)
+    {
+        free(cert_answers.cert_ansrp);
+    }
+    cert_answers.cert_ansrp = NULL;
     sta = searchscm(conp, theCertTable, certSrch, NULL, &addCert2List,
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     if (sta < 0)
