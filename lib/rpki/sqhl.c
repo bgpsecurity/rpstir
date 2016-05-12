@@ -1029,15 +1029,8 @@ static X509 *readCertFromFile(
     return (px);
 }
 
-/**
- * @brief
- *     static variables for efficiency, so only need to set up query
- *     once
- */
-/** @bug length of parentAKI buffer is not documented */
-static char *parentAKI;
-/** @bug length of parentIssuer buffer is not documented */
-static char *parentIssuer;
+static char parentAKI[SKISIZE];
+static char parentIssuer[SUBJSIZE];
 
 /**
  * @brief
@@ -1072,8 +1065,6 @@ init_certSrch(
     ADDCOL2(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, goto done);
     ADDCOL2(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
             goto done);
-    parentAKI = (char *)certSrch->vec[3].valptr;
-    parentIssuer = (char *)certSrch->vec[4].valptr;
 
     assert(!sta);
     if (certSrchp)
@@ -1335,18 +1326,7 @@ find_cert(
             LOG(LOG_DEBUG, "    local_id=%u", ansr->local_id);
         }
     }
-    if (cert_answersp->num_ansrs == 2)
-    {
-        if (!parentAKI || !parentIssuer)
-        {
-            goto done;
-        }
-        /** @bug destination buffer might be smaller than source string */
-        strcpy(parentAKI, cert_ansrp->aki);
-        /** @bug destination buffer might be smaller than source string */
-        strcpy(parentIssuer, cert_ansrp->issuer);
-    }
-    else if (cert_answersp->num_ansrs != 1)
+    if ((cert_answersp->num_ansrs != 1) && (cert_answersp->num_ansrs != 2))
     {
         /**
          * @bug
@@ -1356,6 +1336,10 @@ find_cert(
         /** @bug shouldn't sta be set to an error code? */
         goto done;
     }
+    /** @bug destination buffer might be smaller than source string */
+    strcpy(parentAKI, cert_ansrp->aki);
+    /** @bug destination buffer might be smaller than source string */
+    strcpy(parentIssuer, cert_ansrp->issuer);
     xsnprintf(ofullname, sizeof(ofullname), "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(pathname, ofullname, PATH_MAX);
