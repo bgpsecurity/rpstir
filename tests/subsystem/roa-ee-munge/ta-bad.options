@@ -1,0 +1,9 @@
+type=CA
+issuer=ta-bad
+subject=ta-bad
+sia=r:rsync://invalid/,m:rsync://invalid/invalid.mft
+ipv4=1.0.0.0/8
+ipv6=1::/16
+as=128-255
+selfsigned=true
+subjkeyfile=tests/subsystem/roa-ee-munge/ta-bad.key

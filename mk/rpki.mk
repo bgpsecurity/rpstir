@@ -1,3 +1,179 @@
+######################################################################
+## helpers to generate keys, certs, and roas
+######################################################################
+set_vars= \
+	target='$@' && \
+	top_srcdir='${top_srcdir}' && \
+	target_dir=$${target%/*}
+boilerplate= \
+	${set_vars} && \
+	mkdir -p "$${target_dir}" && \
+	TEST_LOG_NAME=$${target\#\#*/} \
+		TEST_LOG_DIR=$${target_dir} \
+		STRICT_CHECKS=0 \
+		${LOG_COMPILER}
+create_object = ${boilerplate} bin/rpki-object/create_object/create_object
+gen_key = ${boilerplate} bin/rpki-object/gen_key
+KEYS = ${CERTS:.cer=.key}
+CERTS =
+ROAS =
+${KEYS}: bin/rpki-object/gen_key
+	${gen_key} "$${target}" 2048
+${CERTS}: bin/rpki-object/create_object/create_object
+	${create_object} \
+		-f "$${top_srcdir}"/"$${target%.cer}".options \
+		CERT \
+		serial=1 \
+		notbefore=000101010101Z \
+		notafter=21001231235959Z \
+		crldp=rsync://invalid/invalid.crl \
+		outputfilename="$${target}"
+${ROAS}: bin/rpki-object/create_object/create_object
+	${set_vars} && \
+	eeopt=$${target%.roa}.options && \
+	eekey=$$(sed -n -e 's/^subjkeyfile=\(.*\)/\1/p' \
+			"$${top_srcdir}"/"$${eeopt}") && \
+	${create_object} \
+		-f "$${top_srcdir}"/"$${target}".options \
+		ROA \
+		eecertlocation="$${target%.roa}".cer \
+		eekeylocation="$${eekey}" \
+		outputfilename="$${target}"
+check_DATA += ${CERTS} ${KEYS} ${ROAS}
+EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options}
+CLEANFILES += ${CERTS} ${KEYS} ${ROAS}
+
+######################################################################
+## roa-ee-munge test
+######################################################################
+# see ticket #28
+TESTS += \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap
+check_SCRIPTS += \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap
+tests/subsystem/roa-ee-munge/roa-ee-munge.tap: \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap.in
+MK_SUBST_FILES_EXEC += \
+	tests/subsystem/roa-ee-munge/roa-ee-munge.tap
+CERTS += \
+	tests/subsystem/roa-ee-munge/ta-good.cer \
+	tests/subsystem/roa-ee-munge/ta-bad.cer \
+	tests/subsystem/roa-ee-munge/ee-good.cer \
+	tests/subsystem/roa-ee-munge/ee-bad.cer
+ROAS += \
+	tests/subsystem/roa-ee-munge/ee-good.roa \
+	tests/subsystem/roa-ee-munge/ee-bad.roa
+tests/subsystem/roa-ee-munge/ta-good.cer: \
+	tests/subsystem/roa-ee-munge/ta-good.options \
+	tests/subsystem/roa-ee-munge/ta-good.key
+tests/subsystem/roa-ee-munge/ta-bad.cer: \
+	tests/subsystem/roa-ee-munge/ta-bad.options \
+	tests/subsystem/roa-ee-munge/ta-bad.key
+tests/subsystem/roa-ee-munge/ee-good.cer: \
+	tests/subsystem/roa-ee-munge/ee-good.options \
+	tests/subsystem/roa-ee-munge/ee-good.key
+tests/subsystem/roa-ee-munge/ee-good.roa: \
+	tests/subsystem/roa-ee-munge/ee-good.cer \
+	tests/subsystem/roa-ee-munge/ee-good.key \
+	tests/subsystem/roa-ee-munge/ee-good.roa.options
+tests/subsystem/roa-ee-munge/ee-bad.cer: \
+	tests/subsystem/roa-ee-munge/ee-bad.options \
+	tests/subsystem/roa-ee-munge/ee-bad.key
+tests/subsystem/roa-ee-munge/ee-bad.roa: \
+	tests/subsystem/roa-ee-munge/ee-bad.cer \
+	tests/subsystem/roa-ee-munge/ee-bad.key \
+	tests/subsystem/roa-ee-munge/ee-bad.roa.options
+clean-local: clean-roa-ee-munge
+clean-roa-ee-munge:
+	rm -rf tests/subsystem/roa-ee-munge/roa-ee-munge.tap.cache
+
+######################################################################
+## evil twin tests
+######################################################################
+EVIL_TWIN_TESTS = \
+	tests/subsystem/evil-twin/evil-twin-ca-invalid-1.tap \
+	tests/subsystem/evil-twin/evil-twin-ca-invalid-2.tap \
+	tests/subsystem/evil-twin/evil-twin-ca-valid-1.tap \
+	tests/subsystem/evil-twin/evil-twin-ca-valid-2.tap \
+	tests/subsystem/evil-twin/evil-twin-ee-invalid.tap \
+	tests/subsystem/evil-twin/evil-twin-ee-valid.tap
+TESTS += ${EVIL_TWIN_TESTS}
+EXTRA_DIST += ${EVIL_TWIN_TESTS}
+check_SCRIPTS += \
+	tests/subsystem/evil-twin/evil-twin-common.sh
+tests/subsystem/evil-twin/evil-twin-common.sh: \
+	tests/subsystem/evil-twin/evil-twin-common.sh.in
+MK_SUBST_FILES += \
+	tests/subsystem/evil-twin/evil-twin-common.sh
+CERTS += \
+	tests/subsystem/evil-twin/ta-good.cer \
+	tests/subsystem/evil-twin/ta-evil.cer \
+	tests/subsystem/evil-twin/ca-good.cer \
+	tests/subsystem/evil-twin/ca-evil-invalid.cer \
+	tests/subsystem/evil-twin/ca-evil-valid.cer \
+	tests/subsystem/evil-twin/test1-ca.cer \
+	tests/subsystem/evil-twin/test2-ee.cer \
+	tests/subsystem/evil-twin/ee-good.cer \
+	tests/subsystem/evil-twin/ee-evil-invalid.cer \
+	tests/subsystem/evil-twin/ee-evil-valid.cer
+ROAS += \
+	tests/subsystem/evil-twin/test2-ee.roa \
+	tests/subsystem/evil-twin/ee-good.roa \
+	tests/subsystem/evil-twin/ee-evil-invalid.roa \
+	tests/subsystem/evil-twin/ee-evil-valid.roa
+tests/subsystem/evil-twin/ta-good.cer: \
+	tests/subsystem/evil-twin/ta-good.options \
+	tests/subsystem/evil-twin/ta-good.key
+tests/subsystem/evil-twin/ta-evil.cer: \
+	tests/subsystem/evil-twin/ta-evil.options \
+	tests/subsystem/evil-twin/ta-evil.key
+tests/subsystem/evil-twin/ca-good.cer: \
+	tests/subsystem/evil-twin/ca-good.options \
+	tests/subsystem/evil-twin/ca-good.key
+tests/subsystem/evil-twin/ca-evil-invalid.cer: \
+	tests/subsystem/evil-twin/ca-evil-invalid.options \
+	tests/subsystem/evil-twin/ca-evil-invalid.key
+tests/subsystem/evil-twin/ca-evil-valid.cer: \
+	tests/subsystem/evil-twin/ca-evil-valid.options \
+	tests/subsystem/evil-twin/ca-evil-valid.key
+tests/subsystem/evil-twin/test1-ca.cer: \
+	tests/subsystem/evil-twin/test1-ca.options \
+	tests/subsystem/evil-twin/test1-ca.key
+tests/subsystem/evil-twin/test2-ee.cer: \
+	tests/subsystem/evil-twin/test2-ee.options \
+	tests/subsystem/evil-twin/test2-ee.key
+tests/subsystem/evil-twin/test2-ee.roa: \
+	tests/subsystem/evil-twin/test2-ee.cer \
+	tests/subsystem/evil-twin/test2-ee.key \
+	tests/subsystem/evil-twin/test2-ee.roa.options
+tests/subsystem/evil-twin/ee-good.cer: \
+	tests/subsystem/evil-twin/ee-good.options \
+	tests/subsystem/evil-twin/ee-good.key
+tests/subsystem/evil-twin/ee-good.roa: \
+	tests/subsystem/evil-twin/ee-good.cer \
+	tests/subsystem/evil-twin/ee-good.key \
+	tests/subsystem/evil-twin/ee-good.roa.options
+tests/subsystem/evil-twin/ee-evil-invalid.cer: \
+	tests/subsystem/evil-twin/ee-evil-invalid.options \
+	tests/subsystem/evil-twin/ee-evil-invalid.key
+tests/subsystem/evil-twin/ee-evil-invalid.roa: \
+	tests/subsystem/evil-twin/ee-evil-invalid.cer \
+	tests/subsystem/evil-twin/ee-evil-invalid.key \
+	tests/subsystem/evil-twin/ee-evil-invalid.roa.options
+tests/subsystem/evil-twin/ee-evil-valid.cer: \
+	tests/subsystem/evil-twin/ee-evil-valid.options \
+	tests/subsystem/evil-twin/ee-evil-valid.key
+tests/subsystem/evil-twin/ee-evil-valid.roa: \
+	tests/subsystem/evil-twin/ee-evil-valid.cer \
+	tests/subsystem/evil-twin/ee-evil-valid.key \
+	tests/subsystem/evil-twin/ee-evil-valid.roa.options
+clean-local: clean-evil-twin
+clean-evil-twin:
+	rm -rf ${EVIL_TWIN_TESTS:=.cache}
+
+######################################################################
+## chaser
+######################################################################
 pkglibexec_PROGRAMS += bin/rpki/chaser
 
 bin_rpki_chaser_LDADD = \

@@ -1,0 +1,12 @@
+type=CA
+issuer=ta-good
+subject=ca-good
+aia=rsync://invalid/
+sia=r:rsync://invalid/,m:rsync://invalid/invalid.mft
+ipv4=0.0.0.0/16
+ipv6=::/32
+as=1-63
+selfsigned=false
+parentcertfile=tests/subsystem/evil-twin/ta-good.cer
+parentkeyfile=tests/subsystem/evil-twin/ta-good.key
+subjkeyfile=tests/subsystem/evil-twin/ca-good.key
