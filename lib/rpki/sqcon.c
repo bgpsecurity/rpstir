@@ -19,16 +19,32 @@
  */
 
 static void heer(
-    void *h,
-    int what,
+    SQLSMALLINT what,
+    SQLHANDLE h,
     char *errmsg,
     int emlen)
 {
     SQLINTEGER nep;
     SQLSMALLINT tl;
-    char state[24];
+    // ODBC docs say that state gets a 5-character SQLSTATE code plus
+    // a terminating nul byte
+    SQLCHAR state[6];
+    SQLSMALLINT i = 1;
+    // RFC5424 says minimum maximum syslog message is 480 octets; use
+    // 400 to give room for overhead
+    SQLCHAR msg[400];
 
-    SQLGetDiagRec(what, h, 1, (SQLCHAR *) & state[0], &nep,
+    while (SQLOK(SQLGetDiagRec(
+                     what, h, i, state, &nep, msg,
+                     sizeof(msg)/sizeof(msg[0]), &tl)))
+    {
+        LOG(LOG_ERR, "  %s %ld %s%s",
+            (char *)state, (long)nep, (char *)msg,
+            ((size_t)tl >= sizeof(msg)) ? " (truncated)" : "");
+        ++i;
+    }
+
+    SQLGetDiagRec(what, h, 1, state, &nep,
                   (SQLCHAR *) errmsg, emlen, &tl);
 }
 
@@ -185,7 +201,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer((void *)conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+            heer(SQL_HANDLE_ENV, conp->henv, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -193,7 +209,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer((void *)conp->henv, SQL_HANDLE_ENV, errmsg, emlen);
+            heer(SQL_HANDLE_ENV, conp->henv, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
@@ -203,7 +219,7 @@ scmcon *connectscm(
     if (!SQLOK(ret))
     {
         if (errmsg != NULL && emlen > 0)
-            heer((void *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen);
+            heer(SQL_HANDLE_DBC, conp->hdbc, errmsg, emlen);
         // disconnectscm(conp); # if not connected, cannot disconnect
         return (NULL);
     }
@@ -213,18 +229,10 @@ scmcon *connectscm(
     {
         if (errmsg != NULL && emlen > 0 && conp->hstmtp != NULL &&
             conp->hstmtp->hstmt != NULL)
-            heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT, errmsg,
-                 emlen);
+            heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt, errmsg, emlen);
         disconnectscm(conp);
         return (NULL);
     }
-    /*
-     * ret = SQLAllocHandle(SQL_HANDLE_STMT, conp->hdbc, &conp->hstmt); if ( !
-     * SQLOK(ret) ) { if ( errmsg != NULL && emlen > 0 ) heer((void
-     * *)conp->hdbc, SQL_HANDLE_DBC, errmsg, emlen); disconnectscm(conp);
-     * return(NULL); } ret = SQLSetStmtAttr(conp->hstmt, SQL_ATTR_NOSCAN,
-     * (SQLPOINTER)SQL_NOSCAN_ON, SQL_IS_UINTEGER);
-     */
     return (conp);
 }
 
@@ -260,30 +268,43 @@ statementscm(
     scmcon *conp,
     char *stm)
 {
+    LOG(LOG_DEBUG, "statementscm(conp=%p, stm=\"%s\")", conp, stm);
+
+    err_code sta = 0;
     SQLINTEGER istm;
     SQLLEN len;
     SQLRETURN ret;
 
     if (conp == NULL || conp->connected == 0 || stm == NULL || stm[0] == 0)
-        return (ERR_SCM_INVALARG);
+    {
+        sta = ERR_SCM_INVALARG;
+        goto done;
+    }
     memset(conp->mystat.errmsg, 0, conp->mystat.emlen);
     istm = strlen(stm);
     ret = SQLExecDirect(conp->hstmtp->hstmt, (SQLCHAR *) stm, istm);
     if (!SQLOK(ret))
     {
-        heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
+        LOG(LOG_ERR, "SQLExecDirect() failed:");
+        heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt,
              conp->mystat.errmsg, conp->mystat.emlen);
-        return (ERR_SCM_SQL);
+        sta = ERR_SCM_SQL;
+        goto done;
     }
     len = 0;
     ret = SQLRowCount(conp->hstmtp->hstmt, &len);
     if (!SQLOK(ret))
     {
-        heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
+        LOG(LOG_ERR, "SQLRowCount() failed:");
+        heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt,
              conp->mystat.errmsg, conp->mystat.emlen);
-        return (ERR_SCM_SQL);
+        sta = ERR_SCM_SQL;
+        goto done;
     }
-    return (0);
+done:
+    LOG(LOG_DEBUG, "statementscm() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 err_code
@@ -291,17 +312,26 @@ statementscm_no_data(
     scmcon *conp,
     char *stm)
 {
+    LOG(LOG_DEBUG, "statementscm_no_data(conp=%p, stm=\"%s\")", conp, stm);
+
+    err_code sta = 0;
     SQLRETURN ret;
 
     ret = newhstmt(conp);
     if (!SQLOK(ret))
-        return ERR_SCM_SQL;
+    {
+        sta = ERR_SCM_SQL;
+        goto done;
+    }
 
-    ret = statementscm(conp, stm);
+    sta = statementscm(conp, stm);
 
     pophstmt(conp);
 
-    return ret;
+done:
+    LOG(LOG_DEBUG, "statementscm_no_data() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 err_code
@@ -541,27 +571,36 @@ insertscm(
     scmtab *tabp,
     scmkva *arr)
 {
+    LOG(LOG_DEBUG, "insertscm(conp=%p, tabp=%p, arr=%p)", conp, tabp, arr);
+
     char *stmt;
     char *quoted = NULL;
-    err_code sta;
+    err_code sta = 0;
     int leen = 128;
     int wsta = ERR_SCM_UNSPECIFIED;
     int i;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL ||
         tabp->tabname == NULL)
-        return (ERR_SCM_INVALARG);
+    {
+        sta = ERR_SCM_INVALARG;
+        goto done;
+    }
     conp->mystat.tabname = tabp->hname;
     // handle the trivial cases first
     if (arr == NULL || arr->nused <= 0 || arr->vec == NULL)
-        return (0);
+    {
+        goto done;
+    }
     // if the columns listed in arr have not already been validated
     // against the set of columns present in the table, then do so
     if (arr->vald == 0)
     {
         sta = valcols(conp, tabp, arr);
         if (sta < 0)
-            return (sta);
+        {
+            goto done;
+        }
         arr->vald = 1;
     }
     // glean the length of the statement
@@ -574,7 +613,10 @@ insertscm(
     // construct the statement
     stmt = (char *)calloc(leen, sizeof(char));
     if (stmt == NULL)
-        return (ERR_SCM_NOMEM);
+    {
+        sta = ERR_SCM_NOMEM;
+        goto done;
+    }
     xsnprintf(stmt, leen, "INSERT INTO %s (%s", tabp->tabname,
               arr->vec[0].column);
     for (i = 1; i < arr->nused; i++)
@@ -585,7 +627,8 @@ insertscm(
         if (wsta < 0)
         {
             free((void *)stmt);
-            return (wsta);
+            sta = wsta;
+            goto done;
         }
     }
     for (i = 0; i < arr->nused; ++i)
@@ -597,14 +640,15 @@ insertscm(
         if (wsta < 0)
         {
             free((void *)stmt);
-            return (wsta);
+            sta = wsta;
+            goto done;
         }
 
         sta = quote_value(arr->vec[i].value, &quoted);
         if (sta < 0)
         {
             free(stmt);
-            return (sta);
+            goto done;
         }
 
         wsta = strwillfit(stmt, leen, wsta, quoted);
@@ -615,17 +659,22 @@ insertscm(
         if (wsta < 0)
         {
             free(stmt);
-            return (wsta);
+            sta = wsta;
+            goto done;
         }
     }
     wsta = strwillfit(stmt, leen, wsta, ");");
     if (wsta < 0)
     {
         free((void *)stmt);
-        return (wsta);
+        sta = wsta;
+        goto done;
     }
     sta = statementscm_no_data(conp, stmt);
     free((void *)stmt);
+done:
+    LOG(LOG_DEBUG, "insertscm() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 
@@ -669,27 +718,43 @@ getmaxidscm(
     scmtab *mtab,
     unsigned int *ival)
 {
+    LOG(LOG_DEBUG, "getmaxidscm(scmp=%p, conp=%p, field=\"%s\""
+        ", mtab=%p, ival=%p)",
+        scmp, conp, field, mtab, ival);
+
     char stmt[160];
-    err_code sta;
+    err_code sta = 0;
     SQLRETURN sqlsta;
 
     if (scmp == NULL || conp == NULL || conp->connected == 0 || ival == NULL)
-        return (ERR_SCM_INVALARG);
+    {
+        sta = ERR_SCM_INVALARG;
+        goto done;
+    }
     sqlsta = newhstmt(conp);
     if (!SQLOK(sqlsta))
-        return ERR_SCM_SQL;
+    {
+        sta = ERR_SCM_SQL;
+        goto done;
+    }
     xsnprintf(stmt, sizeof(stmt),
               "SELECT MAX(%s) FROM %s;", field, mtab->tabname);
     sta = statementscm(conp, stmt);
     if (sta < 0)
-        return (sta);
+    {
+        goto done;
+    }
     *ival = 0;
     sta = getuintscm(conp, ival);
     pophstmt(conp);
     if (sta < 0)
         *ival = 0;              /* No rows (or NULL), set max to arbitrary
                                  * value of 0. */
-    return 0;
+    sta = 0;
+done:
+    LOG(LOG_DEBUG, "getmaxidscm() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -893,7 +958,7 @@ searchscm(
         rc = SQLRowCount(conp->hstmtp->hstmt, &nrows);
         if (!SQLOK(rc) && (what & SCM_SRCH_BREAK_CERR))
         {
-            heer((void *)(conp->hstmtp->hstmt), SQL_HANDLE_STMT,
+            heer(SQL_HANDLE_STMT, conp->hstmtp->hstmt,
                  conp->mystat.errmsg, conp->mystat.emlen);
             SQLCloseCursor(conp->hstmtp->hstmt);
             pophstmt(conp);

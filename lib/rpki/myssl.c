@@ -41,6 +41,9 @@ char *ASNTimeToDBTime(
     err_code *stap,
     int only_gentime)
 {
+    LOG(LOG_DEBUG, "ASNTimeToDBTime(bef=\"%s\", stap=%p, only_gentime=%d)",
+        bef, stap, only_gentime);
+
     int year;
     int mon;
     int day;
@@ -54,15 +57,17 @@ char *ASNTimeToDBTime(
     int fmt = 0;
     char tz = 0;
     char *ptr;
-    char *out;
+    char *out = NULL;
 
     if (stap == NULL)
-        return (NULL);
+    {
+        goto done;
+    }
     *stap = 0;
     if (bef == NULL || bef[0] == 0)
     {
         *stap = ERR_SCM_INVALARG;
-        return (NULL);
+        goto done;
     }
     // first find and parse the suffix if any
     ptr = strpbrk(bef, "+-");
@@ -73,7 +78,7 @@ char *ASNTimeToDBTime(
             suf_min < 0 || suf_min > 60)
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
         if (*ptr == '-')
         {
@@ -86,7 +91,7 @@ char *ASNTimeToDBTime(
     if (ptr == NULL)
     {
         *stap = ERR_SCM_INVALDT;
-        return (NULL);
+        goto done;
     }
     fmt = (int)(ptr - bef);
     switch (fmt)
@@ -98,7 +103,7 @@ char *ASNTimeToDBTime(
         if (cnt != 6)
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
         if (year > 49)
             year += 1900;
@@ -111,7 +116,7 @@ char *ASNTimeToDBTime(
         if (cnt != 7)
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
         if (year > 49)
             year += 1900;
@@ -124,7 +129,7 @@ char *ASNTimeToDBTime(
         if (cnt != 7)
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
         break;
     case GEN16:
@@ -133,12 +138,12 @@ char *ASNTimeToDBTime(
         if (cnt != 8)
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
         break;
     default:
         *stap = ERR_SCM_INVALDT;
-        return (NULL);
+        goto done;
     }
     // validate the time with the suffix
     if (tz != 'Z' || mon < 1 || mon > 12 || day < 1 || day > 31 || hour < 0 ||
@@ -148,7 +153,7 @@ char *ASNTimeToDBTime(
          */
     {
         *stap = ERR_SCM_INVALDT;
-        return (NULL);
+        goto done;
     }
     // we should adjust the time if there is a suffix, but currently we don't
     // next check that the format matches the year. If the year is < 2050
@@ -158,7 +163,7 @@ char *ASNTimeToDBTime(
         if (fmt != GEN14 && fmt != GEN16)
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
     }
     else
@@ -166,22 +171,26 @@ char *ASNTimeToDBTime(
         if (year < 2050 && (fmt == GEN14 || fmt == GEN16))
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
         if (year >= 2050 && (fmt == UTC10 || fmt == UTC12))
         {
             *stap = ERR_SCM_INVALDT;
-            return (NULL);
+            goto done;
         }
     }
     out = (char *)calloc(48, sizeof(char));
     if (out == NULL)
     {
         *stap = ERR_SCM_NOMEM;
-        return (NULL);
+        goto done;
     }
     xsnprintf(out, 48, "%4d-%02d-%02d %02d:%02d:%02d",
               year, mon, day, hour, min, sec);
+done:
+    LOG(LOG_DEBUG, "ASNTimeToDBTime() returning \"%s\" with error code %s: %s",
+        out, stap ? err2name(*stap) : "NULL",
+        stap ? err2string(*stap) : "NULL");
     return (out);
 }
 

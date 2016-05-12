@@ -891,59 +891,85 @@ manifestValidate(
     struct CMS *cmsp,
     int *stalep)
 {
+    LOG(LOG_DEBUG, "manifestValidate(cmsp=%p, stalep=%p)", cmsp, stalep);
+
     err_code iRes;
 
     // Check that content type is id-ct-rpkiManifest
     if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
                    id_roa_pki_manifest))
-        return ERR_SCM_BADCT;
+    {
+        LOG(LOG_ERR, "manifest has invalid content type");
+        iRes = ERR_SCM_BADCT;
+        goto done;
+    }
 
     // Check version
     struct Manifest *manp =
         &cmsp->content.signedData.encapContentInfo.eContent.manifest;
     if (size_casn(&manp->self) <= 0)
-        return ERR_SCM_BADCT;
+    {
+        LOG(LOG_ERR, "manifest content too small");
+        iRes = ERR_SCM_BADCT;
+        goto done;
+    }
     if ((iRes = check_mft_version(&manp->version.self)) < 0)
-        return iRes;
+    {
+        goto done;
+    }
 
     // Check manifest number
     if ((iRes = check_mft_number(&manp->manifestNumber)) < 0)
-        return iRes;
+    {
+        goto done;
+    }
 
     // Check the hash algorithm
     if (diff_objid(&manp->fileHashAlg, id_sha256))
     {
         LOG(LOG_ERR, "Incorrect hash algorithm");
-        return ERR_SCM_BADHASHALG;
+        iRes = ERR_SCM_BADHASHALG;
+        goto done;
     }
 
     // Check the list of files and hashes
     if ((iRes = check_mft_filenames(&manp->fileList)) < 0)
-        return iRes;
+    {
+        goto done;
+    }
     iRes = check_mft_duplicate_filenames(manp);
     if (iRes < 0)
-        return iRes;
+    {
+        goto done;
+    }
 
     // Check general CMS structure
     iRes = cmsValidate(cmsp);
     if (iRes < 0)
-        return iRes;
+    {
+        goto done;
+    }
 
     struct Certificate *certp =
         &cmsp->content.signedData.certificates.certificate;
 
     // Check dates
     if ((iRes = check_mft_dates(manp, certp, stalep)) < 0)
-        return iRes;
+    {
+        goto done;
+    }
 
     if (has_non_inherit_resources(certp))
     {
         LOG(LOG_ERR, "Manifest's EE certificate has RFC3779 resources "
             "that are not marked inherit");
-        return ERR_SCM_NOTINHERIT;
+        iRes = ERR_SCM_NOTINHERIT;
+        goto done;
     }
-
-    return 0;
+done:
+    LOG(LOG_DEBUG, "manifestValidate() returning %s: %s",
+        err2name(iRes), err2string(iRes));
+    return iRes;
 }
 
 struct certrange {
