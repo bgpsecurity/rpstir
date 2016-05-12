@@ -1116,18 +1116,20 @@ addCert2List(
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(idx);
     if (!cert_answers.num_ansrs)
-        cert_answers.cert_ansrp =
-            (struct cert_ansr *)calloc(1, sizeof(struct cert_ansr));
+    {
+        cert_answers.cert_ansrp = calloc(1, sizeof(struct cert_ansr));
+    }
     else
+    {
         /**
          * @bug
          *     ignores error code without explanation (num_ansrs might
          *     be negative)
          */
         cert_answers.cert_ansrp =
-            (struct cert_ansr *)realloc(cert_answers.cert_ansrp,
-                                        sizeof(struct cert_ansr) *
-                                        (cert_answers.num_ansrs + 1));
+            realloc(cert_answers.cert_ansrp,
+                    sizeof(struct cert_ansr) * (cert_answers->num_ansrs + 1));
+    }
     /** @bug possible null pointer dereference if realloc() failed */
     struct cert_ansr *this_ansrp =
         &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
