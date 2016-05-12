@@ -1140,7 +1140,7 @@ addCert2List(
     /** @bug destination buffer might be smaller than source string */
     strcpy(this_ansrp->filename, (char *)s->vec[0].valptr);
     memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
-    xsnprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
+    xsnprintf(this_ansrp->fullname, sizeof(this_ansrp->fullname), "%s/%s",
               (char *)s->vec[1].valptr, (char *)s->vec[0].valptr);
     memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
     /** @bug destination buffer might be smaller than source string */
@@ -1340,7 +1340,7 @@ static X509 *parent_cert(
         /** @bug shouldn't sta be set to an error code? */
         goto done;
     }
-    xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
+    xsnprintf(ofullname, sizeof(ofullname), "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(pathname, ofullname, PATH_MAX);
     if (flagsp)
