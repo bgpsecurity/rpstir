@@ -53,8 +53,9 @@ show_msgs () {
 
 
 upgrade_from_0_11 () {
-    # nothing to do
-    :
+    mysql_cmd <<\EOF || fatal "failed to update database records"
+ALTER TABLE rpki_manifest DROP COLUMN cert_id;
+EOF
 }
 
 upgrade_from_0_10 () {
