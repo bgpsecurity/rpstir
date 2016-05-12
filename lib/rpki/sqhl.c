@@ -28,9 +28,15 @@
 
 
 #define ADDCOL(a, b, c, d, e, f)                                        \
+    ADDCOL2((a), (b), (c), (d), (e), return (f))
+
+#define ADDCOL2(a, b, c, d, e, f)                                       \
     do {                                                                \
         e = addcolsrchscm((a), (b), (c), (d));                          \
-        if ((e) < 0) return (f);                                        \
+        if ((e) < 0)                                                    \
+        {                                                               \
+            f;                                                          \
+        }                                                               \
     } while (0)
 
 /*
@@ -1018,7 +1024,85 @@ static X509 *readCertFromFile(
     return (px);
 }
 
-static scmsrcha *certSrch = NULL;
+/**
+ * @brief
+ *     static variables for efficiency, so only need to set up query
+ *     once
+ */
+static char *parentAKI;
+static char *parentIssuer;
+
+/**
+ * @brief
+ *     initialize an SQL search structure for certificate searches
+ *
+ * @param[out] certSrchp
+ *     On success the value at this location will be set to the
+ *     location of an initialized SQL search structure.  The caller is
+ *     responsible for freeing the structure via freesrchscm().
+ * @return
+ *     0 on success, a non-zero error code otherwise.
+ */
+static err_code
+init_certSrch(
+    scmsrcha **certSrchp)
+{
+    LOG(LOG_DEBUG, "init_certSrch(certSrchp=%p)", certSrchp);
+
+    err_code sta = 0;
+    scmsrcha *certSrch = newsrchscm(NULL, 6, 0, 1);
+    if (!certSrch)
+    {
+        LOG(LOG_ERR, "Unable to allocate memory to construct an SQL query");
+        sta = ERR_SCM_NOMEM;
+        goto done;
+    }
+    ADDCOL2(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, goto done);
+    ADDCOL2(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, goto done);
+    ADDCOL2(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
+            goto done);
+    ADDCOL2(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, goto done);
+    ADDCOL2(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, goto done);
+    ADDCOL2(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
+            goto done);
+    parentAKI = (char *)certSrch->vec[3].valptr;
+    parentIssuer = (char *)certSrch->vec[4].valptr;
+
+    assert(!sta);
+    if (certSrchp)
+    {
+        *certSrchp = certSrch;
+    }
+    else
+    {
+        freesrchscm(certSrch);
+    }
+    certSrch = NULL;
+
+done:
+    if (sta && certSrch)
+    {
+        freesrchscm(certSrch);
+    }
+    LOG(LOG_DEBUG, "init_certSrch() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
+}
+
+#define INIT_CERTSRCH(certSrch, sta, erraction)                         \
+    do {                                                                \
+        if ((certSrch) == NULL)                                         \
+        {                                                               \
+            sta = init_certSrch(&(certSrch));                           \
+            LOG(LOG_DEBUG, "init_certSrch() returned %s: %s",           \
+                err2name(sta), err2string(sta));                        \
+            if (sta)                                                    \
+            {                                                           \
+                erraction;                                              \
+            }                                                           \
+            assert((certSrch));                                         \
+        }                                                               \
+    } while (0)
 
 struct cert_answers cert_answers;
 
@@ -1048,28 +1132,20 @@ addCert2List(
     struct cert_ansr *this_ansrp =
         &cert_answers.cert_ansrp[cert_answers.num_ansrs++];
     memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
-    strcpy(this_ansrp->dirname, (char *)certSrch->vec[1].valptr);
+    strcpy(this_ansrp->dirname, (char *)s->vec[1].valptr);
     memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
-    strcpy(this_ansrp->filename, (char *)certSrch->vec[0].valptr);
+    strcpy(this_ansrp->filename, (char *)s->vec[0].valptr);
     memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
     xsnprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
-              (char *)certSrch->vec[1].valptr, (char *)certSrch->vec[0].valptr);
+              (char *)s->vec[1].valptr, (char *)s->vec[0].valptr);
     memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
-    strcpy(this_ansrp->issuer, (char *)certSrch->vec[4].valptr);
+    strcpy(this_ansrp->issuer, (char *)s->vec[4].valptr);
     memset(this_ansrp->aki, 0, sizeof(this_ansrp->aki));
-    strcpy(this_ansrp->aki, (char *)certSrch->vec[3].valptr);
+    strcpy(this_ansrp->aki, (char *)s->vec[3].valptr);
     this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
     this_ansrp->local_id = *(unsigned int *)s->vec[5].valptr;
     return 0;
 }
-
-/**
- * @brief
- *     static variables for efficiency, so only need to set up query
- *     once
- */
-static char *parentAKI;
-static char *parentIssuer;
 
 struct cert_answers *find_parent_cert(
     const char *ski,
@@ -1079,23 +1155,9 @@ struct cert_answers *find_parent_cert(
     LOG(LOG_DEBUG, "find_parent_cert(ski=\"%s\", subject=\"%s\", conp=%p)",
         ski, subject, conp);
 
-    err_code sta;
-    if (certSrch == NULL)
-    {
-        /** @bug ignores error code (NULL) without explanation */
-        certSrch = newsrchscm(NULL, 6, 0, 1);
-        ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int),
-               sta, NULL);
-        ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-        ADDCOL(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, NULL);
-        ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        parentAKI = (char *)certSrch->vec[3].valptr;
-        parentIssuer = (char *)certSrch->vec[4].valptr;
-    }
-    sta = 0;
+    err_code sta = 0;
+    static scmsrcha *certSrch = NULL;
+    INIT_CERTSRCH(certSrch, sta, goto done);
     // find the entry whose subject is our issuer and whose ski is our aki,
     // e.g. our parent
     if (subject != NULL){
@@ -1116,6 +1178,8 @@ struct cert_answers *find_parent_cert(
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     LOG(LOG_DEBUG, "searchscm() returned %s: %s",
         err2name(sta), err2string(sta));
+
+done:
     if (sta < 0)
     {
         cert_answers.num_ansrs = sta;
@@ -1280,22 +1344,10 @@ struct cert_answers *find_cert_by_aKI(
     scm *scmp,
     scmcon *conp)
 {
-    err_code sta;
+    err_code sta = 0;
     initTables(scmp);
-    if (certSrch == NULL)
-    {
-        /** @bug ignores error code (NULL) without explanation */
-        certSrch = newsrchscm(NULL, 6, 0, 1);
-        ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-        ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-        ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
-        ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-        ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
-               NULL);
-    }
-    sta = 0;
+    static scmsrcha *certSrch = NULL;
+    INIT_CERTSRCH(certSrch, sta, return NULL);
     if (ski)
         xsnprintf(certSrch->wherestr, WHERESTR_SIZE, "ski=\'%s\'", ski);
     else
@@ -1317,17 +1369,10 @@ struct cert_answers *find_trust_anchors(
     scm *scmp,
     scmcon *conp)
 {
-    err_code sta;
+    err_code sta = 0;
     initTables(scmp);
-    /** @bug ignores error code (NULL) without explanation */
-    certSrch = newsrchscm(NULL, 6, 0, 1);
-    ADDCOL(certSrch, "filename", SQL_C_CHAR, FNAMESIZE, sta, NULL);
-    ADDCOL(certSrch, "dirname", SQL_C_CHAR, DNAMESIZE, sta, NULL);
-    ADDCOL(certSrch, "flags", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
-    ADDCOL(certSrch, "ski", SQL_C_CHAR, SKISIZE, sta, NULL);
-    ADDCOL(certSrch, "aki", SQL_C_CHAR, SKISIZE, sta, NULL);
-    ADDCOL(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta, NULL);
-    sta = 0;
+    static scmsrcha *certSrch = NULL;
+    INIT_CERTSRCH(certSrch, sta, return NULL);
     addFlagTest(certSrch->wherestr, SCM_FLAG_TRUSTED, 1, 0);
     cert_answers.num_ansrs = 0;
     /** @bug memory leak: cert_answers.cert_ansrp must be freed here */
