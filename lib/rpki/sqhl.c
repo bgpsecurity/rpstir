@@ -1134,20 +1134,20 @@ addCert2List(
     struct cert_ansr *this_ansrp =
         &found_certs->cert_ansrp[found_certs->num_ansrs++];
     memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
-    /** @bug destination buffer might be smaller than source string */
-    strcpy(this_ansrp->dirname, (char *)s->vec[1].valptr);
+    xstrlcpy(this_ansrp->dirname, (char *)s->vec[1].valptr,
+             sizeof(this_ansrp->dirname));
     memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
-    /** @bug destination buffer might be smaller than source string */
-    strcpy(this_ansrp->filename, (char *)s->vec[0].valptr);
+    xstrlcpy(this_ansrp->filename, (char *)s->vec[0].valptr,
+             sizeof(this_ansrp->filename));
     memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
     xsnprintf(this_ansrp->fullname, sizeof(this_ansrp->fullname), "%s/%s",
               (char *)s->vec[1].valptr, (char *)s->vec[0].valptr);
     memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
-    /** @bug destination buffer might be smaller than source string */
-    strcpy(this_ansrp->issuer, (char *)s->vec[4].valptr);
+    xstrlcpy(this_ansrp->issuer, (char *)s->vec[4].valptr,
+             sizeof(this_ansrp->issuer));
     memset(this_ansrp->aki, 0, sizeof(this_ansrp->aki));
-    /** @bug destination buffer might be smaller than source string */
-    strcpy(this_ansrp->aki, (char *)s->vec[3].valptr);
+    xstrlcpy(this_ansrp->aki, (char *)s->vec[3].valptr,
+             sizeof(this_ansrp->aki));
     this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
     this_ansrp->local_id = *(unsigned int *)s->vec[5].valptr;
     return 0;
