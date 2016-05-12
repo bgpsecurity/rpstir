@@ -1173,10 +1173,9 @@ addCert2List(
  * @param[out] found_certsp
  *     On success, the value at this location will be set to point to
  *     a structure containing the certificates that match the given @p
- *     ski and @p subject.  Ownership of the structure is retained by
- *     this function; the caller MUST NOT attempt to free it.  The
- *     data in the structure will be overwritten during the next call
- *     to this function.  This parameter may be NULL.
+ *     ski and @p subject.  The caller is responsible for free()ing
+ *     the ::cert_ansrp member as well as the structure itself.  This
+ *     parameter may be NULL.
  * @return
  *     0 on success, a non-zero error code otherwise.  Lack of matches
  *     is not considered to be an error.
@@ -1193,15 +1192,16 @@ find_certs(
         conp, ski, subject, found_certsp);
 
     err_code sta = 0;
-    static struct cert_answers cert_answers;
     struct cert_answers *found_certs = NULL;
     static scmsrcha *certSrch = NULL;
     INIT_CERTSRCH(certSrch, sta, goto done);
 
-    found_certs = &cert_answers;
-    if (found_certs->cert_ansrp)
+    found_certs = malloc(sizeof(*found_certs));
+    if (!found_certs)
     {
-        free(found_certs->cert_ansrp);
+        LOG(LOG_ERR, "Unable to allocate memory to return matches");
+        sta = ERR_SCM_NOMEM;
+        goto done;
     }
     found_certs->cert_ansrp = NULL;
     found_certs->num_ansrs = 0;
@@ -1239,9 +1239,17 @@ find_certs(
     if (found_certsp)
     {
         *found_certsp = found_certs;
+        // ownership has been handed off; prevent the cleanup below
+        // from free()ing the found_certs structures
+        found_certs = NULL;
     }
 
 done:
+    if (found_certs)
+    {
+        free(found_certs->cert_ansrp);
+        free(found_certs);
+    }
     LOG(LOG_DEBUG, "find_certs() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
@@ -1374,6 +1382,11 @@ static X509 *parent_cert(
         *flagsp = cert_ansrp->flags;
     ret = readCertFromFile(ofullname, &sta);
 done:
+    if (cert_answersp)
+    {
+        free(cert_answersp->cert_ansrp);
+        free(cert_answersp);
+    }
     LOG(LOG_DEBUG, "parent_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     if (stap)
