@@ -204,4 +204,15 @@ xvsnprintf(
     const char * restrict format,
     va_list arg) WARN_PRINTF(3, 0);
 
+/**
+ * @brief
+ *     same as BSD strlcpy(), but calls abort() if there is not enough
+ *     room for the nul terminator
+ */
+size_t
+xstrlcpy(
+    char * restrict dst,
+    const char * restrict src,
+    size_t size);
+
 #endif /* !LIB_UTIL_STRINGUTILS_H */

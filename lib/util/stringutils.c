@@ -377,3 +377,12 @@ xvsnprintf(
     }
     return ret;
 }
+
+size_t
+xstrlcpy(
+    char * restrict dst,
+    const char * restrict src,
+    size_t size)
+{
+    return xsnprintf(dst, size, "%s", src);
+}
