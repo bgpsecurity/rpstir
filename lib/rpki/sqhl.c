@@ -3562,10 +3562,10 @@ extractAndAddCert(
     if (stat(pathname, &statbuf))
         /** @bug ignores error code without explanation */
         mkdir(pathname, 0777);
-    int lth = strlen(pathname) - 15;    // not counting /EEcertificates
+    int tdir_lth = strlen(pathname) - 15;
     free((void *)cc);
-    /** @bug outdir might be shorter than lth */
-    cc = &outdir[lth];
+    /** @bug outdir might be shorter than tdir_lth */
+    cc = &outdir[tdir_lth];
 
     /** @bug what is this conditional intended to test? */
     /** @bug *cc might be non-nil even if cc is past the end of outdir */
@@ -3573,18 +3573,18 @@ extractAndAddCert(
     {
         /**
          * @bug after checking to see that the prefix is equal, this
-         * conditional does not check to see if outdir[lth] is
+         * conditional does not check to see if outdir[tdir_lth] is
          * either '\0' or '/'.  this means that if pathname is
          * "/foo/EEcertificates" and outdir is "/foobar/baz" then
          * pathname will become "/foo/EEcertificatesbar/baz"
          */
-        if (strncmp(outdir, pathname, lth))
+        if (strncmp(outdir, pathname, tdir_lth))
         {
             sta = ERR_SCM_WRITE_EE;
             goto done;
         }
         /** @bug this is a no-op */
-        cc = &outdir[lth];
+        cc = &outdir[tdir_lth];
         if (*cc == '/')
             /** @bug destination buffer might be too small */
             strncat(pathname, cc++, 1);
