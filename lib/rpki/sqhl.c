@@ -3509,6 +3509,7 @@ extractAndAddCert(
         ", skip=\"%s\", certfilenamep=%p)",
         cmsp, scmp, conp, outdir, utrust, typ, outfile, skip, certfilenamep);
 
+    X509 *x509p = NULL;
     cert_fields *cf = NULL;
     unsigned int cert_id;
     char certname[PATH_MAX];
@@ -3544,23 +3545,6 @@ extractAndAddCert(
     if (extp)
     {
         sta = ERR_SCM_BADEXT;
-        goto done;
-    }
-    // serialize the Certificate and scan it as an openssl X509 object
-    int siz = size_casn(&certp->self);
-    unsigned char *buf = calloc(1, siz + 4);
-    siz = encode_casn(&certp->self, buf);
-    /*
-     * d2i_X509 changes "used" to point past end of the object
-     */
-    unsigned char *used = buf;
-    /** @bug this X509 structure is never used */
-    X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
-    free(buf);
-    // if deserialization failed, bail
-    if (x509p == NULL)
-    {
-        sta = ERR_SCM_X509;
         goto done;
     }
     memset(certname, 0, sizeof(certname));
@@ -3643,24 +3627,10 @@ extractAndAddCert(
     if (put_casn_file(&certp->self, pathname, 0) < 0)
         sta = ERR_SCM_WRITE_EE;
     else
-        /**
-         * @bug because a filename is given, x509p will be set to NULL
-         * without calling X509_free() on it first.  this results in a
-         * memory leak from the X509 structure returned from the call
-         * to d2i_X509() above
-         */
         cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
     if (cf != NULL && sta == 0)
     {
         // add the X509 cert to the db with the right directory
-        if (!cc)
-        {
-            cc = strrchr(pathname, (int)'/');
-            strncpy(certname, pathname, (cc - pathname));
-            certname[cc - pathname] = 0;
-        }
-        else
-            strcpy(certname, outdir);
         sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id,
                          pathname);
         if (typ == OT_ROA && sta == ERR_SCM_DUPSIG)
