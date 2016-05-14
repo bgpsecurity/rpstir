@@ -1288,10 +1288,8 @@ searchorcreatescm(
     xsnprintf(val, 16, "%u", mid);
     ins->vec[0].value = val;
     sta = insertscm(conp, tabp, ins);
-    /**
-     * @bug ins->vec[0].value should be set to NULL to avoid a double
-     * free() if ins->vec is reused
-     */
+    // assign NULL to avoid a double free() if ins->vec is reused
+    ins->vec[0].value = NULL;
     free(val);
     if (sta < 0)
         return (sta);
