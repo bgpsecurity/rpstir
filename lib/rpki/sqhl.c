@@ -3552,18 +3552,18 @@ extractAndAddCert(
     /** @bug destination buffer might be too small */
     strcpy(certname, outfile);
     strcat(certname, ".cer");
+    // find or add the directory
     /** @bug ignores error code without explanation */
     const char *cc = retrieve_tdir(scmp, conp, &sta);
-    // find or add the directory
-    struct stat statbuf;
     /** @bug destination buffer might be too small */
     strcat(strcpy(pathname, cc), "/EEcertificates");
+    int tdir_lth = strlen(pathname) - 15;
+    free((void *)cc);
+    struct stat statbuf;
     /** @bug ignores errno without explanation */
     if (stat(pathname, &statbuf))
         /** @bug ignores error code without explanation */
         mkdir(pathname, 0777);
-    int tdir_lth = strlen(pathname) - 15;
-    free((void *)cc);
     /** @bug outdir might be shorter than tdir_lth */
     cc = &outdir[tdir_lth];
 
