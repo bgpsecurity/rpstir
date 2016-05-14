@@ -3549,14 +3549,12 @@ extractAndAddCert(
     }
     memset(certname, 0, sizeof(certname));
     memset(pathname, 0, sizeof(pathname));
-    /** @bug destination buffer might be too small */
-    strcpy(certname, outfile);
-    strcat(certname, ".cer");
+    xsnprintf(certname, sizeof(certname), "%s.cer", outfile);
     // find or add the directory
     /** @bug ignores error code without explanation */
     const char *cc = retrieve_tdir(scmp, conp, &sta);
-    /** @bug destination buffer might be too small */
-    strcat(strcpy(pathname, cc), "/EEcertificates");
+    const size_t pathname_lth = xsnprintf(pathname, sizeof(pathname),
+                                          "%s/EEcertificates", cc);
     int tdir_lth = strlen(pathname) - 15;
     free((void *)cc);
     struct stat statbuf;
@@ -3577,19 +3575,25 @@ extractAndAddCert(
         sta = ERR_SCM_WRITE_EE;
         goto done;
     }
+    char *pathname_end = pathname + pathname_lth;
+    size_t pathname_buf_remaining = sizeof(pathname) - pathname_lth;
     cc = &outdir[tdir_lth];
     while (cc)
     {
         char *d = strchr(cc, '/');
+        char backup;
         if (d)
         {
-            d++;
-            /** @bug destination buffer might be too small */
-            strncat(pathname, cc, d - cc);
+            backup = *(++d);
+            *d = '\0';
         }
-        else
-            /** @bug destination buffer might be too small */
-            strcat(pathname, cc);
+        size_t len = xstrlcpy(pathname_end, cc, pathname_buf_remaining);
+        pathname_end += len;
+        pathname_buf_remaining -= len;
+        if (d)
+        {
+            *d = backup;
+        }
         cc = d;
         /** @bug ignores errno without explanation */
         if (stat(pathname, &statbuf) < 0)
@@ -3600,8 +3604,7 @@ extractAndAddCert(
     unsigned int dir_id;
     /** @bug ignores error code without explanation */
     sta = findorcreatedir(scmp, conp, pathname, &dir_id);
-    /** @bug destination buffer might be too small */
-    strcat(strcat(pathname, "/"), certname);
+    xsnprintf(pathname_end, pathname_buf_remaining, "/%s", certname);
     if (certfilenamep)
         /** @bug destination buffer might be too small */
         strcpy(certfilenamep, certname);
