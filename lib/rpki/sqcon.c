@@ -1281,7 +1281,10 @@ searchorcreatescm(
     ins->vec[0].value = NULL;
     char *val = calloc(16, sizeof(char));
     if (!val)
+    {
+        LOG(LOG_ERR, "unable to allocate memory for column value");
         return (ERR_SCM_NOMEM);
+    }
     xsnprintf(val, 16, "%u", mid);
     ins->vec[0].value = val;
     sta = insertscm(conp, tabp, ins);
