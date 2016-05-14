@@ -1146,9 +1146,9 @@ int main(
                 else
                     LOG(LOG_INFO, "Add succeeded: %s", outfile);
             }
-            free((void *)outdir);
-            free((void *)outfile);
-            free((void *)outfull);
+            free(outdir);
+            free(outfile);
+            free(outfull);
         }
         else
             LOG(LOG_ERR, "%s (%s)", err2string(sta), err2name(sta));
