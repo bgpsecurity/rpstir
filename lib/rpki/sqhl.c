@@ -122,7 +122,7 @@ err_code
 findorcreatedir(
     scm *scmp,
     scmcon *conp,
-    char *dirname,
+    const char *dirname,
     unsigned int *idp)
 {
     scmsrcha *srch;
@@ -3497,10 +3497,10 @@ extractAndAddCert(
     struct CMS *cmsp,
     scm *scmp,
     scmcon *conp,
-    char *outdir,
+    const char *outdir,
     int utrust,
     object_type typ,
-    char *outfile,
+    const char *outfile,
     char *skip,
     char *certfilenamep)
 {
@@ -3553,7 +3553,7 @@ extractAndAddCert(
     strcpy(certname, outfile);
     strcat(certname, ".cer");
     /** @bug ignores error code without explanation */
-    char *cc = retrieve_tdir(scmp, conp, &sta);
+    const char *cc = retrieve_tdir(scmp, conp, &sta);
     // find or add the directory
     struct stat statbuf;
     /** @bug destination buffer might be too small */

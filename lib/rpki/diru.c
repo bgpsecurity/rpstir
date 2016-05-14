@@ -98,7 +98,7 @@ int strwillfit(
     char *inbuf,
     int totlen,
     int already,
-    char *newbuf)
+    const char *newbuf)
 {
     int newlen;
 
