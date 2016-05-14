@@ -3578,10 +3578,7 @@ extractAndAddCert(
         goto done;
     }
     cc = &outdir[tdir_lth];
-    if (*cc == '/')
-        /** @bug destination buffer might be too small */
-        strncat(pathname, cc++, 1);
-    do
+    while (cc)
     {
         char *d = strchr(cc, '/');
         if (d)
@@ -3599,7 +3596,6 @@ extractAndAddCert(
             /** @bug ignores error code without explanation */
             mkdir(pathname, 0777);
     }
-    while (cc);
 
     unsigned int dir_id;
     /** @bug ignores error code without explanation */
