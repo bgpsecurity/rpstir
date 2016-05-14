@@ -1245,7 +1245,6 @@ searchorcreatescm(
     unsigned int *idp)
 {
     unsigned int mid = 0;
-    char *tmp;
     err_code sta;
 
     if (idp == NULL || scmp == NULL || conp == NULL || conp->connected == 0 ||
@@ -1276,12 +1275,7 @@ searchorcreatescm(
     if (sta < 0)
         return (sta);
     mid++;
-    tmp = ins->vec[0].value;
-    if (tmp != NULL)
-    {
-        free(tmp);
-        ins->vec[0].value = NULL;
-    }
+    free(ins->vec[0].value);
     ins->vec[0].value = (char *)calloc(16, sizeof(char));
     if (ins->vec[0].value == NULL)
         return (ERR_SCM_NOMEM);
