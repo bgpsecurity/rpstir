@@ -3564,55 +3564,43 @@ extractAndAddCert(
     if (stat(pathname, &statbuf))
         /** @bug ignores error code without explanation */
         mkdir(pathname, 0777);
-    /** @bug outdir might be shorter than tdir_lth */
-    cc = &outdir[tdir_lth];
 
-    /** @bug what is this conditional intended to test? */
-    /** @bug *cc might be non-nil even if cc is past the end of outdir */
-    if (*cc)
+    /**
+     * @bug after checking to see that the prefix is equal, this
+     * conditional does not check to see if outdir[tdir_lth] is
+     * either '\0' or '/'.  this means that if pathname is
+     * "/foo/EEcertificates" and outdir is "/foobar/baz" then
+     * pathname will become "/foo/EEcertificatesbar/baz"
+     */
+    if (strncmp(outdir, pathname, tdir_lth))
     {
-        /**
-         * @bug after checking to see that the prefix is equal, this
-         * conditional does not check to see if outdir[tdir_lth] is
-         * either '\0' or '/'.  this means that if pathname is
-         * "/foo/EEcertificates" and outdir is "/foobar/baz" then
-         * pathname will become "/foo/EEcertificatesbar/baz"
-         */
-        if (strncmp(outdir, pathname, tdir_lth))
-        {
-            sta = ERR_SCM_WRITE_EE;
-            goto done;
-        }
-        /** @bug this is a no-op */
-        cc = &outdir[tdir_lth];
-        if (*cc == '/')
-            /** @bug destination buffer might be too small */
-            strncat(pathname, cc++, 1);
-        do
-        {
-            char *d = strchr(cc, '/');
-            if (d)
-            {
-                d++;
-                /** @bug destination buffer might be too small */
-                strncat(pathname, cc, d - cc);
-            }
-            else
-                /** @bug destination buffer might be too small */
-                strcat(pathname, cc);
-            cc = d;
-            /** @bug ignores errno without explanation */
-            if (stat(pathname, &statbuf) < 0)
-                /** @bug ignores error code without explanation */
-                mkdir(pathname, 0777);
-        }
-        while (cc);
+        sta = ERR_SCM_WRITE_EE;
+        goto done;
     }
-    /** @bug redundant with above stat() and mkdir() */
-    /** @bug ignores errno without explanation */
-    else if (stat(pathname, &statbuf) < 0)
-        /** @bug ignores error code without explanation */
-        mkdir(pathname, 0777);
+    cc = &outdir[tdir_lth];
+    if (*cc == '/')
+        /** @bug destination buffer might be too small */
+        strncat(pathname, cc++, 1);
+    do
+    {
+        char *d = strchr(cc, '/');
+        if (d)
+        {
+            d++;
+            /** @bug destination buffer might be too small */
+            strncat(pathname, cc, d - cc);
+        }
+        else
+            /** @bug destination buffer might be too small */
+            strcat(pathname, cc);
+        cc = d;
+        /** @bug ignores errno without explanation */
+        if (stat(pathname, &statbuf) < 0)
+            /** @bug ignores error code without explanation */
+            mkdir(pathname, 0777);
+    }
+    while (cc);
+
     unsigned int dir_id;
     /** @bug ignores error code without explanation */
     sta = findorcreatedir(scmp, conp, pathname, &dir_id);
