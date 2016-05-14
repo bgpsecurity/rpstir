@@ -3555,7 +3555,7 @@ extractAndAddCert(
     const char *cc = retrieve_tdir(scmp, conp, &sta);
     const size_t pathname_lth = xsnprintf(pathname, sizeof(pathname),
                                           "%s/EEcertificates", cc);
-    int tdir_lth = strlen(pathname) - 15;
+    const size_t tdir_lth = strlen(pathname) - 15;
     free((void *)cc);
     struct stat statbuf;
     /** @bug ignores errno without explanation */
