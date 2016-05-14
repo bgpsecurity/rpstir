@@ -1108,8 +1108,6 @@ int main(
                 if (ians <= 0)
                     sta = 1;
             }
-            // if ( strstr(outdir, "TRUST") != NULL )
-            // trusted++;
             // if the user has declared it to be trusted
             // ask for verification unless force is set
             if (trusted > 0 && force == 0 && sta == 0)

@@ -3587,7 +3587,6 @@ extractAndAddCert(
              * Leave the file there for debugging purposes.  FIXME: add code
              * to clean this up later.
              */
-            // unlink(pathname);
         }
         else if (!sta && (cf->flags & SCM_FLAG_VALIDATED))
             sta = 1;
