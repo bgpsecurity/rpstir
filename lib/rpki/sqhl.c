@@ -1336,10 +1336,8 @@ find_cert(
         /** @bug shouldn't sta be set to an error code? */
         goto done;
     }
-    /** @bug destination buffer might be smaller than source string */
-    strcpy(parentAKI, cert_ansrp->aki);
-    /** @bug destination buffer might be smaller than source string */
-    strcpy(parentIssuer, cert_ansrp->issuer);
+    xstrlcpy(parentAKI, cert_ansrp->aki, sizeof(parentAKI));
+    xstrlcpy(parentIssuer, cert_ansrp->issuer, sizeof(parentIssuer));
     xsnprintf(ofullname, sizeof(ofullname), "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(pathname, ofullname, PATH_MAX);
