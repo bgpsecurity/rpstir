@@ -955,6 +955,27 @@ searchscm(
     // count rows and call counter function if requested
     if ((what & SCM_SRCH_DOCOUNT) && cnter != NULL)
     {
+        /**
+         * @bug
+         *     The ODBC documentation for SQLRowCount() says:
+         *
+         *     > [T]he driver may define the value returned in
+         *     > *RowCountPtr.  For example, some data sources may be
+         *     > able to return the number of rows returned by a
+         *     > SELECT statement or a catalog function before
+         *     > fetching the rows.
+         *     >
+         *     > Note
+         *     >   Many data sources cannot return the number of rows
+         *     >   in a result set before fetching them; for maximum
+         *     >   interoperability, applications should not rely on
+         *     >   this behavior.
+         *
+         *     The following relies on that unreliable behavior.
+         *
+         *     There may be alternative ways to reliably get the
+         *     count; see http://stackoverflow.com/q/243782
+         */
         rc = SQLRowCount(conp->hstmtp->hstmt, &nrows);
         if (!SQLOK(rc) && (what & SCM_SRCH_BREAK_CERR))
         {
@@ -1179,6 +1200,7 @@ addcolsrchscm(
         return (ERR_SCM_NOMEM);
     v = (void *)calloc(1, valsize);
     if (v == NULL)
+        /** @bug memory leak (cdup) */
         return (ERR_SCM_NOMEM);
     vecp = &srch->vec[srch->nused];
     vecp->colno = srch->nused + 1;
@@ -1266,6 +1288,10 @@ searchorcreatescm(
     xsnprintf(ins->vec[0].value, 16, "%u", mid);
     sta = insertscm(conp, tabp, ins);
     free((void *)(ins->vec[0].value));
+    /**
+     * @bug ins->vec[0].value should be set to NULL to avoid a double
+     * free() if ins->vec is reused
+     */
     if (sta < 0)
         return (sta);
     *idp = mid;

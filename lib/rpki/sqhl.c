@@ -198,6 +198,7 @@ char *retrieve_tdir(
     err_code sta;
 
     if (scmp == NULL || conp == NULL || conp->connected == 0 || stap == NULL)
+        /** @bug *stap is not set if stap is non-NULL */
         return (NULL);
     conp->mystat.tabname = "METADATA";
     initTables(scmp);
@@ -1029,7 +1030,9 @@ static X509 *readCertFromFile(
  *     static variables for efficiency, so only need to set up query
  *     once
  */
+/** @bug length of parentAKI buffer is not documented */
 static char *parentAKI;
+/** @bug length of parentIssuer buffer is not documented */
 static char *parentIssuer;
 
 /**
@@ -1123,29 +1126,28 @@ addCert2List(
     }
     else
     {
-        /**
-         * @bug
-         *     ignores error code without explanation (num_ansrs might
-         *     be negative)
-         */
         found_certs->cert_ansrp =
             realloc(found_certs->cert_ansrp,
                     sizeof(struct cert_ansr) * (found_certs->num_ansrs + 1));
     }
-    /** @bug possible null pointer dereference if realloc() failed */
+    /** @bug possible null pointer dereference if allocation failed */
     struct cert_ansr *this_ansrp =
         &found_certs->cert_ansrp[found_certs->num_ansrs++];
     memset(this_ansrp->dirname, 0, sizeof(this_ansrp->dirname));
-    strcpy(this_ansrp->dirname, (char *)s->vec[1].valptr);
+    xstrlcpy(this_ansrp->dirname, (char *)s->vec[1].valptr,
+             sizeof(this_ansrp->dirname));
     memset(this_ansrp->filename, 0, sizeof(this_ansrp->filename));
-    strcpy(this_ansrp->filename, (char *)s->vec[0].valptr);
+    xstrlcpy(this_ansrp->filename, (char *)s->vec[0].valptr,
+             sizeof(this_ansrp->filename));
     memset(this_ansrp->fullname, 0, sizeof(this_ansrp->fullname));
-    xsnprintf(this_ansrp->fullname, PATH_MAX, "%s/%s",
+    xsnprintf(this_ansrp->fullname, sizeof(this_ansrp->fullname), "%s/%s",
               (char *)s->vec[1].valptr, (char *)s->vec[0].valptr);
     memset(this_ansrp->issuer, 0, sizeof(this_ansrp->issuer));
-    strcpy(this_ansrp->issuer, (char *)s->vec[4].valptr);
+    xstrlcpy(this_ansrp->issuer, (char *)s->vec[4].valptr,
+             sizeof(this_ansrp->issuer));
     memset(this_ansrp->aki, 0, sizeof(this_ansrp->aki));
-    strcpy(this_ansrp->aki, (char *)s->vec[3].valptr);
+    xstrlcpy(this_ansrp->aki, (char *)s->vec[3].valptr,
+             sizeof(this_ansrp->aki));
     this_ansrp->flags = *(unsigned int *)s->vec[2].valptr;
     this_ansrp->local_id = *(unsigned int *)s->vec[5].valptr;
     return 0;
@@ -1299,6 +1301,7 @@ static X509 *parent_cert(
         cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (cert_ansrp->flags & (SCM_FLAG_ISTARGET | SCM_FLAG_HASPARACERT))
         {
+            /** @bug shouldn't sta be set to an error code? */
             goto done;
         }
     }
@@ -1308,6 +1311,7 @@ static X509 *parent_cert(
         if (((cert_answersp->cert_ansrp[0].flags & ff) &
              (cert_ansrp->flags & ff)))
         {
+            /** @bug shouldn't sta be set to an error code? */
             goto done;
         }
         // if using paracerts, choose the paracert
@@ -1321,9 +1325,9 @@ static X509 *parent_cert(
         {
             goto done;
         }
-        /** @bug parentAKI is not a buffer of known length */
+        /** @bug destination buffer might be smaller than source string */
         strcpy(parentAKI, cert_ansrp->aki);
-        /** @bug parentIssuer is not a buffer of known length */
+        /** @bug destination buffer might be smaller than source string */
         strcpy(parentIssuer, cert_ansrp->issuer);
     }
     else
@@ -1333,9 +1337,10 @@ static X509 *parent_cert(
          *     what if there are many matches (e.g., cert renewal,
          *     evil twin)?
          */
+        /** @bug shouldn't sta be set to an error code? */
         goto done;
     }
-    xsnprintf(ofullname, PATH_MAX, "%s", cert_ansrp->fullname);
+    xsnprintf(ofullname, sizeof(ofullname), "%s", cert_ansrp->fullname);
     if (pathname != NULL)
         strncpy(pathname, ofullname, PATH_MAX);
     if (flagsp)
@@ -2405,6 +2410,10 @@ verifyChildCert(
             sta = ERR_SCM_X509;
             goto done;
         }
+        /**
+         * @bug memory leak at x (verify_cert() doesn't take ownership
+         * of x because the isTrusted argument is 0)
+         */
         /** @bug ignores chainOK without explanation */
         sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
@@ -3295,6 +3304,11 @@ add_cert(
     }
     useParacerts = constraining;
     sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
+    /**
+     * @bug possible memory leak (add_cert_2() may or may not take
+     * ownership of x depending on the value of utrust and what kind
+     * of error add_cert_2() encountered if any)
+     */
     LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
         err2name(sta), err2string(sta));
     freecf(cf);
@@ -3500,6 +3514,7 @@ extractAndAddCert(
      * d2i_X509 changes "used" to point past end of the object
      */
     unsigned char *used = buf;
+    /** @bug this X509 structure is never used */
     X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
     free(buf);
     // if deserialization failed, bail
@@ -3510,28 +3525,44 @@ extractAndAddCert(
     }
     memset(certname, 0, sizeof(certname));
     memset(pathname, 0, sizeof(pathname));
+    /** @bug destination buffer might be too small */
     strcpy(certname, outfile);
     strcat(certname, ".cer");
     /** @bug ignores error code without explanation */
     char *cc = retrieve_tdir(scmp, conp, &sta);
     // find or add the directory
     struct stat statbuf;
+    /** @bug destination buffer might be too small */
     strcat(strcpy(pathname, cc), "/EEcertificates");
+    /** @bug ignores errno without explanation */
     if (stat(pathname, &statbuf))
+        /** @bug ignores error code without explanation */
         mkdir(pathname, 0777);
     int lth = strlen(pathname) - 15;    // not counting /EEcertificates
     free((void *)cc);
+    /** @bug outdir might be shorter than lth */
     cc = &outdir[lth];
 
+    /** @bug what is this conditional intended to test? */
+    /** @bug *cc might be non-nil even if cc is past the end of outdir */
     if (*cc)
     {
+        /**
+         * @bug after checking to see that the prefix is equal, this
+         * conditional does not check to see if outdir[lth] is
+         * either '\0' or '/'.  this means that if pathname is
+         * "/foo/EEcertificates" and outdir is "/foobar/baz" then
+         * pathname will become "/foo/EEcertificatesbar/baz"
+         */
         if (strncmp(outdir, pathname, lth))
         {
             sta = ERR_SCM_WRITE_EE;
             goto done;
         }
+        /** @bug this is a no-op */
         cc = &outdir[lth];
         if (*cc == '/')
+            /** @bug destination buffer might be too small */
             strncat(pathname, cc++, 1);
         do
         {
@@ -3539,23 +3570,32 @@ extractAndAddCert(
             if (d)
             {
                 d++;
+                /** @bug destination buffer might be too small */
                 strncat(pathname, cc, d - cc);
             }
             else
+                /** @bug destination buffer might be too small */
                 strcat(pathname, cc);
             cc = d;
+            /** @bug ignores errno without explanation */
             if (stat(pathname, &statbuf) < 0)
+                /** @bug ignores error code without explanation */
                 mkdir(pathname, 0777);
         }
         while (cc);
     }
+    /** @bug redundant with above stat() and mkdir() */
+    /** @bug ignores errno without explanation */
     else if (stat(pathname, &statbuf) < 0)
+        /** @bug ignores error code without explanation */
         mkdir(pathname, 0777);
     unsigned int dir_id;
     /** @bug ignores error code without explanation */
     sta = findorcreatedir(scmp, conp, pathname, &dir_id);
+    /** @bug destination buffer might be too small */
     strcat(strcat(pathname, "/"), certname);
     if (certfilenamep)
+        /** @bug destination buffer might be too small */
         strcpy(certfilenamep, certname);
     // pull out the fields
     int x509sta;
@@ -3563,6 +3603,12 @@ extractAndAddCert(
     if (put_casn_file(&certp->self, pathname, 0) < 0)
         sta = ERR_SCM_WRITE_EE;
     else
+        /**
+         * @bug because a filename is given, x509p will be set to NULL
+         * without calling X509_free() on it first.  this results in a
+         * memory leak from the X509 structure returned from the call
+         * to d2i_X509() above
+         */
         cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
     if (cf != NULL && sta == 0)
     {
@@ -3587,11 +3633,15 @@ extractAndAddCert(
              * Leave the file there for debugging purposes.  FIXME: add code
              * to clean this up later.
              */
-            // unlink(pathname);
         }
         else if (!sta && (cf->flags & SCM_FLAG_VALIDATED))
             sta = 1;
     }
+    /**
+     * @bug memory leak if put_casn_file() or cert2fields() fails, and
+     * a potential leak if they succeed (add_cert_2() may or may not
+     * take ownership of x509p)
+     */
     x509p = NULL;               /* freed by add_cert_2 */
     freecf(cf);
     cf = NULL;

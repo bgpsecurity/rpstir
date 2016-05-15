@@ -1101,6 +1101,13 @@ int main(
         sta = splitdf(NULL, NULL, thefile, &outdir, &outfile, &outfull);
         if (sta == 0)
         {
+            /**
+             * @bug after checking to see that the prefix is equal,
+             * this conditional does not check to see if
+             * outdir[tdirlen] is either '\0' or '/'.  this means that
+             * the user will not be prompted if tdir is "/foo" and
+             * outdir is "/foobar".
+             */
             if (strncmp(tdir, outdir, tdirlen) != 0 && force == 0)
             {
                 ians =
@@ -1108,8 +1115,6 @@ int main(
                 if (ians <= 0)
                     sta = 1;
             }
-            // if ( strstr(outdir, "TRUST") != NULL )
-            // trusted++;
             // if the user has declared it to be trusted
             // ask for verification unless force is set
             if (trusted > 0 && force == 0 && sta == 0)
