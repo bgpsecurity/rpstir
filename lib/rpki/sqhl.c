@@ -2450,10 +2450,6 @@ verifyChildCert(
             sta = ERR_SCM_X509;
             goto done;
         }
-        /**
-         * @bug memory leak at x (verify_cert() doesn't take ownership
-         * of x because the isTrusted argument is 0)
-         */
         /** @bug ignores chainOK without explanation */
         sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
@@ -2513,6 +2509,7 @@ verifyChildCert(
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     sta = 0;
 done:
+    X509_free(x);
     LOG(LOG_DEBUG, "verifyChildCert() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
