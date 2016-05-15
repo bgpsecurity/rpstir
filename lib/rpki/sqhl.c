@@ -3333,10 +3333,6 @@ add_cert(
         err2name(sta), err2string(sta));
     if (cf == NULL || x == NULL)
     {
-        if (cf != NULL)
-            freecf(cf);
-        if (x != NULL)
-            X509_free(x);
         goto done;
     }
     useParacerts = constraining;
@@ -3346,11 +3342,13 @@ add_cert(
      * ownership of x depending on the value of utrust and what kind
      * of error add_cert_2() encountered if any)
      */
+    // assume add_cert_2() took ownership of x
+    x = NULL;
     LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
         err2name(sta), err2string(sta));
-    freecf(cf);
-    cf = NULL;
 done:
+    freecf(cf);
+    X509_free(x);
     LOG(LOG_DEBUG, "add_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
