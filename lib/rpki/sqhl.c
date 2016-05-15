@@ -1732,6 +1732,13 @@ verify_cert(
             err2name(sta), err2string(sta));
     }
     sk_X509_pop_free(sk_untrusted, X509_free);
+    if (isTrusted)
+    {
+        // the caller retains ownership of x
+        X509 *tmp = sk_X509_pop(sk_trusted);
+        assert(tmp == x);
+        assert(!sk_X509_num(sk_trusted));
+    }
     sk_X509_pop_free(sk_trusted, X509_free);
     X509_STORE_free(cert_ctx);
     X509_VERIFY_PARAM_free(vpm);
@@ -3177,7 +3184,7 @@ add_cert_2(
     {
         delete_casn(&cert.self);
         sta = locerr;
-        goto done2;
+        goto done;
     }
     if (utrust > 0)
     {
@@ -3208,10 +3215,9 @@ add_cert_2(
         }
         if (locerr)
         {
-            X509_free(x);
             delete_casn(&cert.self);
             sta = (locerr < 0) ? locerr : ERR_SCM_NOTSS;
-            goto done2;
+            goto done;
         }
         cf->flags |= SCM_FLAG_TRUSTED;
     }
@@ -3226,7 +3232,7 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "rescert_profile() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // MCR: new code to check for expiration. Ignore this
     // check if "allowex" is non-zero
@@ -3236,7 +3242,7 @@ add_cert_2(
         {
             LOG(LOG_DEBUG, "expired");
             sta = ERR_SCM_EXPIRED;
-            goto done1;
+            goto done;
         }
     }
     // Check if cert isn't valid yet, i.e. notBefore is in the future.
@@ -3252,7 +3258,7 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "verify_cert() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // check that no crls revoking this cert
     if ((sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
@@ -3260,7 +3266,7 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "cert_revoked() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // actually add the certificate
     if ((sta = addStateToFlags(&cf->flags, chainOK,
@@ -3269,13 +3275,13 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "addStateToFlags() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     if ((sta = add_cert_internal(scmp, conp, cf, cert_id)))
     {
         LOG(LOG_DEBUG, "add_cert_internal() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // try to validate children of cert
     if (chainOK)
@@ -3288,16 +3294,10 @@ add_cert_2(
         {
             LOG(LOG_DEBUG, "verifyOrNotChildren() returned %s: %s",
                 err2name(sta), err2string(sta));
-            goto done1;
+            goto done;
         }
     }
-done1:
-    // if change verify_cert so that not pushing on stack, change this
-    if (!(cf->flags & SCM_FLAG_TRUSTED))
-    {
-        X509_free(x);
-    }
-done2:
+done:
     LOG(LOG_DEBUG, "add_cert_2() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
@@ -3337,13 +3337,6 @@ add_cert(
     }
     useParacerts = constraining;
     sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
-    /**
-     * @bug possible memory leak (add_cert_2() may or may not take
-     * ownership of x depending on the value of utrust and what kind
-     * of error add_cert_2() encountered if any)
-     */
-    // assume add_cert_2() took ownership of x
-    x = NULL;
     LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
         err2name(sta), err2string(sta));
 done:
@@ -3623,12 +3616,7 @@ extractAndAddCert(
         else if (!sta && (cf->flags & SCM_FLAG_VALIDATED))
             sta = 1;
     }
-    /**
-     * @bug memory leak if put_casn_file() or cert2fields() fails, and
-     * a potential leak if they succeed (add_cert_2() may or may not
-     * take ownership of x509p)
-     */
-    x509p = NULL;               /* freed by add_cert_2 */
+    X509_free(x509p);
     freecf(cf);
     cf = NULL;
 done:
