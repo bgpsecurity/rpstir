@@ -1,9 +1,6 @@
 initDB
-initDB4
 makeC2Expired
 makeL111Expired
 makeM111stale
 runSubsystemTest.tap
-runSubsystemTest4.sh
 step?.?.tap
-step4
