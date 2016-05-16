@@ -122,7 +122,7 @@ err_code
 findorcreatedir(
     scm *scmp,
     scmcon *conp,
-    char *dirname,
+    const char *dirname,
     unsigned int *idp)
 {
     scmsrcha *srch;
@@ -1732,6 +1732,13 @@ verify_cert(
             err2name(sta), err2string(sta));
     }
     sk_X509_pop_free(sk_untrusted, X509_free);
+    if (isTrusted)
+    {
+        // the caller retains ownership of x
+        X509 *tmp = sk_X509_pop(sk_trusted);
+        assert(tmp == x);
+        assert(!sk_X509_num(sk_trusted));
+    }
     sk_X509_pop_free(sk_trusted, X509_free);
     X509_STORE_free(cert_ctx);
     X509_VERIFY_PARAM_free(vpm);
@@ -2450,10 +2457,6 @@ verifyChildCert(
             sta = ERR_SCM_X509;
             goto done;
         }
-        /**
-         * @bug memory leak at x (verify_cert() doesn't take ownership
-         * of x because the isTrusted argument is 0)
-         */
         /** @bug ignores chainOK without explanation */
         sta = verify_cert(conp, x, 0, data->aki, data->issuer, &chainOK);
         if (sta < 0)
@@ -2513,6 +2516,7 @@ verifyChildCert(
                     SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
     sta = 0;
 done:
+    X509_free(x);
     LOG(LOG_DEBUG, "verifyChildCert() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
@@ -3180,7 +3184,7 @@ add_cert_2(
     {
         delete_casn(&cert.self);
         sta = locerr;
-        goto done2;
+        goto done;
     }
     if (utrust > 0)
     {
@@ -3211,10 +3215,9 @@ add_cert_2(
         }
         if (locerr)
         {
-            X509_free(x);
             delete_casn(&cert.self);
             sta = (locerr < 0) ? locerr : ERR_SCM_NOTSS;
-            goto done2;
+            goto done;
         }
         cf->flags |= SCM_FLAG_TRUSTED;
     }
@@ -3229,7 +3232,7 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "rescert_profile() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // MCR: new code to check for expiration. Ignore this
     // check if "allowex" is non-zero
@@ -3239,7 +3242,7 @@ add_cert_2(
         {
             LOG(LOG_DEBUG, "expired");
             sta = ERR_SCM_EXPIRED;
-            goto done1;
+            goto done;
         }
     }
     // Check if cert isn't valid yet, i.e. notBefore is in the future.
@@ -3255,7 +3258,7 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "verify_cert() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // check that no crls revoking this cert
     if ((sta = cert_revoked(scmp, conp, cf->fields[CF_FIELD_SN],
@@ -3263,7 +3266,7 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "cert_revoked() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // actually add the certificate
     if ((sta = addStateToFlags(&cf->flags, chainOK,
@@ -3272,13 +3275,13 @@ add_cert_2(
     {
         LOG(LOG_DEBUG, "addStateToFlags() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     if ((sta = add_cert_internal(scmp, conp, cf, cert_id)))
     {
         LOG(LOG_DEBUG, "add_cert_internal() returned %s: %s",
             err2name(sta), err2string(sta));
-        goto done1;
+        goto done;
     }
     // try to validate children of cert
     if (chainOK)
@@ -3291,16 +3294,10 @@ add_cert_2(
         {
             LOG(LOG_DEBUG, "verifyOrNotChildren() returned %s: %s",
                 err2name(sta), err2string(sta));
-            goto done1;
+            goto done;
         }
     }
-done1:
-    // if change verify_cert so that not pushing on stack, change this
-    if (!(cf->flags & SCM_FLAG_TRUSTED))
-    {
-        X509_free(x);
-    }
-done2:
+done:
     LOG(LOG_DEBUG, "add_cert_2() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
@@ -3336,24 +3333,15 @@ add_cert(
         err2name(sta), err2string(sta));
     if (cf == NULL || x == NULL)
     {
-        if (cf != NULL)
-            freecf(cf);
-        if (x != NULL)
-            X509_free(x);
         goto done;
     }
     useParacerts = constraining;
     sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
-    /**
-     * @bug possible memory leak (add_cert_2() may or may not take
-     * ownership of x depending on the value of utrust and what kind
-     * of error add_cert_2() encountered if any)
-     */
     LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
         err2name(sta), err2string(sta));
-    freecf(cf);
-    cf = NULL;
 done:
+    freecf(cf);
+    X509_free(x);
     LOG(LOG_DEBUG, "add_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     return sta;
@@ -3497,10 +3485,10 @@ extractAndAddCert(
     struct CMS *cmsp,
     scm *scmp,
     scmcon *conp,
-    char *outdir,
+    const char *outdir,
     int utrust,
     object_type typ,
-    char *outfile,
+    const char *outfile,
     char *skip,
     char *certfilenamep)
 {
@@ -3509,6 +3497,7 @@ extractAndAddCert(
         ", skip=\"%s\", certfilenamep=%p)",
         cmsp, scmp, conp, outdir, utrust, typ, outfile, skip, certfilenamep);
 
+    X509 *x509p = NULL;
     cert_fields *cf = NULL;
     unsigned int cert_id;
     char certname[PATH_MAX];
@@ -3546,94 +3535,58 @@ extractAndAddCert(
         sta = ERR_SCM_BADEXT;
         goto done;
     }
-    // serialize the Certificate and scan it as an openssl X509 object
-    int siz = size_casn(&certp->self);
-    unsigned char *buf = calloc(1, siz + 4);
-    siz = encode_casn(&certp->self, buf);
-    /*
-     * d2i_X509 changes "used" to point past end of the object
-     */
-    unsigned char *used = buf;
-    /** @bug this X509 structure is never used */
-    X509 *x509p = d2i_X509(NULL, (const unsigned char **)&used, siz);
-    free(buf);
-    // if deserialization failed, bail
-    if (x509p == NULL)
-    {
-        sta = ERR_SCM_X509;
-        goto done;
-    }
     memset(certname, 0, sizeof(certname));
     memset(pathname, 0, sizeof(pathname));
-    /** @bug destination buffer might be too small */
-    strcpy(certname, outfile);
-    strcat(certname, ".cer");
-    /** @bug ignores error code without explanation */
-    char *cc = retrieve_tdir(scmp, conp, &sta);
+    xsnprintf(certname, sizeof(certname), "%s.cer", outfile);
     // find or add the directory
+    /** @bug ignores error code without explanation */
+    const char *cc = retrieve_tdir(scmp, conp, &sta);
+    const size_t pathname_lth = xsnprintf(pathname, sizeof(pathname),
+                                          "%s/EEcertificates", cc);
+    const size_t tdir_lth = pathname_lth - 15;
+    free((void *)cc);
     struct stat statbuf;
-    /** @bug destination buffer might be too small */
-    strcat(strcpy(pathname, cc), "/EEcertificates");
     /** @bug ignores errno without explanation */
     if (stat(pathname, &statbuf))
         /** @bug ignores error code without explanation */
         mkdir(pathname, 0777);
-    int lth = strlen(pathname) - 15;    // not counting /EEcertificates
-    free((void *)cc);
-    /** @bug outdir might be shorter than lth */
-    cc = &outdir[lth];
 
-    /** @bug what is this conditional intended to test? */
-    /** @bug *cc might be non-nil even if cc is past the end of outdir */
-    if (*cc)
+    if (strncmp(outdir, pathname, tdir_lth)
+        || ((outdir[tdir_lth] != '\0') && (outdir[tdir_lth] != '/')))
     {
-        /**
-         * @bug after checking to see that the prefix is equal, this
-         * conditional does not check to see if outdir[lth] is
-         * either '\0' or '/'.  this means that if pathname is
-         * "/foo/EEcertificates" and outdir is "/foobar/baz" then
-         * pathname will become "/foo/EEcertificatesbar/baz"
-         */
-        if (strncmp(outdir, pathname, lth))
-        {
-            sta = ERR_SCM_WRITE_EE;
-            goto done;
-        }
-        /** @bug this is a no-op */
-        cc = &outdir[lth];
-        if (*cc == '/')
-            /** @bug destination buffer might be too small */
-            strncat(pathname, cc++, 1);
-        do
-        {
-            char *d = strchr(cc, '/');
-            if (d)
-            {
-                d++;
-                /** @bug destination buffer might be too small */
-                strncat(pathname, cc, d - cc);
-            }
-            else
-                /** @bug destination buffer might be too small */
-                strcat(pathname, cc);
-            cc = d;
-            /** @bug ignores errno without explanation */
-            if (stat(pathname, &statbuf) < 0)
-                /** @bug ignores error code without explanation */
-                mkdir(pathname, 0777);
-        }
-        while (cc);
+        sta = ERR_SCM_WRITE_EE;
+        goto done;
     }
-    /** @bug redundant with above stat() and mkdir() */
-    /** @bug ignores errno without explanation */
-    else if (stat(pathname, &statbuf) < 0)
-        /** @bug ignores error code without explanation */
-        mkdir(pathname, 0777);
+    char *pathname_end = pathname + pathname_lth;
+    size_t pathname_buf_remaining = sizeof(pathname) - pathname_lth;
+    cc = &outdir[tdir_lth];
+    while (cc)
+    {
+        char *d = strchr(cc, '/');
+        char backup;
+        if (d)
+        {
+            backup = *(++d);
+            *d = '\0';
+        }
+        size_t len = xstrlcpy(pathname_end, cc, pathname_buf_remaining);
+        pathname_end += len;
+        pathname_buf_remaining -= len;
+        if (d)
+        {
+            *d = backup;
+        }
+        cc = d;
+        /** @bug ignores errno without explanation */
+        if (stat(pathname, &statbuf) < 0)
+            /** @bug ignores error code without explanation */
+            mkdir(pathname, 0777);
+    }
+
     unsigned int dir_id;
     /** @bug ignores error code without explanation */
     sta = findorcreatedir(scmp, conp, pathname, &dir_id);
-    /** @bug destination buffer might be too small */
-    strcat(strcat(pathname, "/"), certname);
+    xsnprintf(pathname_end, pathname_buf_remaining, "/%s", certname);
     if (certfilenamep)
         /** @bug destination buffer might be too small */
         strcpy(certfilenamep, certname);
@@ -3643,24 +3596,10 @@ extractAndAddCert(
     if (put_casn_file(&certp->self, pathname, 0) < 0)
         sta = ERR_SCM_WRITE_EE;
     else
-        /**
-         * @bug because a filename is given, x509p will be set to NULL
-         * without calling X509_free() on it first.  this results in a
-         * memory leak from the X509 structure returned from the call
-         * to d2i_X509() above
-         */
         cf = cert2fields(certname, pathname, typ, &x509p, &sta, &x509sta);
     if (cf != NULL && sta == 0)
     {
         // add the X509 cert to the db with the right directory
-        if (!cc)
-        {
-            cc = strrchr(pathname, (int)'/');
-            strncpy(certname, pathname, (cc - pathname));
-            certname[cc - pathname] = 0;
-        }
-        else
-            strcpy(certname, outdir);
         sta = add_cert_2(scmp, conp, cf, x509p, dir_id, utrust, &cert_id,
                          pathname);
         if (typ == OT_ROA && sta == ERR_SCM_DUPSIG)
@@ -3677,12 +3616,7 @@ extractAndAddCert(
         else if (!sta && (cf->flags & SCM_FLAG_VALIDATED))
             sta = 1;
     }
-    /**
-     * @bug memory leak if put_casn_file() or cert2fields() fails, and
-     * a potential leak if they succeed (add_cert_2() may or may not
-     * take ownership of x509p)
-     */
-    x509p = NULL;               /* freed by add_cert_2 */
+    X509_free(x509p);
     freecf(cf);
     cf = NULL;
 done:

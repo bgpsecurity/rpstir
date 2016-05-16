@@ -444,7 +444,7 @@ createalltablesscm(
 
 static int findcol(
     scmtab *tabp,
-    char *coln)
+    const char *coln)
 {
     char *ptr;
     int i;
@@ -476,7 +476,7 @@ valcols(
     scmtab *tabp,
     scmkva *arr)
 {
-    char *ptr;
+    const char *ptr;
     int i;
 
     if (conp == NULL || tabp == NULL || arr == NULL || arr->vec == NULL)
@@ -1245,7 +1245,6 @@ searchorcreatescm(
     unsigned int *idp)
 {
     unsigned int mid = 0;
-    char *tmp;
     err_code sta;
 
     if (idp == NULL || scmp == NULL || conp == NULL || conp->connected == 0 ||
@@ -1276,22 +1275,22 @@ searchorcreatescm(
     if (sta < 0)
         return (sta);
     mid++;
-    tmp = ins->vec[0].value;
-    if (tmp != NULL)
+    free((void *)ins->vec[0].value);
+    // assign NULL to avoid a double free() if the calloc() below
+    // fails and ins->vec is reused
+    ins->vec[0].value = NULL;
+    char *val = calloc(16, sizeof(char));
+    if (!val)
     {
-        free(tmp);
-        ins->vec[0].value = NULL;
-    }
-    ins->vec[0].value = (char *)calloc(16, sizeof(char));
-    if (ins->vec[0].value == NULL)
+        LOG(LOG_ERR, "unable to allocate memory for column value");
         return (ERR_SCM_NOMEM);
-    xsnprintf(ins->vec[0].value, 16, "%u", mid);
+    }
+    xsnprintf(val, 16, "%u", mid);
+    ins->vec[0].value = val;
     sta = insertscm(conp, tabp, ins);
-    free((void *)(ins->vec[0].value));
-    /**
-     * @bug ins->vec[0].value should be set to NULL to avoid a double
-     * free() if ins->vec is reused
-     */
+    // assign NULL to avoid a double free() if ins->vec is reused
+    ins->vec[0].value = NULL;
+    free(val);
     if (sta < 0)
         return (sta);
     *idp = mid;

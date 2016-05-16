@@ -31,7 +31,7 @@ extern int strwillfit(
     char *inbuf,
     int totlen,
     int already,
-    char *newbuf);
+    const char *newbuf);
 
 /*
  * Returns 1 if the argument is a directory, 0 if it isn't and a negative

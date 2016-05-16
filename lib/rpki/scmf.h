@@ -33,8 +33,8 @@ typedef struct _scmcon          /* connection info */
 
 typedef struct _scmkv           /* used for a single column of an insert */
 {
-    char *column;               /* column name */
-    char *value;                /* value for that column */
+    const char *column;         /* column name */
+    const char *value;          /* value for that column */
 } scmkv;
 
 typedef struct _scmkva          /* used for an insert */

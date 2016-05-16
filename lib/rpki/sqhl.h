@@ -110,7 +110,7 @@ err_code
 findorcreatedir(
     scm *scmp,
     scmcon *conp,
-    char *dirname,
+    const char *dirname,
     unsigned int *idp);
 
 /*
