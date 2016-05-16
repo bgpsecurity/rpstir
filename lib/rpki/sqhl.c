@@ -1760,10 +1760,6 @@ done:
  * @brief
  *     crl verification code
  *
- * @param[out] x509sta
- *     The value at this location will be set to an error code
- *     indicating whether there was an error finding the parent
- *     certificate (if any).  This may be NULL.
  * @param[out] chainOK
  *     The value at this location will be set to true if a parent
  *     certificate was found, false otherwise.  Setting this to true
@@ -1781,9 +1777,9 @@ verify_crl(
     X509_CRL *x,
     char *parentSKI,
     char *parentSubject,
-    err_code *x509sta,
     int *chainOK)
 {
+    /** @bug should be named x509sta to be consistent with other code */
     int sta = 0;
     X509 *parent;
     EVP_PKEY *pkey;
@@ -1795,20 +1791,11 @@ verify_crl(
      */
     /**
      * @bug
-     *     I'm pretty sure sta and x509sta were accidentally switched
-     *     (sta should be used where x509sta is used and vice-versa)
-     *     based on their names and the fact that returning
-     *     parent_cert()'s return status doesn't make much sense.  If
-     *     so, fix it (including handling parent_cert()'s error code)
-     *     and update the documentation above.
-     */
-    /**
-     * @bug
      *     parent_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
+    parent = parent_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -2061,7 +2048,6 @@ verifyChildCRL(
     unsigned int id;
     object_type typ;
     int chainOK;
-    err_code x509sta;
     char pathname[PATH_MAX];
 
     UNREFERENCED_PARAMETER(idx);
@@ -2078,10 +2064,9 @@ verifyChildCRL(
                     &x, &sta, &crlsta, goodoids);
     if (cf == NULL)
         return sta;
-    /** @bug ignores x509sta error code without explanation */
     /** @bug ignores chainOK without explanation */
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
-                     cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
+                     cf->fields[CRF_FIELD_ISSUER], &chainOK);
     id = *((unsigned int *)(s->vec[2].valptr));
     // if invalid, delete it
     if (sta < 0)
@@ -3387,7 +3372,6 @@ add_crl(
     err_code sta = 0;
     unsigned int i;
     int chainOK;
-    err_code x509sta;
     struct CertificateRevocationList crl;
 
     if (!goodoids[0].lth)
@@ -3421,9 +3405,8 @@ add_crl(
     }
     cf->dirid = id;
     // first verify the CRL
-    /** @bug ignores x509sta error code without explanation */
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
-                     cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
+                     cf->fields[CRF_FIELD_ISSUER], &chainOK);
     // then add the CRL
     if (sta == 0)
     {
