@@ -3338,13 +3338,12 @@ add_cert(
     unsigned int id,
     int utrust,
     object_type typ,
-    unsigned int *cert_id,
-    int constraining)
+    unsigned int *cert_id)
 {
     LOG(LOG_DEBUG, "add_cert(scmp=%p, conp=%p, outfile=\"%s\""
         ", outfull=\"%s\", id=%u, utrust=%d, typ=%d"
-        ", cert_id=%p, constraining=%d)",
-        scmp, conp, outfile, outfull, id, utrust, typ, cert_id, constraining);
+        ", cert_id=%p)",
+        scmp, conp, outfile, outfull, id, utrust, typ, cert_id);
 
     cert_fields *cf;
     X509 *x = NULL;
@@ -3361,7 +3360,7 @@ add_cert(
     {
         goto done;
     }
-    useParacerts = constraining;
+    useParacerts = 0;
     sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
     LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
         err2name(sta), err2string(sta));
@@ -4352,10 +4351,9 @@ add_object(
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN + OT_PEM_OFFSET:
-        LOG(LOG_DEBUG, "calling add_cert(%p, %p, \"%s\", \"%s\", %d, %d, %d, %p, 0)",
+        LOG(LOG_DEBUG, "calling add_cert(%p, %p, \"%s\", \"%s\", %d, %d, %d, %p)",
             scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
-        sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id,
-                       0);
+        sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
         LOG(LOG_DEBUG, "add_cert() returned %s: %s",
             err2name(sta), err2string(sta));
         break;

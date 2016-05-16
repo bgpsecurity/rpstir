@@ -188,8 +188,7 @@ add_cert(
     unsigned int id,
     int utrust,
     object_type typ,
-    unsigned int *cert_id,
-    int constraining);
+    unsigned int *cert_id);
 
 /*
  * Add a CRL to the DB.  This function returns 0 on success and a negative
