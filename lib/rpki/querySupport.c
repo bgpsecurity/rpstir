@@ -588,9 +588,6 @@ displayFlags(
     {
         addFlagIfSet(returnStr, flags, SCM_FLAG_ONMAN, "ONMAN");
     }
-    addFlagIfSet(returnStr, flags, SCM_FLAG_HASPARACERT, "HASPARACERT");
-    addFlagIfSet(returnStr, flags, SCM_FLAG_ISPARACERT, "ISPARACERT");
-    addFlagIfSet(returnStr, flags, SCM_FLAG_ISTARGET, "ISTARGET");
     return 1;
 }
 

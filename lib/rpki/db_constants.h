@@ -38,12 +38,12 @@ typedef enum {
 #define SCM_FLAG_STALEMAN     0x40
 /** @brief has associated valid manifest */
 #define SCM_FLAG_ONMAN        0x100
-/** @brief is a paracert */
-#define SCM_FLAG_ISPARACERT   0x200
-/** @brief has a paracert */
-#define SCM_FLAG_HASPARACERT  0x400
-/** @brief is a target for LTA work */
-#define SCM_FLAG_ISTARGET     0x800
+// The following flags were previously defined but have been deleted:
+//   - 0x200 was SCM_FLAG_ISPARACERT
+//   - 0x400 was SCM_FLAG_HASPARACERT
+//   - 0x800 was SCM_FLAG_ISTARGET
+// These flags were used for LTAM (draft-ietf-sidr-ltamgmt) but that
+// draft has been superseded by SLURM (draft-ietf-sidr-slurm).
 
 
 #endif
