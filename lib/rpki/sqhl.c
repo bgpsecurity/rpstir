@@ -1316,8 +1316,7 @@ static X509 *parent_cert(
         goto done;
     }
     assert(cert_answersp);
-    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
-    int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
+    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[0];
     LOG(LOG_DEBUG, "got %i answers", cert_answersp->num_ansrs);
     assert(cert_answersp->num_ansrs >= 0);
     if (LOG_DEBUG <= LOG_LEVEL)
@@ -1335,29 +1334,8 @@ static X509 *parent_cert(
             LOG(LOG_DEBUG, "    local_id=%u", ansr->local_id);
         }
     }
-    if (cert_answersp->num_ansrs == 1)
+    if (cert_answersp->num_ansrs == 2)
     {
-        cert_ansrp = &cert_answersp->cert_ansrp[0];
-        if (cert_ansrp->flags & (SCM_FLAG_ISTARGET | SCM_FLAG_HASPARACERT))
-        {
-            /** @bug shouldn't sta be set to an error code? */
-            goto done;
-        }
-    }
-    else if (cert_answersp->num_ansrs == 2)
-    {
-        // do they conflict?
-        if (((cert_answersp->cert_ansrp[0].flags & ff) &
-             (cert_ansrp->flags & ff)))
-        {
-            /** @bug shouldn't sta be set to an error code? */
-            goto done;
-        }
-        if (!(cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT))
-        {
-            cert_ansrp = &cert_answersp->cert_ansrp[0];
-        }
-
         if (!parentAKI || !parentIssuer)
         {
             goto done;
@@ -1367,7 +1345,7 @@ static X509 *parent_cert(
         /** @bug destination buffer might be smaller than source string */
         strcpy(parentIssuer, cert_ansrp->issuer);
     }
-    else
+    else if (cert_answersp->num_ansrs != 1)
     {
         /**
          * @bug
@@ -4656,36 +4634,6 @@ revoke_cert_and_children(
     if ((sta = deletebylid(conp, theCertTable, lid)) < 0)
     {
         goto done;
-    }
-    char *ski = (char *)(s->vec[1].valptr);
-    ulong flags = *(unsigned int *)(s->vec[3].valptr);
-    if ((flags & SCM_FLAG_ISPARACERT))
-    {                           // is its regular cert in the DB with unneeded
-                                // flags?
-        struct cert_answers *cert_answersp;
-        struct cert_ansr *cert_ansrp;
-        cert_answersp = find_cert_by_aKI(ski, NULL, theSCMP, conp);
-        /**
-         * @bug
-         *     ignores error code without explanation (num_ansrs might
-         *     be negative)
-         */
-        if (cert_answersp && cert_answersp->num_ansrs)
-        {
-            int i;
-            for (i = 0, cert_ansrp = &cert_answersp->cert_ansrp[i];
-                 i < cert_answersp->num_ansrs; i++, cert_ansrp++)
-            {
-                if ((cert_ansrp->
-                     flags & (SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET)))
-                {               // if so, clear them
-                    flags = (cert_ansrp->flags &
-                             ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
-                    /** @bug ignores error code without explanation */
-                    set_cert_flag(conp, cert_ansrp->local_id, flags);
-                }
-            }
-        }
     }
     sta = verifyOrNotChildren(
         conp, s->vec[1].valptr, s->vec[2].valptr, NULL, NULL, lid, 0);
