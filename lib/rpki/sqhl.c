@@ -1295,7 +1295,6 @@ find_cert(
         ", pathname=%s, flagsp=%p)",
         conp, ski, subject, stap, pathname, flagsp);
 
-    char ofullname[PATH_MAX];   /* full pathname */
     X509 *ret = NULL;
     err_code sta = 0;
 
@@ -1338,12 +1337,11 @@ find_cert(
     }
     xstrlcpy(parentAKI, cert_ansrp->aki, sizeof(parentAKI));
     xstrlcpy(parentIssuer, cert_ansrp->issuer, sizeof(parentIssuer));
-    xsnprintf(ofullname, sizeof(ofullname), "%s", cert_ansrp->fullname);
     if (pathname != NULL)
-        strncpy(pathname, ofullname, PATH_MAX);
+        strncpy(pathname, cert_ansrp->fullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
-    ret = readCertFromFile(ofullname, &sta);
+    ret = readCertFromFile(cert_ansrp->fullname, &sta);
 done:
     if (cert_answersp)
     {
