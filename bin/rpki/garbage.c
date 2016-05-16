@@ -64,6 +64,7 @@ handleIfStale(
     ssize_t cnt)
 {
     UNREFERENCED_PARAMETER(s);
+    /** @bug magic constant */
     char msg[600];
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
@@ -94,6 +95,7 @@ handleIfCurrent(
     scmsrcha *s,
     ssize_t cnt)
 {
+    /** @bug magic constant */
     char msg[128];
     UNREFERENCED_PARAMETER(s);
     if (cnt == 0)
@@ -151,6 +153,7 @@ countCurrentCRLs(
  * marks accordingly all objects referenced by manifest that is stale
  */
 static char staleManStmt[MANFILES_SIZE];
+/** @bug magic constant */
 static char *staleManFiles[10000];
 static int numStaleManFiles = 0;
 
@@ -256,8 +259,10 @@ int main(
     srch.vald = 0;
     srch.wherestr = NULL;
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
     status = searchscm(connect, metaTable, &srch, NULL, &handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -290,6 +295,10 @@ int main(
     srch.vald = 0;
     xsnprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
     srch.wherestr = msg;
+    /**
+     * @bug memory leak: the srch1[].valptr and .colname fields are
+     * overwritten by addcolsrchscm(), causing them to leak
+     */
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
     /** @bug ignores error code without explanation */
@@ -297,6 +306,7 @@ int main(
     countHandler = &handleIfStale;
     status = searchscm(connect, crlTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    /** @bug srch1 column names leak and should also be freed */
     free(srch1[0].valptr);
     free(srch1[1].valptr);
     if (status != 0 && status != ERR_SCM_NODATA)
@@ -309,6 +319,7 @@ int main(
     // now check for stale and then non-stale manifests
     // note: by doing non-stale test after stale test, those objects that
     // are referenced by both stale and non-stale manifests, set to not stale
+    /** @bug should srch.wherestr be set to NULL? */
     srch.nused = 0;
     srch.vald = 0;
     /** @bug ignores error code without explanation */
@@ -336,6 +347,10 @@ int main(
         handleStaleMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
+    /**
+     * @bug why is this set to 0?  seems like it's just an expensive
+     * no-op given that the columns haven't and won't change
+     */
     srch.vald = 0;
     xsnprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
@@ -359,6 +374,10 @@ int main(
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
+    /**
+     * @bug memory leak: srch[1].valptr and the column names should
+     * also be freed
+     */
     free(srch1[0].valptr);
 
     // check all certs in state unknown to see if now crl with issuer=issuer
@@ -370,14 +389,18 @@ int main(
     addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
     srch.wherestr = msg;
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, 512);
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
     countHandler = &handleIfCurrent;
     status = searchscm(connect, certTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    /** @bug memory leak: the column names should also be freed */
     free(srch1[0].valptr);
     free(srch1[1].valptr);
     free(srch1[2].valptr);

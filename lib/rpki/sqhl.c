@@ -575,7 +575,12 @@ get_cert_sigval(
         initTables(theSCMP);
     if (sigsrch == NULL)
     {
+        /** @bug ignores error code (NULL) without explanation */
         sigsrch = newsrchscm(NULL, 1, 0, 1);
+        /**
+         * @bug on error sigsrch will be left in a half-initialized
+         * state and it will never be fully initialized
+         */
         ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
                SIGVAL_UNKNOWN);
     }
@@ -608,7 +613,12 @@ get_roa_sigval(
         initTables(theSCMP);
     if (sigsrch == NULL)
     {
+        /** @bug ignores error code (NULL) without explanation */
         sigsrch = newsrchscm(NULL, 1, 0, 1);
+        /**
+         * @bug on error sigsrch will be left in a half-initialized
+         * state and it will never be fully initialized
+         */
         ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
                SIGVAL_UNKNOWN);
     }
@@ -1782,6 +1792,11 @@ verify_crl(
 
     /**
      * @bug
+     *     This doesn't resemble the algorithm in RFC5280 section
+     *     6.3.3 at all.  Specifically, step (f) is not performed.
+     */
+    /**
+     * @bug
      *     I'm pretty sure sta and x509sta were accidentally switched
      *     (sta should be used where x509sta is used and vice-versa)
      *     based on their names and the fact that returning
@@ -1789,6 +1804,12 @@ verify_crl(
      *     so, fix it (including handling parent_cert()'s error code)
      *     and update the documentation above.
      */
+    /**
+     * @bug
+     *     parent_cert() only returns one match.  What if there are
+     *     multiple matches?  (e.g., evil twin, cert renewal)
+     */
+    /** @bug ignores error code without explanation */
     parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
     if (parent == NULL)
     {
@@ -1921,6 +1942,11 @@ verify_roa(
     sta = roaValidate(r);
     if (sta < 0)
         return (sta);
+    /**
+     * @bug
+     *     parent_cert() only returns one match.  What if there are
+     *     multiple matches?  (e.g., evil twin, cert renewal)
+     */
     /** @bug ignores error code without explanation */
     cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
     if (cert == NULL)
@@ -3840,6 +3866,7 @@ done:
         scmkv roa_prefixes_cols[1];
         roa_prefixes_cols[0].column = "roa_local_id";
         roa_prefixes_cols[0].value = lid;
+        /** @bug shouldn't cols be roa_prefixes_cols? */
         roa_prefixes_aone.vec = &cols[0];
         roa_prefixes_aone.ntot =
             sizeof(roa_prefixes_cols)/sizeof(roa_prefixes_cols[0]);
@@ -4107,6 +4134,7 @@ add_manifest(
 
     // do the actual insert of the manifest in the db
     scmkva aone;
+    /** @bug why is this 12?  shouldn't it be 9? */
     scmkv cols[12];
     int idx = 0;
     char did[24],
@@ -4136,6 +4164,7 @@ add_manifest(
     xsnprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
     cols[idx++].value = lenbuf;
     aone.vec = &cols[0];
+    /** @bug why is this 12?  shouldn't it be 9? */
     aone.ntot = 12;
     aone.nused = idx;
     aone.vald = 0;
@@ -4585,12 +4614,14 @@ static void fillInColumns(
     srch1[1].sqltype = SQL_C_CHAR;
     srch1[1].colname = "ski";
     srch1[1].valptr = (void *)ski;
+    /** @bug magic constant; should be SKISIZE? */
     srch1[1].valsize = 512;
     srch1[1].avalsize = 0;
     srch1[2].colno = 3;
     srch1[2].sqltype = SQL_C_CHAR;
     srch1[2].colname = "subject";
     srch1[2].valptr = (void *)subject;
+    /** @bug magic constant; should be SUBJSIZE? */
     srch1[2].valsize = 512;
     srch1[2].avalsize = 0;
     srch1[3].colno = 4;
