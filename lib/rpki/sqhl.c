@@ -1779,8 +1779,7 @@ verify_crl(
     char *parentSubject,
     int *chainOK)
 {
-    /** @bug should be named x509sta to be consistent with other code */
-    int sta = 0;
+    int x509sta = 0;
     X509 *parent;
     EVP_PKEY *pkey;
 
@@ -1811,10 +1810,10 @@ verify_crl(
     }
     *chainOK = 1;
     pkey = X509_get_pubkey(parent);
-    sta = X509_CRL_verify(x, pkey);
+    x509sta = X509_CRL_verify(x, pkey);
     X509_free(parent);
     EVP_PKEY_free(pkey);
-    return (sta != 1) ? ERR_SCM_NOTVALID : 0;
+    return (x509sta != 1) ? ERR_SCM_NOTVALID : 0;
 }
 
 /**
