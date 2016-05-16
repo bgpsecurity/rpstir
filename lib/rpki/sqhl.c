@@ -1325,13 +1325,8 @@ find_cert(
             LOG(LOG_DEBUG, "    local_id=%u", ansr->local_id);
         }
     }
-    if ((cert_answersp->num_ansrs != 1) && (cert_answersp->num_ansrs != 2))
+    if (!cert_answersp->num_ansrs)
     {
-        /**
-         * @bug
-         *     what if there are many matches (e.g., cert renewal,
-         *     evil twin)?
-         */
         /** @bug shouldn't sta be set to an error code? */
         goto done;
     }
