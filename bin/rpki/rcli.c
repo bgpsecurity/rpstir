@@ -827,7 +827,6 @@ fileline(
 // -w port operate in wrapper mode using the given socket port
 // -p with -w indicates to run perpetually, e.g. as a daemon
 // -z run from file list instead of port
-// -c use RP work
 
 int main(
     int argc,
@@ -847,7 +846,6 @@ int main(
     char *ne;
     char *porto = NULL;
     char errmsg[1024];
-    char *skifile = NULL;
     int ians = 0;
     int do_create = 0;
     int do_delete = 0;
@@ -911,9 +909,6 @@ int main(
         case 'p':
             perpetual++;
             break;
-        case 'c':
-            skifile = optarg;
-            break;
         case 'h':
             usage();
             return (0);
@@ -935,7 +930,7 @@ int main(
         return (1);
     }
     if ((do_create + do_delete + do_sockopts + do_fileopts) == 0 &&
-        thefile == 0 && thedelfile == 0 && skifile == 0 && use_filelist == 0)
+        thefile == 0 && thedelfile == 0 && use_filelist == 0)
     {
         (void)printf("You need to specify at least one operation "
                      "(e.g. -f file).\n");
@@ -1295,29 +1290,9 @@ int main(
                     }
                 }
             }
-            if (sta == 0 && skifile)
-            {
-                LOG(LOG_DEBUG, "Starting skifile %s", skifile);
-                sta = read_SKI_blocks(scmp, realconp, skifile);
-                if (sta > 0)
-                    sta = 0;
-                if (sta)
-                    LOG(LOG_ERR, "Error with skifile: %s (%s)",
-                            err2string(sta), err2name(sta));
-            }
         } while (perpetual > 0);
         if (protos >= 0)
             (void)close(protos);
-    }
-    if (sta == 0 && skifile)
-    {
-        LOG(LOG_DEBUG, "Starting skifile %s", skifile);
-        sta = read_SKI_blocks(scmp, realconp, skifile);
-        if (sta > 0)
-            sta = 0;
-        if (sta)
-            LOG(LOG_ERR, "Error with skifile: %s (%s)",
-                err2string(sta), err2name(sta));
     }
     sqcleanup();
     if (realconp != NULL)
