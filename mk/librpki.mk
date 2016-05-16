@@ -23,8 +23,6 @@ lib_rpki_librpki_a_SOURCES = \
 	lib/rpki/myssl.h \
 	lib/rpki/querySupport.c \
 	lib/rpki/querySupport.h \
-	lib/rpki/rpcommon.c \
-	lib/rpki/rpwork.c \
 	lib/rpki/rpwork.h \
 	lib/rpki/scmf.h \
 	lib/rpki/scm.h \

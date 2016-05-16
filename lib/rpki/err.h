@@ -115,14 +115,6 @@
     f(ERR_SCM_BADALG, "Differing algorithms in cert")                   \
     f(ERR_SCM_BCPRES, "Basic constraints in EE cert")                   \
     f(ERR_SCM_BADSIGINFO, "Error in SignerInfos")                       \
-    f(ERR_SCM_BADPARACERT, "Error making para-certificate")             \
-    f(ERR_SCM_BADIPRANGE, "Invalid IP numbers")                         \
-    f(ERR_SCM_BADSKIBLOCK, "Invalid constraints entry")                 \
-    f(ERR_SCM_USECONFLICT, "Conflicting constraint entry")              \
-    f(ERR_SCM_NOSKIFILE, "Can't open constraints file")                 \
-    f(ERR_SCM_NORPCERT, "Can't find RP certificate")                    \
-    f(ERR_SCM_BADSKIFILE, "Defective constraints file")                 \
-    f(ERR_SCM_SIGNINGERR, "Error signing para-cert")                    \
     f(ERR_SCM_INVALROA, "Invalid ROA")                                  \
     f(ERR_SCM_INVALMAN, "Invalid manifest")                             \
     f(ERR_SCM_WRITE_EE, "Error writing EE cert")                        \

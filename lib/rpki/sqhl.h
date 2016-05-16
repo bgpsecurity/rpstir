@@ -355,12 +355,6 @@ extern struct Extension *get_extension(
     char *idp,
     int *count);
 
-err_code
-read_SKI_blocks(
-    scm *scmp,
-    scmcon *conp,
-    char *skiblockfile);
-
 extern char *retrieve_tdir(
     scm *scmp,
     scmcon *conp,
