@@ -5089,17 +5089,6 @@ ranlast(
     return (sta);
 }
 
-void *roa_parent(
-    scm *scmp,
-    scmcon *conp,
-    char *ski,
-    char *fn,
-    err_code *stap)
-{
-    initTables(scmp);
-    return parent_cert(conp, ski, NULL, stap, fn, NULL);
-}
-
 /*
  * open syslog and write message that application started
  */
