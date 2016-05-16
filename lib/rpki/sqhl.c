@@ -3387,7 +3387,7 @@ add_crl(
     err_code sta = 0;
     unsigned int i;
     int chainOK;
-    int x509sta;
+    err_code x509sta;
     struct CertificateRevocationList crl;
 
     if (!goodoids[0].lth)
