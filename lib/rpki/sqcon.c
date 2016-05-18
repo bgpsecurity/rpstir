@@ -1198,7 +1198,7 @@ addcolsrchscm(
     cdup = strdup(colname);
     if (cdup == NULL)
         return (ERR_SCM_NOMEM);
-    v = (void *)calloc(1, valsize);
+    v = calloc(1, valsize);
     if (v == NULL)
         /** @bug memory leak (cdup) */
         return (ERR_SCM_NOMEM);

@@ -211,13 +211,13 @@ char *retrieve_tdir(
     srch1.colno = 1;
     srch1.sqltype = SQL_C_CHAR;
     srch1.colname = "rootdir";
-    oot = (char *)calloc(PATH_MAX, sizeof(char));
+    oot = calloc(PATH_MAX, sizeof(char));
     if (oot == NULL)
     {
         *stap = ERR_SCM_NOMEM;
         return (NULL);
     }
-    srch1.valptr = (void *)oot;
+    srch1.valptr = oot;
     srch1.valsize = PATH_MAX;
     srch1.avalsize = 0;
     srch.vec = &srch1;
@@ -232,7 +232,7 @@ char *retrieve_tdir(
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
     {
-        free((void *)oot);
+        free(oot);
         oot = NULL;
     }
     *stap = sta;
@@ -273,7 +273,7 @@ dupsigscm(
     srch1.colno = 1;
     srch1.sqltype = SQL_C_LONG;
     srch1.colname = "local_id";
-    srch1.valptr = (void *)&lid;
+    srch1.valptr = &lid;
     srch1.valsize = sizeof(unsigned long);
     srch1.avalsize = 0;
     srch.vec = &srch1;
@@ -440,7 +440,9 @@ cleanup:
         free(escaped_strings[i]);
     }
     if (wptr != NULL)
-        free((void *)wptr);
+    {
+        free(wptr);
+    }
     lastCertIDAdded = *cert_id;
     return (sta);
 }
@@ -530,7 +532,7 @@ add_crl_internal(
     // add the CRL
     sta = insertscm(conp, theCRLTable, &aone);
 cleanup:
-    free((void *)hexs);
+    free(hexs);
     for (i = 0; i < CRF_NFIELDS; i++)
     {
         free(escaped_strings[i]);
@@ -2615,7 +2617,7 @@ static int countvalidparents(
     srch1.colno = 1;
     srch1.sqltype = SQL_C_ULONG;
     srch1.colname = "flags";
-    srch1.valptr = (void *)&flags;
+    srch1.valptr = &flags;
     srch1.valsize = sizeof(unsigned int);
     srch1.avalsize = 0;
     srch.vec = &srch1;
@@ -2628,12 +2630,12 @@ static int countvalidparents(
     if (now == NULL)
         return (sta);
     xsnprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
-    free((void *)now);
+    free(now);
     addFlagTest(ws, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(ws, SCM_FLAG_NOCHAIN, 0, 1);
     srch.wherestr = &ws[0];
     mymcf.did = 0;
-    srch.context = (void *)&mymcf;
+    srch.context = &mymcf;
     sta = searchscm(conp, theCertTable, &srch, NULL, &cparents,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
@@ -4540,25 +4542,25 @@ iterate_crl(
     srch1[1].colno = 2;
     srch1[1].sqltype = SQL_C_ULONG;
     srch1[1].colname = "snlen";
-    srch1[1].valptr = (void *)&snlen;
+    srch1[1].valptr = &snlen;
     srch1[1].valsize = sizeof(unsigned int);
     srch1[1].avalsize = 0;
     srch1[2].colno = 3;
     srch1[2].sqltype = SQL_C_ULONG;
     srch1[2].colname = "sninuse";
-    srch1[2].valptr = (void *)&sninuse;
+    srch1[2].valptr = &sninuse;
     srch1[2].valsize = sizeof(unsigned int);
     srch1[2].avalsize = 0;
     srch1[3].colno = 4;
     srch1[3].sqltype = SQL_C_ULONG;
     srch1[3].colname = "flags";
-    srch1[3].valptr = (void *)&flags;
+    srch1[3].valptr = &flags;
     srch1[3].valsize = sizeof(unsigned int);
     srch1[3].avalsize = 0;
     srch1[4].colno = 5;
     srch1[4].sqltype = SQL_C_ULONG;
     srch1[4].colname = "local_id";
-    srch1[4].valptr = (void *)&lid;
+    srch1[4].valptr = &lid;
     srch1[4].valsize = sizeof(unsigned int);
     srch1[4].avalsize = 0;
     srch1[5].colno = 6;
@@ -4585,7 +4587,7 @@ iterate_crl(
     crli.conp = conp;
     crli.tabp = theCRLTable;
     crli.cfunc = cfunc;
-    srch.context = (void *)&crli;
+    srch.context = &crli;
     sta = searchscm(conp, theCRLTable, &srch, NULL, &crliterator,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     return (sta);
@@ -4607,27 +4609,27 @@ static void fillInColumns(
     srch1[0].colno = 1;
     srch1[0].sqltype = SQL_C_ULONG;
     srch1[0].colname = "local_id";
-    srch1[0].valptr = (void *)lid;
+    srch1[0].valptr = lid;
     srch1[0].valsize = sizeof(unsigned int);
     srch1[0].avalsize = 0;
     srch1[1].colno = 2;
     srch1[1].sqltype = SQL_C_CHAR;
     srch1[1].colname = "ski";
-    srch1[1].valptr = (void *)ski;
+    srch1[1].valptr = ski;
     /** @bug magic constant; should be SKISIZE? */
     srch1[1].valsize = 512;
     srch1[1].avalsize = 0;
     srch1[2].colno = 3;
     srch1[2].sqltype = SQL_C_CHAR;
     srch1[2].colname = "subject";
-    srch1[2].valptr = (void *)subject;
+    srch1[2].valptr = subject;
     /** @bug magic constant; should be SUBJSIZE? */
     srch1[2].valsize = 512;
     srch1[2].avalsize = 0;
     srch1[3].colno = 4;
     srch1[3].sqltype = SQL_C_ULONG;
     srch1[3].colname = "flags";
-    srch1[3].valptr = (void *)flags;
+    srch1[3].valptr = flags;
     srch1[3].valsize = sizeof(unsigned int);
     srch1[3].avalsize = 0;
     srch->vec = srch1;
@@ -4731,7 +4733,7 @@ delete_object(
         srch1.colno = 1;
         srch1.sqltype = SQL_C_ULONG;
         srch1.colname = "dir_id";
-        srch1.valptr = (void *)&id;
+        srch1.valptr = &id;
         srch1.valsize = sizeof(unsigned int);
         srch1.avalsize = 0;
         srch.vec = &srch1;

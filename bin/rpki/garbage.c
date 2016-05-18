@@ -45,8 +45,8 @@ handleTimestamps(
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(numLine);
-    currTimestamp = (char *)s->vec[0].valptr;
-    prevTimestamp = (char *)s->vec[1].valptr;
+    currTimestamp = s->vec[0].valptr;
+    prevTimestamp = s->vec[1].valptr;
     return 0;
 }
 
@@ -129,8 +129,8 @@ countCurrentCRLs(
         /** @bug ignores error code without explanation */
         addcolsrchscm(cntSrch, "local_id", SQL_C_ULONG, 8);
     }
-    theIssuer = (char *)s->vec[0].valptr;
-    theAKI = (char *)s->vec[1].valptr;
+    theIssuer = s->vec[0].valptr;
+    theAKI = s->vec[1].valptr;
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
