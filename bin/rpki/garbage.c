@@ -218,7 +218,6 @@ int main(
     scmsrcha srch;
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
-    unsigned long blah = 0;
     err_code status;
     int i;
 
@@ -250,7 +249,6 @@ int main(
     srch.sname = NULL;
     srch.ntot = 4;
     srch.where = NULL;
-    srch.context = &blah;
 
     // find the current time and last time garbage collector ran
     metaTable = findtablescm(scmp, "metadata");

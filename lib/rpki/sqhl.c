@@ -189,7 +189,6 @@ char *retrieve_tdir(
     scmcon *conp,
     err_code *stap)
 {
-    unsigned int blah;
     scmsrcha srch;
     scmsrch srch1;
     scmkva where;
@@ -227,7 +226,6 @@ char *retrieve_tdir(
     srch.vald = 0;
     srch.where = &where;
     srch.wherestr = NULL;
-    srch.context = &blah;
     sta = searchscm(conp, theMetaTable, &srch, NULL,
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
@@ -251,7 +249,6 @@ dupsigscm(
     scmtab *tabp,
     char *msig)
 {
-    unsigned int blah;
     unsigned long lid;
     scmsrcha srch;
     scmsrch srch1;
@@ -283,7 +280,6 @@ dupsigscm(
     srch.vald = 0;
     srch.where = &where;
     srch.wherestr = NULL;
-    srch.context = &blah;
     sta = searchscm(conp, tabp, &srch, NULL,
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     switch (sta)
@@ -4696,7 +4692,6 @@ delete_object(
     unsigned int dir_id)
 {
     unsigned int id;
-    unsigned int blah;
     unsigned int lid;
     unsigned int flags;
     scmsrcha srch;
@@ -4743,7 +4738,6 @@ delete_object(
         srch.vald = 0;
         srch.where = &where;
         srch.wherestr = NULL;
-        srch.context = &blah;
         sta =
             searchscm(conp, theDirTable, &srch, NULL, &ok,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
