@@ -377,8 +377,7 @@ add_cert_internal(
     int idx = 0;
     err_code sta;
     int i;
-    char *escaped_strings[CF_NFIELDS];
-    memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
+    char *escaped_strings[CF_NFIELDS] = {NULL};
 
     initTables(scmp);
     sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
@@ -460,15 +459,13 @@ add_crl_internal(
     char *ptr;
     char *hexs;
     char flagn[24];
-    char lid[24];
+    char lid[24] = {'\0'};
     char did[24];
     char csnlen[24];
     int idx = 0;
     err_code sta;
     int i;
-    char *escaped_strings[CRF_NFIELDS];
-
-    memset(escaped_strings, 0, CRF_NFIELDS*sizeof(char*));
+    char *escaped_strings[CRF_NFIELDS] = {NULL};
 
     // immediately check for duplicate signature
     initTables(scmp);
@@ -505,7 +502,6 @@ add_crl_internal(
             cols[idx++].value = escaped_strings[i];
         }
     }
-    memset(lid, 0, sizeof(lid));
     xsnprintf(flagn, sizeof(flagn), "%u", cf->flags);
     cols[idx].column = "flags";
     cols[idx++].value = flagn;
@@ -3507,8 +3503,8 @@ extractAndAddCert(
     X509 *x509p = NULL;
     cert_fields *cf = NULL;
     unsigned int cert_id;
-    char certname[PATH_MAX];
-    char pathname[PATH_MAX];
+    char certname[PATH_MAX] = {'\0'};
+    char pathname[PATH_MAX] = {'\0'};
     int hexify_sta;
     err_code sta = 0;
     struct Certificate *certp;
@@ -3542,8 +3538,6 @@ extractAndAddCert(
         sta = ERR_SCM_BADEXT;
         goto done;
     }
-    memset(certname, 0, sizeof(certname));
-    memset(pathname, 0, sizeof(pathname));
     xsnprintf(certname, sizeof(certname), "%s.cer", outfile);
     // find or add the directory
     /** @bug ignores error code without explanation */
@@ -4770,12 +4764,9 @@ delete_object(
         || typ == OT_MAN_PEM || typ == OT_GBR)
     {
         unsigned int ndir_id;
-        char noutfile[PATH_MAX];
-        char noutdir[PATH_MAX];
-        char noutfull[PATH_MAX];
-        memset(noutfile, 0, PATH_MAX);
-        memset(noutdir, 0, PATH_MAX);
-        memset(noutfull, 0, PATH_MAX);
+        char noutfile[PATH_MAX] = {'\0'};
+        char noutdir[PATH_MAX] = {'\0'};
+        char noutfull[PATH_MAX] = {'\0'};
         /** @bug ignores error code without explanation */
         char *c = retrieve_tdir(scmp, conp, &sta);
         int lth = strlen(c);    // lth of tdir
@@ -4815,10 +4806,8 @@ revoke_cert_by_serial(
     char ski[512];
     char subject[512];
     char *sno;
-    uint8_t sn_zero[SER_NUM_MAX_SZ];
+    uint8_t sn_zero[SER_NUM_MAX_SZ] = {0};
     err_code sta;
-
-    memset(sn_zero, 0, sizeof(sn_zero));
 
     if (scmp == NULL || conp == NULL || conp->connected == 0)
         return (ERR_SCM_INVALARG);
