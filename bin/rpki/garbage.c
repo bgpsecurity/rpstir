@@ -217,7 +217,6 @@ int main(
     scm *scmp = NULL;
     scmcon *connect = NULL;
     scmtab *metaTable = NULL;
-    scmsrcha srch;
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
     err_code status;
@@ -247,17 +246,20 @@ int main(
     checkErr(roaTable == NULL, "Cannot find table roa\n");
     manifestTable = findtablescm(scmp, "manifest");
     checkErr(manifestTable == NULL, "Cannot find table manifest\n");
-    srch.vec = srch1;
-    srch.sname = NULL;
-    srch.ntot = ELTS(srch1);
-    srch.where = NULL;
+
+    scmsrcha srch = {
+        .vec = srch1,
+        .sname = NULL,
+        .ntot = ELTS(srch1),
+        .nused = 0,
+        .vald = 0,
+        .where = NULL,
+        .wherestr = NULL,
+    };
 
     // find the current time and last time garbage collector ran
     metaTable = findtablescm(scmp, "metadata");
     checkErr(metaTable == NULL, "Cannot find table metadata\n");
-    srch.nused = 0;
-    srch.vald = 0;
-    srch.wherestr = NULL;
     /** @bug ignores error code without explanation */
     /** @bug magic constant */
     addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
