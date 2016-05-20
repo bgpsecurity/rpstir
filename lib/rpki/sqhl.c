@@ -24,6 +24,7 @@
 
 #include "cms/roa_utils.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "util/stringutils.h"
 
 
@@ -3706,7 +3707,7 @@ add_roa_internal(
     cols[idx].column = "local_id";
     cols[idx++].value = lid;
     aone.vec = &cols[0];
-    aone.ntot = sizeof(cols)/sizeof(cols[0]);
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     // add the ROA
@@ -3848,8 +3849,7 @@ done:
         roa_prefixes_cols[0].value = lid;
         /** @bug shouldn't cols be roa_prefixes_cols? */
         roa_prefixes_aone.vec = &cols[0];
-        roa_prefixes_aone.ntot =
-            sizeof(roa_prefixes_cols)/sizeof(roa_prefixes_cols[0]);
+        roa_prefixes_aone.ntot = ELTS(roa_prefixes_cols);
         roa_prefixes_aone.nused = roa_prefixes_aone.ntot;
         roa_prefixes_aone.vald = 0;
         delete_status =
@@ -4262,8 +4262,8 @@ add_ghostbusters(
 
     scmkva aone = {
         .vec = &cols[0],
-        .ntot = sizeof(cols)/sizeof(cols[0]),
-        .nused = sizeof(cols)/sizeof(cols[0]),
+        .ntot = ELTS(cols),
+        .nused = ELTS(cols),
         .vald = 0,
     };
 
