@@ -4135,9 +4135,9 @@ add_manifest(
     /** @bug why is this 12?  shouldn't it be 9? */
     scmkv cols[12];
     int idx = 0;
-    char did[24],
-        mid[24],
-        lenbuf[20];
+    char did[24];
+    char mid[24];
+    char lenbuf[20];
     cols[idx].column = "filename";
     cols[idx++].value = outfile;
     xsnprintf(did, sizeof(did), "%u", id);

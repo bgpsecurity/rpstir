@@ -20,17 +20,17 @@
  * and updates its state accordingly.
  **************/
 
-static char *prevTimestamp,
-   *currTimestamp;
-static char *theIssuer,
-   *theAKI;                     // for passing to callback
+static char *prevTimestamp;
+static char *currTimestamp;
+static char *theIssuer;
+static char *theAKI;                     // for passing to callback
 static unsigned int theID;      // for passing to callback
 static sqlcountfunc *countHandler;       // used by countCurrentCRLs
-static scmtab *certTable,
-   *crlTable,
-   *gbrTable,
-   *roaTable,
-   *manifestTable;
+static scmtab *certTable;
+static scmtab *crlTable;
+static scmtab *gbrTable;
+static scmtab *roaTable;
+static scmtab *manifestTable;
 
 /**
  * @brief
