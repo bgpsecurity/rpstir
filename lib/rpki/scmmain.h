@@ -70,7 +70,8 @@ static scmtab scmtabbuilder[] = {
      "         KEY ski (ski, subject),"
      "         KEY aki (aki, issuer),"
      "         KEY lid (local_id),"
-     "         KEY sig (sig)," "         KEY isn (issuer, sn)",
+     "         KEY sig (sig),"
+     "         KEY isn (issuer, sn)",
      NULL,
      0},
     {                           /* RPKI_CRL */
@@ -108,7 +109,8 @@ static scmtab scmtabbuilder[] = {
      "         PRIMARY KEY (filename, dir_id),"
      "         KEY issuer (issuer),"
      "         KEY aki (aki),"
-     "         KEY sig (sig)," "         KEY lid (local_id)",
+     "         KEY sig (sig),"
+     "         KEY lid (local_id)",
      NULL,
      0},
     {                           /* RPKI_ROA */
@@ -185,7 +187,8 @@ static scmtab scmtabbuilder[] = {
      "DIRECTORY",
      "dirname  VARCHAR(4096) NOT NULL,"
      "dir_id   INT UNSIGNED NOT NULL,"
-     "         PRIMARY KEY (dir_id)," "         KEY dirname (dirname)",
+     "         PRIMARY KEY (dir_id),"
+     "         KEY dirname (dirname)",
      NULL,
      0},
     {                           /* RPKI_METADATA */
@@ -198,7 +201,8 @@ static scmtab scmtabbuilder[] = {
      "gc_last  TIMESTAMP DEFAULT 0,"
      "ch_last  TIMESTAMP DEFAULT 0,"
      "flags    INT UNSIGNED DEFAULT 0,"
-     "local_id INT UNSIGNED DEFAULT 1," "         PRIMARY KEY (local_id)",
+     "local_id INT UNSIGNED DEFAULT 1,"
+     "         PRIMARY KEY (local_id)",
      NULL,
      0},
 
@@ -217,7 +221,8 @@ static scmtab scmtabbuilder[] = {
      "rtr_update",
      "RTR_UPDATE",
      // NULL indicates no previous serial number currently exists
-     "serial_num      INT UNSIGNED NOT NULL," "prev_serial_num INT UNSIGNED,"
+     "serial_num      INT UNSIGNED NOT NULL,"
+     "prev_serial_num INT UNSIGNED,"
      "create_time     DATETIME NOT NULL,"
      "has_full        BOOLEAN NOT NULL,"
      "                PRIMARY KEY (serial_num),"

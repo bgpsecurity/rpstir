@@ -4244,33 +4244,33 @@ add_ghostbusters(
     xsnprintf(flags_str, sizeof(flags_str), "%u", flags);
 
     scmkv cols[] = {
-     {
-      .column = "filename",
-      .value = outfile,
-     },
-     {
-      .column = "dir_id",
-      .value = dir_id_str,
-     },
-     {
-      .column = "local_id",
-      .value = local_id_str,
-     },
-     {
-      .column = "ski",
-      .value = ski,
-     },
-     {
-      .column = "flags",
-      .value = flags_str,
-     },
+        {
+            .column = "filename",
+            .value = outfile,
+        },
+        {
+            .column = "dir_id",
+            .value = dir_id_str,
+        },
+        {
+            .column = "local_id",
+            .value = local_id_str,
+        },
+        {
+            .column = "ski",
+            .value = ski,
+        },
+        {
+            .column = "flags",
+            .value = flags_str,
+        },
     };
 
     scmkva aone = {
-     .vec = &cols[0],
-     .ntot = sizeof(cols)/sizeof(cols[0]),
-     .nused = sizeof(cols)/sizeof(cols[0]),
-     .vald = 0,
+        .vec = &cols[0],
+        .ntot = sizeof(cols)/sizeof(cols[0]),
+        .nused = sizeof(cols)/sizeof(cols[0]),
+        .vald = 0,
     };
 
     sta = insertscm(conp, theGBRTable, &aone);
