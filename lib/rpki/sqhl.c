@@ -4271,26 +4271,11 @@ add_ghostbusters(
     xsnprintf(flags_str, sizeof(flags_str), "%u", flags);
 
     scmkv cols[] = {
-        {
-            .column = "filename",
-            .value = outfile,
-        },
-        {
-            .column = "dir_id",
-            .value = dir_id_str,
-        },
-        {
-            .column = "local_id",
-            .value = local_id_str,
-        },
-        {
-            .column = "ski",
-            .value = ski,
-        },
-        {
-            .column = "flags",
-            .value = flags_str,
-        },
+        {"filename", outfile},
+        {"dir_id", dir_id_str},
+        {"local_id", local_id_str},
+        {"ski", ski},
+        {"flags", flags_str},
     };
 
     scmkva aone = {
