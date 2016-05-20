@@ -11,6 +11,7 @@
 #include "rpki/err.h"
 #include "config/config.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "util/stringutils.h"
 
 
@@ -247,7 +248,7 @@ int main(
     checkErr(manifestTable == NULL, "Cannot find table manifest\n");
     srch.vec = srch1;
     srch.sname = NULL;
-    srch.ntot = 4;
+    srch.ntot = ELTS(srch1);
     srch.where = NULL;
 
     // find the current time and last time garbage collector ran

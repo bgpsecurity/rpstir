@@ -147,8 +147,8 @@ findorcreatedir(
     where.nused = 1;
     where.vald = 0;
     ins.vec = &two[0];
-    ins.ntot = 2;
-    ins.nused = 2;
+    ins.ntot = ELTS(two);
+    ins.nused = ELTS(two);
     ins.vald = 0;
     srch = newsrchscm("focdir", 4, sizeof(unsigned int), 0);
     if (srch == NULL)
@@ -390,7 +390,7 @@ add_cert_internal(
     if (sta < 0)
         return (sta);
     // fill in insertion structure
-    for (i = 0; i < CF_NFIELDS + 5; i++)
+    for (i = 0; (size_t)i < ELTS(cols); i++)
         cols[i].value = NULL;
     for (i = 0; i < CF_NFIELDS; i++)
     {
@@ -427,7 +427,7 @@ add_cert_internal(
         cols[idx++].value = wptr;
     }
     aone.vec = &cols[0];
-    aone.ntot = CF_NFIELDS + 5;
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     sta = insertscm(conp, theCertTable, &aone);
@@ -489,7 +489,7 @@ add_crl_internal(
     }
     crl_id++;
     // fill in insertion structure
-    for (i = 0; i < CRF_NFIELDS + 6; i++)
+    for (i = 0; (size_t)i < ELTS(cols); i++)
         cols[i].value = NULL;
     for (i = 0; i < CRF_NFIELDS; i++)
     {
@@ -523,7 +523,7 @@ add_crl_internal(
     cols[idx].column = "snlist";
     cols[idx++].value = hexs;
     aone.vec = &cols[0];
-    aone.ntot = CRF_NFIELDS + 6;
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     // add the CRL
@@ -4144,8 +4144,7 @@ add_manifest(
     xsnprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
     cols[idx++].value = lenbuf;
     aone.vec = &cols[0];
-    /** @bug why is this 12?  shouldn't it be 9? */
-    aone.ntot = 12;
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     do
@@ -4541,8 +4540,8 @@ iterate_crl(
     srch1[6].avalsize = 0;
     srch.vec = &srch1[0];
     srch.sname = NULL;
-    srch.ntot = 7;
-    srch.nused = 7;
+    srch.ntot = ELTS(srch1);
+    srch.nused = ELTS(srch1);
     srch.vald = 0;
     srch.where = NULL;
     srch.wherestr = NULL;
@@ -4720,8 +4719,8 @@ delete_object(
     xsnprintf(did, sizeof(did), "%u", id);
     dtwo[1].value = did;
     dwhere.vec = &dtwo[0];
-    dwhere.ntot = 2;
-    dwhere.nused = 2;
+    dwhere.ntot = ELTS(dtwo);
+    dwhere.nused = ELTS(dtwo);
     dwhere.vald = 0;
     // delete the object based on the type
     // note that the directory itself is not deleted
@@ -4843,8 +4842,8 @@ revoke_cert_by_serial(
     w[2].column = "aki";
     w[2].value = aki;
     where.vec = &w[0];
-    where.ntot = 3;
-    where.nused = 3;
+    where.ntot = ELTS(w);
+    where.nused = ELTS(w);
     where.vald = 0;
     fillInColumns(srch1, &lid, ski, subject, &flags, &srch);
     srch.where = &where;
