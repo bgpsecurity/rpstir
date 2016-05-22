@@ -426,7 +426,7 @@ sign_cert(
     uchar *signature = NULL;
     int ansr = 0;
     int signatureLength;
-    char *msg;
+    char *msg = "UNKNOWN";
     uchar *signstring = NULL;
     int sign_lth;
 
