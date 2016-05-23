@@ -188,7 +188,7 @@ static scmtab scmtabbuilder[] = {
      "dirname  VARCHAR(4096) NOT NULL,"
      "dir_id   INT UNSIGNED NOT NULL,"
      "         PRIMARY KEY (dir_id),"
-     "         KEY dirname (dirname)",
+     "         KEY `dirname` (`dirname`(512))",
      NULL,
      0},
     {                           /* RPKI_METADATA */

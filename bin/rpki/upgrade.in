@@ -55,6 +55,8 @@ show_msgs () {
 upgrade_from_0_11 () {
     mysql_cmd <<\EOF || fatal "failed to update database records"
 ALTER TABLE rpki_manifest DROP COLUMN cert_id;
+DROP INDEX `dirname` ON `rpki_dir`;
+CREATE INDEX `dirname` ON `rpki_dir` (`dirname`(512));
 EOF
 }
 
