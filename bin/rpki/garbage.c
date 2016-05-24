@@ -21,10 +21,12 @@
  * and updates its state accordingly.
  **************/
 
-static char *prevTimestamp;
-static char *currTimestamp;
-static char *theIssuer;
-static char *theAKI;                     // for passing to callback
+/** @bug magic constant */
+static char prevTimestamp[24];
+/** @bug magic constant */
+static char currTimestamp[24];
+static char theIssuer[SUBJSIZE];
+static char theAKI[SKISIZE];
 static unsigned int theID;      // for passing to callback
 static sqlcountfunc *countHandler;       // used by countCurrentCRLs
 static scmtab *certTable;
@@ -46,8 +48,8 @@ handleTimestamps(
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(numLine);
-    currTimestamp = s->vec[0].valptr;
-    prevTimestamp = s->vec[1].valptr;
+    xstrlcpy(currTimestamp, (char *)s->vec[0].valptr, sizeof(currTimestamp));
+    xstrlcpy(prevTimestamp, (char *)s->vec[1].valptr, sizeof(prevTimestamp));
     return 0;
 }
 
@@ -131,8 +133,8 @@ countCurrentCRLs(
         /** @bug ignores error code without explanation */
         addcolsrchscm(cntSrch, "local_id", SQL_C_ULONG, 8);
     }
-    theIssuer = s->vec[0].valptr;
-    theAKI = s->vec[1].valptr;
+    xstrlcpy(theIssuer, (char *)s->vec[0].valptr, sizeof(theIssuer));
+    xstrlcpy(theAKI, (char *)s->vec[1].valptr, sizeof(theAKI));
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
@@ -261,11 +263,10 @@ int main(
     metaTable = findtablescm(scmp, "metadata");
     checkErr(metaTable == NULL, "Cannot find table metadata\n");
     /** @bug ignores error code without explanation */
-    /** @bug magic constant */
-    addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
+    addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR,
+                  sizeof(currTimestamp));
     /** @bug ignores error code without explanation */
-    /** @bug magic constant */
-    addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
+    addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, sizeof(prevTimestamp));
     status = searchscm(connect, metaTable, &srch, NULL, &handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0)
@@ -302,9 +303,9 @@ int main(
      * overwritten by addcolsrchscm(), causing them to leak
      */
     /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
+    addcolsrchscm(&srch, "issuer", SQL_C_CHAR, sizeof(theIssuer));
     /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "aki", SQL_C_CHAR, SKISIZE);
+    addcolsrchscm(&srch, "aki", SQL_C_CHAR, sizeof(theAKI));
     countHandler = &handleIfStale;
     status = searchscm(connect, crlTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -391,11 +392,9 @@ int main(
     addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
     srch.wherestr = msg;
     /** @bug ignores error code without explanation */
-    /** @bug magic constant */
-    addcolsrchscm(&srch, "issuer", SQL_C_CHAR, 512);
+    addcolsrchscm(&srch, "issuer", SQL_C_CHAR, sizeof(theIssuer));
     /** @bug ignores error code without explanation */
-    /** @bug magic constant */
-    addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
+    addcolsrchscm(&srch, "aki", SQL_C_CHAR, sizeof(theAKI));
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "local_id", SQL_C_ULONG, sizeof(unsigned int));
     countHandler = &handleIfCurrent;
