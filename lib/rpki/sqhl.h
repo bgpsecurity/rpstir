@@ -375,27 +375,6 @@ extern char *retrieve_tdir(
     scmcon *conp,
     err_code *stap);
 
-/**
- * @brief
- *     returns the X509 * structure for a ROA's corresponding EE
- *     certificate
- *
- * @param[in] ski
- *     SKI of the ROA
- * @param[out] fn
- *     If non-NULL, the full pathname of the parent certificate will
- *     be written to the buffer at this location.  The buffer must
- *     have size at least @c PATH_MAX.  This may be NULL.
- * @return
- *     an X509 * on success, NULL on error
- */
-extern void *roa_parent(
-    scm *scmp,
-    scmcon *conp,
-    char *ski,
-    char *fn,
-    err_code *stap);
-
 extern void startSyslog(
     char *appName);
 

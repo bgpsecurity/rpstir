@@ -24,6 +24,7 @@
 
 #include "cms/roa_utils.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "util/stringutils.h"
 
 
@@ -146,8 +147,8 @@ findorcreatedir(
     where.nused = 1;
     where.vald = 0;
     ins.vec = &two[0];
-    ins.ntot = 2;
-    ins.nused = 2;
+    ins.ntot = ELTS(two);
+    ins.nused = ELTS(two);
     ins.vald = 0;
     srch = newsrchscm("focdir", 4, sizeof(unsigned int), 0);
     if (srch == NULL)
@@ -189,7 +190,6 @@ char *retrieve_tdir(
     scmcon *conp,
     err_code *stap)
 {
-    unsigned int blah;
     scmsrcha srch;
     scmsrch srch1;
     scmkva where;
@@ -211,13 +211,13 @@ char *retrieve_tdir(
     srch1.colno = 1;
     srch1.sqltype = SQL_C_CHAR;
     srch1.colname = "rootdir";
-    oot = (char *)calloc(PATH_MAX, sizeof(char));
+    oot = calloc(PATH_MAX, sizeof(char));
     if (oot == NULL)
     {
         *stap = ERR_SCM_NOMEM;
         return (NULL);
     }
-    srch1.valptr = (void *)oot;
+    srch1.valptr = oot;
     srch1.valsize = PATH_MAX;
     srch1.avalsize = 0;
     srch.vec = &srch1;
@@ -227,12 +227,11 @@ char *retrieve_tdir(
     srch.vald = 0;
     srch.where = &where;
     srch.wherestr = NULL;
-    srch.context = &blah;
     sta = searchscm(conp, theMetaTable, &srch, NULL,
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
     {
-        free((void *)oot);
+        free(oot);
         oot = NULL;
     }
     *stap = sta;
@@ -251,7 +250,6 @@ dupsigscm(
     scmtab *tabp,
     char *msig)
 {
-    unsigned int blah;
     unsigned long lid;
     scmsrcha srch;
     scmsrch srch1;
@@ -273,8 +271,8 @@ dupsigscm(
     srch1.colno = 1;
     srch1.sqltype = SQL_C_LONG;
     srch1.colname = "local_id";
-    srch1.valptr = (void *)&lid;
-    srch1.valsize = sizeof(unsigned long);
+    srch1.valptr = &lid;
+    srch1.valsize = sizeof(lid);
     srch1.avalsize = 0;
     srch.vec = &srch1;
     srch.sname = NULL;
@@ -283,7 +281,6 @@ dupsigscm(
     srch.vald = 0;
     srch.where = &where;
     srch.wherestr = NULL;
-    srch.context = &blah;
     sta = searchscm(conp, tabp, &srch, NULL,
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     switch (sta)
@@ -380,8 +377,7 @@ add_cert_internal(
     int idx = 0;
     err_code sta;
     int i;
-    char *escaped_strings[CF_NFIELDS];
-    memset(escaped_strings, 0, CF_NFIELDS*sizeof(char*));
+    char *escaped_strings[CF_NFIELDS] = {NULL};
 
     initTables(scmp);
     sta = getmaxidscm(scmp, conp, "local_id", theCertTable, cert_id);
@@ -393,7 +389,7 @@ add_cert_internal(
     if (sta < 0)
         return (sta);
     // fill in insertion structure
-    for (i = 0; i < CF_NFIELDS + 5; i++)
+    for (i = 0; (size_t)i < ELTS(cols); i++)
         cols[i].value = NULL;
     for (i = 0; i < CF_NFIELDS; i++)
     {
@@ -430,7 +426,7 @@ add_cert_internal(
         cols[idx++].value = wptr;
     }
     aone.vec = &cols[0];
-    aone.ntot = CF_NFIELDS + 5;
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     sta = insertscm(conp, theCertTable, &aone);
@@ -440,7 +436,9 @@ cleanup:
         free(escaped_strings[i]);
     }
     if (wptr != NULL)
-        free((void *)wptr);
+    {
+        free(wptr);
+    }
     lastCertIDAdded = *cert_id;
     return (sta);
 }
@@ -461,15 +459,13 @@ add_crl_internal(
     char *ptr;
     char *hexs;
     char flagn[24];
-    char lid[24];
+    char lid[24] = {'\0'};
     char did[24];
     char csnlen[24];
     int idx = 0;
     err_code sta;
     int i;
-    char *escaped_strings[CRF_NFIELDS];
-
-    memset(escaped_strings, 0, CRF_NFIELDS*sizeof(char*));
+    char *escaped_strings[CRF_NFIELDS] = {NULL};
 
     // immediately check for duplicate signature
     initTables(scmp);
@@ -490,7 +486,7 @@ add_crl_internal(
     }
     crl_id++;
     // fill in insertion structure
-    for (i = 0; i < CRF_NFIELDS + 6; i++)
+    for (i = 0; (size_t)i < ELTS(cols); i++)
         cols[i].value = NULL;
     for (i = 0; i < CRF_NFIELDS; i++)
     {
@@ -506,7 +502,6 @@ add_crl_internal(
             cols[idx++].value = escaped_strings[i];
         }
     }
-    memset(lid, 0, sizeof(lid));
     xsnprintf(flagn, sizeof(flagn), "%u", cf->flags);
     cols[idx].column = "flags";
     cols[idx++].value = flagn;
@@ -524,13 +519,13 @@ add_crl_internal(
     cols[idx].column = "snlist";
     cols[idx++].value = hexs;
     aone.vec = &cols[0];
-    aone.ntot = CRF_NFIELDS + 6;
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     // add the CRL
     sta = insertscm(conp, theCRLTable, &aone);
 cleanup:
-    free((void *)hexs);
+    free(hexs);
     for (i = 0; i < CRF_NFIELDS; i++)
     {
         free(escaped_strings[i]);
@@ -575,7 +570,12 @@ get_cert_sigval(
         initTables(theSCMP);
     if (sigsrch == NULL)
     {
+        /** @bug ignores error code (NULL) without explanation */
         sigsrch = newsrchscm(NULL, 1, 0, 1);
+        /**
+         * @bug on error sigsrch will be left in a half-initialized
+         * state and it will never be fully initialized
+         */
         ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
                SIGVAL_UNKNOWN);
     }
@@ -608,7 +608,12 @@ get_roa_sigval(
         initTables(theSCMP);
     if (sigsrch == NULL)
     {
+        /** @bug ignores error code (NULL) without explanation */
         sigsrch = newsrchscm(NULL, 1, 0, 1);
+        /**
+         * @bug on error sigsrch will be left in a half-initialized
+         * state and it will never be fully initialized
+         */
         ADDCOL(sigsrch, "sigval", SQL_C_ULONG, sizeof(unsigned int), sta,
                SIGVAL_UNKNOWN);
     }
@@ -1752,10 +1757,6 @@ done:
  * @brief
  *     crl verification code
  *
- * @param[out] x509sta
- *     The value at this location will be set to an error code
- *     indicating whether there was an error finding the parent
- *     certificate (if any).  This may be NULL.
  * @param[out] chainOK
  *     The value at this location will be set to true if a parent
  *     certificate was found, false otherwise.  Setting this to true
@@ -1773,23 +1774,24 @@ verify_crl(
     X509_CRL *x,
     char *parentSKI,
     char *parentSubject,
-    err_code *x509sta,
     int *chainOK)
 {
-    int sta = 0;
+    int x509sta = 0;
     X509 *parent;
     EVP_PKEY *pkey;
 
     /**
      * @bug
-     *     I'm pretty sure sta and x509sta were accidentally switched
-     *     (sta should be used where x509sta is used and vice-versa)
-     *     based on their names and the fact that returning
-     *     parent_cert()'s return status doesn't make much sense.  If
-     *     so, fix it (including handling parent_cert()'s error code)
-     *     and update the documentation above.
+     *     This doesn't resemble the algorithm in RFC5280 section
+     *     6.3.3 at all.  Specifically, step (f) is not performed.
      */
-    parent = parent_cert(conp, parentSKI, parentSubject, x509sta, NULL, NULL);
+    /**
+     * @bug
+     *     parent_cert() only returns one match.  What if there are
+     *     multiple matches?  (e.g., evil twin, cert renewal)
+     */
+    /** @bug ignores error code without explanation */
+    parent = parent_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -1805,10 +1807,10 @@ verify_crl(
     }
     *chainOK = 1;
     pkey = X509_get_pubkey(parent);
-    sta = X509_CRL_verify(x, pkey);
+    x509sta = X509_CRL_verify(x, pkey);
     X509_free(parent);
     EVP_PKEY_free(pkey);
-    return (sta != 1) ? ERR_SCM_NOTVALID : 0;
+    return (x509sta != 1) ? ERR_SCM_NOTVALID : 0;
 }
 
 /**
@@ -1921,6 +1923,11 @@ verify_roa(
     sta = roaValidate(r);
     if (sta < 0)
         return (sta);
+    /**
+     * @bug
+     *     parent_cert() only returns one match.  What if there are
+     *     multiple matches?  (e.g., evil twin, cert renewal)
+     */
     /** @bug ignores error code without explanation */
     cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
     if (cert == NULL)
@@ -2037,7 +2044,6 @@ verifyChildCRL(
     unsigned int id;
     object_type typ;
     int chainOK;
-    err_code x509sta;
     char pathname[PATH_MAX];
 
     UNREFERENCED_PARAMETER(idx);
@@ -2054,10 +2060,9 @@ verifyChildCRL(
                     &x, &sta, &crlsta, goodoids);
     if (cf == NULL)
         return sta;
-    /** @bug ignores x509sta error code without explanation */
     /** @bug ignores chainOK without explanation */
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
-                     cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
+                     cf->fields[CRF_FIELD_ISSUER], &chainOK);
     id = *((unsigned int *)(s->vec[2].valptr));
     // if invalid, delete it
     if (sta < 0)
@@ -2589,8 +2594,8 @@ static int countvalidparents(
     srch1.colno = 1;
     srch1.sqltype = SQL_C_ULONG;
     srch1.colname = "flags";
-    srch1.valptr = (void *)&flags;
-    srch1.valsize = sizeof(unsigned int);
+    srch1.valptr = &flags;
+    srch1.valsize = sizeof(flags);
     srch1.avalsize = 0;
     srch.vec = &srch1;
     srch.sname = NULL;
@@ -2602,12 +2607,12 @@ static int countvalidparents(
     if (now == NULL)
         return (sta);
     xsnprintf(ws, sizeof(ws), "valfrom < \"%s\" AND \"%s\" < valto", now, now);
-    free((void *)now);
+    free(now);
     addFlagTest(ws, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(ws, SCM_FLAG_NOCHAIN, 0, 1);
     srch.wherestr = &ws[0];
     mymcf.did = 0;
-    srch.context = (void *)&mymcf;
+    srch.context = &mymcf;
     sta = searchscm(conp, theCertTable, &srch, NULL, &cparents,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
@@ -3363,7 +3368,6 @@ add_crl(
     err_code sta = 0;
     unsigned int i;
     int chainOK;
-    int x509sta;
     struct CertificateRevocationList crl;
 
     if (!goodoids[0].lth)
@@ -3397,9 +3401,8 @@ add_crl(
     }
     cf->dirid = id;
     // first verify the CRL
-    /** @bug ignores x509sta error code without explanation */
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
-                     cf->fields[CRF_FIELD_ISSUER], &x509sta, &chainOK);
+                     cf->fields[CRF_FIELD_ISSUER], &chainOK);
     // then add the CRL
     if (sta == 0)
     {
@@ -3500,8 +3503,8 @@ extractAndAddCert(
     X509 *x509p = NULL;
     cert_fields *cf = NULL;
     unsigned int cert_id;
-    char certname[PATH_MAX];
-    char pathname[PATH_MAX];
+    char certname[PATH_MAX] = {'\0'};
+    char pathname[PATH_MAX] = {'\0'};
     int hexify_sta;
     err_code sta = 0;
     struct Certificate *certp;
@@ -3535,8 +3538,6 @@ extractAndAddCert(
         sta = ERR_SCM_BADEXT;
         goto done;
     }
-    memset(certname, 0, sizeof(certname));
-    memset(pathname, 0, sizeof(pathname));
     xsnprintf(certname, sizeof(certname), "%s.cer", outfile);
     // find or add the directory
     /** @bug ignores error code without explanation */
@@ -3700,7 +3701,7 @@ add_roa_internal(
     cols[idx].column = "local_id";
     cols[idx++].value = lid;
     aone.vec = &cols[0];
-    aone.ntot = sizeof(cols)/sizeof(cols[0]);
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     // add the ROA
@@ -3840,9 +3841,9 @@ done:
         scmkv roa_prefixes_cols[1];
         roa_prefixes_cols[0].column = "roa_local_id";
         roa_prefixes_cols[0].value = lid;
+        /** @bug shouldn't cols be roa_prefixes_cols? */
         roa_prefixes_aone.vec = &cols[0];
-        roa_prefixes_aone.ntot =
-            sizeof(roa_prefixes_cols)/sizeof(roa_prefixes_cols[0]);
+        roa_prefixes_aone.ntot = ELTS(roa_prefixes_cols);
         roa_prefixes_aone.nused = roa_prefixes_aone.ntot;
         roa_prefixes_aone.vald = 0;
         delete_status =
@@ -4107,11 +4108,12 @@ add_manifest(
 
     // do the actual insert of the manifest in the db
     scmkva aone;
+    /** @bug why is this 12?  shouldn't it be 9? */
     scmkv cols[12];
     int idx = 0;
-    char did[24],
-        mid[24],
-        lenbuf[20];
+    char did[24];
+    char mid[24];
+    char lenbuf[20];
     cols[idx].column = "filename";
     cols[idx++].value = outfile;
     xsnprintf(did, sizeof(did), "%u", id);
@@ -4136,7 +4138,7 @@ add_manifest(
     xsnprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
     cols[idx++].value = lenbuf;
     aone.vec = &cols[0];
-    aone.ntot = 12;
+    aone.ntot = ELTS(cols);
     aone.nused = idx;
     aone.vald = 0;
     do
@@ -4244,33 +4246,18 @@ add_ghostbusters(
     xsnprintf(flags_str, sizeof(flags_str), "%u", flags);
 
     scmkv cols[] = {
-     {
-      .column = "filename",
-      .value = outfile,
-     },
-     {
-      .column = "dir_id",
-      .value = dir_id_str,
-     },
-     {
-      .column = "local_id",
-      .value = local_id_str,
-     },
-     {
-      .column = "ski",
-      .value = ski,
-     },
-     {
-      .column = "flags",
-      .value = flags_str,
-     },
+        {"filename", outfile},
+        {"dir_id", dir_id_str},
+        {"local_id", local_id_str},
+        {"ski", ski},
+        {"flags", flags_str},
     };
 
     scmkva aone = {
-     .vec = &cols[0],
-     .ntot = sizeof(cols)/sizeof(cols[0]),
-     .nused = sizeof(cols)/sizeof(cols[0]),
-     .vald = 0,
+        .vec = &cols[0],
+        .ntot = ELTS(cols),
+        .nused = ELTS(cols),
+        .vald = 0,
     };
 
     sta = insertscm(conp, theGBRTable, &aone);
@@ -4511,26 +4498,26 @@ iterate_crl(
     srch1[1].colno = 2;
     srch1[1].sqltype = SQL_C_ULONG;
     srch1[1].colname = "snlen";
-    srch1[1].valptr = (void *)&snlen;
-    srch1[1].valsize = sizeof(unsigned int);
+    srch1[1].valptr = &snlen;
+    srch1[1].valsize = sizeof(snlen);
     srch1[1].avalsize = 0;
     srch1[2].colno = 3;
     srch1[2].sqltype = SQL_C_ULONG;
     srch1[2].colname = "sninuse";
-    srch1[2].valptr = (void *)&sninuse;
-    srch1[2].valsize = sizeof(unsigned int);
+    srch1[2].valptr = &sninuse;
+    srch1[2].valsize = sizeof(sninuse);
     srch1[2].avalsize = 0;
     srch1[3].colno = 4;
     srch1[3].sqltype = SQL_C_ULONG;
     srch1[3].colname = "flags";
-    srch1[3].valptr = (void *)&flags;
-    srch1[3].valsize = sizeof(unsigned int);
+    srch1[3].valptr = &flags;
+    srch1[3].valsize = sizeof(flags);
     srch1[3].avalsize = 0;
     srch1[4].colno = 5;
     srch1[4].sqltype = SQL_C_ULONG;
     srch1[4].colname = "local_id";
-    srch1[4].valptr = (void *)&lid;
-    srch1[4].valsize = sizeof(unsigned int);
+    srch1[4].valptr = &lid;
+    srch1[4].valsize = sizeof(lid);
     srch1[4].avalsize = 0;
     srch1[5].colno = 6;
     srch1[5].sqltype = SQL_C_BINARY;
@@ -4547,8 +4534,8 @@ iterate_crl(
     srch1[6].avalsize = 0;
     srch.vec = &srch1[0];
     srch.sname = NULL;
-    srch.ntot = 7;
-    srch.nused = 7;
+    srch.ntot = ELTS(srch1);
+    srch.nused = ELTS(srch1);
     srch.vald = 0;
     srch.where = NULL;
     srch.wherestr = NULL;
@@ -4556,7 +4543,7 @@ iterate_crl(
     crli.conp = conp;
     crli.tabp = theCRLTable;
     crli.cfunc = cfunc;
-    srch.context = (void *)&crli;
+    srch.context = &crli;
     sta = searchscm(conp, theCRLTable, &srch, NULL, &crliterator,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     return (sta);
@@ -4578,26 +4565,28 @@ static void fillInColumns(
     srch1[0].colno = 1;
     srch1[0].sqltype = SQL_C_ULONG;
     srch1[0].colname = "local_id";
-    srch1[0].valptr = (void *)lid;
-    srch1[0].valsize = sizeof(unsigned int);
+    srch1[0].valptr = lid;
+    srch1[0].valsize = sizeof(*lid);
     srch1[0].avalsize = 0;
     srch1[1].colno = 2;
     srch1[1].sqltype = SQL_C_CHAR;
     srch1[1].colname = "ski";
-    srch1[1].valptr = (void *)ski;
+    srch1[1].valptr = ski;
+    /** @bug magic constant; should be SKISIZE? */
     srch1[1].valsize = 512;
     srch1[1].avalsize = 0;
     srch1[2].colno = 3;
     srch1[2].sqltype = SQL_C_CHAR;
     srch1[2].colname = "subject";
-    srch1[2].valptr = (void *)subject;
+    srch1[2].valptr = subject;
+    /** @bug magic constant; should be SUBJSIZE? */
     srch1[2].valsize = 512;
     srch1[2].avalsize = 0;
     srch1[3].colno = 4;
     srch1[3].sqltype = SQL_C_ULONG;
     srch1[3].colname = "flags";
-    srch1[3].valptr = (void *)flags;
-    srch1[3].valsize = sizeof(unsigned int);
+    srch1[3].valptr = flags;
+    srch1[3].valsize = sizeof(*flags);
     srch1[3].avalsize = 0;
     srch->vec = srch1;
     srch->sname = NULL;
@@ -4663,7 +4652,6 @@ delete_object(
     unsigned int dir_id)
 {
     unsigned int id;
-    unsigned int blah;
     unsigned int lid;
     unsigned int flags;
     scmsrcha srch;
@@ -4700,8 +4688,8 @@ delete_object(
         srch1.colno = 1;
         srch1.sqltype = SQL_C_ULONG;
         srch1.colname = "dir_id";
-        srch1.valptr = (void *)&id;
-        srch1.valsize = sizeof(unsigned int);
+        srch1.valptr = &id;
+        srch1.valsize = sizeof(id);
         srch1.avalsize = 0;
         srch.vec = &srch1;
         srch.sname = NULL;
@@ -4710,7 +4698,6 @@ delete_object(
         srch.vald = 0;
         srch.where = &where;
         srch.wherestr = NULL;
-        srch.context = &blah;
         sta =
             searchscm(conp, theDirTable, &srch, NULL, &ok,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -4726,8 +4713,8 @@ delete_object(
     xsnprintf(did, sizeof(did), "%u", id);
     dtwo[1].value = did;
     dwhere.vec = &dtwo[0];
-    dwhere.ntot = 2;
-    dwhere.nused = 2;
+    dwhere.ntot = ELTS(dtwo);
+    dwhere.nused = ELTS(dtwo);
     dwhere.vald = 0;
     // delete the object based on the type
     // note that the directory itself is not deleted
@@ -4777,12 +4764,9 @@ delete_object(
         || typ == OT_MAN_PEM || typ == OT_GBR)
     {
         unsigned int ndir_id;
-        char noutfile[PATH_MAX];
-        char noutdir[PATH_MAX];
-        char noutfull[PATH_MAX];
-        memset(noutfile, 0, PATH_MAX);
-        memset(noutdir, 0, PATH_MAX);
-        memset(noutfull, 0, PATH_MAX);
+        char noutfile[PATH_MAX] = {'\0'};
+        char noutdir[PATH_MAX] = {'\0'};
+        char noutfull[PATH_MAX] = {'\0'};
         /** @bug ignores error code without explanation */
         char *c = retrieve_tdir(scmp, conp, &sta);
         int lth = strlen(c);    // lth of tdir
@@ -4822,10 +4806,8 @@ revoke_cert_by_serial(
     char ski[512];
     char subject[512];
     char *sno;
-    uint8_t sn_zero[SER_NUM_MAX_SZ];
+    uint8_t sn_zero[SER_NUM_MAX_SZ] = {0};
     err_code sta;
-
-    memset(sn_zero, 0, sizeof(sn_zero));
 
     if (scmp == NULL || conp == NULL || conp->connected == 0)
         return (ERR_SCM_INVALARG);
@@ -4849,8 +4831,8 @@ revoke_cert_by_serial(
     w[2].column = "aki";
     w[2].value = aki;
     where.vec = &w[0];
-    where.ntot = 3;
-    where.nused = 3;
+    where.ntot = ELTS(w);
+    where.nused = ELTS(w);
     where.vald = 0;
     fillInColumns(srch1, &lid, ski, subject, &flags, &srch);
     srch.where = &where;
@@ -5087,17 +5069,6 @@ ranlast(
     sta = updateranlastscm(conp, theMetaTable, what, now);
     free((void *)now);
     return (sta);
-}
-
-void *roa_parent(
-    scm *scmp,
-    scmcon *conp,
-    char *ski,
-    char *fn,
-    err_code *stap)
-{
-    initTables(scmp);
-    return parent_cert(conp, ski, NULL, stap, fn, NULL);
 }
 
 /*

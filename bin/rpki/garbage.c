@@ -11,6 +11,7 @@
 #include "rpki/err.h"
 #include "config/config.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "util/stringutils.h"
 
 
@@ -20,17 +21,17 @@
  * and updates its state accordingly.
  **************/
 
-static char *prevTimestamp,
-   *currTimestamp;
-static char *theIssuer,
-   *theAKI;                     // for passing to callback
+static char *prevTimestamp;
+static char *currTimestamp;
+static char *theIssuer;
+static char *theAKI;                     // for passing to callback
 static unsigned int theID;      // for passing to callback
 static sqlcountfunc *countHandler;       // used by countCurrentCRLs
-static scmtab *certTable,
-   *crlTable,
-   *gbrTable,
-   *roaTable,
-   *manifestTable;
+static scmtab *certTable;
+static scmtab *crlTable;
+static scmtab *gbrTable;
+static scmtab *roaTable;
+static scmtab *manifestTable;
 
 /**
  * @brief
@@ -45,8 +46,8 @@ handleTimestamps(
 {
     UNREFERENCED_PARAMETER(conp);
     UNREFERENCED_PARAMETER(numLine);
-    currTimestamp = (char *)s->vec[0].valptr;
-    prevTimestamp = (char *)s->vec[1].valptr;
+    currTimestamp = s->vec[0].valptr;
+    prevTimestamp = s->vec[1].valptr;
     return 0;
 }
 
@@ -64,6 +65,7 @@ handleIfStale(
     ssize_t cnt)
 {
     UNREFERENCED_PARAMETER(s);
+    /** @bug magic constant */
     char msg[600];
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
@@ -71,13 +73,13 @@ handleIfStale(
         return 0;               // exists another crl that is current
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
     mysql_escape_string(escaped_issuer, theIssuer, strlen(theIssuer));
-    xsnprintf(msg, 600,
+    xsnprintf(msg, sizeof(msg),
               "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
               certTable->tabname, SCM_FLAG_STALECRL, escaped_aki,
               escaped_issuer);
     addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
     addFlagTest(msg, SCM_FLAG_CA, 1, 1);
-    xsnprintf(msg + strlen(msg), 600, ";");
+    xsnprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), ";");
     return statementscm_no_data(conp, msg);
 }
 
@@ -94,11 +96,13 @@ handleIfCurrent(
     scmsrcha *s,
     ssize_t cnt)
 {
+    /** @bug magic constant */
     char msg[128];
     UNREFERENCED_PARAMETER(s);
     if (cnt == 0)
         return 0;               // exists another crl that is current
-    xsnprintf(msg, 128, "update %s set flags = flags - %d where local_id=%d;",
+    xsnprintf(msg, sizeof(msg),
+              "update %s set flags = flags - %d where local_id=%d;",
               certTable->tabname, SCM_FLAG_STALECRL, theID);
     return statementscm_no_data(conp, msg);
 }
@@ -127,8 +131,8 @@ countCurrentCRLs(
         /** @bug ignores error code without explanation */
         addcolsrchscm(cntSrch, "local_id", SQL_C_ULONG, 8);
     }
-    theIssuer = (char *)s->vec[0].valptr;
-    theAKI = (char *)s->vec[1].valptr;
+    theIssuer = s->vec[0].valptr;
+    theAKI = s->vec[1].valptr;
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
@@ -151,6 +155,7 @@ countCurrentCRLs(
  * marks accordingly all objects referenced by manifest that is stale
  */
 static char staleManStmt[MANFILES_SIZE];
+/** @bug magic constant */
 static char *staleManFiles[10000];
 static int numStaleManFiles = 0;
 
@@ -162,7 +167,7 @@ handleStaleMan2(
 {
     char escaped_files[2 * strlen(files) + 1];
     mysql_escape_string(escaped_files, files, strlen(files));
-    xsnprintf(staleManStmt, MANFILES_SIZE,
+    xsnprintf(staleManStmt, sizeof(staleManStmt),
               "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
               tab->tabname, SCM_FLAG_STALEMAN,
               2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
@@ -198,7 +203,7 @@ handleFreshMan2(
 {
     char escaped_files[2 * strlen(files) + 1];
     mysql_escape_string(escaped_files, files, strlen(files));
-    xsnprintf(staleManStmt, MANFILES_SIZE,
+    xsnprintf(staleManStmt, sizeof(staleManStmt),
               "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
               tab->tabname, SCM_FLAG_STALEMAN,
               2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
@@ -215,7 +220,6 @@ int main(
     scmsrcha srch;
     scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
-    unsigned long blah = 0;
     err_code status;
     int i;
 
@@ -231,7 +235,7 @@ int main(
     }
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
-    connect = connectscm(scmp->dsn, msg, WHERESTR_SIZE);
+    connect = connectscm(scmp->dsn, msg, sizeof(msg));
     checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
     certTable = findtablescm(scmp, "certificate");
     checkErr(certTable == NULL, "Cannot find table certificate\n");
@@ -245,9 +249,8 @@ int main(
     checkErr(manifestTable == NULL, "Cannot find table manifest\n");
     srch.vec = srch1;
     srch.sname = NULL;
-    srch.ntot = 4;
+    srch.ntot = ELTS(srch1);
     srch.where = NULL;
-    srch.context = &blah;
 
     // find the current time and last time garbage collector ran
     metaTable = findtablescm(scmp, "metadata");
@@ -256,8 +259,10 @@ int main(
     srch.vald = 0;
     srch.wherestr = NULL;
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR, 24);
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, 24);
     status = searchscm(connect, metaTable, &srch, NULL, &handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -288,8 +293,12 @@ int main(
     // to be unknown
     srch.nused = 0;
     srch.vald = 0;
-    xsnprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
+    xsnprintf(msg, sizeof(msg), "next_upd<=\"%s\"", currTimestamp);
     srch.wherestr = msg;
+    /**
+     * @bug memory leak: the srch1[].valptr and .colname fields are
+     * overwritten by addcolsrchscm(), causing them to leak
+     */
     /** @bug ignores error code without explanation */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, SUBJSIZE);
     /** @bug ignores error code without explanation */
@@ -297,6 +306,7 @@ int main(
     countHandler = &handleIfStale;
     status = searchscm(connect, crlTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    /** @bug srch1 column names leak and should also be freed */
     free(srch1[0].valptr);
     free(srch1[1].valptr);
     if (status != 0 && status != ERR_SCM_NODATA)
@@ -309,6 +319,7 @@ int main(
     // now check for stale and then non-stale manifests
     // note: by doing non-stale test after stale test, those objects that
     // are referenced by both stale and non-stale manifests, set to not stale
+    /** @bug should srch.wherestr be set to NULL? */
     srch.nused = 0;
     srch.vald = 0;
     /** @bug ignores error code without explanation */
@@ -336,8 +347,12 @@ int main(
         handleStaleMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
+    /**
+     * @bug why is this set to 0?  seems like it's just an expensive
+     * no-op given that the columns haven't and won't change
+     */
     srch.vald = 0;
-    xsnprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
+    xsnprintf(msg, sizeof(msg), "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -359,6 +374,10 @@ int main(
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
+    /**
+     * @bug memory leak: srch[1].valptr and the column names should
+     * also be freed
+     */
     free(srch1[0].valptr);
 
     // check all certs in state unknown to see if now crl with issuer=issuer
@@ -370,14 +389,17 @@ int main(
     addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
     srch.wherestr = msg;
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "issuer", SQL_C_CHAR, 512);
     /** @bug ignores error code without explanation */
+    /** @bug magic constant */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
     /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
+    addcolsrchscm(&srch, "local_id", SQL_C_ULONG, sizeof(unsigned int));
     countHandler = &handleIfCurrent;
     status = searchscm(connect, certTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    /** @bug memory leak: the column names should also be freed */
     free(srch1[0].valptr);
     free(srch1[1].valptr);
     free(srch1[2].valptr);
@@ -389,7 +411,7 @@ int main(
     }
 
     // write timestamp into database
-    xsnprintf(msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
+    xsnprintf(msg, sizeof(msg), "update %s set gc_last=\"%s\";",
               metaTable->tabname, currTimestamp);
     status = statementscm_no_data(connect, msg);
     if (status != 0)

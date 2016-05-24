@@ -1,6 +1,12 @@
 #ifndef _UTILS_MACROS_H
 #define _UTILS_MACROS_H
 
+/**
+ * @brief
+ *     number of elements in array \p x
+ */
+#define ELTS(x) (sizeof((x))/sizeof((x)[0]))
+
 #define COMPILE_TIME_ASSERT(pred) \
     do {                          \
         switch (0) {              \

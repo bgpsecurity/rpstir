@@ -76,61 +76,6 @@ int write_EEkey(
         return 1;
     }
 
-    // read the EE certificate from file
-    /*
-     * if( !(get_casn_file(&my_cert.self, (char*)value,0) < 0) )
-     */
-    /*
-     * {
-     */
-    /*
-     * struct SignedData *sgdp = &roa->content.signedData;
-     */
-    /*
-     * //Clear the old one
-     */
-    /*
-     * clear_casn(&sgdp->certificates.self);
-     */
-
-    /*
-     * struct Certificate *sigcertp = (struct Certificate
-     * *)inject_casn(&sgdp->certificates.self, 0);
-     */
-
-    /*
-     * //copy the new one in
-     */
-    /*
-     * if(sigcertp != NULL)
-     */
-    /*
-     * copy_casn(&sigcertp->self, &my_cert.self);
-     */
-    /*
-     * else
-     */
-    /*
-     * {
-     */
-    /*
-     * warn(1,"ERROR injecting EE cert");
-     */
-    /*
-     * return 1;
-     */
-    /*
-     * }
-     */
-    /*
-     * }
-     */
-    /*
-     * else
-     */
-    /*
-     * return 1;
-     */
     return SUCCESS;
 }
 
