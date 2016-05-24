@@ -73,13 +73,13 @@ handleIfStale(
         return 0;               // exists another crl that is current
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
     mysql_escape_string(escaped_issuer, theIssuer, strlen(theIssuer));
-    xsnprintf(msg, 600,
+    xsnprintf(msg, sizeof(msg),
               "update %s set flags = flags + %d where aki=\"%s\" and issuer=\"%s\"",
               certTable->tabname, SCM_FLAG_STALECRL, escaped_aki,
               escaped_issuer);
     addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
     addFlagTest(msg, SCM_FLAG_CA, 1, 1);
-    xsnprintf(msg + strlen(msg), 600 - strlen(msg), ";");
+    xsnprintf(msg + strlen(msg), sizeof(msg) - strlen(msg), ";");
     return statementscm_no_data(conp, msg);
 }
 
@@ -101,7 +101,8 @@ handleIfCurrent(
     UNREFERENCED_PARAMETER(s);
     if (cnt == 0)
         return 0;               // exists another crl that is current
-    xsnprintf(msg, 128, "update %s set flags = flags - %d where local_id=%d;",
+    xsnprintf(msg, sizeof(msg),
+              "update %s set flags = flags - %d where local_id=%d;",
               certTable->tabname, SCM_FLAG_STALECRL, theID);
     return statementscm_no_data(conp, msg);
 }
@@ -166,7 +167,7 @@ handleStaleMan2(
 {
     char escaped_files[2 * strlen(files) + 1];
     mysql_escape_string(escaped_files, files, strlen(files));
-    xsnprintf(staleManStmt, MANFILES_SIZE,
+    xsnprintf(staleManStmt, sizeof(staleManStmt),
               "update %s set flags=flags+%d where (flags%%%d)<%d and \"%s\" regexp binary filename;",
               tab->tabname, SCM_FLAG_STALEMAN,
               2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
@@ -202,7 +203,7 @@ handleFreshMan2(
 {
     char escaped_files[2 * strlen(files) + 1];
     mysql_escape_string(escaped_files, files, strlen(files));
-    xsnprintf(staleManStmt, MANFILES_SIZE,
+    xsnprintf(staleManStmt, sizeof(staleManStmt),
               "update %s set flags=flags-%d where (flags%%%d)>=%d and \"%s\" regexp binary filename;",
               tab->tabname, SCM_FLAG_STALEMAN,
               2 * SCM_FLAG_STALEMAN, SCM_FLAG_STALEMAN, escaped_files);
@@ -234,7 +235,7 @@ int main(
     }
     scmp = initscm();
     checkErr(scmp == NULL, "Cannot initialize database schema\n");
-    connect = connectscm(scmp->dsn, msg, WHERESTR_SIZE);
+    connect = connectscm(scmp->dsn, msg, sizeof(msg));
     checkErr(connect == NULL, "Cannot connect to database: %s\n", msg);
     certTable = findtablescm(scmp, "certificate");
     checkErr(certTable == NULL, "Cannot find table certificate\n");
@@ -292,7 +293,7 @@ int main(
     // to be unknown
     srch.nused = 0;
     srch.vald = 0;
-    xsnprintf(msg, WHERESTR_SIZE, "next_upd<=\"%s\"", currTimestamp);
+    xsnprintf(msg, sizeof(msg), "next_upd<=\"%s\"", currTimestamp);
     srch.wherestr = msg;
     /**
      * @bug memory leak: the srch1[].valptr and .colname fields are
@@ -351,7 +352,7 @@ int main(
      * no-op given that the columns haven't and won't change
      */
     srch.vald = 0;
-    xsnprintf(msg, WHERESTR_SIZE, "next_upd>\"%s\"", currTimestamp);
+    xsnprintf(msg, sizeof(msg), "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
     status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -410,7 +411,7 @@ int main(
     }
 
     // write timestamp into database
-    xsnprintf(msg, WHERESTR_SIZE, "update %s set gc_last=\"%s\";",
+    xsnprintf(msg, sizeof(msg), "update %s set gc_last=\"%s\";",
               metaTable->tabname, currTimestamp);
     status = statementscm_no_data(connect, msg);
     if (status != 0)
