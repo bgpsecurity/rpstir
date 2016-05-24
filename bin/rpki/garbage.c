@@ -79,7 +79,7 @@ handleIfStale(
               escaped_issuer);
     addFlagTest(msg, SCM_FLAG_STALECRL, 0, 1);
     addFlagTest(msg, SCM_FLAG_CA, 1, 1);
-    xsnprintf(msg + strlen(msg), 600, ";");
+    xsnprintf(msg + strlen(msg), 600 - strlen(msg), ";");
     return statementscm_no_data(conp, msg);
 }
 
