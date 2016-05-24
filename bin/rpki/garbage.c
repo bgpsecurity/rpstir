@@ -394,8 +394,7 @@ int main(
     /** @bug magic constant */
     addcolsrchscm(&srch, "aki", SQL_C_CHAR, 128);
     /** @bug ignores error code without explanation */
-    /** @bug magic constant */
-    addcolsrchscm(&srch, "local_id", SQL_C_ULONG, 8);
+    addcolsrchscm(&srch, "local_id", SQL_C_ULONG, sizeof(unsigned int));
     countHandler = &handleIfCurrent;
     status = searchscm(connect, certTable, &srch, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
