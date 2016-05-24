@@ -47,9 +47,8 @@ handleTimestamps(
     ssize_t numLine)
 {
     UNREFERENCED_PARAMETER(conp);
+    UNREFERENCED_PARAMETER(s);
     UNREFERENCED_PARAMETER(numLine);
-    xstrlcpy(currTimestamp, (char *)s->vec[0].valptr, sizeof(currTimestamp));
-    xstrlcpy(prevTimestamp, (char *)s->vec[1].valptr, sizeof(prevTimestamp));
     return 0;
 }
 
@@ -126,6 +125,7 @@ countCurrentCRLs(
     scmsrcha *s,
     ssize_t numLine)
 {
+    UNREFERENCED_PARAMETER(s);
     UNREFERENCED_PARAMETER(numLine);
     if (cntSrch == NULL)
     {
@@ -133,16 +133,10 @@ countCurrentCRLs(
         /** @bug ignores error code without explanation */
         addcolsrchscm(cntSrch, "local_id", SQL_C_ULONG, 8);
     }
-    xstrlcpy(theIssuer, (char *)s->vec[0].valptr, sizeof(theIssuer));
-    xstrlcpy(theAKI, (char *)s->vec[1].valptr, sizeof(theAKI));
     char escaped_aki[2 * strlen(theAKI) + 1];
     char escaped_issuer[2 * strlen(theIssuer) + 1];
     mysql_escape_string(escaped_aki, theAKI, strlen(theAKI));
     mysql_escape_string(escaped_issuer, theIssuer, strlen(theIssuer));
-    if (s->nused > 2)
-    {
-        theID = *((unsigned int *)s->vec[2].valptr);
-    }
     xsnprintf(cntSrch->wherestr, WHERESTR_SIZE,
               "issuer=\"%s\" and aki=\"%s\" and next_upd>=\"%s\"",
               escaped_issuer, escaped_aki, currTimestamp);
@@ -219,7 +213,6 @@ int main(
     scm *scmp = NULL;
     scmcon *connect = NULL;
     scmtab *metaTable = NULL;
-    scmsrch srch1[4];
     char msg[WHERESTR_SIZE];
     err_code status;
     int i;
@@ -249,11 +242,29 @@ int main(
     manifestTable = findtablescm(scmp, "manifest");
     checkErr(manifestTable == NULL, "Cannot find table manifest\n");
 
-    scmsrcha srch = {
-        .vec = srch1,
+    scmsrch srch1cols[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_CHAR,
+            .colname = "current_timestamp",
+            .valptr = currTimestamp,
+            .valsize = sizeof(currTimestamp),
+            .avalsize = 0,
+        },
+        {
+            .colno = 2,
+            .sqltype = SQL_C_CHAR,
+            .colname = "gc_last",
+            .valptr = prevTimestamp,
+            .valsize = sizeof(prevTimestamp),
+            .avalsize = 0,
+        },
+    };
+    scmsrcha srch1 = {
+        .vec = srch1cols,
         .sname = NULL,
-        .ntot = ELTS(srch1),
-        .nused = 0,
+        .ntot = ELTS(srch1cols),
+        .nused = ELTS(srch1cols),
         .vald = 0,
         .where = NULL,
         .wherestr = NULL,
@@ -262,12 +273,7 @@ int main(
     // find the current time and last time garbage collector ran
     metaTable = findtablescm(scmp, "metadata");
     checkErr(metaTable == NULL, "Cannot find table metadata\n");
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "current_timestamp", SQL_C_CHAR,
-                  sizeof(currTimestamp));
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "gc_last", SQL_C_CHAR, sizeof(prevTimestamp));
-    status = searchscm(connect, metaTable, &srch, NULL, &handleTimestamps,
+    status = searchscm(connect, metaTable, &srch1, NULL, &handleTimestamps,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0)
     {
@@ -294,24 +300,37 @@ int main(
     // aki
     // and next update after this), update state of any certs covered by crl
     // to be unknown
-    srch.nused = 0;
-    srch.vald = 0;
+    scmsrch srch2cols[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_CHAR,
+            .colname = "issuer",
+            .valptr = theIssuer,
+            .valsize = sizeof(theIssuer),
+            .avalsize = 0,
+        },
+        {
+            .colno = 2,
+            .sqltype = SQL_C_CHAR,
+            .colname = "aki",
+            .valptr = theAKI,
+            .valsize = sizeof(theAKI),
+            .avalsize = 0,
+        },
+    };
     xsnprintf(msg, sizeof(msg), "next_upd<=\"%s\"", currTimestamp);
-    srch.wherestr = msg;
-    /**
-     * @bug memory leak: the srch1[].valptr and .colname fields are
-     * overwritten by addcolsrchscm(), causing them to leak
-     */
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "issuer", SQL_C_CHAR, sizeof(theIssuer));
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "aki", SQL_C_CHAR, sizeof(theAKI));
+    scmsrcha srch2 = {
+        .vec = srch2cols,
+        .sname = NULL,
+        .ntot = ELTS(srch2cols),
+        .nused = ELTS(srch2cols),
+        .vald = 0,
+        .where = NULL,
+        .wherestr = msg,
+    };
     countHandler = &handleIfStale;
-    status = searchscm(connect, crlTable, &srch, NULL, &countCurrentCRLs,
+    status = searchscm(connect, crlTable, &srch2, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    /** @bug srch1 column names leak and should also be freed */
-    free(srch1[0].valptr);
-    free(srch1[1].valptr);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for CRLs: %s\n",
@@ -322,15 +341,38 @@ int main(
     // now check for stale and then non-stale manifests
     // note: by doing non-stale test after stale test, those objects that
     // are referenced by both stale and non-stale manifests, set to not stale
-    /** @bug should srch.wherestr be set to NULL? */
-    srch.nused = 0;
-    srch.vald = 0;
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "files", SQL_C_BINARY, MANFILES_SIZE);
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "fileslen", SQL_C_ULONG, sizeof(unsigned int));
+    char files[MANFILES_SIZE];
+    unsigned int fileslen;
+    scmsrch srch3cols[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_BINARY,
+            .colname = "files",
+            .valptr = files,
+            .valsize = sizeof(files),
+            .avalsize = 0,
+        },
+        {
+            .colno = 2,
+            .sqltype = SQL_C_ULONG,
+            .colname = "fileslen",
+            .valptr = &fileslen,
+            .valsize = sizeof(fileslen),
+            .avalsize = 0,
+        },
+    };
+    scmsrcha srch3 = {
+        .vec = srch3cols,
+        .sname = NULL,
+        .ntot = ELTS(srch3cols),
+        .nused = ELTS(srch3cols),
+        .vald = 0,
+        .where = NULL,
+        /** @bug should srch3.wherestr be set to NULL? */
+        .wherestr = msg,
+    };
     numStaleManFiles = 0;
-    status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
+    status = searchscm(connect, manifestTable, &srch3, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
@@ -354,10 +396,10 @@ int main(
      * @bug why is this set to 0?  seems like it's just an expensive
      * no-op given that the columns haven't and won't change
      */
-    srch.vald = 0;
+    srch3.vald = 0;
     xsnprintf(msg, sizeof(msg), "next_upd>\"%s\"", currTimestamp);
     numStaleManFiles = 0;
-    status = searchscm(connect, manifestTable, &srch, NULL, &handleStaleMan,
+    status = searchscm(connect, manifestTable, &srch3, NULL, &handleStaleMan,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
@@ -377,33 +419,50 @@ int main(
         handleFreshMan2(connect, roaTable, staleManFiles[i]);
         free(staleManFiles[i]);
     }
-    /**
-     * @bug memory leak: srch[1].valptr and the column names should
-     * also be freed
-     */
-    free(srch1[0].valptr);
 
     // check all certs in state unknown to see if now crl with issuer=issuer
     // and aki=ski and nextUpdate after currTime;
     // if so, set state !unknown
-    srch.nused = 0;
-    srch.vald = 0;
+    scmsrch srch4cols[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_CHAR,
+            .colname = "issuer",
+            .valptr = theIssuer,
+            .valsize = sizeof(theIssuer),
+            .avalsize = 0,
+        },
+        {
+            .colno = 2,
+            .sqltype = SQL_C_CHAR,
+            .colname = "aki",
+            .valptr = theAKI,
+            .valsize = sizeof(theAKI),
+            .avalsize = 0,
+        },
+        {
+            .colno = 3,
+            .sqltype = SQL_C_ULONG,
+            .colname = "local_id",
+            .valptr = &theID,
+            .valsize = sizeof(theID),
+            .avalsize = 0,
+        },
+    };
     msg[0] = 0;
     addFlagTest(msg, SCM_FLAG_STALECRL, 1, 0);
-    srch.wherestr = msg;
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "issuer", SQL_C_CHAR, sizeof(theIssuer));
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "aki", SQL_C_CHAR, sizeof(theAKI));
-    /** @bug ignores error code without explanation */
-    addcolsrchscm(&srch, "local_id", SQL_C_ULONG, sizeof(unsigned int));
+    scmsrcha srch4 = {
+        .vec = srch4cols,
+        .sname = NULL,
+        .ntot = ELTS(srch4cols),
+        .nused = ELTS(srch4cols),
+        .vald = 0,
+        .where = NULL,
+        .wherestr = msg,
+    };
     countHandler = &handleIfCurrent;
-    status = searchscm(connect, certTable, &srch, NULL, &countCurrentCRLs,
+    status = searchscm(connect, certTable, &srch4, NULL, &countCurrentCRLs,
                        SCM_SRCH_DOVALUE_ALWAYS, NULL);
-    /** @bug memory leak: the column names should also be freed */
-    free(srch1[0].valptr);
-    free(srch1[1].valptr);
-    free(srch1[2].valptr);
     if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for certificates: %s\n",
