@@ -1,5 +1,5 @@
 ######################################################################
-## helpers to generate keys, certs, and roas
+## helpers to generate keys, certs, roas, and crls
 ######################################################################
 set_vars= \
 	target='$@' && \
@@ -17,6 +17,7 @@ gen_key = ${boilerplate} bin/rpki-object/gen_key
 KEYS = ${CERTS:.cer=.key}
 CERTS =
 ROAS =
+CRLS =
 ${KEYS}: bin/rpki-object/gen_key
 	${gen_key} "$${target}" 2048
 ${CERTS}: bin/rpki-object/create_object/create_object
@@ -39,9 +40,17 @@ ${ROAS}: bin/rpki-object/create_object/create_object
 		eecertlocation="$${target%.roa}".cer \
 		eekeylocation="$${eekey}" \
 		outputfilename="$${target}"
-check_DATA += ${CERTS} ${KEYS} ${ROAS}
-EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options}
-CLEANFILES += ${CERTS} ${KEYS} ${ROAS}
+${CRLS}: bin/rpki-object/create_object/create_object
+	${create_object} \
+		-f "$${top_srcdir}"/"$${target}".options \
+		CRL \
+		thisupdate=000101010101Z \
+		nextupdate=21001231235959Z \
+		crlnum=1 \
+		outputfilename="$${target}"
+check_DATA += ${CERTS} ${KEYS} ${ROAS} ${CRLS}
+EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options} ${CRLS:=.options}
+CLEANFILES += ${CERTS} ${KEYS} ${ROAS} ${CRLS}
 
 ######################################################################
 ## roa-ee-munge test
