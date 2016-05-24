@@ -1,0 +1,6 @@
+/*.cache/
+/*.cer
+/*.crl
+/*.key
+/*.roa
+/test-copied-subject.tap

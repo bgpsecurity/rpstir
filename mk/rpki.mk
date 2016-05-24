@@ -53,6 +53,56 @@ EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options} ${CRLS:=.options}
 CLEANFILES += ${CERTS} ${KEYS} ${ROAS} ${CRLS}
 
 ######################################################################
+## crl-processing tests
+######################################################################
+TESTS += \
+	tests/subsystem/crl-processing/test-copied-subject.tap
+check_SCRIPTS += \
+	tests/subsystem/crl-processing/test-copied-subject.tap
+tests/subsystem/crl-processing/test-copied-subject.tap: \
+	tests/subsystem/crl-processing/test-copied-subject.tap.in
+MK_SUBST_FILES_EXEC += \
+	tests/subsystem/crl-processing/test-copied-subject.tap
+CERTS += \
+	tests/subsystem/crl-processing/ta.cer \
+	tests/subsystem/crl-processing/ca-victim.cer \
+	tests/subsystem/crl-processing/ca-victimchild.cer \
+	tests/subsystem/crl-processing/ca-evil.cer \
+	tests/subsystem/crl-processing/ca-fakevictim.cer
+CRLS += \
+	tests/subsystem/crl-processing/ca-fakevictim.crl
+tests/subsystem/crl-processing/ta.cer: \
+	tests/subsystem/crl-processing/ta.options \
+	tests/subsystem/crl-processing/ta.key
+tests/subsystem/crl-processing/ca-victim.cer: \
+	tests/subsystem/crl-processing/ca-victim.options \
+	tests/subsystem/crl-processing/ca-victim.key \
+	tests/subsystem/crl-processing/ta.cer \
+	tests/subsystem/crl-processing/ta.key
+tests/subsystem/crl-processing/ca-victimchild.cer: \
+	tests/subsystem/crl-processing/ca-victimchild.options \
+	tests/subsystem/crl-processing/ca-victimchild.key \
+	tests/subsystem/crl-processing/ca-victim.cer \
+	tests/subsystem/crl-processing/ca-victim.key
+tests/subsystem/crl-processing/ca-evil.cer: \
+	tests/subsystem/crl-processing/ca-evil.options \
+	tests/subsystem/crl-processing/ca-evil.key \
+	tests/subsystem/crl-processing/ta.cer \
+	tests/subsystem/crl-processing/ta.key
+tests/subsystem/crl-processing/ca-fakevictim.cer: \
+	tests/subsystem/crl-processing/ca-fakevictim.options \
+	tests/subsystem/crl-processing/ca-fakevictim.key \
+	tests/subsystem/crl-processing/ca-evil.cer \
+	tests/subsystem/crl-processing/ca-evil.key
+tests/subsystem/crl-processing/ca-fakevictim.crl: \
+	tests/subsystem/crl-processing/ca-fakevictim.crl.options \
+	tests/subsystem/crl-processing/ca-fakevictim.cer \
+	tests/subsystem/crl-processing/ca-fakevictim.key
+clean-local: clean-crl-processing
+clean-crl-processing:
+	rm -rf tests/subsystem/crl-processing/test-copied-subject.tap.cache
+
+######################################################################
 ## roa-ee-munge test
 ######################################################################
 # see ticket #28

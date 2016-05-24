@@ -1,0 +1,12 @@
+type=CA
+issuer=ca-evil
+subject=ca-victim
+aia=rsync://invalid/
+sia=r:rsync://invalid/,m:rsync://invalid/invalid.mft
+ipv4=0.1.0.0/24
+ipv6=0:1::/48
+as=64-95
+selfsigned=false
+parentcertfile=tests/subsystem/crl-processing/ca-evil.cer
+parentkeyfile=tests/subsystem/crl-processing/ca-evil.key
+subjkeyfile=tests/subsystem/crl-processing/ca-fakevictim.key
