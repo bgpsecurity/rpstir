@@ -57,6 +57,11 @@ upgrade_from_0_11 () {
 ALTER TABLE rpki_manifest DROP COLUMN cert_id;
 DROP INDEX `dirname` ON `rpki_dir`;
 CREATE INDEX `dirname` ON `rpki_dir` (`dirname`(512));
+ALTER TABLE `rpki_metadata`
+    DROP COLUMN `rs_last`,
+    DROP COLUMN `qu_last`,
+    DROP COLUMN `gc_last`,
+    DROP COLUMN `ch_last`;
 EOF
 }
 

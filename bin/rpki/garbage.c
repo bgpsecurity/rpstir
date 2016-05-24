@@ -22,8 +22,6 @@
  **************/
 
 /** @bug magic constant */
-static char prevTimestamp[24];
-/** @bug magic constant */
 static char currTimestamp[24];
 static char theIssuer[SUBJSIZE];
 static char theAKI[SKISIZE];
@@ -251,14 +249,6 @@ int main(
             .valsize = sizeof(currTimestamp),
             .avalsize = 0,
         },
-        {
-            .colno = 2,
-            .sqltype = SQL_C_CHAR,
-            .colname = "gc_last",
-            .valptr = prevTimestamp,
-            .valsize = sizeof(prevTimestamp),
-            .avalsize = 0,
-        },
     };
     scmsrcha srch1 = {
         .vec = srch1cols,
@@ -466,17 +456,6 @@ int main(
     if (status != 0 && status != ERR_SCM_NODATA)
     {
         fprintf(stderr, "Error searching for certificates: %s\n",
-                err2string(status));
-        exit(EXIT_FAILURE);
-    }
-
-    // write timestamp into database
-    xsnprintf(msg, sizeof(msg), "update %s set gc_last=\"%s\";",
-              metaTable->tabname, currTimestamp);
-    status = statementscm_no_data(connect, msg);
-    if (status != 0)
-    {
-        fprintf(stderr, "Error updating timestamp: %s\n",
                 err2string(status));
         exit(EXIT_FAILURE);
     }

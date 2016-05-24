@@ -5069,32 +5069,6 @@ certificate_validity(
     return (retsta);
 }
 
-err_code
-ranlast(
-    scm *scmp,
-    scmcon *conp,
-    char *whichcli)
-{
-    char *now;
-    char what;
-    err_code sta = 0;
-
-    if (scmp == NULL || conp == NULL || conp->connected == 0 ||
-        whichcli == NULL || whichcli[0] == 0)
-        return (ERR_SCM_INVALARG);
-    what = toupper((int)(whichcli[0]));
-    if (what != 'R' && what != 'Q' && what != 'C' && what != 'G')
-        return (ERR_SCM_INVALARG);
-    initTables(scmp);
-    conp->mystat.tabname = "METADATA";
-    now = LocalTimeToDBTime(&sta);
-    if (now == NULL)
-        return (sta);
-    sta = updateranlastscm(conp, theMetaTable, what, now);
-    free((void *)now);
-    return (sta);
-}
-
 /*
  * open syslog and write message that application started
  */

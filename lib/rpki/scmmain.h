@@ -196,10 +196,6 @@ static scmtab scmtabbuilder[] = {
      "METADATA",
      "rootdir  VARCHAR(4096) NOT NULL,"
      "inited   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-     "rs_last  TIMESTAMP DEFAULT 0,"
-     "qu_last  TIMESTAMP DEFAULT 0,"
-     "gc_last  TIMESTAMP DEFAULT 0,"
-     "ch_last  TIMESTAMP DEFAULT 0,"
      "flags    INT UNSIGNED DEFAULT 0,"
      "local_id INT UNSIGNED DEFAULT 1,"
      "         PRIMARY KEY (local_id)",
