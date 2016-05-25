@@ -99,7 +99,7 @@ add() (
     for f in "$@"; do
         testcase_log "adding file ${f}..."
         case ${f} in
-            ta-*.cer) add_flag=-F;;
+            ta.cer|ta-*.cer) add_flag=-F;;
             *) add_flag=-f;;
         esac
         # TODO: figure out how to distinguish invalid added object
