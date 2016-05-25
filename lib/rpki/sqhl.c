@@ -1535,8 +1535,8 @@ cert_revoked(
                sta, sta);
         ADDCOL(revokedSrch, "snlist", SQL_C_BINARY, 16 * 1024 * 1024, sta,
                sta);
-        revokedSNLen = (unsigned int *)revokedSrch->vec[0].valptr;
-        revokedSNList = (uint8_t *)revokedSrch->vec[1].valptr;
+        revokedSNLen = revokedSrch->vec[0].valptr;
+        revokedSNList = revokedSrch->vec[1].valptr;
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
@@ -2278,7 +2278,7 @@ updateManifestObjs(
             {
                 bhashlen /= 2;
                 memcpy(bytehash, bhash, bhashlen);
-                free((void *)bhash);
+                free(bhash);
                 hashlen =
                     check_fileAndHash(fahp, fd, bytehash, bhashlen,
                                       HASHSIZE / 2);
@@ -2306,7 +2306,7 @@ updateManifestObjs(
                           "update %s set flags=flags+%d, hash=\"%s\""
                           " where local_id=%d;",
                           tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
-                free((void *)h);
+                free(h);
             }
             /** @bug ignores error code without explanation */
             statementscm_no_data(conp, flagStmt);
@@ -4633,7 +4633,7 @@ revoke_cert_and_children(
                                 // flags?
         struct cert_answers *cert_answersp;
         struct cert_ansr *cert_ansrp;
-        cert_answersp = find_cert_by_aKI(ski, (char *)0, theSCMP, conp);
+        cert_answersp = find_cert_by_aKI(ski, NULL, theSCMP, conp);
         /**
          * @bug
          *     ignores error code without explanation (num_ansrs might
@@ -4656,8 +4656,8 @@ revoke_cert_and_children(
             }
         }
     }
-    return verifyOrNotChildren(conp, (char *)s->vec[1].valptr,
-                               (char *)s->vec[2].valptr, NULL, NULL, lid, 0);
+    return verifyOrNotChildren(
+        conp, s->vec[1].valptr, s->vec[2].valptr, NULL, NULL, lid, 0);
 }
 
 err_code
