@@ -1893,12 +1893,12 @@ rescert_flags_chk(
     X509 *x,
     int ct)
 {
-    unsigned long ta_flags,
-        ta_kusage,
-        ca_flags,
-        ca_kusage,
-        ee_flags,
-        ee_kusage;
+    unsigned long ta_flags;
+    unsigned long ta_kusage;
+    unsigned long ca_flags;
+    unsigned long ca_kusage;
+    unsigned long ee_flags;
+    unsigned long ee_kusage;
     int cert_type;
 
     ta_flags =
