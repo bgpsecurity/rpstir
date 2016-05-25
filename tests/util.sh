@@ -133,6 +133,7 @@ check_accepted() {
     check_accepted_valid=$(
         try run "${pfx_fn}query_cert" query -n -t cert -d filename
         try run "${pfx_fn}query_roa" query -n -t roa -d filename
+        try run "${pfx_fn}query_crl" query -n -t crl -d filename
     ) || abort_test "unable to list valid files"
     check_accepted_valid=$(sort_args ${check_accepted_valid})
     check_accepted_fail_part="expected files"
