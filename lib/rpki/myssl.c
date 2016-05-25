@@ -1893,21 +1893,19 @@ rescert_flags_chk(
     X509 *x,
     int ct)
 {
-    unsigned long ta_flags;
-    unsigned long ta_kusage;
-    unsigned long ca_flags;
-    unsigned long ca_kusage;
-    unsigned long ee_flags;
-    unsigned long ee_kusage;
-    int cert_type;
-
-    ta_flags =
+    static const unsigned long ta_flags =
         (EXFLAG_SET | EXFLAG_SS | EXFLAG_CA | EXFLAG_KUSAGE | EXFLAG_BCONS);
-    ta_kusage = (KU_KEY_CERT_SIGN | KU_CRL_SIGN);
-    ca_flags = (EXFLAG_SET | EXFLAG_CA | EXFLAG_KUSAGE | EXFLAG_BCONS);
-    ca_kusage = (KU_KEY_CERT_SIGN | KU_CRL_SIGN);
-    ee_flags = (EXFLAG_SET | EXFLAG_KUSAGE);
-    ee_kusage = (KU_DIGITAL_SIGNATURE);
+    static const unsigned long ta_kusage =
+        (KU_KEY_CERT_SIGN | KU_CRL_SIGN);
+    static const unsigned long ca_flags =
+        (EXFLAG_SET | EXFLAG_CA | EXFLAG_KUSAGE | EXFLAG_BCONS);
+    static const unsigned long ca_kusage =
+        (KU_KEY_CERT_SIGN | KU_CRL_SIGN);
+    static const unsigned long ee_flags =
+        (EXFLAG_SET | EXFLAG_KUSAGE);
+    static const unsigned long ee_kusage =
+        (KU_DIGITAL_SIGNATURE);
+    int cert_type;
 
     if ((x->ex_flags == ta_flags) && (x->ex_kusage == ta_kusage))
         cert_type = TA_CERT;
