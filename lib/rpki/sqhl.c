@@ -1556,6 +1556,7 @@ cert_revoked(
     {
         return ERR_SCM_NOMEM;
     }
+    /** @bug ignores error code without explanation */
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, &revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(revokedSN);
@@ -3424,6 +3425,7 @@ add_crl(
         uint8_t *u = (uint8_t *) cf->snlist;
         for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
+            /** @bug ignores error code without explanation */
             revoke_cert_by_serial(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
                                   cf->fields[CRF_FIELD_AKI], u);
         }
@@ -4821,9 +4823,12 @@ revoke_cert_by_serial(
     unsigned int lid;
     unsigned int flags;
     scmsrcha srch;
+    /** @bug magic constant */
     scmsrch srch1[5];
     mcf mymcf;
+    /** @bug magic constant */
     char ski[512];
+    /** @bug magic constant */
     char subject[512];
     char *sno;
     uint8_t sn_zero[SER_NUM_MAX_SZ] = {0};
