@@ -1893,6 +1893,8 @@ rescert_flags_chk(
     X509 *x,
     int ct)
 {
+    LOG(LOG_DEBUG, "rescert_flags_chk(x=%p, ct=%d)", x, ct);
+
     static const unsigned long ta_flags =
         (EXFLAG_SET | EXFLAG_SS | EXFLAG_CA | EXFLAG_KUSAGE | EXFLAG_BCONS);
     static const unsigned long ta_kusage =
@@ -1906,6 +1908,7 @@ rescert_flags_chk(
     static const unsigned long ee_kusage =
         (KU_DIGITAL_SIGNATURE);
     int cert_type;
+    err_code ret = 0;
 
     if ((x->ex_flags == ta_flags) && (x->ex_kusage == ta_kusage))
         cert_type = TA_CERT;
@@ -1917,7 +1920,7 @@ rescert_flags_chk(
         cert_type = UN_CERT;
     if (ct == cert_type)
     {
-        return (0);
+        goto done;
     }
     else
     {
@@ -1928,8 +1931,14 @@ rescert_flags_chk(
                     "in an X.509 certificate.  Please ensure that OpenSSL "
                     "was compiled with RFC 3779 support.");
         }
-        return (ERR_SCM_BADFLAGS);
+        ret = ERR_SCM_BADFLAGS;
+        goto done;
     }
+
+done:
+    LOG(LOG_DEBUG, "rescert_flags_chk() returning %s: %s",
+        err2name(ret), err2string(ret));
+    return ret;
 }
 
 /*************************************************************
@@ -1942,18 +1951,27 @@ static err_code
 rescert_version_chk(
     X509 *x)
 {
+    LOG(LOG_DEBUG, "rescert_version_chk(x=%p)", x);
+
     long l;
+    err_code ret = 0;
 
     l = X509_get_version(x);
     /*
      * returns the value which is 2 to denote version 3
      */
 
-    LOG(LOG_DEBUG, "rescert_version_check: version %lu", l + 1);
+    LOG(LOG_DEBUG, "certificate version: %lu", l + 1);
     if (l != 2)                 /* see above: value of 2 means v3 */
-        return (ERR_SCM_BADCERTVERS);
-    else
-        return (0);
+    {
+        ret = ERR_SCM_BADCERTVERS;
+        goto done;
+    }
+
+done:
+    LOG(LOG_DEBUG, "rescert_version_chk() returning %s: %s",
+        err2name(ret), err2string(ret));
+    return ret;
 }
 
 
@@ -3937,114 +3955,165 @@ rescert_profile_chk(
     struct Certificate *certp,
     int ct)
 {
+    LOG(LOG_DEBUG, "rescert_profile_chk(x=%p, certp=%p, ct=%d)", x, certp, ct);
+
     err_code ret = 0;
 
     if (x == NULL || ct == UN_CERT)
-        return (ERR_SCM_INVALARG);
+    {
+        ret = ERR_SCM_INVALARG;
+        goto done;
+    }
     /*
      * load the X509_st extension values
      */
     x509v3_load_extensions(x);
 
     if ((x->ex_flags & EXFLAG_INVALID) != 0 || (x->ex_flags & EXFLAG_SET) == 0)
-        return (ERR_SCM_BADEXT);
+    {
+        ret = ERR_SCM_BADEXT;
+        goto done;
+    }
 
     ret = rescert_flags_chk(x, ct);
-    LOG(LOG_DEBUG, "rescert_flags_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_version_chk(x);
-    LOG(LOG_DEBUG, "rescert_version_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     if (rescert_name_chk(&certp->toBeSigned.issuer.rDNSequence) < 0)
-        return ERR_SCM_BADISSUER;
+    {
+        ret = ERR_SCM_BADISSUER;
+        goto done;
+    }
     else if (rescert_name_chk(&certp->toBeSigned.subject.rDNSequence) < 0)
-        return ERR_SCM_BADSUBJECT;
+    {
+        ret = ERR_SCM_BADSUBJECT;
+        goto done;
+    }
 
     ret = rescert_basic_constraints_chk(x, ct);
     LOG(LOG_DEBUG, "rescert_basic_constraints_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_ski_chk(x, certp);
     LOG(LOG_DEBUG, "rescert_ski_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_aki_chk(x, ct);
     LOG(LOG_DEBUG, "rescert_aki_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_key_usage_chk(x);
     LOG(LOG_DEBUG, "rescert_key_usage_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_extended_key_usage_chk(x, ct);
     LOG(LOG_DEBUG, "rescert_extended_key_usage_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_crldp_chk(x, ct);
     LOG(LOG_DEBUG, "rescert_crldp_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_aia_chk(x, ct);
     LOG(LOG_DEBUG, "rescert_aia_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_sia_chk(certp);
     LOG(LOG_DEBUG, "rescert_sia_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_cert_policy_chk(x);
     LOG(LOG_DEBUG, "rescert_cert_policy_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_ip_asnum_chk(x, certp, ct);
     LOG(LOG_DEBUG, "rescert_ip_asnum_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_criticals_chk(x);
     LOG(LOG_DEBUG, "rescert_criticals_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_sig_algs_chk(certp);
     LOG(LOG_DEBUG, "rescert_sig_algs_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_serial_number_chk(certp);
     LOG(LOG_DEBUG, "rescert_serial_number_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_dates_chk(certp);
     LOG(LOG_DEBUG, "rescert_dates_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_subj_iss_UID_chk(certp);
     LOG(LOG_DEBUG, "rescert_subj_iss_UID_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
     ret = rescert_extensions_chk(certp);
     LOG(LOG_DEBUG, "rescert_extensions_chk");
     if (ret < 0)
-        return (ret);
+    {
+        goto done;
+    }
 
-    return (0);
+done:
+    LOG(LOG_DEBUG, "rescert_profile_chk() returning %s: %s",
+        err2name(ret), err2string(ret));
+    return ret;
 }
 
 
