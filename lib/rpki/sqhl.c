@@ -127,9 +127,6 @@ findorcreatedir(
     unsigned int *idp)
 {
     scmsrcha *srch;
-    scmkva where;
-    scmkva ins;
-    scmkv two[2];
     err_code sta;
 
     if (conp == NULL || conp->connected == 0 || dirname == NULL ||
@@ -138,18 +135,22 @@ findorcreatedir(
     *idp = (unsigned int)(-1);
     conp->mystat.tabname = "DIRECTORY";
     initTables(scmp);
-    two[0].column = "dir_id";
-    two[0].value = NULL;
-    two[1].column = "dirname";
-    two[1].value = dirname;
-    where.vec = &two[1];
-    where.ntot = 1;
-    where.nused = 1;
-    where.vald = 0;
-    ins.vec = &two[0];
-    ins.ntot = ELTS(two);
-    ins.nused = ELTS(two);
-    ins.vald = 0;
+    scmkv two[] = {
+        {"dir_id", NULL},
+        {"dirname", dirname},
+    };
+    scmkva where = {
+        .vec = &two[1],
+        .ntot = 1,
+        .nused = 1,
+        .vald = 0,
+    };
+    scmkva ins = {
+        .vec = two,
+        .ntot = ELTS(two),
+        .nused = ELTS(two),
+        .vald = 0,
+    };
     srch = newsrchscm("focdir", 4, sizeof(unsigned int), 0);
     if (srch == NULL)
         return (ERR_SCM_NOMEM);
@@ -190,10 +191,6 @@ char *retrieve_tdir(
     scmcon *conp,
     err_code *stap)
 {
-    scmsrcha srch;
-    scmsrch srch1;
-    scmkva where;
-    scmkv one;
     char *oot;
     err_code sta;
 
@@ -202,31 +199,40 @@ char *retrieve_tdir(
         return (NULL);
     conp->mystat.tabname = "METADATA";
     initTables(scmp);
-    one.column = "local_id";
-    one.value = "1";
-    where.vec = &one;
-    where.ntot = 1;
-    where.nused = 1;
-    where.vald = 0;
-    srch1.colno = 1;
-    srch1.sqltype = SQL_C_CHAR;
-    srch1.colname = "rootdir";
+    scmkv one[] = {
+        {"local_id", "1"},
+    };
+    scmkva where = {
+        .vec = one,
+        .ntot = ELTS(one),
+        .nused = ELTS(one),
+        .vald = 0,
+    };
     oot = calloc(PATH_MAX, sizeof(char));
     if (oot == NULL)
     {
         *stap = ERR_SCM_NOMEM;
         return (NULL);
     }
-    srch1.valptr = oot;
-    srch1.valsize = PATH_MAX;
-    srch1.avalsize = 0;
-    srch.vec = &srch1;
-    srch.sname = NULL;
-    srch.ntot = 1;
-    srch.nused = 1;
-    srch.vald = 0;
-    srch.where = &where;
-    srch.wherestr = NULL;
+    scmsrch srch1[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_CHAR,
+            .colname = "rootdir",
+            .valptr = oot,
+            .valsize = PATH_MAX,
+            .avalsize = 0,
+        },
+    };
+    scmsrcha srch = {
+        .vec = srch1,
+        .sname = NULL,
+        .ntot = ELTS(srch1),
+        .nused = ELTS(srch1),
+        .vald = 0,
+        .where = &where,
+        .wherestr = NULL,
+    };
     sta = searchscm(conp, theMetaTable, &srch, NULL,
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
@@ -251,10 +257,6 @@ dupsigscm(
     char *msig)
 {
     unsigned long lid;
-    scmsrcha srch;
-    scmsrch srch1;
-    scmkva where;
-    scmkv one;
     err_code sta;
 
     if (scmp == NULL || conp == NULL || conp->connected == 0 ||
@@ -262,25 +264,34 @@ dupsigscm(
         return (ERR_SCM_INVALARG);
     conp->mystat.tabname = tabp->hname;
     initTables(scmp);
-    one.column = "sig";
-    one.value = msig;
-    where.vec = &one;
-    where.ntot = 1;
-    where.nused = 1;
-    where.vald = 0;
-    srch1.colno = 1;
-    srch1.sqltype = SQL_C_LONG;
-    srch1.colname = "local_id";
-    srch1.valptr = &lid;
-    srch1.valsize = sizeof(lid);
-    srch1.avalsize = 0;
-    srch.vec = &srch1;
-    srch.sname = NULL;
-    srch.ntot = 1;
-    srch.nused = 1;
-    srch.vald = 0;
-    srch.where = &where;
-    srch.wherestr = NULL;
+    scmkv one[] = {
+        {"sig", msig},
+    };
+    scmkva where = {
+        .vec = one,
+        .ntot = ELTS(one),
+        .nused = ELTS(one),
+        .vald = 0,
+    };
+    scmsrch srch1[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_LONG,
+            .colname = "local_id",
+            .valptr = &lid,
+            .valsize = sizeof(lid),
+            .avalsize = 0,
+        },
+    };
+    scmsrcha srch = {
+        .vec = srch1,
+        .sname = NULL,
+        .ntot = ELTS(srch1),
+        .nused = ELTS(srch1),
+        .vald = 0,
+        .where = &where,
+        .wherestr = NULL,
+    };
     sta = searchscm(conp, tabp, &srch, NULL,
                     &ok, SCM_SRCH_DOVALUE_ALWAYS, NULL);
     switch (sta)
@@ -366,7 +377,6 @@ add_cert_internal(
     cert_fields *cf,
     unsigned int *cert_id)
 {
-    scmkva aone;
     scmkv cols[CF_NFIELDS + 5];
     char *wptr = NULL;
     char *ptr;
@@ -395,40 +405,36 @@ add_cert_internal(
     {
         if ((ptr = cf->fields[i]) != NULL)
         {
-            cols[idx].column = certf[i];
             escaped_strings[i] = malloc(strlen(ptr)*2+1);
             if(escaped_strings[i] == NULL) {
                 sta = ERR_SCM_NOMEM;
                 goto cleanup;
             }
             mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
-            cols[idx++].value = escaped_strings[i];
+            cols[idx++] = (scmkv){certf[i], escaped_strings[i]};
         }
     }
     xsnprintf(flagn, sizeof(flagn), "%u", cf->flags);
-    cols[idx].column = "flags";
-    cols[idx++].value = flagn;
+    cols[idx++] = (scmkv){"flags", flagn};
     xsnprintf(lid, sizeof(lid), "%u", *cert_id);
-    cols[idx].column = "local_id";
-    cols[idx++].value = lid;
+    cols[idx++] = (scmkv){"local_id", lid};
     xsnprintf(did, sizeof(did), "%u", cf->dirid);
-    cols[idx].column = "dir_id";
-    cols[idx++].value = did;
+    cols[idx++] = (scmkv){"dir_id", did};
     if (cf->ipblen > 0)
     {
-        cols[idx].column = "ipblen";
         xsnprintf(blen, sizeof(blen), "%u", cf->ipblen);   /* byte length */
-        cols[idx++].value = blen;
-        cols[idx].column = "ipb";
+        cols[idx++] = (scmkv){"ipblen", blen};
         wptr = hexify(cf->ipblen, cf->ipb, HEXIFY_HAT);
         if (wptr == NULL)
             return (ERR_SCM_NOMEM);
-        cols[idx++].value = wptr;
+        cols[idx++] = (scmkv){"ipb", wptr};
     }
-    aone.vec = &cols[0];
-    aone.ntot = ELTS(cols);
-    aone.nused = idx;
-    aone.vald = 0;
+    scmkva aone = {
+        .vec = cols,
+        .ntot = ELTS(cols),
+        .nused = idx,
+        .vald = 0,
+    };
     sta = insertscm(conp, theCertTable, &aone);
 cleanup:
     for (i = 0; i < CF_NFIELDS; i++)
@@ -454,7 +460,6 @@ add_crl_internal(
     crl_fields *cf)
 {
     unsigned int crl_id = 0;
-    scmkva aone;
     scmkv cols[CRF_NFIELDS + 6];
     char *ptr;
     char *hexs;
@@ -492,36 +497,31 @@ add_crl_internal(
     {
         if ((ptr = cf->fields[i]) != NULL)
         {
-            cols[idx].column = crlf[i];
             escaped_strings[i] = malloc(strlen(ptr)*2+1);
             if(escaped_strings[i] == NULL) {
                 sta = ERR_SCM_NOMEM;
                 goto cleanup;
             }
             mysql_escape_string(escaped_strings[i], ptr, strlen(ptr));
-            cols[idx++].value = escaped_strings[i];
+            cols[idx++] = (scmkv){crlf[i], escaped_strings[i]};
         }
     }
     xsnprintf(flagn, sizeof(flagn), "%u", cf->flags);
-    cols[idx].column = "flags";
-    cols[idx++].value = flagn;
+    cols[idx++] = (scmkv){"flags", flagn};
     xsnprintf(lid, sizeof(lid), "%u", crl_id);
-    cols[idx].column = "local_id";
-    cols[idx++].value = lid;
+    cols[idx++] = (scmkv){"local_id", lid};
     xsnprintf(did, sizeof(did), "%u", cf->dirid);
-    cols[idx].column = "dir_id";
-    cols[idx++].value = did;
+    cols[idx++] = (scmkv){"dir_id", did};
     xsnprintf(csnlen, sizeof(csnlen), "%d", cf->snlen);
-    cols[idx].column = "snlen";
-    cols[idx++].value = csnlen;
-    cols[idx].column = "sninuse";
-    cols[idx++].value = csnlen;
-    cols[idx].column = "snlist";
-    cols[idx++].value = hexs;
-    aone.vec = &cols[0];
-    aone.ntot = ELTS(cols);
-    aone.nused = idx;
-    aone.vald = 0;
+    cols[idx++] = (scmkv){"snlen", csnlen};
+    cols[idx++] = (scmkv){"sninuse", csnlen};
+    cols[idx++] = (scmkv){"snlist", hexs};
+    scmkva aone = {
+        .vec = cols,
+        .ntot = ELTS(cols),
+        .nused = idx,
+        .vald = 0,
+    };
     // add the CRL
     sta = insertscm(conp, theCRLTable, &aone);
 cleanup:
@@ -2569,9 +2569,6 @@ static int countvalidparents(
 {
     // ?????? replace this with shorter version using utility funcs ????????
     unsigned int flags = 0;
-    scmsrcha srch;
-    scmsrch srch1;
-    scmkva where;
     scmkv w[2];
     mcf mymcf;
     char ws[256];
@@ -2579,30 +2576,28 @@ static int countvalidparents(
     err_code sta;
     char escaped[(IS != NULL) ? strlen(IS)*2+1 : 0];
 
-    w[0].column = "ski";
-    w[0].value = AK;
+    w[0] = (scmkv){"ski", AK};
     if (IS != NULL)
     {
-        w[1].column = "subject";
         mysql_escape_string(escaped, IS, strlen(IS));
-        w[1].value = escaped;
+        w[1] = (scmkv){"subject", escaped};
     }
-    where.vec = &w[0];
-    where.ntot = (IS == NULL) ? 1 : 2;
-    where.nused = (IS == NULL) ? 1 : 2;
-    where.vald = 0;
-    srch1.colno = 1;
-    srch1.sqltype = SQL_C_ULONG;
-    srch1.colname = "flags";
-    srch1.valptr = &flags;
-    srch1.valsize = sizeof(flags);
-    srch1.avalsize = 0;
-    srch.vec = &srch1;
-    srch.sname = NULL;
-    srch.ntot = 1;
-    srch.nused = 1;
-    srch.vald = 0;
-    srch.where = &where;
+    scmkva where = {
+        .vec = w,
+        .ntot = (IS == NULL) ? 1 : 2,
+        .nused = (IS == NULL) ? 1 : 2,
+        .vald = 0,
+    };
+    scmsrch srch1[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_ULONG,
+            .colname = "flags",
+            .valptr = &flags,
+            .valsize = sizeof(flags),
+            .avalsize = 0,
+        },
+    };
     now = LocalTimeToDBTime(&sta);
     if (now == NULL)
         return (sta);
@@ -2610,9 +2605,17 @@ static int countvalidparents(
     free(now);
     addFlagTest(ws, SCM_FLAG_VALIDATED, 1, 1);
     addFlagTest(ws, SCM_FLAG_NOCHAIN, 0, 1);
-    srch.wherestr = &ws[0];
     mymcf.did = 0;
-    srch.context = &mymcf;
+    scmsrcha srch = {
+        .vec = srch1,
+        .sname = NULL,
+        .ntot = ELTS(srch1),
+        .nused = ELTS(srch1),
+        .vald = 0,
+        .where = &where,
+        .wherestr = ws,
+        .context = &mymcf,
+    };
     sta = searchscm(conp, theCertTable, &srch, NULL, &cparents,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     if (sta < 0)
@@ -3646,13 +3649,10 @@ add_roa_internal(
     unsigned int flags)
 {
     unsigned int roa_id = 0;
-    scmkva aone;
-    scmkv cols[7];
     char flagn[24];
     char asn[24];
     char lid[24];
     char did[24];
-    int idx = 0;
     err_code sta;
 
     // Buffer to hold a potentially large INSERT statement. This is
@@ -3682,28 +3682,25 @@ add_roa_internal(
     }
     roa_id++;
     // fill in insertion structure
-    cols[idx].column = "filename";
-    cols[idx++].value = outfile;
     xsnprintf(did, sizeof(did), "%u", dirid);
-    cols[idx].column = "dir_id";
-    cols[idx++].value = did;
-    cols[idx].column = "ski";
-    cols[idx++].value = ski;
-    cols[idx].column = "sig";
-    cols[idx++].value = sig;
     xsnprintf(asn, sizeof(asn), "%" PRIu32, asid);
-    cols[idx].column = "asn";
-    cols[idx++].value = asn;
     xsnprintf(flagn, sizeof(flagn), "%u", flags);
-    cols[idx].column = "flags";
-    cols[idx++].value = flagn;
     xsnprintf(lid, sizeof(lid), "%u", roa_id);
-    cols[idx].column = "local_id";
-    cols[idx++].value = lid;
-    aone.vec = &cols[0];
-    aone.ntot = ELTS(cols);
-    aone.nused = idx;
-    aone.vald = 0;
+    scmkv cols[] = {
+        {"filename", outfile},
+        {"dir_id", did},
+        {"ski", ski},
+        {"sig", sig},
+        {"asn", asn},
+        {"flags", flagn},
+        {"local_id", lid},
+    };
+    scmkva aone = {
+        .vec = cols,
+        .ntot = ELTS(cols),
+        .nused = ELTS(cols),
+        .vald = 0,
+    };
     // add the ROA
     sta = insertscm(conp, theROATable, &aone);
     if (sta < 0)
@@ -3837,15 +3834,16 @@ done:
 
         // Then delete the prefixes, if they weren't already deleted
         // by the foreign key constraints.
-        scmkva roa_prefixes_aone;
-        scmkv roa_prefixes_cols[1];
-        roa_prefixes_cols[0].column = "roa_local_id";
-        roa_prefixes_cols[0].value = lid;
-        /** @bug shouldn't cols be roa_prefixes_cols? */
-        roa_prefixes_aone.vec = &cols[0];
-        roa_prefixes_aone.ntot = ELTS(roa_prefixes_cols);
-        roa_prefixes_aone.nused = roa_prefixes_aone.ntot;
-        roa_prefixes_aone.vald = 0;
+        scmkv roa_prefixes_cols[1] = {
+            {"roa_local_id", lid},
+        };
+        scmkva roa_prefixes_aone = {
+            /** @bug shouldn't cols be roa_prefixes_cols? */
+            .vec = cols,
+            .ntot = ELTS(roa_prefixes_cols),
+            .nused = ELTS(roa_prefixes_cols),
+            .vald = 0,
+        };
         delete_status =
             deletescm(conp, theROAPrefixTable, &roa_prefixes_aone);
         if (delete_status < 0)
@@ -4107,40 +4105,31 @@ add_manifest(
     }
 
     // do the actual insert of the manifest in the db
-    scmkva aone;
-    /** @bug why is this 12?  shouldn't it be 9? */
-    scmkv cols[12];
-    int idx = 0;
     char did[24];
     char mid[24];
     char lenbuf[20];
-    cols[idx].column = "filename";
-    cols[idx++].value = outfile;
     xsnprintf(did, sizeof(did), "%u", id);
-    cols[idx].column = "dir_id";
-    cols[idx++].value = did;
-    cols[idx].column = "ski";
-    cols[idx++].value = ski;
-    cols[idx].column = "this_upd";
-    cols[idx++].value = thisUpdate;
-    cols[idx].column = "next_upd";
-    cols[idx++].value = nextUpdate;
     char flagn[24];
     xsnprintf(flagn, sizeof(flagn), "%u", flags);
-    cols[idx].column = "flags";
-    cols[idx++].value = flagn;
     xsnprintf(mid, sizeof(mid), "%u", man_id);
-    cols[idx].column = "local_id";
-    cols[idx++].value = mid;
-    cols[idx].column = "files";
-    cols[idx++].value = manFiles;
-    cols[idx].column = "fileslen";
     xsnprintf(lenbuf, sizeof(lenbuf), "%u", manFilesLen);
-    cols[idx++].value = lenbuf;
-    aone.vec = &cols[0];
-    aone.ntot = ELTS(cols);
-    aone.nused = idx;
-    aone.vald = 0;
+    scmkv cols[] = {
+        {"filename", outfile},
+        {"dir_id", did},
+        {"ski", ski},
+        {"this_upd", thisUpdate},
+        {"next_upd", nextUpdate},
+        {"flags", flagn},
+        {"local_id", mid},
+        {"files", manFiles},
+        {"fileslen", lenbuf},
+    };
+    scmkva aone = {
+        .vec = cols,
+        .ntot = ELTS(cols),
+        .nused = ELTS(cols),
+        .vald = 0,
+    };
     do
     {
         if ((sta = insertscm(conp, theManifestTable, &aone)) < 0)
@@ -4472,9 +4461,6 @@ iterate_crl(
     unsigned int sninuse = 0;
     unsigned int flags = 0;
     unsigned int lid = 0;
-    scmsrcha srch;
-    scmsrch srch1[7];
-    crlinfo crli;
     char issuer[512];
     char aki[512];
     err_code sta;
@@ -4488,61 +4474,81 @@ iterate_crl(
     memset(snlist, 0, 16 * 1024 * 1024);
     initTables(scmp);
     // set up a search for issuer, snlen, sninuse, flags, snlist and aki
-    srch1[0].colno = 1;
-    srch1[0].sqltype = SQL_C_CHAR;
-    srch1[0].colname = "issuer";
     issuer[0] = 0;
-    srch1[0].valptr = issuer;
-    srch1[0].valsize = 512;
-    srch1[0].avalsize = 0;
-    srch1[1].colno = 2;
-    srch1[1].sqltype = SQL_C_ULONG;
-    srch1[1].colname = "snlen";
-    srch1[1].valptr = &snlen;
-    srch1[1].valsize = sizeof(snlen);
-    srch1[1].avalsize = 0;
-    srch1[2].colno = 3;
-    srch1[2].sqltype = SQL_C_ULONG;
-    srch1[2].colname = "sninuse";
-    srch1[2].valptr = &sninuse;
-    srch1[2].valsize = sizeof(sninuse);
-    srch1[2].avalsize = 0;
-    srch1[3].colno = 4;
-    srch1[3].sqltype = SQL_C_ULONG;
-    srch1[3].colname = "flags";
-    srch1[3].valptr = &flags;
-    srch1[3].valsize = sizeof(flags);
-    srch1[3].avalsize = 0;
-    srch1[4].colno = 5;
-    srch1[4].sqltype = SQL_C_ULONG;
-    srch1[4].colname = "local_id";
-    srch1[4].valptr = &lid;
-    srch1[4].valsize = sizeof(lid);
-    srch1[4].avalsize = 0;
-    srch1[5].colno = 6;
-    srch1[5].sqltype = SQL_C_BINARY;
-    srch1[5].colname = "snlist";
-    srch1[5].valptr = snlist;
-    srch1[5].valsize = 16 * 1024 * 1024;
-    srch1[5].avalsize = 0;
-    srch1[6].colno = 7;
-    srch1[6].sqltype = SQL_C_CHAR;
-    srch1[6].colname = "aki";
     aki[0] = 0;
-    srch1[6].valptr = aki;
-    srch1[6].valsize = 512;
-    srch1[6].avalsize = 0;
-    srch.vec = &srch1[0];
-    srch.sname = NULL;
-    srch.ntot = ELTS(srch1);
-    srch.nused = ELTS(srch1);
-    srch.vald = 0;
-    srch.where = NULL;
-    srch.wherestr = NULL;
-    crli.scmp = scmp;
-    crli.conp = conp;
-    crli.tabp = theCRLTable;
-    crli.cfunc = cfunc;
+    scmsrch srch1[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_CHAR,
+            .colname = "issuer",
+            .valptr = issuer,
+            .valsize = 512,
+            .avalsize = 0,
+        },
+        {
+            .colno = 2,
+            .sqltype = SQL_C_ULONG,
+            .colname = "snlen",
+            .valptr = &snlen,
+            .valsize = sizeof(snlen),
+            .avalsize = 0,
+        },
+        {
+            .colno = 3,
+            .sqltype = SQL_C_ULONG,
+            .colname = "sninuse",
+            .valptr = &sninuse,
+            .valsize = sizeof(sninuse),
+            .avalsize = 0,
+        },
+        {
+            .colno = 4,
+            .sqltype = SQL_C_ULONG,
+            .colname = "flags",
+            .valptr = &flags,
+            .valsize = sizeof(flags),
+            .avalsize = 0,
+        },
+        {
+            .colno = 5,
+            .sqltype = SQL_C_ULONG,
+            .colname = "local_id",
+            .valptr = &lid,
+            .valsize = sizeof(lid),
+            .avalsize = 0,
+        },
+        {
+            .colno = 6,
+            .sqltype = SQL_C_BINARY,
+            .colname = "snlist",
+            .valptr = snlist,
+            .valsize = 16 * 1024 * 1024,
+            .avalsize = 0,
+        },
+        {
+            .colno = 7,
+            .sqltype = SQL_C_CHAR,
+            .colname = "aki",
+            .valptr = aki,
+            .valsize = 512,
+            .avalsize = 0,
+        },
+    };
+    scmsrcha srch = {
+        .vec = srch1,
+        .sname = NULL,
+        .ntot = ELTS(srch1),
+        .nused = ELTS(srch1),
+        .vald = 0,
+        .where = NULL,
+        .wherestr = NULL,
+    };
+    crlinfo crli = {
+        .scmp = scmp,
+        .conp = conp,
+        .tabp = theCRLTable,
+        .cfunc = cfunc,
+    };
     srch.context = &crli;
     sta = searchscm(conp, theCRLTable, &srch, NULL, &crliterator,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -4562,37 +4568,47 @@ static void fillInColumns(
     unsigned int *flags,
     scmsrcha *srch)
 {
-    srch1[0].colno = 1;
-    srch1[0].sqltype = SQL_C_ULONG;
-    srch1[0].colname = "local_id";
-    srch1[0].valptr = lid;
-    srch1[0].valsize = sizeof(*lid);
-    srch1[0].avalsize = 0;
-    srch1[1].colno = 2;
-    srch1[1].sqltype = SQL_C_CHAR;
-    srch1[1].colname = "ski";
-    srch1[1].valptr = ski;
-    /** @bug magic constant; should be SKISIZE? */
-    srch1[1].valsize = 512;
-    srch1[1].avalsize = 0;
-    srch1[2].colno = 3;
-    srch1[2].sqltype = SQL_C_CHAR;
-    srch1[2].colname = "subject";
-    srch1[2].valptr = subject;
-    /** @bug magic constant; should be SUBJSIZE? */
-    srch1[2].valsize = 512;
-    srch1[2].avalsize = 0;
-    srch1[3].colno = 4;
-    srch1[3].sqltype = SQL_C_ULONG;
-    srch1[3].colname = "flags";
-    srch1[3].valptr = flags;
-    srch1[3].valsize = sizeof(*flags);
-    srch1[3].avalsize = 0;
-    srch->vec = srch1;
-    srch->sname = NULL;
-    srch->ntot = 4;
-    srch->nused = 4;
-    srch->vald = 0;
+    scmsrch tmp[] = {
+        {
+            .sqltype = SQL_C_ULONG,
+            .colname = "local_id",
+            .valptr = lid,
+            .valsize = sizeof(*lid),
+        },
+        {
+            .sqltype = SQL_C_CHAR,
+            .colname = "ski",
+            .valptr = ski,
+            /** @bug magic constant; should be SKISIZE? */
+            .valsize = 512,
+        },
+        {
+            .sqltype = SQL_C_CHAR,
+            .colname = "subject",
+            .valptr = subject,
+            /** @bug magic constant; should be SUBJSIZE? */
+            .valsize = 512,
+        },
+        {
+            .sqltype = SQL_C_ULONG,
+            .colname = "flags",
+            .valptr = flags,
+            .valsize = sizeof(*flags),
+        },
+    };
+    for (size_t i = 0; i < ELTS(tmp); ++i)
+    {
+        tmp[i].colno = i + 1;
+        tmp[i].avalsize = 0;
+        srch1[i] = tmp[i];
+    }
+    *srch = (scmsrcha){
+        .vec = srch1,
+        .sname = NULL,
+        .ntot = ELTS(tmp),
+        .nused = ELTS(tmp),
+        .vald = 0,
+    };
 }
 
 err_code
@@ -4655,12 +4671,7 @@ delete_object(
     unsigned int lid;
     unsigned int flags;
     scmsrcha srch;
-    scmsrch srch1;
     scmsrch srch2[5];
-    scmkva where;
-    scmkva dwhere;
-    scmkv one;
-    scmkv dtwo[2];
     scmtab *thetab;
     object_type typ;
     err_code sta;
@@ -4679,25 +4690,34 @@ delete_object(
         initTables(scmp);       // may be null if tables have been initiated
     if (outdir)
     {
-        one.column = "dirname";
-        one.value = outdir;
-        where.vec = &one;
-        where.ntot = 1;
-        where.nused = 1;
-        where.vald = 0;
-        srch1.colno = 1;
-        srch1.sqltype = SQL_C_ULONG;
-        srch1.colname = "dir_id";
-        srch1.valptr = &id;
-        srch1.valsize = sizeof(id);
-        srch1.avalsize = 0;
-        srch.vec = &srch1;
-        srch.sname = NULL;
-        srch.ntot = 1;
-        srch.nused = 1;
-        srch.vald = 0;
-        srch.where = &where;
-        srch.wherestr = NULL;
+        scmkv one[] = {
+            {"dirname", outdir},
+        };
+        scmkva where = {
+            .vec = one,
+            .ntot = ELTS(one),
+            .nused = ELTS(one),
+            .vald = 0,
+        };
+        scmsrch srch1[] = {
+            {
+                .colno = 1,
+                .sqltype = SQL_C_ULONG,
+                .colname = "dir_id",
+                .valptr = &id,
+                .valsize = sizeof(id),
+                .avalsize = 0,
+            },
+        };
+        srch = (scmsrcha){
+            .vec = srch1,
+            .sname = NULL,
+            .ntot = ELTS(srch1),
+            .nused = ELTS(srch1),
+            .vald = 0,
+            .where = &where,
+            .wherestr = NULL,
+        };
         sta =
             searchscm(conp, theDirTable, &srch, NULL, &ok,
                       SCM_SRCH_DOVALUE_ALWAYS, NULL);
@@ -4707,15 +4727,17 @@ delete_object(
     else
         id = dir_id;
     // fill in where structure
-    dtwo[0].column = "filename";
-    dtwo[0].value = outfile;
-    dtwo[1].column = "dir_id";
     xsnprintf(did, sizeof(did), "%u", id);
-    dtwo[1].value = did;
-    dwhere.vec = &dtwo[0];
-    dwhere.ntot = ELTS(dtwo);
-    dwhere.nused = ELTS(dtwo);
-    dwhere.vald = 0;
+    scmkv dtwo[] = {
+        {"filename", outfile},
+        {"dir_id", did},
+    };
+    scmkva dwhere = {
+        .vec = dtwo,
+        .ntot = ELTS(dtwo),
+        .nused = ELTS(dtwo),
+        .vald = 0,
+    };
     // delete the object based on the type
     // note that the directory itself is not deleted
     thetab = NULL;
@@ -4800,8 +4822,6 @@ revoke_cert_by_serial(
     unsigned int flags;
     scmsrcha srch;
     scmsrch srch1[5];
-    scmkva where;
-    scmkv w[3];
     mcf mymcf;
     char ski[512];
     char subject[512];
@@ -4817,23 +4837,24 @@ revoke_cert_by_serial(
     initTables(scmp);
     mymcf.did = 0;
     mymcf.toplevel = 1;
-    w[0].column = "issuer";
     char escaped [strlen(issuer)*2+1];
     mysql_escape_string(escaped, issuer, strlen(issuer));
-    w[0].value = escaped;
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
     {
         return (ERR_SCM_NOMEM);
     }
-    w[1].column = "sn";
-    w[1].value = &sno[0];
-    w[2].column = "aki";
-    w[2].value = aki;
-    where.vec = &w[0];
-    where.ntot = ELTS(w);
-    where.nused = ELTS(w);
-    where.vald = 0;
+    scmkv w[] = {
+        {"issuer", escaped},
+        {"sn", sno},
+        {"aki", aki},
+    };
+    scmkva where = {
+        .vec = w,
+        .ntot = ELTS(w),
+        .nused = ELTS(w),
+        .vald = 0,
+    };
     fillInColumns(srch1, &lid, ski, subject, &flags, &srch);
     srch.where = &where;
     srch.wherestr = NULL;
@@ -4854,20 +4875,21 @@ deletebylid(
     scmtab *tabp,
     unsigned int lid)
 {
-    scmkva lids;
-    scmkv where;
     char mylid[24];
     int sta;
 
     if (conp == NULL || conp->connected == 0 || tabp == NULL)
         return (ERR_SCM_INVALARG);
-    where.column = "local_id";
     xsnprintf(mylid, sizeof(mylid), "%u", lid);
-    where.value = mylid;
-    lids.vec = &where;
-    lids.ntot = 1;
-    lids.nused = 1;
-    lids.vald = 0;
+    scmkv where[] = {
+        {"local_id", mylid},
+    };
+    scmkva lids = {
+        .vec = where,
+        .ntot = ELTS(where),
+        .nused = ELTS(where),
+        .vald = 0,
+    };
     sta = deletescm(conp, tabp, &lids);
     return (sta);
 }
@@ -4885,8 +4907,6 @@ certmaybeok(
     ssize_t idx)
 {
     unsigned int pflags;
-    scmkva where;
-    scmkv one;
     char lid[24];
     err_code sta;
 
@@ -4897,12 +4917,15 @@ certmaybeok(
         return (0);
     xsnprintf(lid, sizeof(lid), "%u",
               *(unsigned int *)(s->vec[0].valptr));
-    one.column = "local_id";
-    one.value = &lid[0];
-    where.vec = &one;
-    where.ntot = 1;
-    where.nused = 1;
-    where.vald = 0;
+    scmkv one[] = {
+        {"local_id", lid},
+    };
+    scmkva where = {
+        .vec = one,
+        .ntot = ELTS(one),
+        .nused = ELTS(one),
+        .vald = 0,
+    };
     pflags &= ~SCM_FLAG_NOTYET;
     sta = setflagsscm(conp, theCertTable, &where, pflags);
     return (sta);
@@ -4922,20 +4945,21 @@ certtoonew(
     ssize_t idx)
 {
     unsigned int pflags;
-    scmkva where;
-    scmkv one;
     char lid[24];
     err_code sta;
 
     UNREFERENCED_PARAMETER(idx);
     xsnprintf(lid, sizeof(lid), "%u",
               *(unsigned int *)(s->vec[0].valptr));
-    one.column = "local_id";
-    one.value = &lid[0];
-    where.vec = &one;
-    where.ntot = 1;
-    where.nused = 1;
-    where.vald = 0;
+    scmkv one[] = {
+        {"local_id", lid},
+    };
+    scmkva where = {
+        .vec = one,
+        .ntot = ELTS(one),
+        .nused = ELTS(one),
+        .vald = 0,
+    };
     pflags = *(unsigned int *)(s->vec[3].valptr);
     pflags |= SCM_FLAG_NOTYET;
     sta = setflagsscm(conp, theCertTable, &where, pflags);

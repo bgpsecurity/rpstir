@@ -178,8 +178,6 @@ create2op(
     scmcon *conp,
     char *topdir)
 {
-    scmkva aone;
-    scmkv one;
     scmtab *mtab;
     err_code sta;
 
@@ -208,12 +206,15 @@ create2op(
         return ERR_SCM_NOTADIR;
     }
     // step 3: init the metadata table
-    one.column = "rootdir";
-    one.value = tdir;
-    aone.vec = &one;
-    aone.ntot = 1;
-    aone.nused = 1;
-    aone.vald = 0;
+    scmkv one[] = {
+        {"rootdir", tdir},
+    };
+    scmkva aone = {
+        .vec = one,
+        .ntot = sizeof(one)/sizeof(one[0]),
+        .nused = sizeof(one)/sizeof(one[0]),
+        .vald = 0,
+    };
     sta = insertscm(conp, mtab, &aone);
     if (sta == 0)
         LOG(LOG_NOTICE, "Init metadata table succeeded");
