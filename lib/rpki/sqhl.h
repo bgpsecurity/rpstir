@@ -313,15 +313,6 @@ certificate_validity(
     scm *scmp,
     scmcon *conp);
 
-/*
- * Update the metadata table to indicate when a particular client ran last.
- */
-err_code
-ranlast(
-    scm *scmp,
-    scmcon *conp,
-    char *whichcli);
-
 err_code
 addStateToFlags(
     unsigned int *flags,

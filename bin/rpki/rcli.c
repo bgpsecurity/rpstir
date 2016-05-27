@@ -1319,8 +1319,6 @@ int main(
             LOG(LOG_ERR, "Error with skifile: %s (%s)",
                 err2string(sta), err2name(sta));
     }
-    /** @bug ignores error code without explanation */
-    (void)ranlast(scmp, realconp, "RSYNC");
     sqcleanup();
     if (realconp != NULL)
         disconnectscm(realconp);

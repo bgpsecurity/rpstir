@@ -368,17 +368,6 @@ updateblobscm(
     unsigned int lid);
 
 /*
- * This specialized function updates the appropriate xx_last field in the
- * metadata table for the indicated time when the client completed.
- */
-err_code
-updateranlastscm(
-    scmcon *conp,
-    scmtab *mtab,
-    char what,
-    char *now);
-
-/*
  * Create a new STMT and push it onto the top of the stack of STMTs in the
  * connection.
  */
