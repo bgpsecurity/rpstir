@@ -144,7 +144,7 @@ int64_t db_chaser_read_aia(
     char aia[DB_URI_LEN + 1];   // size of db field plus null terminator
     bind_out[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind_out[0].buffer = aia;
-    bind_out[0].buffer_length = DB_URI_LEN + 1;
+    bind_out[0].buffer_length = sizeof(aia);
     bind_out[0].is_null = &is_null;
     bind_out[0].length = &length;
     // the aki.  note: this can be null in the db
@@ -152,7 +152,7 @@ int64_t db_chaser_read_aia(
     char aki[DB_AKI_LEN + 1];   // size of db field plus null terminator
     bind_out[1].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind_out[1].buffer = aki;
-    bind_out[1].buffer_length = DB_AKI_LEN + 1;
+    bind_out[1].buffer_length = sizeof(aki);
     bind_out[1].is_null = &is_null_aki;
     bind_out[1].length = &length_aki;
 
@@ -318,7 +318,7 @@ int64_t db_chaser_read_crldp(
     char crldp[DB_URI_LEN + 1]; // size of db field plus null terminator
     bind_out[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind_out[0].buffer = crldp;
-    bind_out[0].buffer_length = DB_URI_LEN + 1;
+    bind_out[0].buffer_length = sizeof(crldp);
     bind_out[0].is_null = &is_null;
     bind_out[0].length = &length;
 
@@ -468,7 +468,7 @@ int64_t db_chaser_read_sia(
     char sia[DB_URI_LEN + 1];   // size of db field plus null terminator
     bind_out[0].buffer_type = MYSQL_TYPE_VAR_STRING;
     bind_out[0].buffer = sia;
-    bind_out[0].buffer_length = DB_URI_LEN + 1;
+    bind_out[0].buffer_length = sizeof(sia);
     bind_out[0].is_null = &is_null;
     bind_out[0].length = &length;
 
