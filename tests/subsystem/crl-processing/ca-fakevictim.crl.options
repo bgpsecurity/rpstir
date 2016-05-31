@@ -1,0 +1,3 @@
+revokedcertlist=1%000101010101Z
+parentcertfile=tests/subsystem/crl-processing/ca-fakevictim.cer
+parentkeyfile=tests/subsystem/crl-processing/ca-fakevictim.key

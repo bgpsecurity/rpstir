@@ -1496,10 +1496,17 @@ revokedHandler(
     UNREFERENCED_PARAMETER(s);
     UNREFERENCED_PARAMETER(numLine);
     unsigned int i;
+    LOG(LOG_DEBUG, "number of revoked certs in CRL: %u", *revokedSNLen);
     for (i = 0; i < *revokedSNLen; i++)
     {
-        if (memcmp(&revokedSNList[SER_NUM_MAX_SZ * i], revokedSN,
-                   SER_NUM_MAX_SZ) == 0)
+        uint8_t *entry = &revokedSNList[SER_NUM_MAX_SZ * i];
+        if (LOG_DEBUG <= LOG_LEVEL)
+        {
+            char *x = hexify(SER_NUM_MAX_SZ, entry, HEXIFY_X);
+            LOG(LOG_DEBUG, "  checking entry %u: %s", i, x);
+            free(x);
+        }
+        if (memcmp(entry, revokedSN, SER_NUM_MAX_SZ) == 0)
         {
             isRevoked = 1;
             break;
@@ -1523,7 +1530,10 @@ cert_revoked(
     char *sn,
     char *issuer)
 {
-    err_code sta;
+    LOG(LOG_DEBUG, "cert_revoked(scmp=%p, conp=%p, sn=\"%s\", issuer=\"%s\")",
+        scmp, conp, sn, issuer);
+
+    err_code sta = 0;
     int sn_len;
 
     // set up query once first time through and then just modify
@@ -1535,8 +1545,8 @@ cert_revoked(
                sta, sta);
         ADDCOL(revokedSrch, "snlist", SQL_C_BINARY, 16 * 1024 * 1024, sta,
                sta);
-        revokedSNLen = (unsigned int *)revokedSrch->vec[0].valptr;
-        revokedSNList = (uint8_t *)revokedSrch->vec[1].valptr;
+        revokedSNLen = revokedSrch->vec[0].valptr;
+        revokedSNList = revokedSrch->vec[1].valptr;
     }
     // query for crls such that issuer = issuer, and flags & valid
     // and set isRevoked = 1 in the callback if sn is in snlist
@@ -1549,18 +1559,26 @@ cert_revoked(
     sn_len = strlen(sn);
     if (sn_len != 2 + 2*SER_NUM_MAX_SZ) // "^x" followed by hex
     {
-        return ERR_SCM_INVALARG;
+        sta = ERR_SCM_INVALARG;
+        goto done;
     }
     revokedSN = unhexify(sn_len - 2, sn + 2); // 2 for the "^x" prefix
     if (revokedSN == NULL)
     {
-        return ERR_SCM_NOMEM;
+        sta = ERR_SCM_NOMEM;
+        goto done;
     }
+    /** @bug ignores error code without explanation */
     sta = searchscm(conp, theCRLTable, revokedSrch, NULL, &revokedHandler,
                     SCM_SRCH_DOVALUE_ALWAYS, NULL);
     free(revokedSN);
     revokedSN = NULL;
-    return isRevoked ? ERR_SCM_REVOKED : 0;
+    sta = isRevoked ? ERR_SCM_REVOKED : 0;
+
+done:
+    LOG(LOG_DEBUG, "cert_revoked() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -2277,7 +2295,7 @@ updateManifestObjs(
             {
                 bhashlen /= 2;
                 memcpy(bytehash, bhash, bhashlen);
-                free((void *)bhash);
+                free(bhash);
                 hashlen =
                     check_fileAndHash(fahp, fd, bytehash, bhashlen,
                                       HASHSIZE / 2);
@@ -2305,7 +2323,7 @@ updateManifestObjs(
                           "update %s set flags=flags+%d, hash=\"%s\""
                           " where local_id=%d;",
                           tabp->tabname, SCM_FLAG_ONMAN, h, updateManLid);
-                free((void *)h);
+                free(h);
             }
             /** @bug ignores error code without explanation */
             statementscm_no_data(conp, flagStmt);
@@ -3238,7 +3256,7 @@ add_cert_2(
     delete_casn(&cert.self);
     if (sta)
     {
-        LOG(LOG_DEBUG, "rescert_profile() returned %s: %s",
+        LOG(LOG_DEBUG, "rescert_profile_chk() returned %s: %s",
             err2name(sta), err2string(sta));
         goto done;
     }
@@ -3365,6 +3383,10 @@ add_crl(
     int utrust,
     object_type typ)
 {
+    LOG(LOG_DEBUG, "add_crl(scmp=%p, conp=%p, outfile=\"%s\""
+        ", outfull=\"%s\", id=%u, utrust=%i, typ=%i)",
+        scmp, conp, outfile, outfull, id, utrust, typ);
+
     crl_fields *cf;
     X509_CRL *x = NULL;
     int crlsta = 0;
@@ -3383,13 +3405,14 @@ add_crl(
     {
         LOG(LOG_ERR, "Failed to load CRL: %s", outfile);
         delete_casn(&crl.self);
-        return ERR_SCM_INVALASN;
+        sta = ERR_SCM_INVALASN;
+        goto done;
     }
     if ((sta = crl_profile_chk(&crl)) != 0)
     {
         LOG(LOG_ERR, "CRL failed standalone profile check: %s", outfile);
         delete_casn(&crl.self);
-        return sta;
+        goto done;
     }
     delete_casn(&crl.self);
 
@@ -3400,7 +3423,7 @@ add_crl(
             freecrf(cf);
         if (x != NULL)
             X509_CRL_free(x);
-        return (sta);
+        goto done;
     }
     cf->dirid = id;
     // first verify the CRL
@@ -3421,15 +3444,27 @@ add_crl(
     // and do the revocations
     if ((sta == 0) && chainOK)
     {
+        LOG(LOG_DEBUG, "CRL has %u entries", cf->snlen);
         uint8_t *u = (uint8_t *) cf->snlist;
         for (i = 0; i < cf->snlen; i++, u += SER_NUM_MAX_SZ)
         {
+            if (LOG_DEBUG <= LOG_LEVEL)
+            {
+                char *x = hexify(SER_NUM_MAX_SZ, u, HEXIFY_X);
+                LOG(LOG_DEBUG, "  entry %u: %s", i, x);
+                free(x);
+            }
+            /** @bug ignores error code without explanation */
             revoke_cert_by_serial(scmp, conp, cf->fields[CRF_FIELD_ISSUER],
                                   cf->fields[CRF_FIELD_AKI], u);
         }
     }
     freecrf(cf);
     X509_CRL_free(x);
+
+done:
+    LOG(LOG_DEBUG, "add_crl() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 
@@ -4617,13 +4652,18 @@ revoke_cert_and_children(
     scmsrcha *s,
     ssize_t idx)
 {
+    LOG(LOG_DEBUG, "revoke_cert_and_children(conp=%p, s=%p, idx=%zd)",
+        conp, s, idx);
+
     unsigned int lid;
-    err_code sta;
+    err_code sta = 0;
 
     UNREFERENCED_PARAMETER(idx);
     lid = *(unsigned int *)(s->vec[0].valptr);
     if ((sta = deletebylid(conp, theCertTable, lid)) < 0)
-        return sta;
+    {
+        goto done;
+    }
     char *ski = (char *)(s->vec[1].valptr);
     ulong flags = *(unsigned int *)(s->vec[3].valptr);
     if ((flags & SCM_FLAG_ISPARACERT))
@@ -4631,7 +4671,7 @@ revoke_cert_and_children(
                                 // flags?
         struct cert_answers *cert_answersp;
         struct cert_ansr *cert_ansrp;
-        cert_answersp = find_cert_by_aKI(ski, (char *)0, theSCMP, conp);
+        cert_answersp = find_cert_by_aKI(ski, NULL, theSCMP, conp);
         /**
          * @bug
          *     ignores error code without explanation (num_ansrs might
@@ -4654,8 +4694,13 @@ revoke_cert_and_children(
             }
         }
     }
-    return verifyOrNotChildren(conp, (char *)s->vec[1].valptr,
-                               (char *)s->vec[2].valptr, NULL, NULL, lid, 0);
+    sta = verifyOrNotChildren(
+        conp, s->vec[1].valptr, s->vec[2].valptr, NULL, NULL, lid, 0);
+
+done:
+    LOG(LOG_DEBUG, "add_cert() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 err_code
@@ -4818,55 +4863,81 @@ revoke_cert_by_serial(
     char *aki,
     uint8_t *sn)
 {
+    LOG(LOG_DEBUG, "revoke_cert_by_serial(scmp=%p, conp=%p, issuer=\"%s\""
+        ", aki=\"%s\", sn=%p)", scmp, conp, issuer, aki, sn);
+
     unsigned int lid;
     unsigned int flags;
     scmsrcha srch;
+    /** @bug magic constant */
     scmsrch srch1[5];
     mcf mymcf;
+    /** @bug magic constant */
     char ski[512];
+    /** @bug magic constant */
     char subject[512];
     char *sno;
     uint8_t sn_zero[SER_NUM_MAX_SZ] = {0};
-    err_code sta;
+    err_code sta = 0;
 
     if (scmp == NULL || conp == NULL || conp->connected == 0)
-        return (ERR_SCM_INVALARG);
+    {
+        sta = ERR_SCM_INVALARG;
+        goto done;
+    }
     if (issuer == NULL || issuer[0] == 0 || aki == NULL || aki[0] == 0 ||
         memcmp(sn, sn_zero, SER_NUM_MAX_SZ) == 0)
-        return (0);
+    {
+        goto done;
+    }
     initTables(scmp);
     mymcf.did = 0;
     mymcf.toplevel = 1;
-    char escaped [strlen(issuer)*2+1];
-    mysql_escape_string(escaped, issuer, strlen(issuer));
     sno = hexify(SER_NUM_MAX_SZ, sn, HEXIFY_HAT);
     if (sno == NULL)
     {
-        return (ERR_SCM_NOMEM);
+        sta = ERR_SCM_NOMEM;
+        goto done;
     }
-    scmkv w[] = {
-        {"issuer", escaped},
-        {"sn", sno},
-        {"aki", aki},
-    };
-    scmkva where = {
-        .vec = w,
-        .ntot = ELTS(w),
-        .nused = ELTS(w),
-        .vald = 0,
-    };
-    fillInColumns(srch1, &lid, ski, subject, &flags, &srch);
-    srch.where = &where;
-    srch.wherestr = NULL;
-    srch.context = &mymcf;
-    sta = searchscm(conp, theCertTable, &srch, NULL, &revoke_cert_and_children,
-                    SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    {
+        char escaped [strlen(issuer)*2+1];
+        mysql_escape_string(escaped, issuer, strlen(issuer));
+        scmkv w[] = {
+            {"issuer", escaped},
+            {"sn", sno},
+            {"aki", aki},
+        };
+        scmkva where = {
+            .vec = w,
+            .ntot = ELTS(w),
+            .nused = ELTS(w),
+            .vald = 0,
+        };
+        fillInColumns(srch1, &lid, ski, subject, &flags, &srch);
+        srch.where = &where;
+        srch.wherestr = NULL;
+        srch.context = &mymcf;
+        sta = searchscm(
+            conp, theCertTable, &srch, NULL, &revoke_cert_and_children,
+            SCM_SRCH_DOVALUE_ALWAYS, NULL);
+    }
     free(sno);
     sno = NULL;
-    if (sta < 0)
-        return (sta);
+    if (sta >= 0)
+    {
+        sta = mymcf.did == 0 ? 0 : 1;
+    }
+done:
+    if (sta > 0)
+    {
+        LOG(LOG_DEBUG, "revoke_cert_by_serial() returning %d", sta);
+    }
     else
-        return (mymcf.did == 0 ? 0 : 1);
+    {
+        LOG(LOG_DEBUG, "revoke_cert_by_serial() returning %s: %s",
+            err2name(sta), err2string(sta));
+    }
+    return sta;
 }
 
 err_code

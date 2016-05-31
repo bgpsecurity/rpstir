@@ -1,5 +1,5 @@
 ######################################################################
-## helpers to generate keys, certs, and roas
+## helpers to generate keys, certs, roas, and crls
 ######################################################################
 set_vars= \
 	target='$@' && \
@@ -17,6 +17,7 @@ gen_key = ${boilerplate} bin/rpki-object/gen_key
 KEYS = ${CERTS:.cer=.key}
 CERTS =
 ROAS =
+CRLS =
 ${KEYS}: bin/rpki-object/gen_key
 	${gen_key} "$${target}" 2048
 ${CERTS}: bin/rpki-object/create_object/create_object
@@ -39,9 +40,67 @@ ${ROAS}: bin/rpki-object/create_object/create_object
 		eecertlocation="$${target%.roa}".cer \
 		eekeylocation="$${eekey}" \
 		outputfilename="$${target}"
-check_DATA += ${CERTS} ${KEYS} ${ROAS}
-EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options}
-CLEANFILES += ${CERTS} ${KEYS} ${ROAS}
+${CRLS}: bin/rpki-object/create_object/create_object
+	${create_object} \
+		-f "$${top_srcdir}"/"$${target}".options \
+		CRL \
+		thisupdate=000101010101Z \
+		nextupdate=21001231235959Z \
+		crlnum=1 \
+		outputfilename="$${target}"
+check_DATA += ${CERTS} ${KEYS} ${ROAS} ${CRLS}
+EXTRA_DIST += ${CERTS:.cer=.options} ${ROAS:=.options} ${CRLS:=.options}
+CLEANFILES += ${CERTS} ${KEYS} ${ROAS} ${CRLS}
+
+######################################################################
+## crl-processing tests
+######################################################################
+TESTS += \
+	tests/subsystem/crl-processing/test-copied-subject.tap
+check_SCRIPTS += \
+	tests/subsystem/crl-processing/test-copied-subject.tap
+tests/subsystem/crl-processing/test-copied-subject.tap: \
+	tests/subsystem/crl-processing/test-copied-subject.tap.in
+MK_SUBST_FILES_EXEC += \
+	tests/subsystem/crl-processing/test-copied-subject.tap
+CERTS += \
+	tests/subsystem/crl-processing/ta.cer \
+	tests/subsystem/crl-processing/ca-victim.cer \
+	tests/subsystem/crl-processing/ca-victimchild.cer \
+	tests/subsystem/crl-processing/ca-evil.cer \
+	tests/subsystem/crl-processing/ca-fakevictim.cer
+CRLS += \
+	tests/subsystem/crl-processing/ca-fakevictim.crl
+tests/subsystem/crl-processing/ta.cer: \
+	tests/subsystem/crl-processing/ta.options \
+	tests/subsystem/crl-processing/ta.key
+tests/subsystem/crl-processing/ca-victim.cer: \
+	tests/subsystem/crl-processing/ca-victim.options \
+	tests/subsystem/crl-processing/ca-victim.key \
+	tests/subsystem/crl-processing/ta.cer \
+	tests/subsystem/crl-processing/ta.key
+tests/subsystem/crl-processing/ca-victimchild.cer: \
+	tests/subsystem/crl-processing/ca-victimchild.options \
+	tests/subsystem/crl-processing/ca-victimchild.key \
+	tests/subsystem/crl-processing/ca-victim.cer \
+	tests/subsystem/crl-processing/ca-victim.key
+tests/subsystem/crl-processing/ca-evil.cer: \
+	tests/subsystem/crl-processing/ca-evil.options \
+	tests/subsystem/crl-processing/ca-evil.key \
+	tests/subsystem/crl-processing/ta.cer \
+	tests/subsystem/crl-processing/ta.key
+tests/subsystem/crl-processing/ca-fakevictim.cer: \
+	tests/subsystem/crl-processing/ca-fakevictim.options \
+	tests/subsystem/crl-processing/ca-fakevictim.key \
+	tests/subsystem/crl-processing/ca-evil.cer \
+	tests/subsystem/crl-processing/ca-evil.key
+tests/subsystem/crl-processing/ca-fakevictim.crl: \
+	tests/subsystem/crl-processing/ca-fakevictim.crl.options \
+	tests/subsystem/crl-processing/ca-fakevictim.cer \
+	tests/subsystem/crl-processing/ca-fakevictim.key
+clean-local: clean-crl-processing
+clean-crl-processing:
+	rm -rf tests/subsystem/crl-processing/test-copied-subject.tap.cache
 
 ######################################################################
 ## roa-ee-munge test

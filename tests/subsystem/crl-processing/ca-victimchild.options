@@ -1,0 +1,12 @@
+type=CA
+issuer=ca-victim
+subject=ca-victimchild
+aia=rsync://invalid/
+sia=r:rsync://invalid/,m:rsync://invalid/invalid.mft
+ipv4=0.0.0.0/24
+ipv6=::/48
+as=1-31
+selfsigned=false
+parentcertfile=tests/subsystem/crl-processing/ca-victim.cer
+parentkeyfile=tests/subsystem/crl-processing/ca-victim.key
+subjkeyfile=tests/subsystem/crl-processing/ca-victimchild.key
