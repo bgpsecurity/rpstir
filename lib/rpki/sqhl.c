@@ -1494,6 +1494,7 @@ cert_revoked(
         initTables(scmp);
         ADDCOL(revokedSrch, "snlen", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
+        /** @bug magic number */
         ADDCOL(revokedSrch, "snlist", SQL_C_BINARY, 16 * 1024 * 1024, sta,
                sta);
         revokedSNLen = revokedSrch->vec[0].valptr;
@@ -4444,6 +4445,7 @@ iterate_crl(
     // go for broke and allocate a blob large enough that it can hold
     // the entire snlist if necessary
     if (snlist == NULL)
+        /** @bug magic number */
         snlist = malloc(16 * 1024 * 1024);
     if (snlist == NULL)
         return (ERR_SCM_NOMEM);
