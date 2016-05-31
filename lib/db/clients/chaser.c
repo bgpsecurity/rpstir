@@ -33,12 +33,14 @@ int db_chaser_read_time(
         return -1;
     }
 
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
     // the current timestamp
     MYSQL_TIME curr_ts;
-    bind_out[0].buffer_type = MYSQL_TYPE_TIMESTAMP;
-    bind_out[0].buffer = &curr_ts;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_TIMESTAMP,
+            .buffer = &curr_ts,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -101,25 +103,33 @@ int64_t db_chaser_read_aia(
     uint64_t num_rows_used = 0;
     int ret;
 
-    MYSQL_BIND bind_in[4];
-    memset(bind_in, 0, sizeof(bind_in));
-    // flag_no_chain
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &flag_no_chain;
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &flag_no_chain;
-    bind_in[1].is_unsigned = (my_bool) 1;
-    bind_in[1].is_null = (my_bool *) 0;
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &flag_validated;
-    bind_in[2].is_unsigned = (my_bool) 1;
-    bind_in[2].is_null = (my_bool *) 0;
-    bind_in[3].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[3].buffer = &flag_validated;
-    bind_in[3].is_unsigned = (my_bool) 1;
-    bind_in[3].is_null = (my_bool *) 0;
+    MYSQL_BIND bind_in[] = {
+        // flag_no_chain
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &flag_no_chain,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &flag_no_chain,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &flag_validated,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &flag_validated,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -134,27 +144,31 @@ int64_t db_chaser_read_aia(
         return -1;
     }
 
-    MYSQL_BIND bind_out[2];
     my_bool is_null;
     my_bool is_null_aki;
     ulong length;
     ulong length_aki;
-    memset(bind_out, 0, sizeof(bind_out));
     // the aia.  note: this can be null in the db
     char aia[DB_URI_LEN + 1];   // size of db field plus null terminator
-    bind_out[0].buffer_type = MYSQL_TYPE_VAR_STRING;
-    bind_out[0].buffer = aia;
-    bind_out[0].buffer_length = sizeof(aia);
-    bind_out[0].is_null = &is_null;
-    bind_out[0].length = &length;
     // the aki.  note: this can be null in the db
     size_t const DB_AKI_LEN = 128;
     char aki[DB_AKI_LEN + 1];   // size of db field plus null terminator
-    bind_out[1].buffer_type = MYSQL_TYPE_VAR_STRING;
-    bind_out[1].buffer = aki;
-    bind_out[1].buffer_length = sizeof(aki);
-    bind_out[1].is_null = &is_null_aki;
-    bind_out[1].length = &length_aki;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_VAR_STRING,
+            .buffer = aia,
+            .buffer_length = sizeof(aia),
+            .is_null = &is_null,
+            .length = &length,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_VAR_STRING,
+            .buffer = aki,
+            .buffer_length = sizeof(aki),
+            .is_null = &is_null_aki,
+            .length = &length_aki,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -266,17 +280,8 @@ int64_t db_chaser_read_crldp(
     int ret;
     int consumed;
 
-    MYSQL_BIND bind_in[2];
-    memset(bind_in, 0, sizeof(bind_in));
     // the interval to add, expressed in seconds
     uint32_t default_seconds = 60 * 60 * 24 * 365 * 100ul;
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    if (restrict_by_next_update)
-        bind_in[0].buffer = &seconds;
-    else
-        bind_in[0].buffer = &default_seconds;
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
     // the current timestamp
     MYSQL_TIME curr_ts;
     if (sscanf(ts, "%4u-%2u-%2u %2u:%2u:%2u%n",
@@ -293,9 +298,19 @@ int64_t db_chaser_read_crldp(
     }
     curr_ts.neg = (my_bool) 0;
     curr_ts.second_part = (ulong) 0;
-    bind_in[1].buffer_type = MYSQL_TYPE_TIMESTAMP;
-    bind_in[1].buffer = &curr_ts;
-    bind_in[1].is_null = (my_bool *) 0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = (restrict_by_next_update) ? &seconds : &default_seconds,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_TIMESTAMP,
+            .buffer = &curr_ts,
+            .is_null = (my_bool *) 0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -310,17 +325,19 @@ int64_t db_chaser_read_crldp(
         return -1;
     }
 
-    MYSQL_BIND bind_out[1];
     my_bool is_null;
     ulong length;
-    memset(bind_out, 0, sizeof(bind_out));
     // the crldp.  note: this can be null in the db
     char crldp[DB_URI_LEN + 1]; // size of db field plus null terminator
-    bind_out[0].buffer_type = MYSQL_TYPE_VAR_STRING;
-    bind_out[0].buffer = crldp;
-    bind_out[0].buffer_length = sizeof(crldp);
-    bind_out[0].is_null = &is_null;
-    bind_out[0].length = &length;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_VAR_STRING,
+            .buffer = crldp,
+            .buffer_length = sizeof(crldp),
+            .is_null = &is_null,
+            .length = &length,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -434,18 +451,22 @@ int64_t db_chaser_read_sia(
         flag = 0;
     else
         flag = SCM_FLAG_VALIDATED;
-    MYSQL_BIND bind_in[2];
-    memset(bind_in, 0, sizeof(bind_in));
-    // the flag
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &flag;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
-    // the same flag
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &flag;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        // the flag
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &flag,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // the same flag
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &flag,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -460,17 +481,19 @@ int64_t db_chaser_read_sia(
         return -1;
     }
 
-    MYSQL_BIND bind_out[1];
     my_bool is_null;
     ulong length;
-    memset(bind_out, 0, sizeof(bind_out));
     // the sia.  note: this can be null in the db
     char sia[DB_URI_LEN + 1];   // size of db field plus null terminator
-    bind_out[0].buffer_type = MYSQL_TYPE_VAR_STRING;
-    bind_out[0].buffer = sia;
-    bind_out[0].buffer_length = sizeof(sia);
-    bind_out[0].is_null = &is_null;
-    bind_out[0].length = &length;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_VAR_STRING,
+            .buffer = sia,
+            .buffer_length = sizeof(sia),
+            .is_null = &is_null,
+            .length = &length,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {

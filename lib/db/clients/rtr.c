@@ -94,16 +94,18 @@ int db_rtr_get_session_id(
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_GET_SESSION];
     int ret;
 
-    MYSQL_BIND bind_in[1];
     uint32_t limit = 2;         // 2 keeps the fetch small while letting
                                 // num_rows() ensure there's only one row in
                                 // the table
-    memset(bind_in, 0, sizeof(bind_in));
-    // limit number of rows to return
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &limit;
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
+    MYSQL_BIND bind_in[] = {
+        // limit number of rows to return
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &limit,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+    };
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
@@ -119,13 +121,15 @@ int db_rtr_get_session_id(
         return -1;
     }
 
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
     uint16_t db_session;
-    // session_id parameter
-    bind_out[0].buffer_type = MYSQL_TYPE_SHORT;
-    bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = &db_session;
+    MYSQL_BIND bind_out[] = {
+        // session_id parameter
+        {
+            .buffer_type = MYSQL_TYPE_SHORT,
+            .is_unsigned = 1,
+            .buffer = &db_session,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -194,13 +198,15 @@ int db_rtr_get_latest_sernum(
         return GET_SERNUM_ERR;
     }
 
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
     uint32_t db_sn;
-    // serial_num
-    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].is_unsigned = (my_bool) 1;
-    bind_out[0].buffer = &db_sn;
+    MYSQL_BIND bind_out[] = {
+        // serial_num
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .is_unsigned = (my_bool) 1,
+            .buffer = &db_sn,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -261,12 +267,14 @@ static int hasRowsRtrUpdate(
         return -1;
     }
 
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
     uint32_t db_has_rows = 0;
-    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].is_unsigned = (my_bool) 1;
-    bind_out[0].buffer = &db_has_rows;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .is_unsigned = (my_bool) 1,
+            .buffer = &db_has_rows,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -325,13 +333,15 @@ static int readSerNumAsPrev(
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_READ_SER_NUM_AS_PREV];
     int ret;
 
-    MYSQL_BIND bind_in[1];
-    memset(bind_in, 0, sizeof(bind_in));
-    // prev_serial_num parameter
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &ser_num_prev;
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
+    MYSQL_BIND bind_in[] = {
+        // prev_serial_num parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &ser_num_prev,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+    };
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
@@ -348,12 +358,14 @@ static int readSerNumAsPrev(
     }
 
     uint32_t db_sn;
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
-    // serial_num
-    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].buffer = &db_sn;
-    bind_out[0].is_unsigned = (my_bool) 1;
+    MYSQL_BIND bind_out[] = {
+        // serial_num
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &db_sn,
+            .is_unsigned = (my_bool) 1,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -426,13 +438,15 @@ static int readSerNumAsCurrent(
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_READ_SER_NUM_AS_CURRENT];
     int ret;
 
-    MYSQL_BIND bind_in[1];
-    memset(bind_in, 0, sizeof(bind_in));
-    // serial_num parameter
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &serial;
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
+    MYSQL_BIND bind_in[] = {
+        // serial_num parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+    };
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
@@ -451,17 +465,21 @@ static int readSerNumAsCurrent(
     my_bool db_is_null_prev_sn;
     int8_t db_has_full;
     uint32_t db_prev_sn;
-    MYSQL_BIND bind_out[2];
-    memset(bind_out, 0, sizeof(bind_out));
-    // prev_serial_num
-    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].buffer = &db_prev_sn;
-    bind_out[0].is_unsigned = (my_bool) 1;
-    bind_out[0].is_null = &db_is_null_prev_sn;
-    // has_full
-    bind_out[1].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[1].buffer = &db_has_full;
-    bind_out[1].is_unsigned = (my_bool) 0;
+    MYSQL_BIND bind_out[] = {
+        // prev_serial_num
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &db_prev_sn,
+            .is_unsigned = (my_bool) 1,
+            .is_null = &db_is_null_prev_sn,
+        },
+        // has_full
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &db_has_full,
+            .is_unsigned = (my_bool) 0,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -739,56 +757,61 @@ static int serial_query_do_query(
     int ret;
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_SERIAL_QRY_GET_NEXT];
-
-    MYSQL_BIND bind_in[7];
-    memset(bind_in, 0, sizeof(bind_in));
-    // serial_num parameter
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &(state->ser_num);
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
-    // start-at-beginning parameter
-    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[1].buffer = &state->first_row.first_time;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
-    // asn parameter
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &state->first_row.asn;
-    bind_in[2].is_unsigned = (my_bool)1;
-    bind_in[2].is_null = (my_bool *)0;
-    // prefix parameter
-    bind_in[3].buffer_type = MYSQL_TYPE_BLOB;
-    bind_in[3].buffer = &state->first_row.prefix;
-    bind_in[3].buffer_length = sizeof(state->first_row.prefix);
-    unsigned long prefix_family_length;
-    if (state->first_row.first_time)
-    {
-        prefix_family_length = 0;
-    }
-    else
-    {
-        prefix_family_length = state->first_row.prefix_family_length;
-    }
-    bind_in[3].length = &prefix_family_length;
-    bind_in[3].is_null = (my_bool *)0;
-    // prefix_length parameter
-    bind_in[4].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[4].buffer = &state->first_row.prefix_length;
-    bind_in[4].is_unsigned = (my_bool)1;
-    bind_in[4].is_null = (my_bool *)0;
-    // prefix_max_length parameter
-    bind_in[5].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[5].buffer = &state->first_row.prefix_max_length;
-    bind_in[5].is_unsigned = (my_bool)1;
-    bind_in[5].is_null = (my_bool *)0;
-    // limit parameter
-    bind_in[6].buffer_type = MYSQL_TYPE_LONGLONG;
+    unsigned long prefix_family_length = (state->first_row.first_time) ?
+        0 : state->first_row.prefix_family_length;
     unsigned long long limit = max_rows - *num_pdus;
-    bind_in[6].buffer = &limit;
-    bind_in[6].is_unsigned = (my_bool) 1;
-    bind_in[6].is_null = (my_bool *) 0;
-
+    MYSQL_BIND bind_in[] = {
+        // serial_num parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &(state->ser_num),
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+        // start-at-beginning parameter
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &state->first_row.first_time,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // asn parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &state->first_row.asn,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // prefix parameter
+        {
+            .buffer_type = MYSQL_TYPE_BLOB,
+            .buffer = &state->first_row.prefix,
+            .buffer_length = sizeof(state->first_row.prefix),
+            .length = &prefix_family_length,
+            .is_null = (my_bool *)0,
+        },
+        // prefix_length parameter
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &state->first_row.prefix_length,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // prefix_max_length parameter
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &state->first_row.prefix_max_length,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // limit parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONGLONG,
+            .buffer = &limit,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -804,35 +827,45 @@ static int serial_query_do_query(
         return -1;
     }
 
-    MYSQL_BIND bind_out[5];
     unsigned db_asn;
     unsigned long db_prefix_family_length;
     unsigned char db_prefix[16];
     unsigned char db_prefix_length;
     unsigned char db_prefix_max_length;
     signed char db_is_announce;
-    memset(bind_out, 0, sizeof(bind_out));
-    // asn output
-    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].is_unsigned = (my_bool) 1;
-    bind_out[0].buffer = &db_asn;
-    // prefix output
-    bind_out[1].buffer_type = MYSQL_TYPE_BLOB;
-    bind_out[1].buffer_length = sizeof(db_prefix);
-    bind_out[1].length = &db_prefix_family_length;
-    bind_out[1].buffer = &db_prefix;
-    // prefix_length output
-    bind_out[2].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[2].is_unsigned = (my_bool)1;
-    bind_out[2].buffer = &db_prefix_length;
-    // prefix_max_length output
-    bind_out[3].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[3].is_unsigned = (my_bool)1;
-    bind_out[3].buffer = &db_prefix_max_length;
-    // is_announce output
-    bind_out[4].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[4].is_unsigned = (my_bool) 0;
-    bind_out[4].buffer = &db_is_announce;
+    MYSQL_BIND bind_out[] = {
+        // asn output
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .is_unsigned = (my_bool) 1,
+            .buffer = &db_asn,
+        },
+        // prefix output
+        {
+            .buffer_type = MYSQL_TYPE_BLOB,
+            .buffer_length = sizeof(db_prefix),
+            .length = &db_prefix_family_length,
+            .buffer = &db_prefix,
+        },
+        // prefix_length output
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .is_unsigned = (my_bool)1,
+            .buffer = &db_prefix_length,
+        },
+        // prefix_max_length output
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .is_unsigned = (my_bool)1,
+            .buffer = &db_prefix_max_length,
+        },
+        // is_announce output
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .is_unsigned = (my_bool) 0,
+            .buffer = &db_is_announce,
+        }
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -1149,54 +1182,61 @@ ssize_t db_rtr_reset_query_get_next(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_RESET_QRY_GET_NEXT];
-    MYSQL_BIND bind_in[7];
-    memset(bind_in, 0, sizeof(bind_in));
-    // serial_num parameter
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &(state->ser_num);
-    bind_in[0].is_unsigned = (my_bool) 1;
-    bind_in[0].is_null = (my_bool *) 0;
-    // start-at-beginning parameter
-    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[1].buffer = &state->first_row.first_time;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
-    // asn parameter
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &state->first_row.asn;
-    bind_in[2].is_unsigned = (my_bool)1;
-    bind_in[2].is_null = (my_bool *)0;
-    // prefix parameter
-    bind_in[3].buffer_type = MYSQL_TYPE_BLOB;
-    bind_in[3].buffer = &state->first_row.prefix;
-    bind_in[3].buffer_length = sizeof(state->first_row.prefix);
-    unsigned long prefix_family_length;
-    if (state->first_row.first_time)
-    {
-        prefix_family_length = 0;
-    }
-    else
-    {
-        prefix_family_length = state->first_row.prefix_family_length;
-    }
-    bind_in[3].length = &prefix_family_length;
-    bind_in[3].is_null = (my_bool *)0;
-    // prefix_length parameter
-    bind_in[4].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[4].buffer = &state->first_row.prefix_length;
-    bind_in[4].is_unsigned = (my_bool)1;
-    bind_in[4].is_null = (my_bool *)0;
-    // prefix_max_length parameter
-    bind_in[5].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[5].buffer = &state->first_row.prefix_max_length;
-    bind_in[5].is_unsigned = (my_bool)1;
-    bind_in[5].is_null = (my_bool *)0;
-    // limit parameter
-    bind_in[6].buffer_type = MYSQL_TYPE_LONGLONG;
+    unsigned long prefix_family_length = (state->first_row.first_time) ?
+        0 : state->first_row.prefix_family_length;
     unsigned long long limit = max_rows - num_pdus;
-    bind_in[6].buffer = &limit;
-    bind_in[6].is_unsigned = (my_bool) 1;
-    bind_in[6].is_null = (my_bool *) 0;
+    MYSQL_BIND bind_in[] = {
+        // serial_num parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &(state->ser_num),
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+        // start-at-beginning parameter
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &state->first_row.first_time,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // asn parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &state->first_row.asn,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // prefix parameter
+        {
+            .buffer_type = MYSQL_TYPE_BLOB,
+            .buffer = &state->first_row.prefix,
+            .buffer_length = sizeof(state->first_row.prefix),
+            .length = &prefix_family_length,
+            .is_null = (my_bool *)0,
+        },
+        // prefix_length parameter
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &state->first_row.prefix_length,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // prefix_max_length parameter
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &state->first_row.prefix_max_length,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        // limit parameter
+        {
+            .buffer_type = MYSQL_TYPE_LONGLONG,
+            .buffer = &limit,
+            .is_unsigned = (my_bool) 1,
+            .is_null = (my_bool *) 0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1216,30 +1256,38 @@ ssize_t db_rtr_reset_query_get_next(
         return -1;
     }
 
-    MYSQL_BIND bind_out[4];
     unsigned db_asn;
     unsigned long db_prefix_family_length;
     unsigned char db_prefix[16];
     unsigned char db_prefix_length;
     unsigned char db_prefix_max_length;
-    memset(bind_out, 0, sizeof(bind_out));
-    // asn output
-    bind_out[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = &db_asn;
-    // prefix output
-    bind_out[1].buffer_type = MYSQL_TYPE_BLOB;
-    bind_out[1].buffer_length = sizeof(db_prefix);
-    bind_out[1].length = &db_prefix_family_length;
-    bind_out[1].buffer = &db_prefix;
-    // prefix_length output
-    bind_out[2].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[2].is_unsigned = (my_bool)1;
-    bind_out[2].buffer = &db_prefix_length;
-    // prefix_max_length output
-    bind_out[3].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[3].is_unsigned = (my_bool)1;
-    bind_out[3].buffer = &db_prefix_max_length;
+    MYSQL_BIND bind_out[] = {
+        // asn output
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .is_unsigned = 1,
+            .buffer = &db_asn,
+        },
+        // prefix output
+        {
+            .buffer_type = MYSQL_TYPE_BLOB,
+            .buffer_length = sizeof(db_prefix),
+            .length = &db_prefix_family_length,
+            .buffer = &db_prefix,
+        },
+        // prefix_length output
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .is_unsigned = (my_bool)1,
+            .buffer = &db_prefix_length,
+        },
+        // prefix_max_length output
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .is_unsigned = (my_bool)1,
+            .buffer = &db_prefix_max_length,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -1346,12 +1394,14 @@ bool db_rtr_has_valid_session(
         return false;
     }
 
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
     unsigned long long session_count;
-    bind_out[0].buffer_type = MYSQL_TYPE_LONGLONG;
-    bind_out[0].is_unsigned = (my_bool)1;
-    bind_out[0].buffer = &session_count;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONGLONG,
+            .is_unsigned = (my_bool)1,
+            .buffer = &session_count,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -1438,20 +1488,26 @@ bool db_rtr_good_serials(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DETECT_INCONSISTENT_STATE];
-    MYSQL_BIND bind_in[3];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &current_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &current_uint;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &previous_uint;
-    bind_in[2].is_unsigned = (my_bool)1;
-    bind_in[2].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &previous_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1466,12 +1522,14 @@ bool db_rtr_good_serials(
         return false;
     }
 
-    MYSQL_BIND bind_out[1];
     unsigned char is_inconsistent;
-    memset(bind_out, 0, sizeof(bind_out));
-    bind_out[0].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[0].is_unsigned = 1;
-    bind_out[0].buffer = &is_inconsistent;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .is_unsigned = 1,
+            .buffer = &is_inconsistent,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -1512,12 +1570,14 @@ bool db_rtr_insert_full(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_INSERT_FULL];
-    MYSQL_BIND bind_in[1 + FLAG_TESTS_PARAMETERS];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &serial_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[1 + FLAG_TESTS_PARAMETERS] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
     flag_tests_bind(bind_in + 1, &flag_tests);
 
     if (mysql_stmt_bind_param(stmt, bind_in))
@@ -1543,7 +1603,6 @@ bool db_rtr_insert_incremental(
 {
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_INSERT_INCREMENTAL];
-    MYSQL_BIND bind_in[4];
 
     // Convert previous_serial and current_serial to a type that MySQL
     // can take.
@@ -1555,24 +1614,33 @@ bool db_rtr_insert_incremental(
     unsigned char is_announce;
 
     // announcements
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &current_serial_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
     is_announce = 1;
-    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[1].buffer = &is_announce;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &previous_serial_uint;
-    bind_in[2].is_unsigned = (my_bool)1;
-    bind_in[2].is_null = (my_bool *)0;
-    bind_in[3].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[3].buffer = &current_serial_uint;
-    bind_in[3].is_unsigned = (my_bool)1;
-    bind_in[3].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &is_announce,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &previous_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1588,26 +1656,35 @@ bool db_rtr_insert_incremental(
     }
 
     // withdrawals
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &current_serial_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
     is_announce = 0;
-    bind_in[1].buffer_type = MYSQL_TYPE_TINY;
-    bind_in[1].buffer = &is_announce;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &current_serial_uint;
-    bind_in[2].is_unsigned = (my_bool)1;
-    bind_in[2].is_null = (my_bool *)0;
-    bind_in[3].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[3].buffer = &previous_serial_uint;
-    bind_in[3].is_unsigned = (my_bool)1;
-    bind_in[3].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in2[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &is_announce,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &previous_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
-    if (mysql_stmt_bind_param(stmt, bind_in))
+    if (mysql_stmt_bind_param(stmt, bind_in2))
     {
         LOG(LOG_ERR, "mysql_stmt_bind_param() failed");
         LOG(LOG_ERR, "    %u: %s\n", mysql_stmt_errno(stmt),
@@ -1636,12 +1713,14 @@ int db_rtr_has_incremental_changes(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_HAS_CHANGES];
-    MYSQL_BIND bind_in[1];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &serial_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1656,12 +1735,14 @@ int db_rtr_has_incremental_changes(
         return -1;
     }
 
-    MYSQL_BIND bind_out[1];
-    memset(bind_out, 0, sizeof(bind_out));
     unsigned char has_changes = 0;
-    bind_out[0].buffer_type = MYSQL_TYPE_TINY;
-    bind_out[0].buffer = &has_changes;
-    bind_out[0].is_unsigned = (my_bool)1;
+    MYSQL_BIND bind_out[] = {
+        {
+            .buffer_type = MYSQL_TYPE_TINY,
+            .buffer = &has_changes,
+            .is_unsigned = (my_bool)1,
+        },
+    };
 
     if (mysql_stmt_bind_result(stmt, bind_out))
     {
@@ -1710,18 +1791,22 @@ bool db_rtr_insert_update(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_INSERT_UPDATE];
-    MYSQL_BIND bind_in[2];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &current_serial_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
     my_bool my_previous_serial_is_null =
         (my_bool)previous_serial_is_null;
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &previous_serial_uint;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = &my_previous_serial_is_null;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &current_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &previous_serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = &my_previous_serial_is_null,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1750,12 +1835,14 @@ bool db_rtr_delete_full(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_USELESS_FULL];
-    MYSQL_BIND bind_in[1];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &serial_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1786,16 +1873,20 @@ bool db_rtr_ignore_old_full(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_IGNORE_OLD_FULL];
-    MYSQL_BIND bind_in[2];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &serial1_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &serial2_uint;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial1_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial2_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1826,16 +1917,20 @@ bool db_rtr_delete_old_full(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_OLD_FULL];
-    MYSQL_BIND bind_in[2];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[0].buffer = &serial1_uint;
-    bind_in[0].is_unsigned = (my_bool)1;
-    bind_in[0].is_null = (my_bool *)0;
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &serial2_uint;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial1_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial2_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
@@ -1869,20 +1964,26 @@ bool db_rtr_delete_old_update(
 
     MYSQL_STMT *stmt =
         conn->stmts[DB_CLIENT_TYPE_RTR][DB_PSTMT_RTR_DELETE_OLD_UPDATE];
-    MYSQL_BIND bind_in[3];
-    memset(bind_in, 0, sizeof(bind_in));
-    bind_in[0].buffer_type = MYSQL_TYPE_LONGLONG;
-    bind_in[0].buffer = &retention_hours;
-    bind_in[0].is_unsigned = (my_bool)0;
-    bind_in[0].is_null = (my_bool *)0;
-    bind_in[1].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[1].buffer = &serial1_uint;
-    bind_in[1].is_unsigned = (my_bool)1;
-    bind_in[1].is_null = (my_bool *)0;
-    bind_in[2].buffer_type = MYSQL_TYPE_LONG;
-    bind_in[2].buffer = &serial2_uint;
-    bind_in[2].is_unsigned = (my_bool)1;
-    bind_in[2].is_null = (my_bool *)0;
+    MYSQL_BIND bind_in[] = {
+        {
+            .buffer_type = MYSQL_TYPE_LONGLONG,
+            .buffer = &retention_hours,
+            .is_unsigned = (my_bool)0,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial1_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+        {
+            .buffer_type = MYSQL_TYPE_LONG,
+            .buffer = &serial2_uint,
+            .is_unsigned = (my_bool)1,
+            .is_null = (my_bool *)0,
+        },
+    };
 
     if (mysql_stmt_bind_param(stmt, bind_in))
     {
