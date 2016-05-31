@@ -1750,11 +1750,6 @@ verify_crl(
 
     /**
      * @bug
-     *     This doesn't resemble the algorithm in RFC5280 section
-     *     6.3.3 at all.  Specifically, step (f) is not performed.
-     */
-    /**
-     * @bug
      *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
