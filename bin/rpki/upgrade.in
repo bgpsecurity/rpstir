@@ -53,6 +53,17 @@ show_msgs () {
 
 
 upgrade_from_0_11 () {
+    ltam_certs=$(
+        mysql_cmd -N -B <<\EOF || fatal "failed to check for LTAM certs"
+SELECT COUNT(*) FROM `rpki_cert` WHERE (`flags` & 0xe00) != 0;
+EOF
+    ) || exit 1
+    [ 0 -eq "${ltam_certs}" ] || fatal "Your database has\
+ ${ltam_certs} certificate(s) with an LTAM flag set, but this version\
+ of @PACKAGE_NAME@ no longer supports LTAM.  Unable to upgrade\
+ without potentially incorrect results.  Either downgrade to 0.10 or\
+ re-initialize the database via @PACKAGE_NAME@-initialize."
+
     mysql_cmd <<\EOF || fatal "failed to update database records"
 ALTER TABLE rpki_manifest DROP COLUMN cert_id;
 DROP INDEX `dirname` ON `rpki_dir`;
