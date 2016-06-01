@@ -3711,8 +3711,9 @@ add_roa_internal(
     {
         if (multiinsert_idx == 0)
         {
-            memcpy(multiinsert, multiinsert_pre, multiinsert_pre_len);
-            multiinsert_idx += multiinsert_pre_len;
+            multiinsert_idx += xstrlcpy(
+                multiinsert, multiinsert_pre, multiinsert_len);
+            assert(multiinsert_idx == multiinsert_pre_len);
         }
 
         prefix = hexify(
