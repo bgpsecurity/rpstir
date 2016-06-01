@@ -1285,8 +1285,8 @@ done:
 static X509 *
 find_cert(
     scmcon *conp,
-    char *ski,
-    char *subject,
+    const char *ski,
+    const char *subject,
     err_code *stap,
     char *pathname,
     int *flagsp)
@@ -1542,8 +1542,8 @@ verify_cert(
     scmcon *conp,
     X509 *x,
     int isTrusted,
-    char *aki,
-    char *issuer,
+    const char *aki,
+    const char *issuer,
     int *chainOK)
 {
     LOG(LOG_DEBUG, "verify_cert(conp=%p, x=%p, isTrusted=%d, aki=\"%s\""
@@ -1741,8 +1741,8 @@ static err_code
 verify_crl(
     scmcon *conp,
     X509_CRL *x,
-    char *aki,
-    char *issuer,
+    const char *aki,
+    const char *issuer,
     int *chainOK)
 {
     int x509sta = 0;
