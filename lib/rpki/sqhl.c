@@ -4444,9 +4444,10 @@ iterate_crl(
 
     // go for broke and allocate a blob large enough that it can hold
     // the entire snlist if necessary
+    /** @bug magic number */
+    static const size_t snlist_len = 16 * 1024 * 1024;
     if (snlist == NULL)
-        /** @bug magic number */
-        snlist = calloc(1, 16 * 1024 * 1024);
+        snlist = calloc(1, snlist_len);
     if (snlist == NULL)
         return (ERR_SCM_NOMEM);
     initTables(scmp);
@@ -4499,7 +4500,7 @@ iterate_crl(
             .sqltype = SQL_C_BINARY,
             .colname = "snlist",
             .valptr = snlist,
-            .valsize = 16 * 1024 * 1024,
+            .valsize = snlist_len,
             .avalsize = 0,
         },
         {
