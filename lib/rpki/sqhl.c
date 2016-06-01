@@ -1029,15 +1029,8 @@ static X509 *readCertFromFile(
     return (px);
 }
 
-/**
- * @brief
- *     static variables for efficiency, so only need to set up query
- *     once
- */
-/** @bug length of parentAKI buffer is not documented */
-static char *parentAKI;
-/** @bug length of parentIssuer buffer is not documented */
-static char *parentIssuer;
+static char parentAKI[SKISIZE];
+static char parentIssuer[SUBJSIZE];
 
 /**
  * @brief
@@ -1072,8 +1065,6 @@ init_certSrch(
     ADDCOL2(certSrch, "issuer", SQL_C_CHAR, SUBJSIZE, sta, goto done);
     ADDCOL2(certSrch, "local_id", SQL_C_ULONG, sizeof(unsigned int), sta,
             goto done);
-    parentAKI = (char *)certSrch->vec[3].valptr;
-    parentIssuer = (char *)certSrch->vec[4].valptr;
 
     assert(!sta);
     if (certSrchp)
@@ -1291,7 +1282,8 @@ done:
  *     multiple matches.  To distinguish an error from no matches,
  *     check the value at @p stap after this function returns.
  */
-static X509 *parent_cert(
+static X509 *
+find_cert(
     scmcon *conp,
     char *ski,
     char *subject,
@@ -1299,11 +1291,10 @@ static X509 *parent_cert(
     char *pathname,
     int *flagsp)
 {
-    LOG(LOG_DEBUG, "parent_cert(conp=%p, ski=%s, subject=%s, stap=%p"
+    LOG(LOG_DEBUG, "find_cert(conp=%p, ski=%s, subject=%s, stap=%p"
         ", pathname=%s, flagsp=%p)",
         conp, ski, subject, stap, pathname, flagsp);
 
-    char ofullname[PATH_MAX];   /* full pathname */
     X509 *ret = NULL;
     err_code sta = 0;
 
@@ -1334,40 +1325,25 @@ static X509 *parent_cert(
             LOG(LOG_DEBUG, "    local_id=%u", ansr->local_id);
         }
     }
-    if (cert_answersp->num_ansrs == 2)
+    if (!cert_answersp->num_ansrs)
     {
-        if (!parentAKI || !parentIssuer)
-        {
-            goto done;
-        }
-        /** @bug destination buffer might be smaller than source string */
-        strcpy(parentAKI, cert_ansrp->aki);
-        /** @bug destination buffer might be smaller than source string */
-        strcpy(parentIssuer, cert_ansrp->issuer);
-    }
-    else if (cert_answersp->num_ansrs != 1)
-    {
-        /**
-         * @bug
-         *     what if there are many matches (e.g., cert renewal,
-         *     evil twin)?
-         */
         /** @bug shouldn't sta be set to an error code? */
         goto done;
     }
-    xsnprintf(ofullname, sizeof(ofullname), "%s", cert_ansrp->fullname);
+    xstrlcpy(parentAKI, cert_ansrp->aki, sizeof(parentAKI));
+    xstrlcpy(parentIssuer, cert_ansrp->issuer, sizeof(parentIssuer));
     if (pathname != NULL)
-        strncpy(pathname, ofullname, PATH_MAX);
+        strncpy(pathname, cert_ansrp->fullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
-    ret = readCertFromFile(ofullname, &sta);
+    ret = readCertFromFile(cert_ansrp->fullname, &sta);
 done:
     if (cert_answersp)
     {
         free(cert_answersp->cert_ansrp);
         free(cert_answersp);
     }
-    LOG(LOG_DEBUG, "parent_cert() returning %s: %s",
+    LOG(LOG_DEBUG, "find_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     if (stap)
     {
@@ -1678,17 +1654,16 @@ verify_cert(
         int flags;
         /**
          * @bug
-         *     parent_cert()'s error code is not checked, so this
-         *     logic does not distinguish an error from a parentless
-         *     cert
+         *     find_cert()'s error code is not checked, so this logic
+         *     does not distinguish an error from a parentless cert
          */
         parent =
-            parent_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
-        LOG(LOG_DEBUG, "parent_cert() (for SKI/subject) error code is %s: %s",
+            find_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
+        LOG(LOG_DEBUG, "find_cert() (for SKI/subject) error code is %s: %s",
             err2name(sta), err2string(sta));
         if (!parent)
         {
-            LOG(LOG_DEBUG, "parent_cert() returned NULL");
+            LOG(LOG_DEBUG, "find_cert() returned NULL");
         }
         while (parent != NULL)
         {
@@ -1705,17 +1680,17 @@ verify_cert(
                 sk_X509_push(sk_untrusted, parent);
                 /**
                  * @bug
-                 *     parent_cert()'s error code is not checked, so
+                 *     find_cert()'s error code is not checked, so
                  *     this logic does not distinguish an error from a
                  *     parentless cert
                  */
-                parent = parent_cert(conp, parentAKI, parentIssuer, &sta, NULL,
+                parent = find_cert(conp, parentAKI, parentIssuer, &sta, NULL,
                                      &flags);
-                LOG(LOG_DEBUG, "parent_cert() (for AKI/issuer) error code is"
+                LOG(LOG_DEBUG, "find_cert() (for AKI/issuer) error code is"
                     " %s: %s", err2name(sta), err2string(sta));
                 if (!parent)
                 {
-                    LOG(LOG_DEBUG, "parent_cert() returned NULL");
+                    LOG(LOG_DEBUG, "find_cert() returned NULL");
                 }
             }
         }
@@ -1780,11 +1755,11 @@ verify_crl(
      */
     /**
      * @bug
-     *     parent_cert() only returns one match.  What if there are
+     *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = parent_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
+    parent = find_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -1918,11 +1893,11 @@ verify_roa(
         return (sta);
     /**
      * @bug
-     *     parent_cert() only returns one match.  What if there are
+     *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
+    cert = find_cert(conp, ski, NULL, &sta, fn, NULL);
     if (cert == NULL)
     {
         *chainOK = 0;
