@@ -53,7 +53,6 @@ static scmtab *theGBRTable = NULL;
 static scmtab *theDirTable = NULL;
 static scmtab *theMetaTable = NULL;
 static scm *theSCMP = NULL;
-static int useParacerts = 1;
 static int allowex = 0;
 
 void setallowexpired(
@@ -1317,8 +1316,7 @@ static X509 *parent_cert(
         goto done;
     }
     assert(cert_answersp);
-    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[1];
-    int ff = (SCM_FLAG_ISPARACERT | SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET);
+    struct cert_ansr *cert_ansrp = &cert_answersp->cert_ansrp[0];
     LOG(LOG_DEBUG, "got %i answers", cert_answersp->num_ansrs);
     assert(cert_answersp->num_ansrs >= 0);
     if (LOG_DEBUG <= LOG_LEVEL)
@@ -1336,31 +1334,8 @@ static X509 *parent_cert(
             LOG(LOG_DEBUG, "    local_id=%u", ansr->local_id);
         }
     }
-    if (cert_answersp->num_ansrs == 1)
+    if (cert_answersp->num_ansrs == 2)
     {
-        cert_ansrp = &cert_answersp->cert_ansrp[0];
-        if (cert_ansrp->flags & (SCM_FLAG_ISTARGET | SCM_FLAG_HASPARACERT))
-        {
-            /** @bug shouldn't sta be set to an error code? */
-            goto done;
-        }
-    }
-    else if (cert_answersp->num_ansrs == 2)
-    {
-        // do they conflict?
-        if (((cert_answersp->cert_ansrp[0].flags & ff) &
-             (cert_ansrp->flags & ff)))
-        {
-            /** @bug shouldn't sta be set to an error code? */
-            goto done;
-        }
-        // if using paracerts, choose the paracert
-
-        if ((useParacerts &&
-             (cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT)) ||
-            (!useParacerts &&
-             !(cert_answersp->cert_ansrp[0].flags & SCM_FLAG_ISPARACERT)))
-            cert_ansrp = &cert_answersp->cert_ansrp[0];
         if (!parentAKI || !parentIssuer)
         {
             goto done;
@@ -1370,7 +1345,7 @@ static X509 *parent_cert(
         /** @bug destination buffer might be smaller than source string */
         strcpy(parentIssuer, cert_ansrp->issuer);
     }
-    else
+    else if (cert_answersp->num_ansrs != 1)
     {
         /**
          * @bug
@@ -3338,13 +3313,12 @@ add_cert(
     unsigned int id,
     int utrust,
     object_type typ,
-    unsigned int *cert_id,
-    int constraining)
+    unsigned int *cert_id)
 {
     LOG(LOG_DEBUG, "add_cert(scmp=%p, conp=%p, outfile=\"%s\""
         ", outfull=\"%s\", id=%u, utrust=%d, typ=%d"
-        ", cert_id=%p, constraining=%d)",
-        scmp, conp, outfile, outfull, id, utrust, typ, cert_id, constraining);
+        ", cert_id=%p)",
+        scmp, conp, outfile, outfull, id, utrust, typ, cert_id);
 
     cert_fields *cf;
     X509 *x = NULL;
@@ -3361,7 +3335,6 @@ add_cert(
     {
         goto done;
     }
-    useParacerts = constraining;
     sta = add_cert_2(scmp, conp, cf, x, id, utrust, cert_id, outfull);
     LOG(LOG_DEBUG, "add_cert_2() returned error code %s: %s",
         err2name(sta), err2string(sta));
@@ -4315,7 +4288,6 @@ add_object(
     object_type typ;
     err_code sta;
 
-    useParacerts = 0;
     if (scmp == NULL || conp == NULL || conp->connected == 0 ||
         outfile == NULL || outdir == NULL || outfull == NULL)
     {
@@ -4352,10 +4324,9 @@ add_object(
     case OT_CER_PEM:
     case OT_UNKNOWN:
     case OT_UNKNOWN + OT_PEM_OFFSET:
-        LOG(LOG_DEBUG, "calling add_cert(%p, %p, \"%s\", \"%s\", %d, %d, %d, %p, 0)",
+        LOG(LOG_DEBUG, "calling add_cert(%p, %p, \"%s\", \"%s\", %d, %d, %d, %p)",
             scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
-        sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id,
-                       0);
+        sta = add_cert(scmp, conp, outfile, outfull, id, utrust, typ, &obj_id);
         LOG(LOG_DEBUG, "add_cert() returned %s: %s",
             err2name(sta), err2string(sta));
         break;
@@ -4663,36 +4634,6 @@ revoke_cert_and_children(
     if ((sta = deletebylid(conp, theCertTable, lid)) < 0)
     {
         goto done;
-    }
-    char *ski = (char *)(s->vec[1].valptr);
-    ulong flags = *(unsigned int *)(s->vec[3].valptr);
-    if ((flags & SCM_FLAG_ISPARACERT))
-    {                           // is its regular cert in the DB with unneeded
-                                // flags?
-        struct cert_answers *cert_answersp;
-        struct cert_ansr *cert_ansrp;
-        cert_answersp = find_cert_by_aKI(ski, NULL, theSCMP, conp);
-        /**
-         * @bug
-         *     ignores error code without explanation (num_ansrs might
-         *     be negative)
-         */
-        if (cert_answersp && cert_answersp->num_ansrs)
-        {
-            int i;
-            for (i = 0, cert_ansrp = &cert_answersp->cert_ansrp[i];
-                 i < cert_answersp->num_ansrs; i++, cert_ansrp++)
-            {
-                if ((cert_ansrp->
-                     flags & (SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET)))
-                {               // if so, clear them
-                    flags = (cert_ansrp->flags &
-                             ~(SCM_FLAG_HASPARACERT | SCM_FLAG_ISTARGET));
-                    /** @bug ignores error code without explanation */
-                    set_cert_flag(conp, cert_ansrp->local_id, flags);
-                }
-            }
-        }
     }
     sta = verifyOrNotChildren(
         conp, s->vec[1].valptr, s->vec[2].valptr, NULL, NULL, lid, 0);

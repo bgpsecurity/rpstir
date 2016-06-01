@@ -90,7 +90,6 @@ include mk/asn1.mk
 include mk/config.mk
 include mk/doxygen.mk
 include mk/oidtable.mk
-include mk/rpki-local-ta.mk
 include mk/rpki-object.mk
 include mk/rpki-rsync.mk
 include mk/rpki-rtr.mk
