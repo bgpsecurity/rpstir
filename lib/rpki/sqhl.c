@@ -4446,10 +4446,9 @@ iterate_crl(
     // the entire snlist if necessary
     if (snlist == NULL)
         /** @bug magic number */
-        snlist = malloc(16 * 1024 * 1024);
+        snlist = calloc(1, 16 * 1024 * 1024);
     if (snlist == NULL)
         return (ERR_SCM_NOMEM);
-    memset(snlist, 0, 16 * 1024 * 1024);
     initTables(scmp);
     // set up a search for issuer, snlen, sninuse, flags, snlist and aki
     issuer[0] = 0;
