@@ -1121,13 +1121,11 @@ void addFlagTest(
      * (0x04 * 2) and see if it is >= 0x04 (in which case bit 0x04 is set),
      * or < 0x04 (in which case bit 0x04 is not set).
      */
-    int len = strlen(whereStr);
-    xsnprintf(&whereStr[len], WHERESTR_SIZE - len,
-              "%s ((flags%%%d)%s%d)",
-              needAnd ? " and" : "",
-              2 * flagVal,  /* 2x since we are doing flag mod this value */
-              isSet ? ">=" : "<",
-              flagVal);
+    where_append(whereStr, "%s ((flags%%%d)%s%d)",
+                 needAnd ? " and" : "",
+                 2 * flagVal,  /* 2x since we are doing flag mod this value */
+                 isSet ? ">=" : "<",
+                 flagVal);
 }
 
 scmsrcha *newsrchscm(

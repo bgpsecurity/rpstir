@@ -2,12 +2,14 @@
 #define LIB_RPKI_SCMF_H
 
 #include "err.h"
+#include "util/macros.h"
 
 #include <inttypes.h>
 #include <unistd.h>
 #include <sql.h>
 #include <sqlext.h>
 #include "scm.h"
+#include <stdarg.h>
 
 typedef struct _scmstat         /* connection statistics */
 {
@@ -128,6 +130,39 @@ extern scmsrcha *newsrchscm(
     int leen,
     int cleenn,
     int useWhereStr);
+
+/**
+ * @brief
+ *     Append a string to a WHERE buffer.
+ *
+ * @param[out] buf
+ *     The location of the start of the WHERE string buffer.  This
+ *     buffer is assumed to be ::WHERESTR_SIZE characters long.  This
+ *     parameter MUST NOT be NULL.
+ * @param[in] format
+ *     printf()-like format string, with subsequent arguments having
+ *     the corresponding meaning.
+ * @return
+ *     The number of characters appended to the buffer.  This function
+ *     does not return an error code; if the WHERE buffer is too small
+ *     or an error occurs writing to the buffer then this function
+ *     calls abort().
+ */
+int
+where_append(
+    char *restrict buf,
+    const char *restrict format,
+    ...) WARN_PRINTF(2, 3);
+
+/**
+ * @brief
+ *     @c va_list equivalent to where_append()
+ */
+int
+where_append_v(
+    char *restrict buf,
+    const char *restrict format,
+    va_list ap) WARN_PRINTF(2, 0);
 
 /*
  * add clause for testing the value of a flag to a where string

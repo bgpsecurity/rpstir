@@ -6,12 +6,35 @@ t4s_setup
 
 @trap_errors@
 
-t4s_testcase "Loading data" '
-    rsync_aur -s -t -f "$TESTS_SRCDIR/test3.7.log" -w -e -i \
-        -d "$TESTS_BUILDDIR/testcases" || t4s_fatal "rsync_aur failed"
+actual=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
+expected=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
+
+t4s_testcase "roa query" '
+    use_config_file "$TESTS_SRCDIR/specs.3.6.conf"
+    query -t roa -d filename >${actual} || t4s_fatal "roa query failed"
 '
-t4s_testcase "Running garbage collector" '
-    run "step8.garbage" garbage || t4s_fatal "garbage failed"
+cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
+Filename = R111.roa  
+Filename = R1121.roa  
+Filename = R1131.roa  
+Filename = R1211.roa  
+Filename = R1321.roa  
+Filename = R1322.roa  
+EOF
+t4s_testcase_diff "roa query output" "${expected}" "${actual}"
+
+t4s_testcase "gbr query" '
+    use_config_file "$TESTS_SRCDIR/specs.3.6.conf"
+    query -t gbr -d filename >${actual} || t4s_fatal "gbr query failed"
 '
+cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
+Filename = G111.gbr  
+Filename = G1121.gbr  
+Filename = G1131.gbr  
+Filename = G1211.gbr  
+Filename = G1321.gbr  
+Filename = G1322.gbr  
+EOF
+t4s_testcase_diff "gbr query output" "${expected}" "${actual}"
 
 t4s_done

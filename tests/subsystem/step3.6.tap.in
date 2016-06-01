@@ -6,8 +6,23 @@ t4s_setup
 
 @trap_errors@
 
-t4s_testcase "Running the garbage collector" '
-    run "step5.garbage" garbage || t4s_setup "garbage failed"
+actual=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
+expected=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
+
+t4s_testcase "roa query" '
+    use_config_file "$TESTS_SRCDIR/specs.3.6.conf"
+    query -t roa -d filename >${actual} || t4s_fatal "roa query failed"
 '
+cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
+EOF
+t4s_testcase_diff "roa query output" "${expected}" "${actual}"
+
+t4s_testcase "gbr query" '
+    use_config_file "$TESTS_SRCDIR/specs.3.6.conf"
+    query -t gbr -d filename >${actual} || t4s_fatal "gbr query failed"
+'
+cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
+EOF
+t4s_testcase_diff "gbr query output" "${expected}" "${actual}"
 
 t4s_done

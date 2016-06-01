@@ -6,6 +6,7 @@
 #include "configlib/configlib.h"
 
 #include "configlib/types/bool.h"
+#include "configlib/types/deprecated.h"
 #include "configlib/types/enum.h"
 #include "configlib/types/path.h"
 #include "configlib/types/sscanf.h"
@@ -34,6 +35,7 @@ enum config_key {
     CONFIG_NULL_STRING,
     CONFIG_DEFAULT_NULL_STRING,
     CONFIG_LOG_LEVEL,
+    CONFIG_DEPRECATED,
 
     CONFIG_NUM_OPTIONS
 };
@@ -291,6 +293,17 @@ static const struct config_option CONFIG_OPTIONS[] = {
         config_type_enum_free,
         NULL, NULL,
         NULL},
+
+    // CONFIG_DEPRECATED
+    {
+        "Deprecated",
+        false,
+        config_type_deprecated_converter, NULL,
+        NULL, NULL,
+        free,
+        NULL, NULL,
+        "",
+    },
 };
 
 
@@ -369,7 +382,8 @@ static bool test_config(
         " string instead\n"
         "WARN: %s:38: variable ${ENV_VAR_UNSET} not found, using the empty"
         " string instead\n"
-        , conf_file, conf_file, conf_file, conf_file, conf_file);
+        "WARN: %s:47: this option is deprecated and has no effect\n"
+        , conf_file, conf_file, conf_file, conf_file, conf_file, conf_file);
 
     TEST_STR(logbuf, ==, expected_logbuf);
 

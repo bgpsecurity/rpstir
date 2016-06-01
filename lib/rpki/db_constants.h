@@ -26,10 +26,10 @@ typedef enum {
 #define SCM_FLAG_CA           0x1
 /** @brief trusted */
 #define SCM_FLAG_TRUSTED      0x2
-/** @brief at some point, chain existed */
-#define SCM_FLAG_VALIDATED    0x4
-/** @brief now missing links on chain to anchor */
-#define SCM_FLAG_NOCHAIN      0x8
+/** @brief is valid */
+#define SCM_FLAG_VALID        0x4
+// 0x8 was previously SCM_FLAG_NOTVALID/SCM_FLAG_NOCHAIN, but is now
+// unused
 /** @brief too early, not yet ready */
 #define SCM_FLAG_NOTYET       0x10
 /** @brief assoc crl of self or ancestor stale */

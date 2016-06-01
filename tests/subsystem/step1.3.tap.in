@@ -6,55 +6,8 @@ t4s_setup
 
 @trap_errors@
 
-actual=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
-expected=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
-
-t4s_testcase "roa query" '
-    use_config_file "$TESTS_SRCDIR/specs.1.3.conf"
-    query -t roa -d filename >${actual} || t4s_fatal "roa query failed"
+t4s_testcase "Making C2 expired" '
+    "$TESTS_BUILDDIR/makeC2Expired" || t4s_fatal "makeC2Expired failed"
 '
-cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
-Filename = R111.roa  
-Filename = R1111.roa  
-Filename = R11111.roa  
-Filename = R1112.roa  
-Filename = R1113.roa  
-Filename = R1121.roa  
-Filename = R1131.roa  
-Filename = R1211.roa  
-Filename = R1311.roa  
-Filename = R1321.roa  
-Filename = R1322.roa  
-Filename = R2111.roa  
-Filename = R221.roa  
-Filename = R2211.roa  
-Filename = R22111.roa  
-Filename = R22121.roa  
-EOF
-t4s_testcase_diff "roa query output" "${expected}" "${actual}"
-
-t4s_testcase "gbr query" '
-    use_config_file "$TESTS_SRCDIR/specs.1.3.conf"
-    query -t gbr -d filename >${actual} || t4s_fatal "gbr query failed"
-'
-cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
-Filename = G111.gbr  
-Filename = G1111.gbr  
-Filename = G11111.gbr  
-Filename = G1112.gbr  
-Filename = G1113.gbr  
-Filename = G1121.gbr  
-Filename = G1131.gbr  
-Filename = G1211.gbr  
-Filename = G1311.gbr  
-Filename = G1321.gbr  
-Filename = G1322.gbr  
-Filename = G2111.gbr  
-Filename = G221.gbr  
-Filename = G2211.gbr  
-Filename = G22111.gbr  
-Filename = G22121.gbr  
-EOF
-t4s_testcase_diff "gbr query output" "${expected}" "${actual}"
 
 t4s_done

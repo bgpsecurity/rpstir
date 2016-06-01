@@ -24,6 +24,7 @@ lib_rpki_librpki_a_SOURCES = \
 	lib/rpki/querySupport.c \
 	lib/rpki/querySupport.h \
 	lib/rpki/rpwork.h \
+	lib/rpki/scmf.c \
 	lib/rpki/scmf.h \
 	lib/rpki/scm.h \
 	lib/rpki/scmmain.h \

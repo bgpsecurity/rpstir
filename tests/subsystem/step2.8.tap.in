@@ -9,50 +9,24 @@ t4s_setup
 actual=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
 expected=$(@MKTEMP@) || t4s_bailout "unable to create temporary file"
 
-t4s_testcase "(RPKIAllowStaleValidationChain yes) roa query" '
+t4s_testcase "roa query" '
     use_config_file "$TESTS_SRCDIR/specs.2.6.conf"
-    query -t roa -d filename >${actual} || t4s_fatal "roa query failed"
-'
-cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
-Filename = R111.roa  
-Filename = R1121.roa  
-Filename = R1131.roa  
-EOF
-t4s_testcase_diff "(RPKIAllowStaleValidationChain yes) roa query output" \
-    "${expected}" "${actual}"
-
-t4s_testcase "(RPKIAllowStaleValidationChain yes) gbr query" '
-    use_config_file "$TESTS_SRCDIR/specs.2.6.conf"
-    query -t gbr -d filename >${actual} || t4s_fatal "gbr query failed"
-'
-cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
-Filename = G111.gbr  
-Filename = G1121.gbr  
-Filename = G1131.gbr  
-EOF
-t4s_testcase_diff "(RPKIAllowStaleValidationChain yes) gbr query output" \
-    "${expected}" "${actual}"
-
-t4s_testcase "(RPKIAllowStaleValidationChain no) roa query" '
-    use_config_file "$TESTS_SRCDIR/specs.2.8.conf"
     query -t roa -d filename >${actual} || t4s_fatal "roa query failed"
 '
 cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
 Filename = R111.roa  
 Filename = R1131.roa  
 EOF
-t4s_testcase_diff "(RPKIAllowStaleValidationChain no) roa query output" \
-    "${expected}" "${actual}"
+t4s_testcase_diff "roa query output" "${expected}" "${actual}"
 
-t4s_testcase "(RPKIAllowStaleValidationChain no) gbr query" '
-    use_config_file "$TESTS_SRCDIR/specs.2.8.conf"
+t4s_testcase "gbr query" '
+    use_config_file "$TESTS_SRCDIR/specs.2.6.conf"
     query -t gbr -d filename >${actual} || t4s_fatal "gbr query failed"
 '
 cat >${expected} <<EOF || t4s_bailout "unable to write to ${expected}"
 Filename = G111.gbr  
 Filename = G1131.gbr  
 EOF
-t4s_testcase_diff "(RPKIAllowStaleValidationChain no) gbr query output" \
-    "${expected}" "${actual}"
+t4s_testcase_diff "gbr query output" "${expected}" "${actual}"
 
 t4s_done
