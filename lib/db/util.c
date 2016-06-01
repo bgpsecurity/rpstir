@@ -194,13 +194,17 @@ void flag_tests_bind(
     MYSQL_BIND *parameters,
     struct flag_tests const *tests)
 {
-    parameters[0].buffer_type = MYSQL_TYPE_LONGLONG;
-    parameters[0].buffer = (void *)&tests->mask;
-    parameters[0].is_unsigned = (my_bool)1;
-    parameters[0].is_null = (my_bool *)0;
+    parameters[0] = (MYSQL_BIND){
+        .buffer_type = MYSQL_TYPE_LONGLONG,
+        .buffer = (void *)&tests->mask,
+        .is_unsigned = (my_bool)1,
+        .is_null = (my_bool *)0,
+    };
 
-    parameters[1].buffer_type = MYSQL_TYPE_LONGLONG;
-    parameters[1].buffer = (void *)&tests->result;
-    parameters[1].is_unsigned = (my_bool)1;
-    parameters[1].is_null = (my_bool *)0;
+    parameters[1] = (MYSQL_BIND){
+        .buffer_type = MYSQL_TYPE_LONGLONG,
+        .buffer = (void *)&tests->result,
+        .is_unsigned = (my_bool)1,
+        .is_null = (my_bool *)0,
+    };
 }

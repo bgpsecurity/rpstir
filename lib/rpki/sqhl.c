@@ -1285,8 +1285,8 @@ done:
 static X509 *
 find_cert(
     scmcon *conp,
-    char *ski,
-    char *subject,
+    const char *ski,
+    const char *subject,
     err_code *stap,
     char *pathname,
     int *flagsp)
@@ -1494,6 +1494,7 @@ cert_revoked(
         initTables(scmp);
         ADDCOL(revokedSrch, "snlen", SQL_C_ULONG, sizeof(unsigned int),
                sta, sta);
+        /** @bug magic number */
         ADDCOL(revokedSrch, "snlist", SQL_C_BINARY, 16 * 1024 * 1024, sta,
                sta);
         revokedSNLen = revokedSrch->vec[0].valptr;
@@ -1541,13 +1542,13 @@ verify_cert(
     scmcon *conp,
     X509 *x,
     int isTrusted,
-    char *parentSKI,
-    char *parentSubject,
+    const char *aki,
+    const char *issuer,
     int *chainOK)
 {
-    LOG(LOG_DEBUG, "verify_cert(conp=%p, x=%p, isTrusted=%d, parentSKI=\"%s\""
-        ", parentSubject=\"%s\", chainOK=%p)",
-        conp, x, isTrusted, parentSKI, parentSubject, chainOK);
+    LOG(LOG_DEBUG, "verify_cert(conp=%p, x=%p, isTrusted=%d, aki=\"%s\""
+        ", issuer=\"%s\", chainOK=%p)",
+        conp, x, isTrusted, aki, issuer, chainOK);
 
     STACK_OF(X509) *sk_trusted = NULL;
     STACK_OF(X509) *sk_untrusted = NULL;
@@ -1658,7 +1659,7 @@ verify_cert(
          *     does not distinguish an error from a parentless cert
          */
         parent =
-            find_cert(conp, parentSKI, parentSubject, &sta, NULL, &flags);
+            find_cert(conp, aki, issuer, &sta, NULL, &flags);
         LOG(LOG_DEBUG, "find_cert() (for SKI/subject) error code is %s: %s",
             err2name(sta), err2string(sta));
         if (!parent)
@@ -1740,8 +1741,8 @@ static err_code
 verify_crl(
     scmcon *conp,
     X509_CRL *x,
-    char *parentSKI,
-    char *parentSubject,
+    const char *aki,
+    const char *issuer,
     int *chainOK)
 {
     int x509sta = 0;
@@ -1750,16 +1751,11 @@ verify_crl(
 
     /**
      * @bug
-     *     This doesn't resemble the algorithm in RFC5280 section
-     *     6.3.3 at all.  Specifically, step (f) is not performed.
-     */
-    /**
-     * @bug
      *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = find_cert(conp, parentSKI, parentSubject, NULL, NULL, NULL);
+    parent = find_cert(conp, aki, issuer, NULL, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -3715,8 +3711,9 @@ add_roa_internal(
     {
         if (multiinsert_idx == 0)
         {
-            memcpy(multiinsert, multiinsert_pre, multiinsert_pre_len);
-            multiinsert_idx += multiinsert_pre_len;
+            multiinsert_idx += xstrlcpy(
+                multiinsert, multiinsert_pre, multiinsert_len);
+            assert(multiinsert_idx == multiinsert_pre_len);
         }
 
         prefix = hexify(
@@ -4448,11 +4445,12 @@ iterate_crl(
 
     // go for broke and allocate a blob large enough that it can hold
     // the entire snlist if necessary
+    /** @bug magic number */
+    static const size_t snlist_len = 16 * 1024 * 1024;
     if (snlist == NULL)
-        snlist = malloc(16 * 1024 * 1024);
+        snlist = calloc(1, snlist_len);
     if (snlist == NULL)
         return (ERR_SCM_NOMEM);
-    memset(snlist, 0, 16 * 1024 * 1024);
     initTables(scmp);
     // set up a search for issuer, snlen, sninuse, flags, snlist and aki
     issuer[0] = 0;
@@ -4503,7 +4501,7 @@ iterate_crl(
             .sqltype = SQL_C_BINARY,
             .colname = "snlist",
             .valptr = snlist,
-            .valsize = 16 * 1024 * 1024,
+            .valsize = snlist_len,
             .avalsize = 0,
         },
         {

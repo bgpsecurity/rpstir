@@ -36,6 +36,12 @@ static scmtab *manifestTable;
 /**
  * @brief
  *     callback function for searchscm() that records the timestamps
+ *
+ * @todo
+ *     While this function seems like a no-op, passing it to
+ *     searchscm() causes searchscm() to populate the value fields in
+ *     the column structures.  There's probably a better way to get
+ *     the current db time.
  */
 static sqlvaluefunc handleTimestamps;
 err_code

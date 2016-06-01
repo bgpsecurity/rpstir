@@ -30,6 +30,7 @@
 #include "rpki/err.h"
 #include "config/config.h"
 #include "util/logging.h"
+#include "util/macros.h"
 #include "util/stringutils.h"
 
 
@@ -211,8 +212,8 @@ create2op(
     };
     scmkva aone = {
         .vec = one,
-        .ntot = sizeof(one)/sizeof(one[0]),
-        .nused = sizeof(one)/sizeof(one[0]),
+        .ntot = ELTS(one),
+        .nused = ELTS(one),
         .vald = 0,
     };
     sta = insertscm(conp, mtab, &aone);
