@@ -171,8 +171,8 @@ int write_revoked_entry(
     char *str_num;
     char *eptr;
     char *rtime;
-    int rtime_len,
-        snum_len;
+    int rtime_len;
+    int snum_len;
     long certnum;
     int utclen = 13;
     int glen = 15;
