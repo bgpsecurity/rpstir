@@ -171,8 +171,8 @@ int write_revoked_entry(
     char *str_num;
     char *eptr;
     char *rtime;
-    int rtime_len,
-        snum_len;
+    int rtime_len;
+    int snum_len;
     long certnum;
     int utclen = 13;
     int glen = 15;
@@ -190,7 +190,8 @@ int write_revoked_entry(
 
         // pull out the serial number and convert to an int
         snum_len = rtime - entry;
-        if ((str_num = calloc(snum_len, sizeof(char))) == NULL)
+        // +1 for the nul terminator
+        if ((str_num = calloc(snum_len + 1, sizeof(char))) == NULL)
             return -1;
         memcpy(str_num, entry, snum_len);
         certnum = atoi(str_num);
