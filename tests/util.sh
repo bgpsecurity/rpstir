@@ -191,3 +191,115 @@ test_perms() {
 $(permutations  ${test_perms_add})
 EOF
 }
+
+# print arguments with duplicates removed (first instance preserved,
+# no sorting)
+uniquify_args() {
+    printf '%s ' $(
+        printf %s\\n "$@" | grep -v '^[[:space:]]*$' | awk '!x[$1]++{print$1}'
+    )
+    printf \\n
+}
+
+# Iterate through the interesting permutations of files to add when
+# there are two objects of interest.  For each permutation, run
+# reset_add_check as a testcase.
+#
+# ==== EXPLANATION ====
+#
+# When there are only two objects of interest, there are only 14 ways
+# to add files that are interesting.  This is because it only matters
+# when the state of each of the two objects change:
+#
+#   * from not present to present (either present and valid or
+#     present but not yet valid because the certification path isn't yet
+#     complete), or
+#   * from present but not yet valid to present and valid
+#
+# This can be expressed as four events A, B, X, Y where:
+#
+#   * event A happens when object #1 has been added but its hierarchy
+#     is still incomplete (so it is not yet valid)
+#   * event B happens when object #1 is added and valid (its hierarchy
+#     has been added)
+#   * event X is similar to event A but for object #2
+#   * event Y is similar to event B but for object #2
+#
+# Events A and X are optional (the objects can transition from not
+# present to present with complete hierarchy without first going
+# through present but hierarchy incomplete).  If A happens it must
+# happen some time before B.  If X happens, it must happen some time
+# before Y.
+#
+# There are 14 different event sequences that match the above rules:
+#   1. ABXY
+#   2. AXBY
+#   3. AXYB
+#   4. XABY
+#   5. XAYB
+#   6. XYAB
+#   7. ABY
+#   8. AYB
+#   9. YAB
+#   10. BXY
+#   11. XBY
+#   12. XYB
+#   13. BY
+#   14. YB
+#
+# ==== REQUIRED FUNCTIONS ====
+#
+# The caller is required to define the following functions:
+#
+#   * event_A
+#   * event_B
+#   * event_X
+#   * event_Y
+#
+# Each function should output a whitespace-separated list of files to
+# add to achieve the corresponding event in an order that wouldn't
+# cause a different event to happen along the way.
+#
+# ==== ARGUMENTS ====
+#
+#   * 1: parent of cache directory.  a subdirectory underneath this
+#     (named after the test number) will be used as the cache
+#     directory
+#   * 2 through n: passed as args 3 through n to reset_add_check
+#
+test_ABXY() {
+    test_ABXY_cache_dir=${1}; shift
+    test_ABXY_n=0
+    while IFS= read -r test_ABXY_event_seq; do
+        test_ABXY_n=$((test_ABXY_n+1))
+        test_ABXY_add=
+        for test_ABXY_e in ${test_ABXY_event_seq}; do
+            test_ABXY_add=$(
+                uniquify_args ${test_ABXY_add} $(event_"${test_ABXY_e}") )
+        done
+        t4s_log "test_ABXY_add=${test_ABXY_add}"
+
+        testcase \
+            "event sequence: $(printf %s ${test_ABXY_event_seq})\
+ files: ${test_ABXY_add}" \
+            'reset_add_check "$@"' \
+            "${test_ABXY_cache_dir}"/"${test_ABXY_n}" \
+            "${test_ABXY_add}" \
+            "$@"
+    done <<EOF
+A B X Y
+A X B Y
+A X Y B
+X A B Y
+X A Y B
+X Y A B
+A B Y
+A Y B
+Y A B
+B X Y
+X B Y
+X Y B
+B Y
+Y B
+EOF
+}

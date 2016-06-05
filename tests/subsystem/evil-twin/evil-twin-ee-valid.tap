@@ -21,7 +21,10 @@
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
-files="ta-good.cer ta-evil.cer ee-good.roa ee-evil-valid.roa"
 exp="ta-good.cer ta-evil.cer ee-good.roa ee-good.roa.cer"
 
-run_tests "${files}" "${exp}"
+event_A() { printf %s\\n ee-good.roa; }
+event_B() { printf %s\\n ta-good.cer ee-good.roa; }
+event_X() { printf %s\\n ee-evil-valid.roa; }
+event_Y() { printf %s\\n ta-evil.cer ee-evil-valid.roa; }
+run_ABXY_tests "${exp}"

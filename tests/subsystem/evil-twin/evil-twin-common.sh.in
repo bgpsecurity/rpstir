@@ -7,7 +7,83 @@ u=${TESTS_TOP_SRCDIR}/tests/util.sh
 
 cd "${TESTS_BUILDDIR}" || t4s_bailout "unable to cd to ${TESTS_BUILDDIR}"
 
+goodta() { pecho "ta-good.cer"; }
+goodca() { pecho "ca-good.cer"; }
+testobj() { fatal "testobj() must be overridden"; }
+evilta() { pecho "ta-evil.cer"; }
+evilca() { fatal "evilca() must be overridden"; }
 run_tests() {
-    test_perms "${0##*/}".cache "$@"
+    i=0
+    while IFS= read -r line; do
+        # first construct the sequence of events that this sequence of
+        # file additions would produce
+        event_seq=$(
+            goodta=false
+            goodca=false
+            testobj=false
+            evilta=false
+            evilca=false
+            set -- ${line}
+            for x in "$@"; do
+                eval "${x}=true"
+                case ${x} in
+                    goodta)
+                        if ${goodca} && ${testobj}; then
+                            printf %s 'goodca_and_test_valid_'
+                        elif ${goodca}; then
+                            printf %s 'goodca_valid_'
+                        fi
+                        ;;
+                    goodca)
+                        if ${goodta}; then
+                            printf %s 'goodca_valid_'
+                        else
+                            printf %s 'goodca_present_'
+                        fi
+                        ;;
+                    testobj)
+                        if ${goodta} && ${goodca}; then
+                            printf %s 'test_valid_'
+                        else
+                            printf %s 'test_present_'
+                        fi
+                        ;;
+                    evilta)
+                        if ${evilca}; then
+                            printf %s 'evil_valid_'
+                        fi
+                        ;;
+                    evilca)
+                        if ${evilta}; then
+                            printf %s 'evil_valid_'
+                        else
+                            printf %s 'evil_present_'
+                        fi
+                        ;;
+                esac
+            done
+        )
+        t4s_log "event_seq=${event_seq}"
+
+        # has this sequence of events been seen already?
+        ! eval "\${${event_seq}-false}" || continue
+
+        # no, so mark it as seen and process
+        eval "${event_seq}=true"
+        i=$((i+1))
+        files_to_add=$(set -- $(for f in ${line}; do "${f}"; done); pecho "$@")
+        testcase "${pfx}${files_to_add}" \
+            'reset_add_check "$@"' \
+            "${0##*/}".cache/"${i}" \
+            "${files_to_add}" \
+            "$@"
+    done <<EOF
+$(permutations goodta goodca testobj evilta evilca)
+EOF
+    t4s_done
+}
+
+run_ABXY_tests() {
+    test_ABXY "${0##*/}".cache "$@"
     t4s_done
 }

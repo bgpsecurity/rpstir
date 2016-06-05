@@ -26,7 +26,7 @@
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
-files="ta-good.cer ta-evil.cer ca-good.cer ca-evil-invalid.cer test2-ee.roa"
 exp="ta-good.cer ta-evil.cer ca-good.cer test2-ee.roa test2-ee.roa.cer"
-
-run_tests "${files}" "${exp}"
+testobj() { pecho "test2-ee.roa"; }
+evilca() { pecho "ca-evil-invalid.cer"; }
+run_tests "${exp}"
