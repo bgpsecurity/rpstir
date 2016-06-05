@@ -20,7 +20,6 @@
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
-files="ta-good.cer ta-evil.cer ee-good.roa ee-evil-invalid.roa"
 exp="ta-good.cer ta-evil.cer ee-good.roa ee-good.roa.cer"
 # This is an alternative accepted result, though it shouldn't be.
 # There's a bug that causes ee-evil-invalid.roa to be "accepted"
@@ -32,4 +31,8 @@ exp2="ta-good.cer ta-evil.cer ee-evil-invalid.roa ee-good.roa.cer"
 # accepted instead of just one or the other.
 exp3="ta-good.cer ta-evil.cer ee-evil-invalid.roa ee-good.roa.cer ee-good.roa"
 
-run_tests "${files}" "${exp}" "${exp2}" "${exp3}"
+event_A() { printf %s\\n ee-good.roa; }
+event_B() { printf %s\\n ta-good.cer ee-good.roa; }
+event_X() { printf %s\\n ee-evil-invalid.roa; }
+event_Y() { printf %s\\n ta-evil.cer ee-evil-invalid.roa; }
+run_ABXY_tests "${exp}" "${exp2}" "${exp3}"

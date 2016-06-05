@@ -26,9 +26,6 @@
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
-files="ta-good.cer ta-evil.cer ca-good.cer ca-evil-valid.cer test2-ee.roa"
-exp=${files}" test2-ee.roa.cer"
-
 # override testcase() to set xfail for cases that are known to fail
 testcase() {
     pass=true
@@ -49,4 +46,8 @@ testcase() {
     fi
 }
 
-run_tests "${files}" "${exp}"
+exp="ta-good.cer ta-evil.cer ca-good.cer ca-evil-valid.cer test2-ee.roa\
+ test2-ee.roa.cer"
+testobj() { pecho "test2-ee.roa"; }
+evilca() { pecho "ca-evil-valid.cer"; }
+run_tests "${exp}"
