@@ -1592,6 +1592,319 @@ done:
 
 /**
  * @brief
+ *     Callback that is executed whenever a certification path is
+ *     found
+ *
+ * The certification path indicated by @p intermediates and @p ta is
+ * not necessarily valid.  It might be invalid if there is an "evil
+ * twin" certificate -- an invalid certificate that borrows the SKI
+ * and subject from another certificate.  The callback should verify
+ * the certificate chain.
+ *
+ * @param[in] cb_context
+ *     The same value passed as the @p cb_context argument to
+ *     find_cert().
+ * @param[in] intermediates
+ *     Intermediate certificates along the certification path.  The
+ *     certificate at the bottom of the stack has a SKI and subject
+ *     that match the values passed to find_cert_paths().  The SKI and
+ *     subject in the next certificate up the stack match the AKI and
+ *     issuer in the certificate below it, all the way up to the top
+ *     certificate.  The top certificate has an AKI and issuer that
+ *     match the SKI and subject in @p ta.  This may be empty if there
+ *     is a trust anchor with a SKI and subject that match the values
+ *     passed to find_cert_paths().  The caller retains ownership of
+ *     the stack and the certificates in it.  This MUST NOT be NULL.
+ * @param[in] ta
+ *     Trust anchor.  If @p intermediates is non-empty, the SKI and
+ *     subject of this certificate match the AKI and issuer of the top
+ *     certificate in @p intermediates.  Otherwise, the SKI and
+ *     subject will match the values passed to find_cert_paths().
+ *     This MUST NOT be NULL.
+ * @return
+ *     0 on success and the search should continue, ERR_SCM_BREAK on
+ *     success and the search should stop, another non-zero error code
+ *     on error.
+ */
+typedef err_code
+find_cert_paths_cb(
+    void *cb_context,
+    STACK_OF(X509) *intermediates,
+    X509 *ta);
+
+/**
+ * @brief
+ *     Internal data for find_cert_paths() and its helper functions
+ */
+struct find_cert_paths_context {
+    find_cert_paths_cb *cb;
+    void *cb_context;
+    STACK_OF(X509) *cert_path;
+};
+
+/**
+ * @brief
+ *     Helper function for find_cert_paths()
+ */
+static err_code
+find_cert_paths_internal(
+    scmcon *conp,
+    const char *ski,
+    const char *subject,
+    struct find_cert_paths_context *ctx);
+
+/**
+ * @brief
+ *     Helper callback for find_cert_paths()
+ */
+static sqlvaluefunc find_cert_paths_handle_row;
+err_code
+find_cert_paths_handle_row(
+    scmcon *conp,
+    scmsrcha *s,
+    ssize_t idx)
+{
+    LOG(LOG_DEBUG, "find_cert_paths_handle_row(conp=%p, s=%p, idx=%zd)",
+        conp, s, idx);
+
+    err_code sta = 0;
+    struct find_cert_paths_context *ctx = s->context;
+
+    char *filename = s->vec[0].valptr;
+    SQLLEN filename_len = s->vec[0].avalsize;
+    assert(FNAMESIZE == s->vec[0].valsize);
+
+    char *dirname = s->vec[1].valptr;
+    SQLLEN dirname_len = s->vec[1].avalsize;
+    assert(DNAMESIZE == s->vec[1].valsize);
+
+    unsigned int flags = *(unsigned int *)s->vec[2].valptr;
+    assert(flags & SCM_FLAG_VALID);
+
+    char *aki = s->vec[3].valptr;
+    assert(SKISIZE == s->vec[3].valsize);
+
+    char *issuer = s->vec[4].valptr;
+    assert(SUBJSIZE == s->vec[4].valsize);
+
+    // sanity checks
+    for (int i = 0; i < s->nused; ++i)
+    {
+        if (((i == 3) || (i == 4)) && (flags & SCM_FLAG_TRUSTED))
+        {
+            // if the cert is a TA, the aki and issuer fields aren't
+            // used so don't check them
+            continue;
+        }
+        scmsrch *col = &s->vec[i];
+        SQLLEN len = col->avalsize;
+        assert(len != SQL_NO_TOTAL);
+        assert(len != SQL_NULL_DATA);
+        assert(len >= 0);
+        if (SQL_C_CHAR == col->sqltype)
+        {
+            // need room for the nul terminator
+            assert((unsigned int)len < col->valsize);
+        }
+        else
+        {
+            assert((unsigned int)len <= col->valsize);
+        }
+    }
+
+    char fullname[PATH_MAX];
+    int fullname_len = xsnprintf(fullname, sizeof(fullname), "%s/%s",
+                                 dirname, filename);
+    assert(dirname_len + 1 + filename_len == fullname_len);
+
+    X509 *cert = readCertFromFile(fullname, &sta);
+    if (sta)
+    {
+        goto done;
+    }
+    assert(cert);
+
+    if (flags & SCM_FLAG_TRUSTED)
+    {
+        // cert is a trust anchor.  call the callback
+        if (ctx->cb)
+        {
+            sta = (*ctx->cb)(ctx->cb_context, ctx->cert_path, cert);
+        }
+        goto done;
+    }
+
+    // cert is not a trust anchor, so go deeper by recursively calling
+    // find_cert_paths_internal()
+    if (sk_X509_push(ctx->cert_path, cert) <= 0)
+    {
+        LOG(LOG_ERR, "sk_X509_push() failed");
+        sta = ERR_SCM_X509STACK;
+        goto done;
+    }
+    sta = find_cert_paths_internal(conp, aki, issuer, ctx);
+    X509 *popped = sk_X509_pop(ctx->cert_path);
+    assert(popped == cert);
+
+done:
+    X509_free(cert);
+    LOG(LOG_DEBUG, "find_cert_paths_handle_row() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
+}
+
+err_code
+find_cert_paths_internal(
+    scmcon *conp,
+    const char *ski,
+    const char *subject,
+    struct find_cert_paths_context *ctx)
+{
+    LOG(LOG_DEBUG, "find_cert_paths_internal(conp=%p, ski=\"%s\""
+        ", subject=\"%s\", ctx=%p)",
+        conp, ski, subject, ctx);
+
+    err_code sta = 0;
+    char filename[FNAMESIZE];
+    char dirname[DNAMESIZE];
+    unsigned int flags;
+    char aki[SKISIZE];
+    char issuer[SUBJSIZE];
+    scmsrch srchvec[] = {
+        {
+            .colno = 1,
+            .sqltype = SQL_C_CHAR,
+            .colname = "filename",
+            .valptr = filename,
+            .valsize = sizeof(filename),
+        },
+        {
+            .colno = 2,
+            .sqltype = SQL_C_CHAR,
+            .colname = "dirname",
+            .valptr = dirname,
+            .valsize = sizeof(dirname),
+        },
+        {
+            .colno = 3,
+            .sqltype = SQL_C_ULONG,
+            .colname = "flags",
+            .valptr = &flags,
+            .valsize = sizeof(flags),
+        },
+        {
+            .colno = 4,
+            .sqltype = SQL_C_CHAR,
+            .colname = "aki",
+            .valptr = aki,
+            .valsize = sizeof(aki),
+        },
+        {
+            .colno = 5,
+            .sqltype = SQL_C_CHAR,
+            .colname = "issuer",
+            .valptr = issuer,
+            .valsize = sizeof(issuer),
+        },
+    };
+    char where[WHERESTR_SIZE];
+    size_t subject_len = strlen(subject);
+    char subject_escaped[subject_len*2+1];
+    mysql_escape_string(subject_escaped, subject, subject_len);
+    xsnprintf(where, sizeof(where),
+              "(`flags` & 0x%x) != 0 AND `ski` = '%s' AND `subject` = '%s'",
+              SCM_FLAG_VALID, ski, subject_escaped);
+    scmsrcha srch = {
+        .vec = srchvec,
+        .ntot = ELTS(srchvec),
+        .nused = ELTS(srchvec),
+        .wherestr = where,
+        .context = ctx,
+    };
+
+    sta = searchscm(
+        conp, theCertTable, &srch, NULL, &find_cert_paths_handle_row,
+        SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+    if (ERR_SCM_NODATA == sta)
+    {
+        sta = 0;
+    }
+
+    LOG(LOG_DEBUG, "find_cert_paths_internal() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
+}
+
+/**
+ * @brief
+ *     Find all certification paths and execute a callback whenever
+ *     one is found
+ *
+ * @param[in] conp
+ *     Database connection.  This MUST NOT be NULL.
+ * @param[in] ski
+ *     Subject key identifier of the certificate at the bottom of the
+ *     certification path.  This MUST NOT be NULL.
+ * @param[in] subject
+ *     Subject of the certificate at the bottom of the certification
+ *     path.  This MUST NOT be NULL.
+ * @param[in] cb
+ *     Function to execute whenever a certification path is found.
+ *     The certification path is not neccessarily valid -- the
+ *     callback should verify the path.  If the callback returns
+ *     ERR_SCM_BREAK, the search is halted and this function returns
+ *     success assuming there is no error during cleanup.  If the
+ *     callback returns another non-zero value, the search is halted
+ *     and this function returns the error code returned by the
+ *     callback.  This parameter may be NULL, which is the same as
+ *     providing a callback that does nothing except return 0.
+ * @param[in] cb_context
+ *     Parameter to opaque data.  This value is passed as the argument
+ *     for the @p cb_context parameter to the @p cb callback function
+ *     whenever a valid certification path is found.  This may be
+ *     NULL.
+ * @return
+ *     0 on success, non-zero otherwise.  It is not an error if no
+ *     valid certification paths are found.  To determine whether
+ *     there is a valid certification path or not, use @p cb and @p
+ *     context.
+ */
+static err_code
+find_cert_paths(
+    scmcon *conp,
+    const char *ski,
+    const char *subject,
+    find_cert_paths_cb *cb,
+    void *cb_context)
+{
+    LOG(LOG_DEBUG, "find_cert_paths(conp=%p, ski=\"%s\""
+        ", subject=\"%s\", cb=%p, cb_context=%p)",
+        conp, ski, subject, cb, cb_context);
+
+    err_code sta = 0;
+    struct find_cert_paths_context ctx = {
+        .cb = cb,
+        .cb_context = cb_context,
+        .cert_path = sk_X509_new_null(),
+    };
+    if (ctx.cert_path == NULL)
+    {
+        LOG(LOG_ERR, "sk_X509_new_null() returned NULL");
+        sta = ERR_SCM_X509STACK;
+        goto done;
+    }
+    sta = find_cert_paths_internal(conp, ski, subject, &ctx);
+    assert(!sk_X509_num(ctx.cert_path));
+    sk_X509_pop_free(ctx.cert_path, X509_free);
+
+done:
+    LOG(LOG_DEBUG, "find_cert_paths() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
+}
+
+/**
+ * @brief
  *     Certificate verification code by mudge
  */
 static err_code
