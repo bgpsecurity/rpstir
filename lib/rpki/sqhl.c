@@ -1944,6 +1944,23 @@ verify_cert_cb(
 /**
  * @brief
  *     Verify certificate
+ *
+ * @param[in] conp
+ *     Database connection.  This MUST NOT be NULL.
+ * @param[in] cert
+ *     Certificate to verify.  This MUST NOT be NULL.
+ * @param[in] isTrusted
+ *     True if @p cert is a trust anchor, false otherwise.
+ * @param[in] aki
+ *     Value of the AKI field in @p cert.  This MUST NOT be NULL if @p
+ *     isTrusted is false.  Ignored if @p isTrusted is true.
+ * @param[in] issuer
+ *     Value of the issuer field in @p cert.  This MUST NOT be NULL if
+ *     @p isTrusted is false.  Ignored if @p isTrusted is true.
+ * @return
+ *     0 if the certificate is valid and no error was encountered,
+ *     ERR_SCM_NOTVALID if the certificate is not valid and no error
+ *     was encountered, other error code if an error was encountered.
  */
 static err_code
 verify_cert(
