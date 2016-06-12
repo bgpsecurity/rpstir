@@ -1903,9 +1903,47 @@ done:
     return sta;
 }
 
+struct verify_cert_context {
+    scmcon *conp;
+    X509 *cert;
+    _Bool success;
+};
+
+static find_cert_paths_cb verify_cert_cb;
+err_code
+verify_cert_cb(
+    void *cb_context,
+    STACK_OF(X509) *intermediates,
+    X509 *ta)
+{
+    LOG(LOG_DEBUG, "verify_cert_cb(cb_context=%p, intermediates=%p, ta=%p)",
+        cb_context, intermediates, ta);
+
+    err_code sta = 0;
+    struct verify_cert_context *ctx = cb_context;
+
+    assert(!ctx->success);
+    sta = checkit(ctx->conp, ctx->cert, intermediates, ta);
+    if (!sta)
+    {
+        ctx->success = 1;
+        // no need to continue the search
+        sta = ERR_SCM_BREAK;
+    }
+    if (ERR_SCM_NOTVALID == sta)
+    {
+        // let it continue the search
+        sta = 0;
+    }
+
+    LOG(LOG_DEBUG, "verify_cert_cb() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
+}
+
 /**
  * @brief
- *     Certificate verification code by mudge
+ *     Verify certificate
  */
 static err_code
 verify_cert(
@@ -1919,80 +1957,37 @@ verify_cert(
         ", aki=\"%s\", issuer=\"%s\")",
         conp, cert, isTrusted, aki, issuer);
 
-    STACK_OF(X509) *sk_untrusted = NULL;
-    X509 *parent = NULL;
-    X509 *trust_anchor = NULL;
     err_code sta = 0;
 
-    sk_untrusted = sk_X509_new_null();
-    if (sk_untrusted == NULL)
-    {
-        LOG(LOG_DEBUG, "sk_X509_new_null() (for sk_untrusted) returned NULL");
-        sta = ERR_SCM_X509STACK;
-        goto done;
-    }
-    // if the certificate has already been flagged as trusted
-    // just push it on the trusted stack and verify it
-    _Bool complete_chain = 0;
     if (isTrusted)
     {
-        complete_chain = 1;
-        trust_anchor = cert;
-    }
-    else
-    {
-        int flags;
-        /**
-         * @bug
-         *     find_cert()'s error code is not checked, so this logic
-         *     does not distinguish an error from a parentless cert
-         */
-        parent =
-            find_cert(conp, aki, issuer, &sta, NULL, &flags);
-        LOG(LOG_DEBUG, "find_cert() (for SKI/subject) error code is %s: %s",
-            err2name(sta), err2string(sta));
-        if (!parent)
+        // trust anchor
+        STACK_OF(X509) *intermediates = sk_X509_new_null();
+        if (!intermediates)
         {
-            LOG(LOG_DEBUG, "find_cert() returned NULL");
+            LOG(LOG_ERR, "sk_X509_new_null() returned NULL");
+            sta = ERR_SCM_X509STACK;
+            goto done;
         }
-        while (parent != NULL)
-        {
-            if (flags & SCM_FLAG_TRUSTED)
-            {
-                complete_chain = 1;
-                trust_anchor = parent;
-                break;
-            }
-            else
-            {
-                /** @bug ignores error code without explanation */
-                sk_X509_push(sk_untrusted, parent);
-                /**
-                 * @bug
-                 *     find_cert()'s error code is not checked, so
-                 *     this logic does not distinguish an error from a
-                 *     parentless cert
-                 */
-                parent = find_cert(conp, parentAKI, parentIssuer, &sta, NULL,
-                                     &flags);
-                LOG(LOG_DEBUG, "find_cert() (for AKI/issuer) error code is"
-                    " %s: %s", err2name(sta), err2string(sta));
-                if (!parent)
-                {
-                    LOG(LOG_DEBUG, "find_cert() returned NULL");
-                }
-            }
-        }
+        sta = checkit(conp, cert, intermediates, cert);
+        sk_X509_pop_free(intermediates, &X509_free);
+        goto done;
     }
-    sta = ERR_SCM_NOTVALID;
-    if (complete_chain)
+
+    // not a trust anchor
+    struct verify_cert_context ctx = {
+        .conp = conp,
+        .cert = cert,
+    };
+    sta = find_cert_paths(conp, aki, issuer, &verify_cert_cb, &ctx);
+    if (sta && sta != ERR_SCM_BREAK)
     {
-        sta = checkit(conp, cert, sk_untrusted, trust_anchor);
-        LOG(LOG_DEBUG, "checkit() returned %s: %s",
-            err2name(sta), err2string(sta));
+        assert(sta != ERR_SCM_NOTVALID);
+        goto done;
     }
+    sta = ctx.success ? 0 : ERR_SCM_NOTVALID;
+
 done:
-    sk_X509_pop_free(sk_untrusted, X509_free);
     LOG(LOG_DEBUG, "verify_cert() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
