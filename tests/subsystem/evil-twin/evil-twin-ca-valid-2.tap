@@ -26,26 +26,6 @@
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
-# override testcase() to set xfail for cases that are known to fail
-testcase() {
-    pass=true
-    # if the evil hierarchy is completely added before the test ROA,
-    # or if the entire evil hierarchy and the test ROA are added
-    # before the good hierarchy is completely added, then it will fail
-    # stated another way, if the good hierarchy and test ROA are added
-    # before the bad hierarchy is completely added, then it will pass.
-    case $(printf " %s " $4) in
-        *evil*evil*" test2-ee.roa "*) pass=false;;
-        *evil*" test2-ee.roa "*evil*good*) pass=false;;
-        *" test2-ee.roa "*evil*evil*good*) pass=false;;
-    esac
-    if "${pass}"; then
-        t4s_testcase "$@"
-    else
-        t4s_testcase --xfail "see ticket #29" "$@"
-    fi
-}
-
 exp="ta-good.cer ta-evil.cer ca-good.cer ca-evil-valid.cer test2-ee.roa\
  test2-ee.roa.cer"
 testobj() { pecho "test2-ee.roa"; }
