@@ -1603,7 +1603,7 @@ done:
  *
  * @param[in] cb_context
  *     The same value passed as the @p cb_context argument to
- *     find_cert().
+ *     find_cert_paths().
  * @param[in] intermediates
  *     Intermediate certificates along the certification path.  The
  *     certificate at the bottom of the stack has a SKI and subject
