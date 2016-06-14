@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# This scenario is the same as evil-twin-ca-valid-1 except the Test1
+# CA certificate is replaced with a CRL as in evil-twin-ca-invalid-3:
+#
+#     Good TA (valid)     Evil TA (valid)
+#     IPv4: 0.0.0.0/8     IPv4: 1.0.0.0/8
+#     IPv6: ::/16         IPv6: 1::/16
+#     AS:   1-127         AS:   128-255
+#         |                   |
+#         |                   |
+#     Good CA (valid)     Evil CA (valid, this is the "evil twin" of Good CA)
+#     IPv4: 0.0.0.0/16    IPv4: 1.0.0.0/16 (modified resources to be valid)
+#     IPv6: ::/32         IPv6: 1::/32 (modified resources to be valid)
+#     AS:   1-63          AS:   128-191 (modified resources to be valid)
+#         |
+#         |
+#     Test3 CRL (valid)
+
+. "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
+
+exp="ta-good.cer ta-evil.cer ca-good.cer ca-evil-valid.cer test3.crl"
+testobj() { pecho "test3.crl"; }
+evilca() { pecho "ca-evil-valid.cer"; }
+run_tests "${exp}"

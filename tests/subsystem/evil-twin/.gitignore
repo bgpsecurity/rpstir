@@ -1,5 +1,6 @@
 /*.cache/
 /*.cer
+/*.crl
 /*.key
 /*.roa
 /evil-twin-common.sh
