@@ -65,6 +65,7 @@ int diff_objid(
     if ((lth = vsize_objid(casnp)) <= 0)
         return -2;
     c = dbcalloc(1, lth);
+    /** @bug error code ignored without explanation */
     read_objid(casnp, c);
     if (lth < lth2)
         ansr = lth;
@@ -99,6 +100,7 @@ int read_objid(
 int vsize_objid(
     struct casn *casnp)
 {
+    /** @bug magic number */
     char buf[16];
 
     if (_clear_error(casnp) < 0)
@@ -145,39 +147,69 @@ int _readsize_objid(
     if (casnp->type == ASN_OBJ_ID ||    // elements 1 & 2
         (casnp->type == ASN_ANY && casnp->tag == ASN_OBJ_ID))
     {                           // have to allow tag for a mixed definer
+        /**
+         * @bug
+         *     This logic does not properly handle OID components that
+         *     are too big to fit in an unsigned long
+         */
+        /**
+         * @bug
+         *     BER and DER prohibit leading bytes equal to 0x80.  This
+         *     logic ignores them.  Should it error out somehow?
+         */
         for (val = 0; c < e && (*c & 0x80); c++)
         {
             val = (val << 7) + (*c & 0x7F);
         }
+        /** @bug invalid read if c == e */
         val = (val << 7) + *c++;
+        /** @bug magic numbers */
+        /** @bug might overflow buffer */
         b = _putd(to, (val < 120) ? (val / 40) : 2);
+        /** @bug might overflow buffer */
         *b++ = '.';
+        /** @bug magic numbers */
+        /** @bug might overflow buffer */
         b = _putd(b, (val < 120) ? (val % 40) : val - 80);
+        /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
             lth = b - to;
             b = to;
         }
         if (c < e)
+            /** @bug might overflow buffer */
             *b++ = '.';
     }
     while (c < e)
     {
+        /**
+         * @bug
+         *     This logic does not properly handle OID components that
+         *     are too big to fit in an unsigned long
+         */
+        /** @bug invalid read if c >= e */
         for (val = 0; (*c & 0x80); c++)
         {
             val = (val << 7) + (*c & 0x7F);
         }
         val = (val << 7) + *c++;
+        /** @bug might overflow buffer */
         b = _putd(b, val);
         if (c < e)
+            /** @bug might overflow buffer */
             *b++ = '.';
+        /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
             lth += b - to;
             b = to;
         }
     }
+    /** @bug callers seem to assume that mode is a boolean */
     if ((mode & ASN_READ))
+        /** @bug might overflow buffer */
         *b++ = 0;
+    /** @bug callers seem to assume that mode is a boolean */
     return (mode & ASN_READ) ? (b - to) : ++lth;
 }

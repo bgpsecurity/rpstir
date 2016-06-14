@@ -648,6 +648,7 @@ set_cert_sigval(
     char *ski,
     sigval_state valu)
 {
+    /** @bug magic number */
     char stmt[520];
     err_code sta;
 
@@ -670,6 +671,7 @@ set_roa_sigval(
     char *ski,
     sigval_state valu)
 {
+    /** @bug magic number */
     char stmt[520];
     err_code sta;
 
@@ -2058,6 +2060,7 @@ verify_crl(
         return 0;
     }
     *chainOK = 1;
+    /** @bug ignores error code (NULL) without explanation */
     pkey = X509_get_pubkey(parent);
     x509sta = X509_CRL_verify(x, pkey);
     X509_free(parent);
@@ -3922,19 +3925,25 @@ add_roa_internal(
     unsigned int flags)
 {
     unsigned int roa_id = 0;
+    /** @bug magic number */
     char flagn[24];
+    /** @bug magic number */
     char asn[24];
+    /** @bug magic number */
     char lid[24];
+    /** @bug magic number */
     char did[24];
     err_code sta;
 
     // Buffer to hold a potentially large INSERT statement. This is
     // used to insert multiple rows per statement into
     // rpki_roa_prefix.
+    /** @bug magic number */
     size_t const multiinsert_len = 32 * 1024;
     char * multiinsert = malloc(multiinsert_len);
     if (multiinsert == NULL)
     {
+        /** @bug error message not logged */
         return ERR_SCM_NOMEM;
     }
 
@@ -4151,6 +4160,7 @@ add_roa(
     object_type typ)
 {
     struct CMS roa;             // note: roaFromFile constructs this
+    /** @bug magic number */
     char ski[60];
     char *sig = NULL;
     char certfilename[PATH_MAX];

@@ -40,7 +40,9 @@ check_sig(
     int sidsize;
     uchar *c;
     uchar *buf;
+    /** @bug magic number */
     uchar hash[40];
+    /** @bug magic number */
     uchar sid[40];
 
     // get SID and generate the sha-1 hash
@@ -49,6 +51,7 @@ check_sig(
     bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self);
     if (bsize < 0)
         return ERR_SCM_INVALSIG;;
+    /** @bug ignores error code (NULL) without explanation */
     buf = (uchar *) calloc(1, bsize);
     encode_casn(&certp->toBeSigned.subjectPublicKeyInfo.self, buf);
     sidsize = gen_hash(buf, bsize, sid, CRYPT_ALGO_SHA1);
@@ -63,6 +66,7 @@ check_sig(
     bsize = size_casn(&sigInfop->signedAttrs.self);
     if (bsize < 0)
         return ERR_SCM_INVALSIG;;
+    /** @bug ignores error code (NULL) without explanation */
     buf = (uchar *) calloc(1, bsize);
     encode_casn(&sigInfop->signedAttrs.self, buf);
     *buf = ASN_SET;
@@ -341,26 +345,42 @@ setup_cert_minmax(
     int fam)
 {
     memset(cmin, 0, MINMAXBUFSIZE);
+    /** @bug magic number */
     memset(cmax, -1, MINMAXBUFSIZE);
+    /** @bug magic number */
     if (fam == 1)
+        /** @bug magic number */
         fam = 7;
+    /** @bug magic number */
     else if (fam == 2)
+        /** @bug magic number */
         fam = 19;
     else
+        /** @bug error message not logged */
         return ERR_SCM_INVALFAM;
+    /** @bug error code ignored without explanation */
     if (tag_casn(&rpAddrRangep->self) == ASN_SEQUENCE)
     {
+        /** @bug error code ignored without explanation */
         if (size_casn(&rpAddrRangep->addressRange.min) > fam ||
+            /** @bug error code ignored without explanation */
             size_casn(&rpAddrRangep->addressRange.max) > fam)
+            /** @bug error message not logged */
             return ERR_SCM_INVALFAM;
+        /** @bug error code ignored without explanation */
         encode_casn(&rpAddrRangep->addressRange.min, cmin);
+        /** @bug error code ignored without explanation */
         encode_casn(&rpAddrRangep->addressRange.max, cmax);
     }
     else
     {
+        /** @bug error code ignored without explanation */
         if (size_casn(&rpAddrRangep->addressPrefix) > fam)
+            /** @bug error message not logged */
             return ERR_SCM_INVALFAM;
+        /** @bug error code ignored without explanation */
         encode_casn(&rpAddrRangep->addressPrefix, cmin);
+        /** @bug error code ignored without explanation */
         encode_casn(&rpAddrRangep->addressPrefix, cmax);
     }
     fill_max(cmax);
@@ -377,16 +397,26 @@ setup_roa_minmax(
     int fam)
 {
     memset(rmin, 0, MINMAXBUFSIZE);
+    /** @bug magic number */
     memset(rmax, -1, MINMAXBUFSIZE);
+    /** @bug magic number */
     if (fam == 1)
+        /** @bug magic number */
         fam = 7;
+    /** @bug magic number */
     else if (fam == 2)
+        /** @bug magic number */
         fam = 19;
     else
+        /** @bug error message not logged */
         return ERR_SCM_INVALFAM;
+    /** @bug error code ignored without explanation */
     if (size_casn(ripAddrp) > fam)
+        /** @bug error message not logged */
         return ERR_SCM_INVALIPL;
+    /** @bug error code ignored without explanation */
     encode_casn(ripAddrp, rmin);
+    /** @bug error code ignored without explanation */
     encode_casn(ripAddrp, rmax);
     fill_max(rmax);
     rmin[2] = 0;
@@ -1174,6 +1204,7 @@ roaValidate(
     // OID 1.2.240.113549.1.9.16.1.24)
     if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
                    id_routeOriginAttestation))
+        /** @bug error message not logged */
         return ERR_SCM_BADCT;
 
     struct RouteOriginAttestation *roap =
@@ -1182,6 +1213,7 @@ roaValidate(
     // check that the ROA version is right
     long val;
     if (read_casn_num(&roap->version.self, &val) != 0 || val != 0)
+        /** @bug error message not logged */
         return ERR_SCM_BADROAVER;
     // check that the asID is a non-negative integer in the range specified by RFC4893
     if (read_casn_num_max(&roap->asID, &iAS_ID) < 0)
@@ -1233,10 +1265,13 @@ roaValidate2(
     uchar cmax[MINMAXBUFSIZE];
     uchar rmin[MINMAXBUFSIZE];
     uchar rmax[MINMAXBUFSIZE];
+    /** @bug magic number */
     uchar rfam[8];
+    /** @bug magic number */
     uchar cfam[8];
     int all_extns = 0;
 
+    /** @bug error code ignored without explanation */
     struct Certificate *cert =
         (struct Certificate *)member_casn(&rp->content.signedData.certificates.
                                           self, 0);
@@ -1246,27 +1281,35 @@ roaValidate2(
     // - ignore it
     // - Or check the certificate against x (optional)
 
+    /** @bug this next comment is simply wrong */
     // ///////////////////////////////////////////////////////////////
     // We get to assume cert validity up the chain, because by virtue
     // of having been extracted, it is reputable
     // ///////////////////////////////////////////////////////////////
     iRes = 0;
     for (extp = (struct Extension *)&cert->toBeSigned.extensions.extension;
+         /** @bug error code ignored without explanation */
          extp && iRes == 0; extp = (struct Extension *)next_of(&extp->self))
     {
+        /** @bug error code ignored without explanation */
         readvsize_objid(&extp->extnID, &oidp);
         // if it's the SKID extension
+        /** @bug invalid read if oidp longer than id_subjectKeyIdentifier */
         if (!memcmp(oidp, id_subjectKeyIdentifier, strlen(oidp)))
         {
             all_extns |= HAS_EXTN_SKI;
             // Check that roa->envelope->SKI = cert->SKI
+            /** @bug error code ignored without explanation */
             if (diff_casn
                 (&rp->content.signedData.signerInfos.signerInfo.
                  sid.subjectKeyIdentifier,
                  (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
+                /** @bug error message not logged */
+                /** @bug memory leak (oidp) */
                 return ERR_SCM_INVALSKI;
         }
         // or if it's the IP addr extension
+        /** @bug invalid read if oidp longer than id_pe_ipAddrBlock */
         else if (!memcmp(oidp, id_pe_ipAddrBlock, strlen(oidp)))
         {
             all_extns |= HAS_EXTN_IPADDR;
@@ -1275,6 +1318,7 @@ roaValidate2(
             // RFC3779
             struct IPAddressFamilyA *rpAddrFamp =
                 &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
+            /** @bug error code ignored without explanation */
             read_casn(&rpAddrFamp->addressFamily, cfam);
             // for ieach of the ROA's families
             struct ROAIPAddressFamily *ripAddrFamp;
@@ -1282,22 +1326,29 @@ roaValidate2(
                  &rp->content.signedData.encapContentInfo.eContent.roa.
                  ipAddrBlocks.rOAIPAddressFamily;
                  ripAddrFamp;
+                 /** @bug error code ignored without explanation */
                  ripAddrFamp =
                  (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
             {                   // find that family in cert
+                /** @bug error code ignored without explanation */
                 read_casn(&ripAddrFamp->addressFamily, rfam);
+                /** @bug magic number */
+                /** @bug are cfam and rfam guaranteed to have len 2? */
                 while (rpAddrFamp && memcmp(cfam, rfam, 2) != 0)
                 {
+                    /** @bug error code ignored without explanation */
                     if (!
                         (rpAddrFamp =
                          (struct IPAddressFamilyA *)next_of(&rpAddrFamp->
                                                             self)))
                         iRes = ERR_SCM_INVALIPB;
                     else
+                        /** @bug error code ignored without explanation */
                         read_casn(&rpAddrFamp->addressFamily, cfam);
                 }
                 // OK, got the cert family, too f it's not inheriting
                 if (iRes == 0 &&
+                    /** @bug error code ignored without explanation */
                     tag_casn(&rpAddrFamp->ipAddressChoice.self) ==
                     ASN_SEQUENCE)
                 {               // go through all ip addresses in that ROA
@@ -1305,9 +1356,13 @@ roaValidate2(
                     struct ROAIPAddress *roaAddrp;
                     for (roaAddrp = &ripAddrFamp->addresses.rOAIPAddress;
                          roaAddrp && iRes == 0;
+                         /** @bug error code ignored without explanation */
                          roaAddrp =
                          (struct ROAIPAddress *)next_of(&roaAddrp->self))
                     {           // set up the limits
+                        /** @bug error code possibly ignored without
+                         * explanation */
+                        /** @bug why rfam[1]? */
                         if ((sta =
                              setup_roa_minmax(&roaAddrp->address, rmin, rmax,
                                               rfam[1])) < 0)
@@ -1316,6 +1371,9 @@ roaValidate2(
                         struct IPAddressOrRangeA *rpAddrRangep =
                             &rpAddrFamp->ipAddressChoice.addressesOrRanges.
                             iPAddressOrRangeA;
+                        /** @bug error code possibly ignored without
+                         * explanation */
+                        /** @bug why cfam[1]? */
                         if ((sta =
                              setup_cert_minmax(rpAddrRangep, cmin, cmax,
                                                cfam[1])) < 0)
@@ -1328,11 +1386,15 @@ roaValidate2(
                                memcmp(&cmax[2], &rmin[2],
                                       sizeof(rmin) - 2) <= 0)
                         {
+                            /** @bug brace nesting too deep */
+
+                            /** @bug error code ignored without explanation */
                             if (!(rpAddrRangep =
                                   (struct IPAddressOrRangeA *)
                                   next_of(&rpAddrRangep->self))
                                 || setup_cert_minmax(rpAddrRangep, cmin, cmax,
                                                      cfam[1]) < 0)
+                                /** @bug error message not logged */
                                 iRes = ERR_SCM_INVALIPB;
                         }
                         if (rpAddrRangep && iRes == 0)
@@ -1346,6 +1408,7 @@ roaValidate2(
                                 || (ij =
                                     memcmp(&rmax[2], &cmax[2],
                                            sizeof(cmin) - 2)) > 0)
+                                /** @bug error message not logged */
                                 break;
                         }
                     }
@@ -1357,6 +1420,7 @@ roaValidate2(
         free(oidp);
     }
     if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI))
+        /** @bug error message not logged */
         iRes = ERR_SCM_INVALIPB;
     if (iRes == 0)              // check the signature
     {

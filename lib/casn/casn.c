@@ -495,6 +495,7 @@ member_casn(
     int err = 0;
 
     if (index < 0)
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return (struct casn *)0;
     if (_clear_error(casnp) < 0)
         return (struct casn *)0;

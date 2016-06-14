@@ -62,6 +62,7 @@ int main(
     if (diff_objid(&algp->algorithm, id_sha_256WithRSAEncryption))
     {
         char oidbuf[80];
+        /** @bug error code ignored without explanation */
         read_objid(&algp->algorithm, oidbuf);
         FATAL(MSG_ALG, oidbuf);
     }

@@ -436,12 +436,14 @@ long _dumpread(
     }
     else if (type == ASN_OBJ_ID)
     {
+        /** @bug error code ignored without explanation */
         ansr = _readsize_objid(casnp, c, mode) - 1;     // for extra null
         if (mode)
             c += ansr;
         if (oidtable)
         {
             char *buf = (char *)calloc(1, ansr + 2);
+            /** @bug error code ignored without explanation */
             _readsize_objid(casnp, buf, 1);
             int diff;
             char *labelp = find_label(buf, &diff, oidtable, oidtable_size);
