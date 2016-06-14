@@ -188,40 +188,56 @@ tests/subsystem/evil-twin/ta-evil.cer: \
 	tests/subsystem/evil-twin/ta-evil.key
 tests/subsystem/evil-twin/ca-good.cer: \
 	tests/subsystem/evil-twin/ca-good.options \
-	tests/subsystem/evil-twin/ca-good.key
+	tests/subsystem/evil-twin/ca-good.key \
+	tests/subsystem/evil-twin/ta-good.cer \
+	tests/subsystem/evil-twin/ta-good.key
 tests/subsystem/evil-twin/ca-evil-invalid.cer: \
 	tests/subsystem/evil-twin/ca-evil-invalid.options \
-	tests/subsystem/evil-twin/ca-evil-invalid.key
+	tests/subsystem/evil-twin/ca-evil-invalid.key \
+	tests/subsystem/evil-twin/ta-evil.cer \
+	tests/subsystem/evil-twin/ta-evil.key
 tests/subsystem/evil-twin/ca-evil-valid.cer: \
 	tests/subsystem/evil-twin/ca-evil-valid.options \
-	tests/subsystem/evil-twin/ca-evil-valid.key
+	tests/subsystem/evil-twin/ca-evil-valid.key \
+	tests/subsystem/evil-twin/ta-evil.cer \
+	tests/subsystem/evil-twin/ta-evil.key
 tests/subsystem/evil-twin/test1-ca.cer: \
 	tests/subsystem/evil-twin/test1-ca.options \
-	tests/subsystem/evil-twin/test1-ca.key
+	tests/subsystem/evil-twin/test1-ca.key \
+	tests/subsystem/evil-twin/ca-good.cer \
+	tests/subsystem/evil-twin/ca-good.key
 tests/subsystem/evil-twin/test2-ee.cer: \
 	tests/subsystem/evil-twin/test2-ee.options \
-	tests/subsystem/evil-twin/test2-ee.key
+	tests/subsystem/evil-twin/test2-ee.key \
+	tests/subsystem/evil-twin/ca-good.cer \
+	tests/subsystem/evil-twin/ca-good.key
 tests/subsystem/evil-twin/test2-ee.roa: \
 	tests/subsystem/evil-twin/test2-ee.cer \
 	tests/subsystem/evil-twin/test2-ee.key \
 	tests/subsystem/evil-twin/test2-ee.roa.options
 tests/subsystem/evil-twin/ee-good.cer: \
 	tests/subsystem/evil-twin/ee-good.options \
-	tests/subsystem/evil-twin/ee-good.key
+	tests/subsystem/evil-twin/ee-good.key \
+	tests/subsystem/evil-twin/ta-good.cer \
+	tests/subsystem/evil-twin/ta-good.key
 tests/subsystem/evil-twin/ee-good.roa: \
 	tests/subsystem/evil-twin/ee-good.cer \
 	tests/subsystem/evil-twin/ee-good.key \
 	tests/subsystem/evil-twin/ee-good.roa.options
 tests/subsystem/evil-twin/ee-evil-invalid.cer: \
 	tests/subsystem/evil-twin/ee-evil-invalid.options \
-	tests/subsystem/evil-twin/ee-evil-invalid.key
+	tests/subsystem/evil-twin/ee-evil-invalid.key \
+	tests/subsystem/evil-twin/ta-evil.cer \
+	tests/subsystem/evil-twin/ta-evil.key
 tests/subsystem/evil-twin/ee-evil-invalid.roa: \
 	tests/subsystem/evil-twin/ee-evil-invalid.cer \
 	tests/subsystem/evil-twin/ee-evil-invalid.key \
 	tests/subsystem/evil-twin/ee-evil-invalid.roa.options
 tests/subsystem/evil-twin/ee-evil-valid.cer: \
 	tests/subsystem/evil-twin/ee-evil-valid.options \
-	tests/subsystem/evil-twin/ee-evil-valid.key
+	tests/subsystem/evil-twin/ee-evil-valid.key \
+	tests/subsystem/evil-twin/ta-evil.cer \
+	tests/subsystem/evil-twin/ta-evil.key
 tests/subsystem/evil-twin/ee-evil-valid.roa: \
 	tests/subsystem/evil-twin/ee-evil-valid.cer \
 	tests/subsystem/evil-twin/ee-evil-valid.key \
