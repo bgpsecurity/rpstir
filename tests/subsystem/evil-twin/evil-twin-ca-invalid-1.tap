@@ -22,15 +22,8 @@
 #
 # The five objects above are added to the database one at a time.  To
 # ensure that the order in which the objects are added does not affect
-# the outcome, all permutations are tried (the database is scrubbed
-# between permutations).  The result looks like this:
-#
-#   1. ta-good.cer ta-evil.cer ca-good.cer ca-evil.cer test1-ca.cer
-#   2. ta-good.cer ta-evil.cer ca-good.cer test1-ca.cer ca-evil.cer
-#   3. ta-good.cer ta-evil.cer ca-evil.cer ca-good.cer test1-ca.cer
-#   4. ta-good.cer ta-evil.cer ca-evil.cer test1-ca.cer ca-good.cer
-#   ...
-#   120. test1-ca.cer ca-evil.cer ca-good.cer ta-evil.cer ta-good.cer
+# the outcome, all interesting permutations are tried (the database is
+# scrubbed between permutations).
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
