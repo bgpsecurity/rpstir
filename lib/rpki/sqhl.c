@@ -3659,7 +3659,7 @@ add_crl(
         ", outfull=\"%s\", id=%u, utrust=%i, typ=%i)",
         scmp, conp, outfile, outfull, id, utrust, typ);
 
-    crl_fields *cf;
+    crl_fields *cf = NULL;
     X509_CRL *x = NULL;
     int crlsta = 0;
     err_code sta = 0;
@@ -3691,10 +3691,6 @@ add_crl(
     cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, goodoids);
     if (cf == NULL || x == NULL)
     {
-        if (cf != NULL)
-            freecrf(cf);
-        if (x != NULL)
-            X509_CRL_free(x);
         goto done;
     }
     cf->dirid = id;
@@ -3731,10 +3727,10 @@ add_crl(
                                   cf->fields[CRF_FIELD_AKI], u);
         }
     }
-    freecrf(cf);
-    X509_CRL_free(x);
 
 done:
+    freecrf(cf);
+    X509_CRL_free(x);
     LOG(LOG_DEBUG, "add_crl() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
