@@ -2030,14 +2030,14 @@ done:
 static err_code
 verify_crl(
     scmcon *conp,
-    X509_CRL *x,
+    X509_CRL *crl,
     const char *aki,
     const char *issuer,
     int *chainOK)
 {
     LOG(LOG_DEBUG, "verify_crl("
-        "conp=%p, x=%p, aki=\"%s\", issuer=\"%s\", chainOK=%p)",
-        conp, x, aki, issuer, chainOK);
+        "conp=%p, crl=%p, aki=\"%s\", issuer=\"%s\", chainOK=%p)",
+        conp, crl, aki, issuer, chainOK);
 
     err_code sta = 0;
     int x509sta = 0;
@@ -2067,7 +2067,7 @@ verify_crl(
     *chainOK = 1;
     /** @bug ignores error code (NULL) without explanation */
     pkey = X509_get_pubkey(parent);
-    x509sta = X509_CRL_verify(x, pkey);
+    x509sta = X509_CRL_verify(crl, pkey);
     X509_free(parent);
     EVP_PKEY_free(pkey);
 
@@ -2317,7 +2317,7 @@ verifyChildCRL(
         conp, s, idx);
 
     crl_fields *cf;
-    X509_CRL *x = NULL;
+    X509_CRL *crl = NULL;
     int crlsta = 0;
     err_code sta = 0;
     unsigned int i;
@@ -2337,13 +2337,13 @@ verifyChildCRL(
               (char *)s->vec[1].valptr);
     typ = infer_filetype(pathname);
     cf = crl2fields((char *)s->vec[1].valptr, pathname, typ,
-                    &x, &sta, &crlsta, goodoids);
+                    &crl, &sta, &crlsta, goodoids);
     if (cf == NULL)
     {
         goto done;
     }
     /** @bug ignores chainOK without explanation */
-    sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
+    sta = verify_crl(conp, crl, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &chainOK);
     id = *((unsigned int *)(s->vec[2].valptr));
     // if invalid, delete it
@@ -3660,7 +3660,7 @@ add_crl(
         scmp, conp, outfile, outfull, id, utrust, typ);
 
     crl_fields *cf = NULL;
-    X509_CRL *x = NULL;
+    X509_CRL *xcrl = NULL;
     int crlsta = 0;
     err_code sta = 0;
     unsigned int i;
@@ -3688,15 +3688,15 @@ add_crl(
     }
     delete_casn(&crl.self);
 
-    cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, goodoids);
-    if (cf == NULL || x == NULL)
+    cf = crl2fields(outfile, outfull, typ, &xcrl, &sta, &crlsta, goodoids);
+    if (cf == NULL || xcrl == NULL)
     {
         goto done;
     }
     cf->dirid = id;
 
     // first verify the CRL
-    sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
+    sta = verify_crl(conp, xcrl, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &chainOK);
     if (sta)
     {
@@ -3738,7 +3738,7 @@ add_crl(
 
 done:
     freecrf(cf);
-    X509_CRL_free(x);
+    X509_CRL_free(xcrl);
     LOG(LOG_DEBUG, "add_crl() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
