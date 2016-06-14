@@ -3694,23 +3694,31 @@ add_crl(
         goto done;
     }
     cf->dirid = id;
+
     // first verify the CRL
     sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &chainOK);
+    if (sta)
+    {
+        goto done;
+    }
+
     // then add the CRL
-    if (sta == 0)
+    sta = addStateToFlags(&cf->flags, chainOK,
+                          cf->fields[CRF_FIELD_FILENAME], outfull, scmp,
+                          conp);
+    if (sta)
     {
-        sta =
-            addStateToFlags(&cf->flags, chainOK,
-                            cf->fields[CRF_FIELD_FILENAME], outfull, scmp,
-                            conp);
+        goto done;
     }
-    if (sta == 0)
+    sta = add_crl_internal(scmp, conp, cf);
+    if (sta)
     {
-        sta = add_crl_internal(scmp, conp, cf);
+        goto done;
     }
+
     // and do the revocations
-    if ((sta == 0) && chainOK)
+    if (chainOK)
     {
         LOG(LOG_DEBUG, "CRL has %u entries", cf->snlen);
         uint8_t *u = (uint8_t *) cf->snlist;
