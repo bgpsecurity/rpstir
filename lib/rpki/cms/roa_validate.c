@@ -1191,6 +1191,8 @@ err_code
 roaValidate(
     struct CMS *rp)
 {
+    LOG(LOG_DEBUG, "roaValidate(rp=%p)", rp);
+
     err_code sta = 0;
     intmax_t iAS_ID = 0;
 
@@ -1198,7 +1200,9 @@ roaValidate(
     // Validate ROA constants
     // ///////////////////////////////////////////////////////////
     if ((sta = cmsValidate(rp)) < 0)
-        return sta;
+    {
+        goto done;
+    }
 
     // check that eContentType is routeOriginAttestation (=
     // OID 1.2.240.113549.1.9.16.1.24)
@@ -1206,7 +1210,8 @@ roaValidate(
                    id_routeOriginAttestation))
     {
         LOG(LOG_ERR, "ROA's eContentType is not routeOriginaAttestation");
-        return ERR_SCM_BADCT;
+        sta = ERR_SCM_BADCT;
+        goto done;
     }
 
     struct RouteOriginAttestation *roap =
@@ -1217,29 +1222,34 @@ roaValidate(
     if (read_casn_num(&roap->version.self, &val) != 0)
     {
         LOG(LOG_ERR, "unable to read ROA version number");
-        return ERR_SCM_BADROAVER;
+        sta = ERR_SCM_BADROAVER;
+        goto done;
     }
     if (val != 0)
     {
         LOG(LOG_ERR, "ROA's version number is not 0");
-        return ERR_SCM_BADROAVER;
+        sta = ERR_SCM_BADROAVER;
+        goto done;
     }
     // check that the asID is a non-negative integer in the range
     // specified by RFC4893
     if (read_casn_num_max(&roap->asID, &iAS_ID) < 0)
     {
         LOG(LOG_ERR, "error reading ROA's AS number");
-        return ERR_SCM_INVALASID;
+        sta = ERR_SCM_INVALASID;
+        goto done;
     }
     else if (iAS_ID < 0)
     {
         LOG(LOG_ERR, "ROA has negative AS number (%" PRIdMAX ")", iAS_ID);
-        return ERR_SCM_INVALASID;
+        sta = ERR_SCM_INVALASID;
+        goto done;
     }
     else if (iAS_ID > 0xffffffffLL)
     {
         LOG(LOG_ERR, "ROA's AS number is too large (%" PRIdMAX ")", iAS_ID);
-        return ERR_SCM_INVALASID;
+        sta = ERR_SCM_INVALASID;
+        goto done;
     }
     struct Certificate *certp =
         &rp->content.signedData.certificates.certificate;
@@ -1250,11 +1260,19 @@ roaValidate(
     struct ROAIPAddrBlocks *roaIPAddrBlocksp =
         &rp->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks;
     if ((sta = validateIPContents(roaIPAddrBlocksp)) < 0)
-        return sta;
+    {
+        goto done;
+    }
     // and that they are within the cert's resources
     if ((sta = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
-        return sta;
-    return 0;
+    {
+        goto done;
+    }
+
+done:
+    LOG(LOG_DEBUG, "roaValidate() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 #define HAS_EXTN_SKI 0x01
@@ -1265,6 +1283,8 @@ err_code
 roaValidate2(
     struct CMS *rp)
 {
+    LOG(LOG_DEBUG, "roaValidate2(rp=%p)", rp);
+
     err_code sta = 0;
     long ii;
     long ij;
@@ -1448,6 +1468,8 @@ roaValidate2(
 
 done:
     free(oidp);
+    LOG(LOG_DEBUG, "roaValidate2() returning %s: %s",
+        err2name(sta), err2string(sta));
     return sta;
 }
 
