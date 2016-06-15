@@ -3943,7 +3943,8 @@ add_roa_internal(
     char * multiinsert = malloc(multiinsert_len);
     if (multiinsert == NULL)
     {
-        /** @bug error message not logged */
+        LOG(LOG_ERR, "unable to allocate %zu bytes of memory",
+            multiinsert_len);
         return ERR_SCM_NOMEM;
     }
 

@@ -1204,17 +1204,26 @@ roaValidate(
     // OID 1.2.240.113549.1.9.16.1.24)
     if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
                    id_routeOriginAttestation))
-        /** @bug error message not logged */
+    {
+        LOG(LOG_ERR, "ROA's eContentType is not routeOriginaAttestation");
         return ERR_SCM_BADCT;
+    }
 
     struct RouteOriginAttestation *roap =
         &rp->content.signedData.encapContentInfo.eContent.roa;
 
     // check that the ROA version is right
     long val;
-    if (read_casn_num(&roap->version.self, &val) != 0 || val != 0)
-        /** @bug error message not logged */
+    if (read_casn_num(&roap->version.self, &val) != 0)
+    {
+        LOG(LOG_ERR, "unable to read ROA version number");
         return ERR_SCM_BADROAVER;
+    }
+    if (val != 0)
+    {
+        LOG(LOG_ERR, "ROA's version number is not 0");
+        return ERR_SCM_BADROAVER;
+    }
     // check that the asID is a non-negative integer in the range
     // specified by RFC4893
     if (read_casn_num_max(&roap->asID, &iAS_ID) < 0)
