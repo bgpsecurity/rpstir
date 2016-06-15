@@ -543,8 +543,8 @@ cleanup:
 static sigval_state
 get_cert_sigval(
     scmcon *conp,
-    char *subj,
-    char *ski)
+    const char *subj,
+    const char *ski)
 {
     static scmsrcha *sigsrch = NULL;
     unsigned int *svalp;
@@ -582,7 +582,7 @@ get_cert_sigval(
 static sigval_state
 get_roa_sigval(
     scmcon *conp,
-    char *ski)
+    const char *ski)
 {
     static scmsrcha *sigsrch = NULL;
     unsigned int *svalp;
@@ -620,8 +620,8 @@ static sigval_state
 get_sigval(
     scmcon *conp,
     object_type typ,
-    char *item1,
-    char *item2)
+    const char *item1,
+    const char *item2)
 {
     switch (typ)
     {
@@ -644,8 +644,8 @@ get_sigval(
 static err_code
 set_cert_sigval(
     scmcon *conp,
-    char *subj,
-    char *ski,
+    const char *subj,
+    const char *ski,
     sigval_state valu)
 {
     /** @bug magic number */
@@ -668,7 +668,7 @@ set_cert_sigval(
 static err_code
 set_roa_sigval(
     scmcon *conp,
-    char *ski,
+    const char *ski,
     sigval_state valu)
 {
     /** @bug magic number */
@@ -690,8 +690,8 @@ static err_code
 set_sigval(
     scmcon *conp,
     object_type typ,
-    char *item1,
-    char *item2,
+    const char *item1,
+    const char *item2,
     sigval_state valu)
 {
     err_code sta = ERR_SCM_UNSPECIFIED;
