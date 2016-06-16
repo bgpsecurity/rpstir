@@ -17,31 +17,39 @@ Cambridge, Ma. 02138
 #include <stdlib.h>
 #include "casn.h"
 
-extern struct casn *_skip_casn(
+extern struct casn *
+_skip_casn(
     struct casn *,
     int);
-extern int _casn_obj_err(
+extern int
+_casn_obj_err(
     struct casn *,
-    int),
-    _clear_error(
-    struct casn *),
-    _readsize_objid(
+    int);
+extern int
+_clear_error(
+    struct casn *);
+extern int
+_readsize_objid(
     struct casn *casnp,
     char *to,
     int mode);
 
-static char *cat(
+static char *
+cat(
     char *,
     char *);
-static int newline(
+static int
+newline(
     char *,
     int);
-static long _dumpread(
+static long
+_dumpread(
     struct casn *casnp,
     char *to,
     int offset,
-    int mode),
-    _dumpsize(
+    int mode);
+static long
+_dumpsize(
     struct casn *casnp,
     char *to,
     int offset,
@@ -50,7 +58,8 @@ static long _dumpread(
 struct oidtable *oidtable;
 int oidtable_size;
 
-int _dump_tag(
+int
+_dump_tag(
     int tag,
     char *to,
     int offset,

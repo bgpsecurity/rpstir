@@ -17,27 +17,35 @@ Cambridge, Ma. 02138
 
 #define ASN_READ 1              // modes for encode & read
 
-extern int _casn_obj_err(
+extern int
+_casn_obj_err(
     struct casn *,
-    int),
-    _check_enum(
-    struct casn **casnpp),
-    _clear_error(
-    struct casn *),
-    _write_enum(
-    struct casn *casnp),
-    _write_objid(
+    int);
+extern int
+_check_enum(
+    struct casn **casnpp);
+extern int
+_clear_error(
+    struct casn *);
+extern int
+_write_enum(
+    struct casn *casnp);
+extern int
+_write_objid(
     struct casn *casnp,
     const char *from);
 
-extern char *_putd(
+extern char *
+_putd(
     char *to,
     long val);
 
-extern void *_free_it(
+extern void *
+_free_it(
     void *);
 
-int _readsize_objid(
+int
+_readsize_objid(
     struct casn *casnp,
     char *to,
     int mode);
@@ -46,9 +54,9 @@ int diff_objid(
     struct casn *casnp,
     const char *objid)
 {
-    int ansr,
-        lth,
-        lth2;
+    int ansr;
+    int lth;
+    int lth2;
     char *c;
     const char *c_const;
 
@@ -123,8 +131,8 @@ int _readsize_objid(
     int mode)
 {
     int lth;
-    uchar *c = casnp->startp,
-        *e = &c[casnp->lth];
+    uchar *c = casnp->startp;
+    uchar *e = &c[casnp->lth];
     char *b;
     ulong val;
 

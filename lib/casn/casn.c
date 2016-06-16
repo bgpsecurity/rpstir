@@ -1722,17 +1722,17 @@ _readsize(
     uchar *to,
     int mode)
 {
-    uchar bb,
-       *b,
-       *c,
-        buf[8];
-    int i,
-        lth,
-        num,
-        of;
+    uchar bb;
+    uchar *b;
+    uchar *c;
+    uchar buf[8];
+    int i;
+    int lth;
+    int num;
+    int of;
     int64_t secs = 0;
-    struct casn *tcasnp,
-       *ch_casnp;
+    struct casn *tcasnp;
+    struct casn *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;
 #endif
@@ -1741,10 +1741,11 @@ _readsize(
         uchar *c;
         struct casn *casnp;
         struct set_struct *nextp;
-    }  *sstp1,
-       *sstp2,
-       *sstp0,
-       *tablep;
+    };
+    struct set_struct *sstp1;
+    struct set_struct *sstp2;
+    struct set_struct *sstp0;
+    struct set_struct *tablep;
 
     if (casnp->level > 0 && (_go_up(casnp)->flags & ASN_OF_FLAG) &&
         !casnp->ptr)
@@ -2110,9 +2111,9 @@ void
 _stuff_num(
     int count)
 {
-    char *a,
-       *b,
-       *c;
+    char *a;
+    char *b;
+    char *c;
 
     if ((c = casn_err_struct.asn_map_string))
     {

@@ -31,17 +31,17 @@ check_sig(
     struct CMS *rp,
     struct Certificate *certp)
 {
-    CRYPT_CONTEXT pubkeyContext,
-        hashContext;
+    CRYPT_CONTEXT pubkeyContext;
+    CRYPT_CONTEXT hashContext;
     CRYPT_PKCINFO_RSA rsakey;
     struct RSAPubKey rsapubkey;
-    int bsize,
-        ret,
-        sidsize;
-    uchar *c,
-       *buf,
-        hash[40],
-        sid[40];
+    int bsize;
+    int ret;
+    int sidsize;
+    uchar *c;
+    uchar *buf;
+    uchar hash[40];
+    uchar sid[40];
 
     // get SID and generate the sha-1 hash
     // (needed for cryptlib; see below)
