@@ -47,7 +47,7 @@ check_sig(
 
     // get SID and generate the sha-1 hash
     // (needed for cryptlib; see below)
-    memset(sid, 0, 40);
+    memset(sid, 0, sizeof(sid));
     bsize = size_casn(&certp->toBeSigned.subjectPublicKeyInfo.self);
     if (bsize < 0)
         return ERR_SCM_INVALSIG;;
@@ -62,7 +62,7 @@ check_sig(
     struct SignerInfo *sigInfop =
         (struct SignerInfo *)member_casn(&rp->content.signedData.signerInfos.
                                          self, 0);
-    memset(hash, 0, 40);
+    memset(hash, 0, sizeof(hash));
     bsize = size_casn(&sigInfop->signedAttrs.self);
     if (bsize < 0)
         return ERR_SCM_INVALSIG;;
