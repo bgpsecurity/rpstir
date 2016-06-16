@@ -494,7 +494,6 @@ member_casn(
     struct casn *tcasnp;
     int err = 0;
 
-    // if (index < 0) return ASN_OF_BOUNDS_ERR;
     if (index < 0)
         return (struct casn *)0;
     if (_clear_error(casnp) < 0)

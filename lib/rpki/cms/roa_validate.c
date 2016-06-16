@@ -34,7 +34,6 @@ check_sig(
     CRYPT_CONTEXT pubkeyContext,
         hashContext;
     CRYPT_PKCINFO_RSA rsakey;
-    // CRYPT_KEYSET cryptKeyset;
     struct RSAPubKey rsapubkey;
     int bsize,
         ret,
@@ -1240,9 +1239,6 @@ roaValidate2(
     uchar cfam[8];
     int all_extns = 0;
 
-    // roaValidate() is an independent function; the caller must call it
-    // if the caller wants semantic validation
-    // if (roaValidate(r) == FALSE) return FALSE;
     struct Certificate *cert =
         (struct Certificate *)member_casn(&rp->content.signedData.certificates.
                                           self, 0);
