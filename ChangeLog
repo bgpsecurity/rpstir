@@ -1,10 +1,19 @@
-0.12, not yet released
+0.12, released 2016-06-16
 
+	* Fixed a bug where an "evil twin" certificate (maliciously
+	  crafted certificate that uses the same public key, SKI, and
+	  issuer as another valid certificate) could cause RPSTIR to
+	  treat valid objects as invalid.
+	* Fixed some potentially exploitable buffer overflow bugs.
+	* Fixed unsafe use of snprintf().
+	* Compatibility improvements for MySQL 5.7.
+	* The undocumented, incomplete, and probably buggy support for
+	  LTAM has been removed.  (draft-ietf-sidr-ltamgmt has been
+	  deprecated in favor of draft-ietf-sidr-slurm.)
 	* Miscellaneous code clean-up and minor bug fixes.
-	* Adjust README to instruct users to build a shared version of
-	  OpenSSL.
-	* Bump copyright year to 2016.
-	* Fix unsafe use of snprintf().
+	* Adjusted README to instruct users to build a shared version
+	  of OpenSSL.
+	* Bumped copyright year to 2016.
 	* A compiler with C99 support is now required.
 	* Build system improvements.  Autoconf 2.60 is now required.
 	* Test suite improvements.
