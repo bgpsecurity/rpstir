@@ -90,10 +90,10 @@ SELECT COUNT(*) FROM `rpki_cert` WHERE (`flags` & 0xe00) != 0;
 EOF
     ) || exit 1
     [ 0 -eq "${ltam_certs}" ] || fatal "Your database has\
- ${ltam_certs} certificate(s) with an LTAM flag set, but this version\
- of @PACKAGE_NAME@ no longer supports LTAM.  Unable to upgrade\
- without potentially incorrect results.  Either downgrade to 0.10 or\
- re-initialize the database via @PACKAGE_NAME@-initialize."
+ ${ltam_certs} certificate(s) with an LTAM flag set, but\
+ @PACKAGE_NAME@ v0.12 and newer no longer supports LTAM.  Unable to\
+ upgrade without potentially incorrect results.  Either downgrade to\
+ v0.11 or re-initialize the database via @PACKAGE_NAME@-initialize."
 
     # v0.12 eliminated the SCM_FLAG_NOCHAIN flag.  Any record with
     # that flag set should be considered invalid instead.
