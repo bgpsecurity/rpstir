@@ -1201,8 +1201,6 @@ roaValidate(
     }
     struct Certificate *certp =
         &rp->content.signedData.certificates.certificate;
-    if (!certp)
-        return ERR_SCM_BADNUMCERTS;     // XXX: this never happens
 
     // NOTE: ROA asID need not be within EE cert's AS allocation!
 
