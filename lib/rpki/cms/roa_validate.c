@@ -1215,7 +1215,8 @@ roaValidate(
     if (read_casn_num(&roap->version.self, &val) != 0 || val != 0)
         /** @bug error message not logged */
         return ERR_SCM_BADROAVER;
-    // check that the asID is a non-negative integer in the range specified by RFC4893
+    // check that the asID is a non-negative integer in the range
+    // specified by RFC4893
     if (read_casn_num_max(&roap->asID, &iAS_ID) < 0)
     {
         LOG(LOG_ERR, "error reading ROA's AS number");
@@ -1313,9 +1314,8 @@ roaValidate2(
         else if (!memcmp(oidp, id_pe_ipAddrBlock, strlen(oidp)))
         {
             all_extns |= HAS_EXTN_IPADDR;
-            // start at first family in cert. NOTE order must be v4 then v6,
-            // per
-            // RFC3779
+            // start at first family in cert. NOTE order must be v4
+            // then v6, per RFC3779
             struct IPAddressFamilyA *rpAddrFamp =
                 &extp->extnValue.ipAddressBlock.iPAddressFamilyA;
             /** @bug error code ignored without explanation */
@@ -1329,7 +1329,8 @@ roaValidate2(
                  /** @bug error code ignored without explanation */
                  ripAddrFamp =
                  (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
-            {                   // find that family in cert
+            {
+                // find that family in cert
                 /** @bug error code ignored without explanation */
                 read_casn(&ripAddrFamp->addressFamily, rfam);
                 /** @bug magic number */
@@ -1351,15 +1352,16 @@ roaValidate2(
                     /** @bug error code ignored without explanation */
                     tag_casn(&rpAddrFamp->ipAddressChoice.self) ==
                     ASN_SEQUENCE)
-                {               // go through all ip addresses in that ROA
-                                // family
+                {
+                    // go through all ip addresses in that ROA family
                     struct ROAIPAddress *roaAddrp;
                     for (roaAddrp = &ripAddrFamp->addresses.rOAIPAddress;
                          roaAddrp && iRes == 0;
                          /** @bug error code ignored without explanation */
                          roaAddrp =
                          (struct ROAIPAddress *)next_of(&roaAddrp->self))
-                    {           // set up the limits
+                    {
+                        // set up the limits
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why rfam[1]? */
@@ -1378,10 +1380,9 @@ roaValidate2(
                              setup_cert_minmax(rpAddrRangep, cmin, cmax,
                                                cfam[1])) < 0)
                             iRes = sta;
-                        // go through cert addresses until a high enough one
-                        // is found
-                        // i.e. skip cert addresses whose max is below roa's
-                        // min
+                        // go through cert addresses until a high
+                        // enough one is found i.e. skip cert
+                        // addresses whose max is below roa's min
                         while (iRes == 0 && rpAddrRangep &&
                                memcmp(&cmax[2], &rmin[2],
                                       sizeof(rmin) - 2) <= 0)
@@ -1398,10 +1399,10 @@ roaValidate2(
                                 iRes = ERR_SCM_INVALIPB;
                         }
                         if (rpAddrRangep && iRes == 0)
-                        {       // now at cert values at or beyond roa
-                            // if roa min is below cert min OR roa max beyond
-                            // cert max,
-                            // bail out
+                        {
+                            // now at cert values at or beyond roa.
+                            // if roa min is below cert min OR roa max
+                            // beyond cert max, bail out
                             if ((ii =
                                  memcmp(&rmin[2], &cmin[2],
                                         sizeof(cmin) - 2)) < 0
@@ -1422,8 +1423,9 @@ roaValidate2(
     if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI))
         /** @bug error message not logged */
         iRes = ERR_SCM_INVALIPB;
-    if (iRes == 0)              // check the signature
+    if (iRes == 0)
     {
+        // check the signature
         iRes = check_sig(rp, cert);
     }
     return iRes;

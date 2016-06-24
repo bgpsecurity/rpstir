@@ -4159,7 +4159,8 @@ add_roa(
     int utrust,
     object_type typ)
 {
-    struct CMS roa;             // note: roaFromFile constructs this
+    // note: roaFromFile constructs this
+    struct CMS roa;
     /** @bug magic number */
     char ski[60];
     char *sig = NULL;
@@ -4200,7 +4201,8 @@ add_roa(
         goto done;
     cert_added = 1;
 
-    asid = roaAS_ID(&roa);  /* it's OK if this comes back zero */
+    // it's OK if this comes back zero
+    asid = roaAS_ID(&roa);
 
     // signature NOTE: this does not calloc, only points
     if ((bsig = roaSignature(&roa, &bsiglen)) == NULL || bsiglen < 0)

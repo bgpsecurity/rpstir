@@ -1972,7 +1972,8 @@ check_filled_default(
     {
         if (((casnp->flags & ASN_FILLED_FLAG)))
         {
-            struct casn *xcasnp = &casnp[2];    // the default value
+            // the default value
+            struct casn *xcasnp = &casnp[2];
             if (xcasnp->lth != casnp->lth)
                 return 0;
             if (!memcmp(xcasnp->startp, casnp->startp, casnp->lth))
@@ -1982,36 +1983,37 @@ check_filled_default(
     return 0;
 }
 
+// handles default cases at level above _readsize()
 int
 _readvsize(
     struct casn *casnp,
     uchar *to,
     int mode)
-{                               // handles default cases at level above
-                                // _readsize()
+{
     int ansr = 0;
     struct casn *ch_casnp = NULL;
 
     if (_clear_error(casnp) < 0)
         return -1;
     if (casnp->type == ASN_CHOICE)
-    {                           // anything chosen?
+    {
+        // anything chosen?
         if (!(ch_casnp = _find_filled_or_chosen(casnp, &ansr)))
             return _casn_obj_err(casnp, ansr);
     }
     // is it (or a chosen item below it) the default value?
-    if (check_filled_default(casnp) > 0 || (ch_casnp && check_filled_default(ch_casnp)))        // if
-                                                                                                // so,
-                                                                                                // skip
-                                                                                                // it
+    if (check_filled_default(casnp) > 0
+        || (ch_casnp && check_filled_default(ch_casnp)))
+        // if so, skip it
         return 0;
-    //
     if (ch_casnp)
         casnp = ch_casnp;
     if ((ansr = _readsize(casnp, to, mode)) > 0)
-    {                           // pure read of bit-string-defined-by
+    {
+        // pure read of bit-string-defined-by
         if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
-            memmove(to, &to[1], --ansr);        // shift to left 1 byte
+            // shift to left 1 byte
+            memmove(to, &to[1], --ansr);
     }
     return ansr;
 }

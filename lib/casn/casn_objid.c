@@ -15,7 +15,8 @@ Cambridge, Ma. 02138
 
 #include "casn.h"
 
-#define ASN_READ 1              // modes for encode & read
+// modes for encode & read
+#define ASN_READ 1
 
 extern int
 _casn_obj_err(
@@ -61,7 +62,8 @@ int diff_objid(
     const char *c_const;
 
     for (c_const = objid; *c_const; c_const++);
-    lth2 = c_const - objid + 1;       // include terminal null, as read_objid does
+    // include terminal null, as read_objid does
+    lth2 = c_const - objid + 1;
     if ((lth = vsize_objid(casnp)) <= 0)
         return -2;
     c = dbcalloc(1, lth);
@@ -144,9 +146,11 @@ int _readsize_objid(
         return lth;
     if (!casnp->lth)
         return 0;
-    if (casnp->type == ASN_OBJ_ID ||    // elements 1 & 2
+    // elements 1 & 2
+    if (casnp->type == ASN_OBJ_ID ||
+        // have to allow tag for a mixed definer
         (casnp->type == ASN_ANY && casnp->tag == ASN_OBJ_ID))
-    {                           // have to allow tag for a mixed definer
+    {
         /**
          * @bug
          *     This logic does not properly handle OID components that

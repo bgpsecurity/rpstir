@@ -436,8 +436,9 @@ long _dumpread(
     }
     else if (type == ASN_OBJ_ID)
     {
+        // subtract one for extra null
         /** @bug error code ignored without explanation */
-        ansr = _readsize_objid(casnp, c, mode) - 1;     // for extra null
+        ansr = _readsize_objid(casnp, c, mode) - 1;
         if (mode)
             c += ansr;
         if (oidtable)
