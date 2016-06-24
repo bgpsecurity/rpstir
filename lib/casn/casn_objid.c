@@ -134,14 +134,12 @@ int _readsize_objid(
     char *to,
     int mode)
 {
-    int lth;
+    int lth = 0;
     uchar *c = casnp->startp;
     uchar *e = &c[casnp->lth];
-    char *b;
+    char *b = to;
     ulong val;
 
-    b = to;
-    lth = 0;
     if (casnp->tag == ASN_NOTYPE && (lth = _check_enum(&casnp)) <= 0)
         return lth;
     if (!casnp->lth)

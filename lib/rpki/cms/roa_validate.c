@@ -1265,7 +1265,7 @@ err_code
 roaValidate2(
     struct CMS *rp)
 {
-    err_code iRes;
+    err_code iRes = 0;
     err_code sta;
     long ii;
     long ij;
@@ -1296,7 +1296,6 @@ roaValidate2(
     // We get to assume cert validity up the chain, because by virtue
     // of having been extracted, it is reputable
     // ///////////////////////////////////////////////////////////////
-    iRes = 0;
     for (extp = (struct Extension *)&cert->toBeSigned.extensions.extension;
          extp && iRes == 0;
          /** @bug error code ignored without explanation */
