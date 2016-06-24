@@ -1270,7 +1270,7 @@ roaValidate2(
     long ii;
     long ij;
     struct Extension *extp;
-    char *oidp;
+    char *oidp = NULL;
     uchar cmin[MINMAXBUFSIZE];
     uchar cmax[MINMAXBUFSIZE];
     uchar rmin[MINMAXBUFSIZE];
@@ -1301,6 +1301,10 @@ roaValidate2(
          /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self))
     {
+        // free oidp from prev iteration (or no-op if first
+        // iteration).  oidp malloc()ed during last iteration will be
+        // free()d just before returning.
+        free(oidp);
         /** @bug error code ignored without explanation */
         readvsize_objid(&extp->extnID, &oidp);
         // if it's the SKID extension
@@ -1313,9 +1317,11 @@ roaValidate2(
             if (diff_casn(
                     &rd->signerInfos.signerInfo.sid.subjectKeyIdentifier,
                     (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
+            {
                 /** @bug error message not logged */
-                /** @bug memory leak (oidp) */
-                return ERR_SCM_INVALSKI;
+                iRes = ERR_SCM_INVALSKI;
+                goto done;
+            }
         }
         // or if it's the IP addr extension
         /** @bug invalid read if oidp longer than id_pe_ipAddrBlock */
@@ -1420,7 +1426,6 @@ roaValidate2(
                 }
             }
         }
-        free(oidp);
     }
     if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI))
         /** @bug error message not logged */
@@ -1430,6 +1435,8 @@ roaValidate2(
         // check the signature
         iRes = check_sig(rp, cert);
     }
+done:
+    free(oidp);
     return iRes;
 }
 
