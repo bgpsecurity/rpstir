@@ -1298,8 +1298,9 @@ roaValidate2(
     // ///////////////////////////////////////////////////////////////
     iRes = 0;
     for (extp = (struct Extension *)&cert->toBeSigned.extensions.extension;
+         extp && iRes == 0;
          /** @bug error code ignored without explanation */
-         extp && iRes == 0; extp = (struct Extension *)next_of(&extp->self))
+         extp = (struct Extension *)next_of(&extp->self))
     {
         /** @bug error code ignored without explanation */
         readvsize_objid(&extp->extnID, &oidp);
@@ -1310,9 +1311,9 @@ roaValidate2(
             all_extns |= HAS_EXTN_SKI;
             // Check that roa->envelope->SKI = cert->SKI
             /** @bug error code ignored without explanation */
-            if (diff_casn
-                (&rd->signerInfos.signerInfo.sid.subjectKeyIdentifier,
-                 (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
+            if (diff_casn(
+                    &rd->signerInfos.signerInfo.sid.subjectKeyIdentifier,
+                    (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
                 /** @bug error message not logged */
                 /** @bug memory leak (oidp) */
                 return ERR_SCM_INVALSKI;
@@ -1335,8 +1336,8 @@ roaValidate2(
             for (ripAddrFamp = &roa->ipAddrBlocks.rOAIPAddressFamily;
                  ripAddrFamp;
                  /** @bug error code ignored without explanation */
-                 ripAddrFamp =
-                 (struct ROAIPAddressFamily *)next_of(&ripAddrFamp->self))
+                 ripAddrFamp = (struct ROAIPAddressFamily *)next_of(
+                     &ripAddrFamp->self))
             {
                 // find that family in cert
                 /** @bug error code ignored without explanation */
@@ -1346,10 +1347,8 @@ roaValidate2(
                 while (rpAddrFamp && memcmp(cfam, rfam, 2) != 0)
                 {
                     /** @bug error code ignored without explanation */
-                    if (!
-                        (rpAddrFamp =
-                         (struct IPAddressFamilyA *)next_of(&rpAddrFamp->
-                                                            self)))
+                    if (!(rpAddrFamp = (struct IPAddressFamilyA *)next_of(
+                              &rpAddrFamp->self)))
                         iRes = ERR_SCM_INVALIPB;
                     else
                         /** @bug error code ignored without explanation */
@@ -1358,24 +1357,22 @@ roaValidate2(
                 // OK, got the cert family, too f it's not inheriting
                 if (iRes == 0 &&
                     /** @bug error code ignored without explanation */
-                    tag_casn(&rpAddrFamp->ipAddressChoice.self) ==
-                    ASN_SEQUENCE)
+                    tag_casn(&rpAddrFamp->ipAddressChoice.self) == ASN_SEQUENCE)
                 {
                     // go through all ip addresses in that ROA family
                     struct ROAIPAddress *roaAddrp;
                     for (roaAddrp = &ripAddrFamp->addresses.rOAIPAddress;
                          roaAddrp && iRes == 0;
                          /** @bug error code ignored without explanation */
-                         roaAddrp =
-                         (struct ROAIPAddress *)next_of(&roaAddrp->self))
+                         roaAddrp = (struct ROAIPAddress *)next_of(
+                             &roaAddrp->self))
                     {
                         // set up the limits
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why rfam[1]? */
-                        if ((sta =
-                             setup_roa_minmax(&roaAddrp->address, rmin, rmax,
-                                              rfam[1])) < 0)
+                        if ((sta = setup_roa_minmax(
+                                 &roaAddrp->address, rmin, rmax, rfam[1])) < 0)
                             iRes = sta;
                         // first set up initial entry in cert
                         struct IPAddressOrRangeA *rpAddrRangep =
@@ -1384,9 +1381,8 @@ roaValidate2(
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why cfam[1]? */
-                        if ((sta =
-                             setup_cert_minmax(rpAddrRangep, cmin, cmax,
-                                               cfam[1])) < 0)
+                        if ((sta = setup_cert_minmax(
+                                 rpAddrRangep, cmin, cmax, cfam[1])) < 0)
                             iRes = sta;
                         // go through cert addresses until a high
                         // enough one is found i.e. skip cert
@@ -1399,10 +1395,10 @@ roaValidate2(
 
                             /** @bug error code ignored without explanation */
                             if (!(rpAddrRangep =
-                                  (struct IPAddressOrRangeA *)
-                                  next_of(&rpAddrRangep->self))
-                                || setup_cert_minmax(rpAddrRangep, cmin, cmax,
-                                                     cfam[1]) < 0)
+                                  (struct IPAddressOrRangeA *)next_of(
+                                      &rpAddrRangep->self))
+                                || setup_cert_minmax(
+                                    rpAddrRangep, cmin, cmax, cfam[1]) < 0)
                                 /** @bug error message not logged */
                                 iRes = ERR_SCM_INVALIPB;
                         }
@@ -1411,12 +1407,11 @@ roaValidate2(
                             // now at cert values at or beyond roa.
                             // if roa min is below cert min OR roa max
                             // beyond cert max, bail out
-                            if ((ii =
-                                 memcmp(&rmin[2], &cmin[2],
-                                        sizeof(cmin) - 2)) < 0
-                                || (ij =
-                                    memcmp(&rmax[2], &cmax[2],
-                                           sizeof(cmin) - 2)) > 0)
+                            if ((ii = memcmp(
+                                     &rmin[2], &cmin[2], sizeof(cmin) - 2)) < 0
+                                || (ij = memcmp(
+                                        &rmax[2], &cmax[2],
+                                        sizeof(cmin) - 2)) > 0)
                                 /** @bug error message not logged */
                                 break;
                         }
