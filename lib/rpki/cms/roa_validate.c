@@ -1280,11 +1280,11 @@ roaValidate2(
     /** @bug magic number */
     uchar cfam[8];
     int all_extns = 0;
+    struct SignedData *rd = &rp->content.signedData;
 
     /** @bug error code ignored without explanation */
     struct Certificate *cert =
-        (struct Certificate *)member_casn(&rp->content.signedData.certificates.
-                                          self, 0);
+        (struct Certificate *)member_casn(&rd->certificates.self, 0);
 
     //
     // if (certificate exists in roa)
@@ -1311,8 +1311,7 @@ roaValidate2(
             // Check that roa->envelope->SKI = cert->SKI
             /** @bug error code ignored without explanation */
             if (diff_casn
-                (&rp->content.signedData.signerInfos.signerInfo.
-                 sid.subjectKeyIdentifier,
+                (&rd->signerInfos.signerInfo.sid.subjectKeyIdentifier,
                  (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
                 /** @bug error message not logged */
                 /** @bug memory leak (oidp) */
@@ -1331,9 +1330,9 @@ roaValidate2(
             read_casn(&rpAddrFamp->addressFamily, cfam);
             // for ieach of the ROA's families
             struct ROAIPAddressFamily *ripAddrFamp;
-            for (ripAddrFamp =
-                 &rp->content.signedData.encapContentInfo.eContent.roa.
-                 ipAddrBlocks.rOAIPAddressFamily;
+            struct RouteOriginAttestation *roa =
+                &rd->encapContentInfo.eContent.roa;
+            for (ripAddrFamp = &roa->ipAddrBlocks.rOAIPAddressFamily;
                  ripAddrFamp;
                  /** @bug error code ignored without explanation */
                  ripAddrFamp =
