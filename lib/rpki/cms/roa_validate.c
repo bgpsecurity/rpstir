@@ -1266,7 +1266,6 @@ roaValidate2(
     struct CMS *rp)
 {
     err_code iRes = 0;
-    err_code sta;
     long ii;
     long ij;
     struct Extension *extp;
@@ -1297,7 +1296,7 @@ roaValidate2(
     // of having been extracted, it is reputable
     // ///////////////////////////////////////////////////////////////
     for (extp = (struct Extension *)&cert->toBeSigned.extensions.extension;
-         extp && iRes == 0;
+         extp;
          /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self))
     {
@@ -1354,20 +1353,21 @@ roaValidate2(
                     /** @bug error code ignored without explanation */
                     if (!(rpAddrFamp = (struct IPAddressFamilyA *)next_of(
                               &rpAddrFamp->self)))
+                    {
                         iRes = ERR_SCM_INVALIPB;
-                    else
-                        /** @bug error code ignored without explanation */
-                        read_casn(&rpAddrFamp->addressFamily, cfam);
+                        goto done;
+                    }
+                    /** @bug error code ignored without explanation */
+                    read_casn(&rpAddrFamp->addressFamily, cfam);
                 }
                 // OK, got the cert family, too f it's not inheriting
-                if (iRes == 0 &&
-                    /** @bug error code ignored without explanation */
-                    tag_casn(&rpAddrFamp->ipAddressChoice.self) == ASN_SEQUENCE)
+                /** @bug error code ignored without explanation */
+                if (tag_casn(&rpAddrFamp->ipAddressChoice.self) == ASN_SEQUENCE)
                 {
                     // go through all ip addresses in that ROA family
                     struct ROAIPAddress *roaAddrp;
                     for (roaAddrp = &ripAddrFamp->addresses.rOAIPAddress;
-                         roaAddrp && iRes == 0;
+                         roaAddrp;
                          /** @bug error code ignored without explanation */
                          roaAddrp = (struct ROAIPAddress *)next_of(
                              &roaAddrp->self))
@@ -1376,9 +1376,11 @@ roaValidate2(
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why rfam[1]? */
-                        if ((sta = setup_roa_minmax(
+                        if ((iRes = setup_roa_minmax(
                                  &roaAddrp->address, rmin, rmax, rfam[1])) < 0)
-                            iRes = sta;
+                        {
+                            goto done;
+                        }
                         // first set up initial entry in cert
                         struct IPAddressOrRangeA *rpAddrRangep =
                             &rpAddrFamp->ipAddressChoice.addressesOrRanges.
@@ -1386,15 +1388,16 @@ roaValidate2(
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why cfam[1]? */
-                        if ((sta = setup_cert_minmax(
+                        if ((iRes = setup_cert_minmax(
                                  rpAddrRangep, cmin, cmax, cfam[1])) < 0)
-                            iRes = sta;
+                        {
+                            goto done;
+                        }
                         // go through cert addresses until a high
                         // enough one is found i.e. skip cert
                         // addresses whose max is below roa's min
-                        while (iRes == 0 && rpAddrRangep &&
-                               memcmp(&cmax[2], &rmin[2],
-                                      sizeof(rmin) - 2) <= 0)
+                        while (rpAddrRangep && memcmp(
+                                   &cmax[2], &rmin[2], sizeof(rmin) - 2) <= 0)
                         {
                             /** @bug brace nesting too deep */
 
@@ -1404,10 +1407,13 @@ roaValidate2(
                                       &rpAddrRangep->self))
                                 || setup_cert_minmax(
                                     rpAddrRangep, cmin, cmax, cfam[1]) < 0)
+                            {
                                 /** @bug error message not logged */
                                 iRes = ERR_SCM_INVALIPB;
+                                goto done;
+                            }
                         }
-                        if (rpAddrRangep && iRes == 0)
+                        if (rpAddrRangep)
                         {
                             // now at cert values at or beyond roa.
                             // if roa min is below cert min OR roa max
@@ -1417,24 +1423,29 @@ roaValidate2(
                                 || (ij = memcmp(
                                         &rmax[2], &cmax[2],
                                         sizeof(cmin) - 2)) > 0)
+                            {
                                 /** @bug error message not logged */
-                                break;
+                                iRes = ERR_SCM_INVALIPB;
+                                goto done;
+                            }
                         }
                     }
-                    if (roaAddrp)
-                        iRes = ERR_SCM_INVALIPB;
                 }
             }
         }
     }
     if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI))
+    {
         /** @bug error message not logged */
         iRes = ERR_SCM_INVALIPB;
-    if (iRes == 0)
-    {
-        // check the signature
-        iRes = check_sig(rp, cert);
+        goto done;
     }
+    // check the signature
+    if ((iRes = check_sig(rp, cert)))
+    {
+        goto done;
+    }
+
 done:
     free(oidp);
     return iRes;
