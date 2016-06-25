@@ -3559,7 +3559,8 @@ rescert_sig_algs_chk(
         /** @bug error message not logged */
         return ERR_SCM_NOMEM;
     /** @bug error code ignored without explanation */
-    if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length)
+    if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp,
+                   length + 1) != length)
     {
         free(outer_sig_alg_oidp);
         LOG(LOG_ERR, "outer sig alg oid actual length != stated length");
@@ -3588,8 +3589,8 @@ rescert_sig_algs_chk(
         return ERR_SCM_NOMEM;
     }
     /** @bug error code ignored without explanation */
-    if (read_objid(&certp->toBeSigned.signature.algorithm, inner_sig_alg_oidp)
-        != length)
+    if (read_objid(&certp->toBeSigned.signature.algorithm,
+                   inner_sig_alg_oidp, length + 1) != length)
     {
         free(inner_sig_alg_oidp);
         free(outer_sig_alg_oidp);
@@ -3632,7 +3633,7 @@ rescert_sig_algs_chk(
         return ERR_SCM_NOMEM;
     /** @bug error code ignored without explanation */
     if (read_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm,
-                   alg_pubkey_oidp) != length)
+                   alg_pubkey_oidp, length + 1) != length)
     {
         free(alg_pubkey_oidp);
         LOG(LOG_ERR,
@@ -3951,7 +3952,7 @@ rescert_extensions_chk(
             else
             {
                 /** @bug error code ignored without explanation */
-                read_objid(&extp->extnID, oid_print);
+                read_objid(&extp->extnID, oid_print, sizeof(oid_print));
             }
             LOG(LOG_ERR, "certificate has unknown extension %s",
                     oid_print);
@@ -4504,7 +4505,7 @@ crl_extensions_chk(
             {
                 return ERR_SCM_BADEXT;
             }
-            if (read_objid(&crlextp->extnID, oidp) <= 0)
+            if (read_objid(&crlextp->extnID, oidp, i + 2) <= 0)
             {
                 free(oidp);
                 LOG(LOG_ERR, "Error reading CRLExtension OID");

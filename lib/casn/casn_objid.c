@@ -17,8 +17,6 @@ Cambridge, Ma. 02138
 #include "casn_private.h"
 #include "util/stringutils.h"
 
-#include <limits.h>
-
 int diff_objid(
     struct casn *casnp,
     const char *objid)
@@ -37,7 +35,7 @@ int diff_objid(
     /** @bug error code ignored without explanation */
     c = calloc(1, lth);
     /** @bug error code ignored without explanation */
-    read_objid(casnp, c);
+    read_objid(casnp, c, lth);
     if (lth < lth2)
         ansr = lth;
     else
@@ -85,14 +83,14 @@ int diff_objid(
 
 int read_objid(
     struct casn *casnp,
-    char *to)
+    char *to,
+    size_t tolen)
 {
     if (_clear_error(casnp) < 0)
         return -1;
     if (casnp->type != ASN_OBJ_ID && casnp->type != ASN_RELATIVE_OID)
         return _casn_obj_err(casnp, ASN_TYPE_ERR);
-    /** @bug should use real buffer length to avoid overflow */
-    return _readsize_objid(casnp, to, INT_MAX, 1);
+    return _readsize_objid(casnp, to, tolen, 1);
 }
 
 int vsize_objid(
