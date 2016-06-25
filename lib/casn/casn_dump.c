@@ -16,18 +16,8 @@ Cambridge, Ma. 02138
 #include <stdio.h>
 #include <stdlib.h>
 #include "casn.h"
+#include "casn_private.h"
 
-extern struct casn *
-_skip_casn(
-    struct casn *,
-    int);
-extern int
-_casn_obj_err(
-    struct casn *,
-    int);
-extern int
-_clear_error(
-    struct casn *);
 extern int
 _readsize_objid(
     struct casn *casnp,
@@ -57,14 +47,6 @@ _dumpsize(
 
 struct oidtable *oidtable;
 int oidtable_size;
-
-int
-_dump_tag(
-    int tag,
-    char *to,
-    int offset,
-    ushort flags,
-    int mode);
 
 #define ASN_READING 1
 
