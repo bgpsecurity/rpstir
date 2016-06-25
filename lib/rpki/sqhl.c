@@ -1330,10 +1330,6 @@ done:
  *     Error code.  On success the value at this location is set to 0.
  *     On error it is set to a non-zero value.  This parameter may be
  *     NULL.
- * @param[out] pathname
- *     If non-NULL, the full pathname of the matching certificate will
- *     be written to the buffer at this location.  The buffer must
- *     have size at least @c PATH_MAX.  This may be NULL.
  * @return
  *     NULL on error or if there is no match, otherwise it returns the
  *     matching cert.
@@ -1349,12 +1345,11 @@ find_cert(
     const char *ski,
     const char *subject,
     err_code *stap,
-    char *pathname,
     int *flagsp)
 {
     LOG(LOG_DEBUG, "find_cert(conp=%p, ski=\"%s\", subject=\"%s\", stap=%p"
-        ", pathname=%p, flagsp=%p)",
-        conp, ski, subject, stap, pathname, flagsp);
+        ", flagsp=%p)",
+        conp, ski, subject, stap, flagsp);
 
     X509 *ret = NULL;
     err_code sta = 0;
@@ -1393,8 +1388,6 @@ find_cert(
     }
     xstrlcpy(parentAKI, cert_ansrp->aki, sizeof(parentAKI));
     xstrlcpy(parentIssuer, cert_ansrp->issuer, sizeof(parentIssuer));
-    if (pathname != NULL)
-        strncpy(pathname, cert_ansrp->fullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
     ret = readCertFromFile(cert_ansrp->fullname, &sta);
@@ -2050,7 +2043,7 @@ verify_crl(
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = find_cert(conp, aki, issuer, NULL, NULL, NULL);
+    parent = find_cert(conp, aki, issuer, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -2127,7 +2120,7 @@ verify_roa(
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    cert = find_cert(conp, ski, NULL, &sta, NULL, NULL);
+    cert = find_cert(conp, ski, NULL, &sta, NULL);
     if (cert == NULL)
     {
         *chainOK = 0;
