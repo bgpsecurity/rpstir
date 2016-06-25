@@ -3332,6 +3332,7 @@ struct Extension *get_extension(
     for (extp = (struct Extension *)member_casn(&extsp->self, 0);
          extp != NULL; extp = (struct Extension *)next_of(&extp->self))
     {
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&extp->extnID, idp))
         {
             if (!cnt)
@@ -3754,10 +3755,13 @@ extractAndAddCert(
     }
     // test for forbidden extension
     struct Extension *extp;
+    /** @bug error code ignored without explanation */
     for (extp =
          (struct Extension *)member_casn(&certp->toBeSigned.extensions.self,
                                          0);
+         /** @bug error code ignored without explanation */
          extp && diff_objid(&extp->extnID, id_extKeyUsage);
+         /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self));
     if (extp)
     {

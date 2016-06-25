@@ -79,6 +79,7 @@ int get_casn_file(
     // defend against a truncated file
     c = b;
     tmp = _get_tag(&c);
+    /** @bug error code ignored without explanation */
     if ((tmp = _calc_lth(&c, *b)) >= 0)
     {
         tmp += (c - b);

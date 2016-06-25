@@ -332,6 +332,7 @@ int main(
     struct Extension *extp;
     extp =
         (struct Extension *)member_casn(&pcert.toBeSigned.extensions.self, 0);
+    /** @bug error code ignored without explanation */
     while (extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock) != 0)
         extp = (struct Extension *)next_of(&extp->self);
     if (extp == NULL)

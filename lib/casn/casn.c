@@ -293,6 +293,7 @@ dup_casn(
     struct casn *casnp)
 {
     if (!(casnp->flags & ASN_POINTER_FLAG))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return (struct casn *)0;
     return _dup_casn(casnp);
 }
@@ -674,6 +675,7 @@ _calc_lth(
         lth;
 
     if (*c > 0x84 || (*c == 0x84 && c[1] > 0x7F))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return -2;
     if (*c == ASN_INDEF_LTH)
     {
@@ -724,6 +726,7 @@ _check_enum(
     struct casn *tcasnp;
 
     if (!(tcasnp = _go_up(*casnpp)))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return -1;
     if ((*casnpp)->lth != tcasnp->lth ||
         memcmp((*casnpp)->startp, tcasnp->startp, tcasnp->lth))
@@ -858,10 +861,12 @@ _csize(
         for (lth = 0; from < e; lth++)
         {
             if (*from == 0xFE || *from == 0xFF)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -1;
             for (typ = *from, tlth = -1; typ & 0x80; typ <<= 1, tlth++);
             for (from++; tlth-- >= 0 && (*from & 0xC0) == 0x80; from++);
             if (tlth >= 0 || from > e)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -1;
         }
     }
@@ -1116,6 +1121,7 @@ _count_crumbs_size(
     for (c = fromp; *c || c[1]; c += lth)
     {
         c++;                    // go to length field;
+        /** @bug error code ignored without explanation */
         lth = _calc_lth(&c, (uchar) 0); // c ends at 1st data byte
         ansr += lth;
     }
@@ -1138,6 +1144,7 @@ _gather_crumbs(
     for (curr_endp = startp; *c || c[1]; c += lth)
     {
         c++;                    // c goes to length field
+        /** @bug error code ignored without explanation */
         lth = _calc_lth(&c, (uchar) 0); // c ends at 1st data byte
         memcpy(curr_endp, c, lth);
         curr_endp += lth;
@@ -1713,6 +1720,7 @@ _putd(
 
     if (tmp)
         to = _putd(to, tmp);
+    /** @bug this emits garbage if val is negative */
     *to++ = (char)((val % 10) + '0');
     return to;
 }
@@ -2122,9 +2130,11 @@ _stuff_num(
     {
         while (*c)
             c++;
+        /** @bug magic number */
         c = (char *)dbcalloc(1, (c - casn_err_struct.asn_map_string) + 8);
     }
     else
+        /** @bug magic number */
         c = (char *)dbcalloc(1, 8);
     a = c;
     c = _putd(c, count);
@@ -2304,6 +2314,7 @@ _write_casn(
             return _casn_obj_err(casnp, err);
         casnp = tcasnp;
     }
+    /** @bug error code ignored without explanation */
     tmp = _csize(casnp, c, lth);        // tmp is 'byte' count
     int64_t timeval = 0;
     if (casnp->type == ASN_NONE)

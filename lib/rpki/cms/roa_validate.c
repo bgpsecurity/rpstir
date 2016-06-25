@@ -209,9 +209,11 @@ check_cert(
     for (extp = (struct Extension *)member_casn(&certtbsp->extensions.self, 0);
          extp; extp = (struct Extension *)next_of(&extp->self))
     {
+        /** @bug error code ignored without explanation */
         if (isEE && !diff_objid(&extp->extnID, id_basicConstraints) &&
             size_casn(&extp->extnValue.basicConstraints.cA) > 0)
             return ERR_SCM_NOTEE;
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&extp->extnID, id_subjectKeyIdentifier))
         {
             uchar *ski;
@@ -321,6 +323,7 @@ static struct Attribute *find_unique_attr(
     for (attrp = (struct Attribute *)member_casn(&attrsp->self, 0);
          attrp != NULL; attrp = (struct Attribute *)next_of(&attrp->self))
     {
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&attrp->attrType, oidp))
         {
             if (*found_any)
@@ -524,6 +527,7 @@ cmsValidate(
     // (= OID 2.16.840.1.101.3.4.2.1)
     if (num_items(&rp->content.signedData.digestAlgorithms.self) != 1)
         return ERR_SCM_BADNUMDALG;
+    /** @bug error code ignored without explanation */
     if (diff_objid
         (&rp->content.signedData.digestAlgorithms.cMSAlgorithmIdentifier.
          algorithm, id_sha256))
@@ -544,6 +548,7 @@ cmsValidate(
         return ERR_SCM_SIGINFOVER;
     if (!size_casn(&sigInfop->sid.subjectKeyIdentifier))
         return ERR_SCM_SIGINFOSID;
+    /** @bug error code ignored without explanation */
     if (diff_objid(&sigInfop->digestAlgorithm.algorithm, id_sha256))
         return ERR_SCM_BADHASHALG;
 
@@ -625,9 +630,13 @@ cmsValidate(
         attrp != NULL;
         attrp = (struct Attribute *)next_of(&attrp->self))
     {
+        /** @bug error code ignored without explanation */
         if (diff_objid(&attrp->attrType, id_contentTypeAttr) &&
+            /** @bug error code ignored without explanation */
             diff_objid(&attrp->attrType, id_messageDigestAttr) &&
+            /** @bug error code ignored without explanation */
             diff_objid(&attrp->attrType, id_signingTimeAttr) &&
+            /** @bug error code ignored without explanation */
             diff_objid(&attrp->attrType, id_binSigningTimeAttr))
         {
             return ERR_SCM_INVALSATTR;
@@ -644,12 +653,16 @@ cmsValidate(
         return ret;
     // check that the cert's SKI matches that in SignerInfo
     struct Extension *extp;
+    /** @bug error code ignored without explanation */
     for (extp =
          (struct Extension *)member_casn(&certp->toBeSigned.extensions.
                                          self, 0);
+         /** @bug error code ignored without explanation */
          extp && diff_objid(&extp->extnID, id_subjectKeyIdentifier);
+         /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self));
     if (!extp
+        /** @bug error code ignored without explanation */
         || diff_casn(&extp->extnValue.subjectKeyIdentifier,
                      &sigInfop->sid.subjectKeyIdentifier))
         return ERR_SCM_SIGINFOSID;
@@ -660,6 +673,7 @@ cmsValidate(
 
     // check that roa->content->signerInfo.digestAlgorithm == SHA-256
     // (= OID 2.16.840.1.101.3.4.2.1)
+    /** @bug error code ignored without explanation */
     if (diff_objid
         (&rp->content.signedData.signerInfos.signerInfo.digestAlgorithm.
          algorithm, id_sha256))
@@ -675,10 +689,12 @@ cmsValidate(
     struct casn *oidp =
         &rp->content.signedData.signerInfos.signerInfo.signatureAlgorithm.
         algorithm;
+    /** @bug error code ignored without explanation */
     if (!diff_objid(oidp, id_rsadsi_rsaEncryption))
     {
         LOG(LOG_DEBUG, "signatureAlgorithm is id_rsadsi_rsaEncryption");
     }
+    /** @bug error code ignored without explanation */
     else if (!diff_objid(oidp, id_sha_256WithRSAEncryption))
     {
         LOG(LOG_DEBUG, "signatureAlgorithm is id_sha_256WithRSAEncryption");
@@ -925,6 +941,7 @@ manifestValidate(
     err_code iRes;
 
     // Check that content type is id-ct-rpkiManifest
+    /** @bug error code ignored without explanation */
     if (diff_objid(&cmsp->content.signedData.encapContentInfo.eContentType,
                    id_roa_pki_manifest))
     {
@@ -954,6 +971,7 @@ manifestValidate(
     }
 
     // Check the hash algorithm
+    /** @bug error code ignored without explanation */
     if (diff_objid(&manp->fileHashAlg, id_sha256))
     {
         LOG(LOG_ERR, "Incorrect hash algorithm");
@@ -1065,10 +1083,13 @@ checkIPAddrs(
 {
     // determine if all the address blocks in the ROA are within the EE cert
     struct Extension *extp;
+    /** @bug error code ignored without explanation */
     for (extp =
          (struct Extension *)member_casn(&certp->toBeSigned.extensions.self,
                                          0);
+         /** @bug error code ignored without explanation */
          extp && diff_objid(&extp->extnID, id_pe_ipAddrBlock);
+         /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self));
     if (!extp)
         return ERR_SCM_NOIPEXT;
@@ -1206,6 +1227,7 @@ roaValidate(
 
     // check that eContentType is routeOriginAttestation (=
     // OID 1.2.240.113549.1.9.16.1.24)
+    /** @bug error code ignored without explanation */
     if (diff_objid(&rp->content.signedData.encapContentInfo.eContentType,
                    id_routeOriginAttestation))
     {
@@ -1477,6 +1499,7 @@ static err_code
 check_ghostbusters_cms(
     struct CMS *cms)
 {
+    /** @bug error code ignored without explanation */
     if (diff_objid(&cms->content.signedData.encapContentInfo.eContentType,
                    id_ct_rpkiGhostbusters))
     {

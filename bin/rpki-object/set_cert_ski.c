@@ -40,6 +40,7 @@ int main(
          (struct Extension *)member_casn(&cert.toBeSigned.extensions.self, 0);
          extp; extp = (struct Extension *)next_of(&extp->self))
     {
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&extp->extnID, id_subjectKeyIdentifier))
             break;
     }

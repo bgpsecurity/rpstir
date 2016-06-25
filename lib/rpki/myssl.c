@@ -2794,6 +2794,7 @@ static int get_cert_type(
         (struct Extension *)member_casn(&certp->toBeSigned.extensions.self, 0);
     for (; extp; extp = (struct Extension *)next_of(&extp->self))
     {
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&extp->extnID, id_basicConstraints))
             return CA_CERT;
     }
@@ -2862,6 +2863,7 @@ rescert_sia_chk(
         uchar *uri_mft = 0;
         for (; adp; adp = (struct AccessDescription *)next_of(&adp->self))
         {
+            /** @bug error code ignored without explanation */
             if (!diff_objid(&adp->accessMethod, id_ad_caRepository) &&
                 size_casn((struct casn *)&adp->accessLocation.url))
             {
@@ -2875,6 +2877,7 @@ rescert_sia_chk(
                 free(uri_repo);
                 uri_repo = NULL;
             }
+            /** @bug error code ignored without explanation */
             else if (!diff_objid(&adp->accessMethod, id_ad_rpkiManifest) &&
                 size_casn((struct casn *)&adp->accessLocation.url))
             {
@@ -2907,6 +2910,7 @@ rescert_sia_chk(
         uchar *uri_obj = 0;
         for (; adp; adp = (struct AccessDescription *)next_of(&adp->self))
         {
+            /** @bug error code ignored without explanation */
             if (!diff_objid(&adp->accessMethod, id_ad_signedObject))
             {
                 if (size_casn((struct casn *)&adp->accessLocation.url))
@@ -3478,6 +3482,7 @@ rescert_name_chk(
             struct AttributeValueAssertion *avap =
                 (struct AttributeValueAssertion *)member_casn(&rdnp->self,
                                                               set_idx);
+            /** @bug error code ignored without explanation */
             if (!diff_objid(&avap->objid, id_commonName))
             {
                 if (commonName)
@@ -3499,6 +3504,7 @@ rescert_name_chk(
                     }
                 }
             }
+            /** @bug error code ignored without explanation */
             else if (!diff_objid(&avap->objid, id_serialNumber))
             {
                 if (serialNumber)
@@ -3552,6 +3558,7 @@ rescert_sig_algs_chk(
     if (!outer_sig_alg_oidp)
         /** @bug error message not logged */
         return ERR_SCM_NOMEM;
+    /** @bug error code ignored without explanation */
     if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length)
     {
         free(outer_sig_alg_oidp);
@@ -3580,6 +3587,7 @@ rescert_sig_algs_chk(
             free(outer_sig_alg_oidp);
         return ERR_SCM_NOMEM;
     }
+    /** @bug error code ignored without explanation */
     if (read_objid(&certp->toBeSigned.signature.algorithm, inner_sig_alg_oidp)
         != length)
     {
@@ -3622,6 +3630,7 @@ rescert_sig_algs_chk(
     char *alg_pubkey_oidp = calloc(1, length + 1);
     if (!alg_pubkey_oidp)
         return ERR_SCM_NOMEM;
+    /** @bug error code ignored without explanation */
     if (read_objid(&certp->toBeSigned.subjectPublicKeyInfo.algorithm.algorithm,
                    alg_pubkey_oidp) != length)
     {
@@ -3921,6 +3930,7 @@ rescert_extensions_chk(
         ext_allowed = false;
         for (i = 0; allowed_extensions[i] != NULL; ++i)
         {
+            /** @bug error code ignored without explanation */
             if (!diff_objid(&extp->extnID, allowed_extensions[i]))
             {
                 ext_allowed = true;
@@ -4178,12 +4188,14 @@ crl_sigalg_chk(
 {
     if (!crlp)
         return ERR_SCM_INTERNAL;
+    /** @bug error code ignored without explanation */
     if (diff_objid(&crlp->toBeSigned.signature.algorithm,
                    id_sha_256WithRSAEncryption) != 0)
     {
         LOG(LOG_ERR, "Wrong CRL inner signature algorithm");
         return ERR_SCM_BADSIGALG;
     }
+    /** @bug error code ignored without explanation */
     if (diff_objid(&crlp->algorithm.algorithm,
                    id_sha_256WithRSAEncryption) != 0)
     {
@@ -4440,6 +4452,7 @@ crl_extensions_chk(
     for (crlextp = (struct CRLExtension *)member_casn(&crlextsp->self, 0);
          crlextp; crlextp = (struct CRLExtension *)next_of(&crlextp->self))
     {
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&crlextp->extnID, id_authKeyId))
         {
             i = 0;
@@ -4457,6 +4470,7 @@ crl_extensions_chk(
             }
             authkeyIdp = &crlextp->extnValue.authKeyId;
         }
+        /** @bug error code ignored without explanation */
         else if (!diff_objid(&crlextp->extnID, id_cRLNumber))
         {
             i = 0;

@@ -272,8 +272,11 @@ void removeExtension(
     if (!num_items(&extsp->self))
         return;
 
+    /** @bug error code ignored without explanation */
     for (extp = (struct Extension *)member_casn(&extsp->self, 0);
+         /** @bug error code ignored without explanation */
          extp && diff_objid(&extp->extnID, oid);
+         /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self), i++);
 
     // found the extension
