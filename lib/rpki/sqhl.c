@@ -1603,7 +1603,7 @@ done:
  *
  * @param[in] cb_context
  *     The same value passed as the @p cb_context argument to
- *     find_cert().
+ *     find_cert_paths().
  * @param[in] intermediates
  *     Intermediate certificates along the certification path.  The
  *     certificate at the bottom of the stack has a SKI and subject
@@ -1824,7 +1824,7 @@ find_cert_paths_internal(
 
     sta = searchscm(
         conp, theCertTable, &srch, NULL, &find_cert_paths_handle_row,
-        SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_DO_JOIN, NULL);
+        SCM_SRCH_DOVALUE_ALWAYS | SCM_SRCH_BREAK_VERR | SCM_SRCH_DO_JOIN, NULL);
     if (ERR_SCM_NODATA == sta)
     {
         sta = 0;

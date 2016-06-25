@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# This scenario uses the following forest:
-#
+# This scenario is the same as evil-twin-ca-invalid-1 except the Test1
+# CA certificate is replaced with a CRL:
 #
 #     Good TA (valid)     Evil TA (valid)
 #     IPv4: 0.0.0.0/8     IPv4: 1.0.0.0/8
@@ -15,19 +15,11 @@
 #     AS:   1-63          AS:   1-63 (outside of issuer resources)
 #         |
 #         |
-#     Test1 CA (valid)
-#     IPv4: 0.0.0.0/24
-#     IPv6: ::/48
-#     AS:   1-31
-#
-# The five objects above are added to the database one at a time.  To
-# ensure that the order in which the objects are added does not affect
-# the outcome, all interesting permutations are tried (the database is
-# scrubbed between permutations).
+#     Test3 CRL (valid)
 
 . "${TESTS_BUILDDIR}"/evil-twin-common.sh || exit 1
 
-exp="ta-good.cer ta-evil.cer ca-good.cer test1-ca.cer"
-testobj() { pecho "test1-ca.cer"; }
+exp="ta-good.cer ta-evil.cer ca-good.cer test3.crl"
+testobj() { pecho "test3.crl"; }
 evilca() { pecho "ca-evil-invalid.cer"; }
 run_tests "${exp}"

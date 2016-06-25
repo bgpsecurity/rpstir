@@ -1,0 +1,3 @@
+revokedcertlist=12345%000101010101Z
+parentcertfile=tests/subsystem/evil-twin/ca-good.cer
+parentkeyfile=tests/subsystem/evil-twin/ca-good.key
