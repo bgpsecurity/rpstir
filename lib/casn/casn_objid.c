@@ -16,19 +16,10 @@ Cambridge, Ma. 02138
 #include "casn.h"
 #include "casn_private.h"
 
-// modes for encode & read
-#define ASN_READ 1
-
 extern char *
 _putd(
     char *to,
     long val);
-
-int
-_readsize_objid(
-    struct casn *casnp,
-    char *to,
-    int mode);
 
 int diff_objid(
     struct casn *casnp,

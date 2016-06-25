@@ -18,12 +18,6 @@ Cambridge, Ma. 02138
 #include "casn.h"
 #include "casn_private.h"
 
-extern int
-_readsize_objid(
-    struct casn *casnp,
-    char *to,
-    int mode);
-
 static char *
 cat(
     char *,
