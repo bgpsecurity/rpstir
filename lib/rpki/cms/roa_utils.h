@@ -331,7 +331,6 @@ ghostbustersValidate(
  *     scm *scmp; // previously opened DB schema
  *     scmcon *conp; // previously opened DB connection
  *     X509 *cert;
- *     uchar *blob;
  *     char *ski;
  *     char fn[PATH_MAX];
  *     int valid = -1;
@@ -343,8 +342,7 @@ ghostbustersValidate(
  *         if (ski != NULL) {
  *             cert = parent_cert(conp, ski, NULL, &sta, fn, NULL);
  *             if (cert != NULL && sta == 0) {
- *                 blob = read cert from file (fn);
- *                 valid = roaValidate2(r, blob);
+ *                 valid = roaValidate2(r);
  *             }
  *         }
  *     }

@@ -2081,78 +2081,6 @@ done:
 
 /**
  * @brief
- *     roa utility
- *
- * @param[out] stap
- *     Error code.  This parameter MUST NOT be NULL.
- */
-static unsigned char *readfile(
-    char *fn,
-    err_code *stap)
-{
-    struct stat mystat;
-    char *outptr = NULL;
-    char *ptr;
-    int outsz = 0;
-    int fd;
-    int rd;
-
-    if (stap == NULL)
-        return (NULL);
-    if (fn == NULL || fn[0] == 0)
-    {
-        *stap = ERR_SCM_INVALARG;
-        return (NULL);
-    }
-    fd = open(fn, O_RDONLY);
-    if (fd < 0)
-    {
-        *stap = ERR_SCM_COFILE;
-        return (NULL);
-    }
-    memset(&mystat, 0, sizeof(mystat));
-    if (fstat(fd, &mystat) < 0 || mystat.st_size == 0)
-    {
-        (void)close(fd);
-        *stap = ERR_SCM_COFILE;
-        return (NULL);
-    }
-    ptr = (char *)calloc(mystat.st_size, sizeof(char));
-    if (ptr == NULL)
-    {
-        (void)close(fd);
-        *stap = ERR_SCM_NOMEM;
-        return (NULL);
-    }
-    rd = read(fd, ptr, mystat.st_size);
-    (void)close(fd);
-    if (rd != mystat.st_size)
-    {
-        free((void *)ptr);
-        ptr = NULL;
-        *stap = ERR_SCM_COFILE;
-    }
-    else
-        *stap = 0;
-    if (strstr(fn, ".pem") == NULL)     /* not a PEM file */
-        return ((unsigned char *)ptr);
-    *stap =
-        decode_b64((unsigned char *)ptr, mystat.st_size,
-                   (unsigned char **)&outptr, &outsz, "CERTIFICATE");
-    free((void *)ptr);
-    if (*stap < 0)
-    {
-        if (outptr != NULL)
-        {
-            free((void *)outptr);
-            outptr = NULL;
-        }
-    }
-    return ((unsigned char *)outptr);
-}
-
-/**
- * @brief
  *     roa verification code
  *
  * @param[out] chainOK
@@ -2176,10 +2104,8 @@ verify_roa(
         conp, r, ski, chainOK);
 
     err_code sta = 0;
-    unsigned char *blob = NULL;
     X509 *cert;
     sigval_state sigval;
-    char fn[PATH_MAX];
 
     // first, see if the ROA is already validated and in the DB
     sigval = get_sigval(conp, OT_ROA, ski, NULL);
@@ -2201,7 +2127,7 @@ verify_roa(
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    cert = find_cert(conp, ski, NULL, &sta, fn, NULL);
+    cert = find_cert(conp, ski, NULL, &sta, NULL, NULL);
     if (cert == NULL)
     {
         *chainOK = 0;
@@ -2216,14 +2142,7 @@ verify_roa(
         goto done;
     }
     *chainOK = 1;
-    // read the ASN.1 blob from the file
-    blob = readfile(fn, &sta);
-    /** @bug what if blob is NULL and sta is non-negative? */
-    if (blob != NULL)
-    {
-        sta = roaValidate2(r);
-        free((void *)blob);
-    }
+    sta = roaValidate2(r);
     X509_free(cert);
     if (sta >= 0)
     {
