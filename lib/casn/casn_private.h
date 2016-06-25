@@ -138,6 +138,7 @@ int
 _readsize_objid(
     struct casn *casnp,
     char *to,
+    size_t tolen,
     int mode);
 
 char *

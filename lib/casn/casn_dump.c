@@ -13,6 +13,7 @@ Cambridge, Ma. 02138
 617-873-3000
 *****************************************************************************/
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "casn.h"
@@ -414,14 +415,16 @@ long _dumpread(
     {
         // subtract one for extra null
         /** @bug error code ignored without explanation */
-        ansr = _readsize_objid(casnp, c, mode) - 1;
+        /** @bug should use real buffer length to avoid overflow */
+        ansr = _readsize_objid(casnp, c, INT_MAX, mode) - 1;
         if (mode)
             c += ansr;
         if (oidtable)
         {
-            char *buf = (char *)calloc(1, ansr + 2);
+            size_t buflen = ansr + 2;
+            char *buf = (char *)calloc(1, buflen);
             /** @bug error code ignored without explanation */
-            _readsize_objid(casnp, buf, 1);
+            _readsize_objid(casnp, buf, buflen, 1);
             int diff;
             char *labelp = find_label(buf, &diff, oidtable, oidtable_size);
             if (labelp)

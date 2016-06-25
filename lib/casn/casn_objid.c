@@ -91,7 +91,8 @@ int read_objid(
         return -1;
     if (casnp->type != ASN_OBJ_ID && casnp->type != ASN_RELATIVE_OID)
         return _casn_obj_err(casnp, ASN_TYPE_ERR);
-    return _readsize_objid(casnp, to, 1);
+    /** @bug should use real buffer length to avoid overflow */
+    return _readsize_objid(casnp, to, INT_MAX, 1);
 }
 
 int vsize_objid(
@@ -104,7 +105,7 @@ int vsize_objid(
         return -1;
     if (casnp->type != ASN_OBJ_ID && casnp->type != ASN_RELATIVE_OID)
         return _casn_obj_err(casnp, ASN_TYPE_ERR);
-    return _readsize_objid(casnp, buf, 0);
+    return _readsize_objid(casnp, buf, sizeof(buf), 0);
 }
 
 int write_objid(
@@ -127,6 +128,7 @@ int write_objid(
 int _readsize_objid(
     struct casn *casnp,
     char *to,
+    size_t tolen,
     int mode)
 {
     int lth = 0;
@@ -134,8 +136,6 @@ int _readsize_objid(
     uchar *e = &c[casnp->lth];
     char *b = to;
     ulong val;
-    /** @bug should use real buffer length to avoid overflow */
-    size_t tolen = INT_MAX;
 
     if (casnp->tag == ASN_NOTYPE && (lth = _check_enum(&casnp)) <= 0)
         /** @bug null terminator hasn't been written if lth is 0 */
