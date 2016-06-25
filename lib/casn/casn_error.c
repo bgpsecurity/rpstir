@@ -9,6 +9,8 @@ Remarks:
 
 *****************************************************************************/
 
+#include "casn_private.h"
+
 #include <stdio.h>
 
 void casn_error(
