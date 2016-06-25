@@ -16,11 +16,6 @@ Cambridge, Ma. 02138
 #include "casn.h"
 #include "casn_private.h"
 
-extern char *
-_putd(
-    char *to,
-    long val);
-
 int diff_objid(
     struct casn *casnp,
     const char *objid)

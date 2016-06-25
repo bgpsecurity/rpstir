@@ -144,4 +144,9 @@ _readsize_objid(
     char *to,
     int mode);
 
+char *
+_putd(
+    char *to,
+    long val);
+
 #endif /* LIB_CASN_CASN_PRIVATE_H */
