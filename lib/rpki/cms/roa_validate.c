@@ -1191,14 +1191,14 @@ err_code
 roaValidate(
     struct CMS *rp)
 {
-    err_code iRes = 0;
+    err_code sta = 0;
     intmax_t iAS_ID = 0;
 
     // ///////////////////////////////////////////////////////////
     // Validate ROA constants
     // ///////////////////////////////////////////////////////////
-    if ((iRes = cmsValidate(rp)) < 0)
-        return iRes;
+    if ((sta = cmsValidate(rp)) < 0)
+        return sta;
 
     // check that eContentType is routeOriginAttestation (=
     // OID 1.2.240.113549.1.9.16.1.24)
@@ -1249,11 +1249,11 @@ roaValidate(
     // check that the contents are valid
     struct ROAIPAddrBlocks *roaIPAddrBlocksp =
         &rp->content.signedData.encapContentInfo.eContent.roa.ipAddrBlocks;
-    if ((iRes = validateIPContents(roaIPAddrBlocksp)) < 0)
-        return iRes;
+    if ((sta = validateIPContents(roaIPAddrBlocksp)) < 0)
+        return sta;
     // and that they are within the cert's resources
-    if ((iRes = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
-        return iRes;
+    if ((sta = checkIPAddrs(certp, roaIPAddrBlocksp)) < 0)
+        return sta;
     return 0;
 }
 
@@ -1265,7 +1265,7 @@ err_code
 roaValidate2(
     struct CMS *rp)
 {
-    err_code iRes = 0;
+    err_code sta = 0;
     long ii;
     long ij;
     struct Extension *extp;
@@ -1318,7 +1318,7 @@ roaValidate2(
                     (struct casn *)&extp->extnValue.subjectKeyIdentifier) != 0)
             {
                 /** @bug error message not logged */
-                iRes = ERR_SCM_INVALSKI;
+                sta = ERR_SCM_INVALSKI;
                 goto done;
             }
         }
@@ -1354,7 +1354,7 @@ roaValidate2(
                     if (!(rpAddrFamp = (struct IPAddressFamilyA *)next_of(
                               &rpAddrFamp->self)))
                     {
-                        iRes = ERR_SCM_INVALIPB;
+                        sta = ERR_SCM_INVALIPB;
                         goto done;
                     }
                     /** @bug error code ignored without explanation */
@@ -1376,7 +1376,7 @@ roaValidate2(
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why rfam[1]? */
-                        if ((iRes = setup_roa_minmax(
+                        if ((sta = setup_roa_minmax(
                                  &roaAddrp->address, rmin, rmax, rfam[1])) < 0)
                         {
                             goto done;
@@ -1388,7 +1388,7 @@ roaValidate2(
                         /** @bug error code possibly ignored without
                          * explanation */
                         /** @bug why cfam[1]? */
-                        if ((iRes = setup_cert_minmax(
+                        if ((sta = setup_cert_minmax(
                                  rpAddrRangep, cmin, cmax, cfam[1])) < 0)
                         {
                             goto done;
@@ -1409,7 +1409,7 @@ roaValidate2(
                                     rpAddrRangep, cmin, cmax, cfam[1]) < 0)
                             {
                                 /** @bug error message not logged */
-                                iRes = ERR_SCM_INVALIPB;
+                                sta = ERR_SCM_INVALIPB;
                                 goto done;
                             }
                         }
@@ -1425,7 +1425,7 @@ roaValidate2(
                                         sizeof(cmin) - 2)) > 0)
                             {
                                 /** @bug error message not logged */
-                                iRes = ERR_SCM_INVALIPB;
+                                sta = ERR_SCM_INVALIPB;
                                 goto done;
                             }
                         }
@@ -1437,18 +1437,18 @@ roaValidate2(
     if (all_extns != (HAS_EXTN_IPADDR | HAS_EXTN_SKI))
     {
         /** @bug error message not logged */
-        iRes = ERR_SCM_INVALIPB;
+        sta = ERR_SCM_INVALIPB;
         goto done;
     }
     // check the signature
-    if ((iRes = check_sig(rp, cert)))
+    if ((sta = check_sig(rp, cert)))
     {
         goto done;
     }
 
 done:
     free(oidp);
-    return iRes;
+    return sta;
 }
 
 static err_code
