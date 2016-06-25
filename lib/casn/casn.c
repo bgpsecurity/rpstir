@@ -16,8 +16,10 @@ Cambridge, Ma. 02138
 #include "casn.h"
 #include "casn_private.h"
 
+#include <limits.h>
 #include <stdio.h>
 #include "util/logging.h"
+#include "util/stringutils.h"
 
 #define ASN_READ 1              // modes for encode & read
 
@@ -1756,11 +1758,13 @@ _putd(
     long val)
 {
     long tmp = val / 10;
+    /** @bug should use real buffer length to avoid overflow */
+    size_t tolen = INT_MAX;
 
     if (tmp)
         to = _putd(to, tmp);
     /** @bug this emits garbage if val is negative */
-    *to++ = (char)((val % 10) + '0');
+    to += xsnprintf(to, tolen, "%c", (char)((val % 10) + '0'));
     return to;
 }
 
