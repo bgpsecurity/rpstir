@@ -14,49 +14,25 @@ Cambridge, Ma. 02138
 *****************************************************************************/
 
 #include "casn.h"
-
-#define ASN_READ 1              // modes for encode & read
-
-extern int _casn_obj_err(
-    struct casn *,
-    int),
-    _check_enum(
-    struct casn **casnpp),
-    _clear_error(
-    struct casn *),
-    _write_enum(
-    struct casn *casnp),
-    _write_objid(
-    struct casn *casnp,
-    const char *from);
-
-extern char *_putd(
-    char *to,
-    long val);
-
-extern void *_free_it(
-    void *);
-
-int _readsize_objid(
-    struct casn *casnp,
-    char *to,
-    int mode);
+#include "casn_private.h"
 
 int diff_objid(
     struct casn *casnp,
     const char *objid)
 {
-    int ansr,
-        lth,
-        lth2;
+    int ansr;
+    int lth;
+    int lth2;
     char *c;
     const char *c_const;
 
     for (c_const = objid; *c_const; c_const++);
-    lth2 = c_const - objid + 1;       // include terminal null, as read_objid does
+    // include terminal null, as read_objid does
+    lth2 = c_const - objid + 1;
     if ((lth = vsize_objid(casnp)) <= 0)
         return -2;
     c = dbcalloc(1, lth);
+    /** @bug error code ignored without explanation */
     read_objid(casnp, c);
     if (lth < lth2)
         ansr = lth;
@@ -91,6 +67,7 @@ int read_objid(
 int vsize_objid(
     struct casn *casnp)
 {
+    /** @bug magic number */
     char buf[16];
 
     if (_clear_error(casnp) < 0)
@@ -122,54 +99,84 @@ int _readsize_objid(
     char *to,
     int mode)
 {
-    int lth;
-    uchar *c = casnp->startp,
-        *e = &c[casnp->lth];
-    char *b;
+    int lth = 0;
+    uchar *c = casnp->startp;
+    uchar *e = &c[casnp->lth];
+    char *b = to;
     ulong val;
 
-    b = to;
-    lth = 0;
     if (casnp->tag == ASN_NOTYPE && (lth = _check_enum(&casnp)) <= 0)
         return lth;
     if (!casnp->lth)
         return 0;
-    if (casnp->type == ASN_OBJ_ID ||    // elements 1 & 2
+    // elements 1 & 2
+    if (casnp->type == ASN_OBJ_ID ||
+        // have to allow tag for a mixed definer
         (casnp->type == ASN_ANY && casnp->tag == ASN_OBJ_ID))
-    {                           // have to allow tag for a mixed definer
+    {
+        /**
+         * @bug
+         *     This logic does not properly handle OID components that
+         *     are too big to fit in an unsigned long
+         */
+        /**
+         * @bug
+         *     BER and DER prohibit leading bytes equal to 0x80.  This
+         *     logic ignores them.  Should it error out somehow?
+         */
         for (val = 0; c < e && (*c & 0x80); c++)
         {
             val = (val << 7) + (*c & 0x7F);
         }
+        /** @bug invalid read if c == e */
         val = (val << 7) + *c++;
+        /** @bug magic numbers */
+        /** @bug might overflow buffer */
         b = _putd(to, (val < 120) ? (val / 40) : 2);
+        /** @bug might overflow buffer */
         *b++ = '.';
+        /** @bug magic numbers */
+        /** @bug might overflow buffer */
         b = _putd(b, (val < 120) ? (val % 40) : val - 80);
+        /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
             lth = b - to;
             b = to;
         }
         if (c < e)
+            /** @bug might overflow buffer */
             *b++ = '.';
     }
     while (c < e)
     {
+        /**
+         * @bug
+         *     This logic does not properly handle OID components that
+         *     are too big to fit in an unsigned long
+         */
+        /** @bug invalid read if c >= e */
         for (val = 0; (*c & 0x80); c++)
         {
             val = (val << 7) + (*c & 0x7F);
         }
         val = (val << 7) + *c++;
+        /** @bug might overflow buffer */
         b = _putd(b, val);
         if (c < e)
+            /** @bug might overflow buffer */
             *b++ = '.';
+        /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
             lth += b - to;
             b = to;
         }
     }
+    /** @bug callers seem to assume that mode is a boolean */
     if ((mode & ASN_READ))
+        /** @bug might overflow buffer */
         *b++ = 0;
+    /** @bug callers seem to assume that mode is a boolean */
     return (mode & ASN_READ) ? (b - to) : ++lth;
 }

@@ -471,12 +471,6 @@ static int write_family(
     return num;
 }
 
-/*
- * static void view_extensions(struct Extensions *extsp) { struct Extension
- * *extp; for (extp = (struct Extension *)member_casn(&extsp->self, 0); extp;
- * extp = (struct Extension *)next_of(&extp->self)) { char id[20];
- * read_objid(&extp->extnID, id); printf("%s\n", id); } }
- */
 int main(
     int argc,
     char **argv)

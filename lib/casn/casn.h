@@ -23,8 +23,8 @@ struct casn {
     long tag;
     uchar *startp;
     ulong lth;
-    ushort type,
-        level;
+    ushort type;
+    ushort level;
     ushort flags;
     short min;
     ulong max;

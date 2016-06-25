@@ -16,32 +16,24 @@ Cambridge, Ma. 02138
 #include <stdio.h>
 #include <stdlib.h>
 #include "casn.h"
+#include "casn_private.h"
 
-extern struct casn *_skip_casn(
-    struct casn *,
-    int);
-extern int _casn_obj_err(
-    struct casn *,
-    int),
-    _clear_error(
-    struct casn *),
-    _readsize_objid(
-    struct casn *casnp,
-    char *to,
-    int mode);
-
-static char *cat(
+static char *
+cat(
     char *,
     char *);
-static int newline(
+static int
+newline(
     char *,
     int);
-static long _dumpread(
+static long
+_dumpread(
     struct casn *casnp,
     char *to,
     int offset,
-    int mode),
-    _dumpsize(
+    int mode);
+static long
+_dumpsize(
     struct casn *casnp,
     char *to,
     int offset,
@@ -49,13 +41,6 @@ static long _dumpread(
 
 struct oidtable *oidtable;
 int oidtable_size;
-
-int _dump_tag(
-    int tag,
-    char *to,
-    int offset,
-    ushort flags,
-    int mode);
 
 #define ASN_READING 1
 
@@ -427,12 +412,15 @@ long _dumpread(
     }
     else if (type == ASN_OBJ_ID)
     {
-        ansr = _readsize_objid(casnp, c, mode) - 1;     // for extra null
+        // subtract one for extra null
+        /** @bug error code ignored without explanation */
+        ansr = _readsize_objid(casnp, c, mode) - 1;
         if (mode)
             c += ansr;
         if (oidtable)
         {
             char *buf = (char *)calloc(1, ansr + 2);
+            /** @bug error code ignored without explanation */
             _readsize_objid(casnp, buf, 1);
             int diff;
             char *labelp = find_label(buf, &diff, oidtable, oidtable_size);

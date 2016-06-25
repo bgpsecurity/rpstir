@@ -3550,6 +3550,7 @@ rescert_sig_algs_chk(
     }
     char *outer_sig_alg_oidp = calloc(1, length + 1);
     if (!outer_sig_alg_oidp)
+        /** @bug error message not logged */
         return ERR_SCM_NOMEM;
     if (read_objid(&certp->algorithm.algorithm, outer_sig_alg_oidp) != length)
     {
@@ -3939,6 +3940,7 @@ rescert_extensions_chk(
             }
             else
             {
+                /** @bug error code ignored without explanation */
                 read_objid(&extp->extnID, oid_print);
             }
             LOG(LOG_ERR, "certificate has unknown extension %s",

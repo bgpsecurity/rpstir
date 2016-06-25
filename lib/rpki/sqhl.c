@@ -543,8 +543,8 @@ cleanup:
 static sigval_state
 get_cert_sigval(
     scmcon *conp,
-    char *subj,
-    char *ski)
+    const char *subj,
+    const char *ski)
 {
     static scmsrcha *sigsrch = NULL;
     unsigned int *svalp;
@@ -582,7 +582,7 @@ get_cert_sigval(
 static sigval_state
 get_roa_sigval(
     scmcon *conp,
-    char *ski)
+    const char *ski)
 {
     static scmsrcha *sigsrch = NULL;
     unsigned int *svalp;
@@ -620,8 +620,8 @@ static sigval_state
 get_sigval(
     scmcon *conp,
     object_type typ,
-    char *item1,
-    char *item2)
+    const char *item1,
+    const char *item2)
 {
     switch (typ)
     {
@@ -644,10 +644,11 @@ get_sigval(
 static err_code
 set_cert_sigval(
     scmcon *conp,
-    char *subj,
-    char *ski,
+    const char *subj,
+    const char *ski,
     sigval_state valu)
 {
+    /** @bug magic number */
     char stmt[520];
     err_code sta;
 
@@ -667,9 +668,10 @@ set_cert_sigval(
 static err_code
 set_roa_sigval(
     scmcon *conp,
-    char *ski,
+    const char *ski,
     sigval_state valu)
 {
+    /** @bug magic number */
     char stmt[520];
     err_code sta;
 
@@ -688,8 +690,8 @@ static err_code
 set_sigval(
     scmcon *conp,
     object_type typ,
-    char *item1,
-    char *item2,
+    const char *item1,
+    const char *item2,
     sigval_state valu)
 {
     err_code sta = ERR_SCM_UNSPECIFIED;
@@ -1328,10 +1330,6 @@ done:
  *     Error code.  On success the value at this location is set to 0.
  *     On error it is set to a non-zero value.  This parameter may be
  *     NULL.
- * @param[out] pathname
- *     If non-NULL, the full pathname of the matching certificate will
- *     be written to the buffer at this location.  The buffer must
- *     have size at least @c PATH_MAX.  This may be NULL.
  * @return
  *     NULL on error or if there is no match, otherwise it returns the
  *     matching cert.
@@ -1347,12 +1345,11 @@ find_cert(
     const char *ski,
     const char *subject,
     err_code *stap,
-    char *pathname,
     int *flagsp)
 {
-    LOG(LOG_DEBUG, "find_cert(conp=%p, ski=%s, subject=%s, stap=%p"
-        ", pathname=%s, flagsp=%p)",
-        conp, ski, subject, stap, pathname, flagsp);
+    LOG(LOG_DEBUG, "find_cert(conp=%p, ski=\"%s\", subject=\"%s\", stap=%p"
+        ", flagsp=%p)",
+        conp, ski, subject, stap, flagsp);
 
     X509 *ret = NULL;
     err_code sta = 0;
@@ -1391,8 +1388,6 @@ find_cert(
     }
     xstrlcpy(parentAKI, cert_ansrp->aki, sizeof(parentAKI));
     xstrlcpy(parentIssuer, cert_ansrp->issuer, sizeof(parentIssuer));
-    if (pathname != NULL)
-        strncpy(pathname, cert_ansrp->fullname, PATH_MAX);
     if (flagsp)
         *flagsp = cert_ansrp->flags;
     ret = readCertFromFile(cert_ansrp->fullname, &sta);
@@ -2028,11 +2023,16 @@ done:
 static err_code
 verify_crl(
     scmcon *conp,
-    X509_CRL *x,
+    X509_CRL *crl,
     const char *aki,
     const char *issuer,
     int *chainOK)
 {
+    LOG(LOG_DEBUG, "verify_crl("
+        "conp=%p, crl=%p, aki=\"%s\", issuer=\"%s\", chainOK=%p)",
+        conp, crl, aki, issuer, chainOK);
+
+    err_code sta = 0;
     int x509sta = 0;
     X509 *parent;
     EVP_PKEY *pkey;
@@ -2043,7 +2043,7 @@ verify_crl(
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    parent = find_cert(conp, aki, issuer, NULL, NULL, NULL);
+    parent = find_cert(conp, aki, issuer, NULL, NULL);
     if (parent == NULL)
     {
         *chainOK = 0;
@@ -2055,86 +2055,21 @@ verify_crl(
          *     above to clarify the semantics of this function and its
          *     return value.
          */
-        return 0;
+        goto done;
     }
     *chainOK = 1;
+    /** @bug ignores error code (NULL) without explanation */
     pkey = X509_get_pubkey(parent);
-    x509sta = X509_CRL_verify(x, pkey);
+    x509sta = X509_CRL_verify(crl, pkey);
     X509_free(parent);
     EVP_PKEY_free(pkey);
-    return (x509sta != 1) ? ERR_SCM_NOTVALID : 0;
-}
 
-/**
- * @brief
- *     roa utility
- *
- * @param[out] stap
- *     Error code.  This parameter MUST NOT be NULL.
- */
-static unsigned char *readfile(
-    char *fn,
-    err_code *stap)
-{
-    struct stat mystat;
-    char *outptr = NULL;
-    char *ptr;
-    int outsz = 0;
-    int fd;
-    int rd;
+    sta = (x509sta != 1) ? ERR_SCM_NOTVALID : 0;
 
-    if (stap == NULL)
-        return (NULL);
-    if (fn == NULL || fn[0] == 0)
-    {
-        *stap = ERR_SCM_INVALARG;
-        return (NULL);
-    }
-    fd = open(fn, O_RDONLY);
-    if (fd < 0)
-    {
-        *stap = ERR_SCM_COFILE;
-        return (NULL);
-    }
-    memset(&mystat, 0, sizeof(mystat));
-    if (fstat(fd, &mystat) < 0 || mystat.st_size == 0)
-    {
-        (void)close(fd);
-        *stap = ERR_SCM_COFILE;
-        return (NULL);
-    }
-    ptr = (char *)calloc(mystat.st_size, sizeof(char));
-    if (ptr == NULL)
-    {
-        (void)close(fd);
-        *stap = ERR_SCM_NOMEM;
-        return (NULL);
-    }
-    rd = read(fd, ptr, mystat.st_size);
-    (void)close(fd);
-    if (rd != mystat.st_size)
-    {
-        free((void *)ptr);
-        ptr = NULL;
-        *stap = ERR_SCM_COFILE;
-    }
-    else
-        *stap = 0;
-    if (strstr(fn, ".pem") == NULL)     /* not a PEM file */
-        return ((unsigned char *)ptr);
-    *stap =
-        decode_b64((unsigned char *)ptr, mystat.st_size,
-                   (unsigned char **)&outptr, &outsz, "CERTIFICATE");
-    free((void *)ptr);
-    if (*stap < 0)
-    {
-        if (outptr != NULL)
-        {
-            free((void *)outptr);
-            outptr = NULL;
-        }
-    }
-    return ((unsigned char *)outptr);
+done:
+    LOG(LOG_DEBUG, "verify_crl() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -2158,30 +2093,34 @@ verify_roa(
     char *ski,
     int *chainOK)
 {
-    unsigned char *blob = NULL;
+    LOG(LOG_DEBUG, "verify_roa(conp=%p, r=%p, ski=\"%s\", chainOK=%p)",
+        conp, r, ski, chainOK);
+
+    err_code sta = 0;
     X509 *cert;
     sigval_state sigval;
-    err_code sta;
-    char fn[PATH_MAX];
 
     // first, see if the ROA is already validated and in the DB
     sigval = get_sigval(conp, OT_ROA, ski, NULL);
     if (sigval == SIGVAL_VALID)
     {
+        LOG(LOG_DEBUG, "ROA already verified; skipping checks");
         *chainOK = 1;
-        return 0;
+        goto done;
     }
     // next call the syntactic verification
     sta = roaValidate(r);
-    if (sta < 0)
-        return (sta);
+    if (sta)
+    {
+        goto done;
+    }
     /**
      * @bug
      *     find_cert() only returns one match.  What if there are
      *     multiple matches?  (e.g., evil twin, cert renewal)
      */
     /** @bug ignores error code without explanation */
-    cert = find_cert(conp, ski, NULL, &sta, fn, NULL);
+    cert = find_cert(conp, ski, NULL, &sta, NULL);
     if (cert == NULL)
     {
         *chainOK = 0;
@@ -2193,17 +2132,10 @@ verify_roa(
          *     clarify the semantics of this function and its return
          *     value.
          */
-        return 0;
+        goto done;
     }
     *chainOK = 1;
-    // read the ASN.1 blob from the file
-    blob = readfile(fn, &sta);
-    /** @bug what if blob is NULL and sta is non-negative? */
-    if (blob != NULL)
-    {
-        sta = roaValidate2(r);
-        free((void *)blob);
-    }
+    sta = roaValidate2(r);
     X509_free(cert);
     if (sta >= 0)
     {
@@ -2213,7 +2145,12 @@ verify_roa(
                     "could not set ROA sigval: conp->mystat.errmsg = %s",
                     conp->mystat.errmsg);
     }
-    return (sta < 0) ? sta : 0;
+    sta = (sta < 0) ? sta : 0;
+
+done:
+    LOG(LOG_DEBUG, "verify_roa() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -2288,8 +2225,11 @@ verifyChildCRL(
     scmsrcha *s,
     ssize_t idx)
 {
+    LOG(LOG_DEBUG, "verifyChildCRL(conp=%p, s=%p, idx=%zd)",
+        conp, s, idx);
+
     crl_fields *cf;
-    X509_CRL *x = NULL;
+    X509_CRL *crl = NULL;
     int crlsta = 0;
     err_code sta = 0;
     unsigned int i;
@@ -2309,11 +2249,13 @@ verifyChildCRL(
               (char *)s->vec[1].valptr);
     typ = infer_filetype(pathname);
     cf = crl2fields((char *)s->vec[1].valptr, pathname, typ,
-                    &x, &sta, &crlsta, goodoids);
+                    &crl, &sta, &crlsta, goodoids);
     if (cf == NULL)
-        return sta;
+    {
+        goto done;
+    }
     /** @bug ignores chainOK without explanation */
-    sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
+    sta = verify_crl(conp, crl, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &chainOK);
     id = *((unsigned int *)(s->vec[2].valptr));
     // if invalid, delete it
@@ -2321,7 +2263,7 @@ verifyChildCRL(
     {
         /** @bug ignores error code without explanation */
         deletebylid(conp, theCRLTable, id);
-        return sta;
+        goto done;
     }
     // otherwise, validate it and do its revocations
     /** @bug ignores error code without explanation */
@@ -2334,7 +2276,11 @@ verifyChildCRL(
                               cf->fields[CRF_FIELD_AKI],
                               &((uint8_t *)cf->snlist)[SER_NUM_MAX_SZ * i]);
     }
-    return 0;
+    sta = 0;
+done:
+    LOG(LOG_DEBUG, "verifyChildCRL() returning %s: %s",
+        err2name(sta), err2string(sta));
+    return sta;
 }
 
 /**
@@ -3625,8 +3571,8 @@ add_crl(
         ", outfull=\"%s\", id=%u, utrust=%i, typ=%i)",
         scmp, conp, outfile, outfull, id, utrust, typ);
 
-    crl_fields *cf;
-    X509_CRL *x = NULL;
+    crl_fields *cf = NULL;
+    X509_CRL *xcrl = NULL;
     int crlsta = 0;
     err_code sta = 0;
     unsigned int i;
@@ -3654,33 +3600,37 @@ add_crl(
     }
     delete_casn(&crl.self);
 
-    cf = crl2fields(outfile, outfull, typ, &x, &sta, &crlsta, goodoids);
-    if (cf == NULL || x == NULL)
+    cf = crl2fields(outfile, outfull, typ, &xcrl, &sta, &crlsta, goodoids);
+    if (cf == NULL || xcrl == NULL)
     {
-        if (cf != NULL)
-            freecrf(cf);
-        if (x != NULL)
-            X509_CRL_free(x);
         goto done;
     }
     cf->dirid = id;
+
     // first verify the CRL
-    sta = verify_crl(conp, x, cf->fields[CRF_FIELD_AKI],
+    sta = verify_crl(conp, xcrl, cf->fields[CRF_FIELD_AKI],
                      cf->fields[CRF_FIELD_ISSUER], &chainOK);
+    if (sta)
+    {
+        goto done;
+    }
+
     // then add the CRL
-    if (sta == 0)
+    sta = addStateToFlags(&cf->flags, chainOK,
+                          cf->fields[CRF_FIELD_FILENAME], outfull, scmp,
+                          conp);
+    if (sta)
     {
-        sta =
-            addStateToFlags(&cf->flags, chainOK,
-                            cf->fields[CRF_FIELD_FILENAME], outfull, scmp,
-                            conp);
+        goto done;
     }
-    if (sta == 0)
+    sta = add_crl_internal(scmp, conp, cf);
+    if (sta)
     {
-        sta = add_crl_internal(scmp, conp, cf);
+        goto done;
     }
+
     // and do the revocations
-    if ((sta == 0) && chainOK)
+    if (chainOK)
     {
         LOG(LOG_DEBUG, "CRL has %u entries", cf->snlen);
         uint8_t *u = (uint8_t *) cf->snlist;
@@ -3697,10 +3647,10 @@ add_crl(
                                   cf->fields[CRF_FIELD_AKI], u);
         }
     }
-    freecrf(cf);
-    X509_CRL_free(x);
 
 done:
+    freecrf(cf);
+    X509_CRL_free(xcrl);
     LOG(LOG_DEBUG, "add_crl() returning %s: %s",
         err2name(sta), err2string(sta));
     return (sta);
@@ -3921,21 +3871,36 @@ add_roa_internal(
     char *sig,
     unsigned int flags)
 {
+    LOG(LOG_DEBUG, "add_roa_internal(scmp=%p, conp=%p"
+        ", outfile=\"%s\", dirid=%u, ski=\"%s\", asid=%" PRIu32
+        ", prefixes_length=%zu, prefixes=%p, sig=%p, flags=%u)",
+        scmp, conp, outfile, dirid, ski, asid, prefixes_length, prefixes,
+        sig, flags);
+
+    err_code sta = 0;
     unsigned int roa_id = 0;
+    /** @bug magic number */
     char flagn[24];
+    /** @bug magic number */
     char asn[24];
+    /** @bug magic number */
     char lid[24];
+    /** @bug magic number */
     char did[24];
-    err_code sta;
+    _Bool inserted = 0;
 
     // Buffer to hold a potentially large INSERT statement. This is
     // used to insert multiple rows per statement into
     // rpki_roa_prefix.
+    /** @bug magic number */
     size_t const multiinsert_len = 32 * 1024;
     char * multiinsert = malloc(multiinsert_len);
     if (multiinsert == NULL)
     {
-        return ERR_SCM_NOMEM;
+        LOG(LOG_ERR, "unable to allocate %zu bytes of memory",
+            multiinsert_len);
+        sta = ERR_SCM_NOMEM;
+        goto done;
     }
 
     initTables(scmp);
@@ -3944,14 +3909,12 @@ add_roa_internal(
     sta = dupsigscm(scmp, conp, theROATable, sig);
     if (sta < 0)
     {
-        free(multiinsert);
-        return (sta);
+        goto done;
     }
     sta = getmaxidscm(scmp, conp, "local_id", theROATable, &roa_id);
     if (sta < 0)
     {
-        free(multiinsert);
-        return (sta);
+        goto done;
     }
     roa_id++;
     // fill in insertion structure
@@ -3978,9 +3941,9 @@ add_roa_internal(
     sta = insertscm(conp, theROATable, &aone);
     if (sta < 0)
     {
-        free(multiinsert);
-        return sta;
+        goto done;
     }
+    inserted = 1;
 
     // Prefix for the insert statement that inserts multiple rows
     // into rpki_roa_prefix.
@@ -4093,7 +4056,7 @@ add_roa_internal(
 
 done:
 
-    if (sta < 0)
+    if (inserted && sta)
     {
         // There was an error, so delete the ROA we just inserted.
         err_code delete_status;
@@ -4131,6 +4094,8 @@ done:
 
     free(multiinsert);
 
+    LOG(LOG_DEBUG, "add_roa_internal() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 
@@ -4150,14 +4115,25 @@ add_roa(
     int utrust,
     object_type typ)
 {
-    struct CMS roa;             // note: roaFromFile constructs this
+    LOG(LOG_DEBUG, "add_roa(scmp=%p, conp=%p, outfile=\"%s\", outdir=\"%s\""
+        ", outfull=\"%s\", id=%u, utrust=%i, typ=%i)",
+        scmp, conp, outfile, outdir, outfull, id, utrust, typ);
+
+    err_code sta = 0;
+    // zero-initialized struct CMS for initializing roa below
+    static const struct CMS CMS_ZERO_INITIALIZER;
+    // note: roaFromFile constructs this
+    // make sure roa is initialized so that delete_casn() doesn't free
+    // invalid pointers or do some other bad thing during cleanup
+    // when there's an early error
+    struct CMS roa = CMS_ZERO_INITIALIZER;
+    /** @bug magic number */
     char ski[60];
     char *sig = NULL;
     char certfilename[PATH_MAX];
     size_t prefixes_length = 0;
     struct roa_prefix *prefixes = NULL;
     unsigned char *bsig = NULL;
-    err_code sta;
     int chainOK;
     int bsiglen = 0;
     int cert_added = 0;
@@ -4167,14 +4143,16 @@ add_roa(
     // validate parameters
     if (scmp == NULL || conp == NULL || conp->connected == 0 || outfile == NULL
         || outfile[0] == 0 || outfull == NULL || outfull[0] == 0)
-        return (ERR_SCM_INVALARG);
+    {
+        sta = ERR_SCM_INVALARG;
+        goto done;
+    }
     sta =
         roaFromFile(outfull, typ >= OT_PEM_OFFSET ? FMT_PEM : FMT_DER, 1,
                     &roa);
     if (sta < 0)
     {
-        delete_casn(&roa.self);
-        return (sta);
+        goto done;
     }
 
     /**
@@ -4190,7 +4168,8 @@ add_roa(
         goto done;
     cert_added = 1;
 
-    asid = roaAS_ID(&roa);  /* it's OK if this comes back zero */
+    // it's OK if this comes back zero
+    asid = roaAS_ID(&roa);
 
     // signature NOTE: this does not calloc, only points
     if ((bsig = roaSignature(&roa, &bsiglen)) == NULL || bsiglen < 0)
@@ -4236,6 +4215,8 @@ done:
     delete_casn(&roa.self);
     if (sig != NULL)
         free(sig);
+    LOG(LOG_DEBUG, "add_roa() returning %s: %s",
+        err2name(sta), err2string(sta));
     return (sta);
 }
 

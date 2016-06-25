@@ -494,8 +494,8 @@ member_casn(
     struct casn *tcasnp;
     int err = 0;
 
-    // if (index < 0) return ASN_OF_BOUNDS_ERR;
     if (index < 0)
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return (struct casn *)0;
     if (_clear_error(casnp) < 0)
         return (struct casn *)0;
@@ -1723,17 +1723,17 @@ _readsize(
     uchar *to,
     int mode)
 {
-    uchar bb,
-       *b,
-       *c,
-        buf[8];
-    int i,
-        lth,
-        num,
-        of;
+    uchar bb;
+    uchar *b;
+    uchar *c;
+    uchar buf[8];
+    int i;
+    int lth;
+    int num;
+    int of;
     int64_t secs = 0;
-    struct casn *tcasnp,
-       *ch_casnp;
+    struct casn *tcasnp;
+    struct casn *ch_casnp;
 #ifdef FLOATS
     struct casn realobj;
 #endif
@@ -1742,10 +1742,11 @@ _readsize(
         uchar *c;
         struct casn *casnp;
         struct set_struct *nextp;
-    }  *sstp1,
-       *sstp2,
-       *sstp0,
-       *tablep;
+    };
+    struct set_struct *sstp1;
+    struct set_struct *sstp2;
+    struct set_struct *sstp0;
+    struct set_struct *tablep;
 
     if (casnp->level > 0 && (_go_up(casnp)->flags & ASN_OF_FLAG) &&
         !casnp->ptr)
@@ -1971,7 +1972,8 @@ check_filled_default(
     {
         if (((casnp->flags & ASN_FILLED_FLAG)))
         {
-            struct casn *xcasnp = &casnp[2];    // the default value
+            // the default value
+            struct casn *xcasnp = &casnp[2];
             if (xcasnp->lth != casnp->lth)
                 return 0;
             if (!memcmp(xcasnp->startp, casnp->startp, casnp->lth))
@@ -1981,36 +1983,37 @@ check_filled_default(
     return 0;
 }
 
+// handles default cases at level above _readsize()
 int
 _readvsize(
     struct casn *casnp,
     uchar *to,
     int mode)
-{                               // handles default cases at level above
-                                // _readsize()
+{
     int ansr = 0;
     struct casn *ch_casnp = NULL;
 
     if (_clear_error(casnp) < 0)
         return -1;
     if (casnp->type == ASN_CHOICE)
-    {                           // anything chosen?
+    {
+        // anything chosen?
         if (!(ch_casnp = _find_filled_or_chosen(casnp, &ansr)))
             return _casn_obj_err(casnp, ansr);
     }
     // is it (or a chosen item below it) the default value?
-    if (check_filled_default(casnp) > 0 || (ch_casnp && check_filled_default(ch_casnp)))        // if
-                                                                                                // so,
-                                                                                                // skip
-                                                                                                // it
+    if (check_filled_default(casnp) > 0
+        || (ch_casnp && check_filled_default(ch_casnp)))
+        // if so, skip it
         return 0;
-    //
     if (ch_casnp)
         casnp = ch_casnp;
     if ((ansr = _readsize(casnp, to, mode)) > 0)
-    {                           // pure read of bit-string-defined-by
+    {
+        // pure read of bit-string-defined-by
         if (casnp->type == (ASN_CHOICE | ASN_BITSTRING))
-            memmove(to, &to[1], --ansr);        // shift to left 1 byte
+            // shift to left 1 byte
+            memmove(to, &to[1], --ansr);
     }
     return ansr;
 }
@@ -2111,9 +2114,9 @@ void
 _stuff_num(
     int count)
 {
-    char *a,
-       *b,
-       *c;
+    char *a;
+    char *b;
+    char *c;
 
     if ((c = casn_err_struct.asn_map_string))
     {

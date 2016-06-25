@@ -135,4 +135,18 @@ set_asn_lth(
     unsigned char *,
     unsigned char *);
 
+// modes for encode & read
+#define ASN_READ 1
+
+int
+_readsize_objid(
+    struct casn *casnp,
+    char *to,
+    int mode);
+
+char *
+_putd(
+    char *to,
+    long val);
+
 #endif /* LIB_CASN_CASN_PRIVATE_H */
