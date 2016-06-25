@@ -15,6 +15,7 @@ Cambridge, Ma. 02138
 
 #include "casn.h"
 #include "casn_private.h"
+#include "util/stringutils.h"
 
 #include <limits.h>
 
@@ -167,8 +168,7 @@ int _readsize_objid(
         /** @bug magic numbers */
         /** @bug _putd() takes a long, not an unsigned long */
         b = _putd(b, tolen - (b - to), (val < 120) ? (val / 40) : 2);
-        /** @bug might overflow buffer */
-        *b++ = '.';
+        b += xstrlcpy(b, ".", tolen - (b - to));
         /** @bug magic numbers */
         /** @bug _putd() takes a long, not an unsigned long */
         b = _putd(b, tolen - (b - to), (val < 120) ? (val % 40) : val - 80);
@@ -179,8 +179,9 @@ int _readsize_objid(
             b = to;
         }
         if (c < e)
-            /** @bug might overflow buffer */
-            *b++ = '.';
+        {
+            b += xstrlcpy(b, ".", tolen - (b - to));
+        }
     }
     while (c < e)
     {
@@ -205,8 +206,9 @@ int _readsize_objid(
         /** @bug _putd() takes a long, not an unsigned long */
         b = _putd(b, tolen - (b - to), val);
         if (c < e)
-            /** @bug might overflow buffer */
-            *b++ = '.';
+        {
+            b += xstrlcpy(b, ".", tolen - (b - to));
+        }
         /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
@@ -214,10 +216,7 @@ int _readsize_objid(
             b = to;
         }
     }
+    // add one to include the nul terminator in the length
     /** @bug callers seem to assume that mode is a boolean */
-    if ((mode & ASN_READ))
-        /** @bug might overflow buffer */
-        *b++ = 0;
-    /** @bug callers seem to assume that mode is a boolean */
-    return (mode & ASN_READ) ? (b - to) : ++lth;
+    return (mode & ASN_READ) ? (b - to) + 1 : ++lth;
 }
