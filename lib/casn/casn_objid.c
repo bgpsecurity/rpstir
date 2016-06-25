@@ -16,6 +16,8 @@ Cambridge, Ma. 02138
 #include "casn.h"
 #include "casn_private.h"
 
+#include <limits.h>
+
 int diff_objid(
     struct casn *casnp,
     const char *objid)
@@ -131,6 +133,8 @@ int _readsize_objid(
     uchar *e = &c[casnp->lth];
     char *b = to;
     ulong val;
+    /** @bug should use real buffer length to avoid overflow */
+    size_t tolen = INT_MAX;
 
     if (casnp->tag == ASN_NOTYPE && (lth = _check_enum(&casnp)) <= 0)
         /** @bug null terminator hasn't been written if lth is 0 */
@@ -162,14 +166,12 @@ int _readsize_objid(
         val = (val << 7) + *c++;
         /** @bug magic numbers */
         /** @bug _putd() takes a long, not an unsigned long */
-        /** @bug might overflow buffer */
-        b = _putd(to, (val < 120) ? (val / 40) : 2);
+        b = _putd(b, tolen - (b - to), (val < 120) ? (val / 40) : 2);
         /** @bug might overflow buffer */
         *b++ = '.';
         /** @bug magic numbers */
         /** @bug _putd() takes a long, not an unsigned long */
-        /** @bug might overflow buffer */
-        b = _putd(b, (val < 120) ? (val % 40) : val - 80);
+        b = _putd(b, tolen - (b - to), (val < 120) ? (val % 40) : val - 80);
         /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
@@ -201,8 +203,7 @@ int _readsize_objid(
         /** @bug invalid read if c >= e */
         val = (val << 7) + *c++;
         /** @bug _putd() takes a long, not an unsigned long */
-        /** @bug might overflow buffer */
-        b = _putd(b, val);
+        b = _putd(b, tolen - (b - to), val);
         if (c < e)
             /** @bug might overflow buffer */
             *b++ = '.';

@@ -16,7 +16,6 @@ Cambridge, Ma. 02138
 #include "casn.h"
 #include "casn_private.h"
 
-#include <limits.h>
 #include <stdio.h>
 #include "util/logging.h"
 #include "util/stringutils.h"
@@ -1755,14 +1754,17 @@ _put_asn_lth(
 char *
 _putd(
     char *to,
+    size_t tolen,
     long val)
 {
     long tmp = val / 10;
-    /** @bug should use real buffer length to avoid overflow */
-    size_t tolen = INT_MAX;
 
     if (tmp)
-        to = _putd(to, tmp);
+    {
+        char *newto = _putd(to, tolen, tmp);
+        tolen -= newto - to;
+        to = newto;
+    }
     /** @bug this emits garbage if val is negative */
     to += xsnprintf(to, tolen, "%c", (char)((val % 10) + '0'));
     return to;
@@ -2167,19 +2169,19 @@ _stuff_num(
     char *a;
     char *b;
     char *c;
+    size_t len = 0;
 
     if ((c = casn_err_struct.asn_map_string))
     {
         while (*c)
             c++;
-        /** @bug magic number */
-        c = calloc(1, (c - casn_err_struct.asn_map_string) + 8);
+        len = (c - casn_err_struct.asn_map_string);
     }
-    else
-        /** @bug magic number */
-        c = calloc(1, 8);
+    /** @bug magic number */
+    len += 8;
+    c = calloc(1, len);
     a = c;
-    c = _putd(c, count);
+    c = _putd(c, len, count);
     *c++ = '.';
     for (b = casn_err_struct.asn_map_string; b && *b; *c++ = *b++);
     _free_it(casn_err_struct.asn_map_string);
