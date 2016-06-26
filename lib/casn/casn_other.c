@@ -17,7 +17,7 @@ int encodesize_casn(
 {
     int lth;
 
-    *pp = (uchar *) 0;
+    *pp = NULL;
     if ((lth = size_casn(casnp)) < 0)
         return lth;
     *pp = calloc(1, lth);
@@ -30,7 +30,7 @@ int readvsize_casn(
 {
     int lth;
 
-    *pp = (uchar *) 0;
+    *pp = NULL;
     if ((lth = vsize_casn(casnp)) < 0)
         return lth;
     *pp = calloc(1, lth + 1);
@@ -43,7 +43,7 @@ int readvsize_objid(
 {
     int lth;
 
-    *pp = (char *)0;
+    *pp = NULL;
     if ((lth = vsize_objid(casnp)) < 0)
         return lth;
     *pp = calloc(1, lth);

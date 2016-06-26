@@ -906,7 +906,7 @@ _dup_casn(
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
     {
         _casn_obj_err(casnp, -err);
-        casnp = (struct casn *)0;
+        casnp = NULL;
     }
     return casnp->ptr;
 }
@@ -2313,7 +2313,7 @@ _write_casn(
         return _match_casn(&casnp[1], c, lth, (casnp->flags & ASN_OF_FLAG),
                            (ushort) 1,
                            ((casnp->
-                             flags & ASN_OF_FLAG)) ? casnp : (struct casn *)0,
+                             flags & ASN_OF_FLAG)) ? casnp : NULL,
                            &has_indef);
     }
     if (casnp->type == ASN_CHOICE)
