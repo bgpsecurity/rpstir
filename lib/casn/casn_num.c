@@ -203,7 +203,7 @@ int _write_casn_num(
         for (siz = 1; tmp > 0x7F; siz++, tmp >>= 8);
     else
         for (siz = 1; tmp < -128; siz++, tmp >>= 8);
-    casnp->startp = dbcalloc(1, siz + 1);
+    casnp->startp = calloc(1, siz + 1);
     for (c = &casnp->startp[siz]; val != 0 && val != -1;
          *(--c) = (val & 0xFF), val >>= 8);
     if (val < 0 && !*casnp->startp)

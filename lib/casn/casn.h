@@ -311,15 +311,6 @@ find_label(
     struct oidtable *oidtable,
     int oidtable_size);
 
-#ifndef DEBUG
-#define dbcalloc calloc
-#define dbfree free
-#else
-void *
-dbcalloc(
-    size_t,
-    size_t);
-#endif
 #define ASN_UNDEFINED_LTH 0x7FFFFFFF
     // for reals
 #define ASN_PLUS_INFINITY  0x40

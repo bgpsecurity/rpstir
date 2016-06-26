@@ -32,7 +32,7 @@ int diff_objid(
     if ((lth = vsize_objid(casnp)) <= 0)
         return -2;
     /** @bug error code ignored without explanation */
-    c = dbcalloc(1, lth);
+    c = calloc(1, lth);
     /** @bug error code ignored without explanation */
     read_objid(casnp, c);
     if (lth < lth2)
