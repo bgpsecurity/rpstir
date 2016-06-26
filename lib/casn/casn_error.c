@@ -9,14 +9,18 @@ Remarks:
 
 *****************************************************************************/
 
-#include "casn_private.h"
+#include "casn.h"
 
 #include <stdio.h>
 
-void casn_error(
+static casn_error_callback default_casn_error_handler;
+void
+default_casn_error_handler(
     int num,
     const char *msg)
 {
     fprintf(stderr, "Error #%d: %s\n", num, msg);
     fflush(stderr);
 }
+
+casn_error_callback *casn_error = &default_casn_error_handler;
