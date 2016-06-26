@@ -92,7 +92,7 @@ _dump_tag(
 void
 casn_error(
     int,
-    char *);
+    const char *);
 
 int
 _calc_lth(

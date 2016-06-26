@@ -15,7 +15,7 @@ Remarks:
 
 void casn_error(
     int num,
-    char *msg)
+    const char *msg)
 {
     fprintf(stderr, "Error #%d: %s\n", num, msg);
     fflush(stderr);
