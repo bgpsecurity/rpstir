@@ -20,6 +20,6 @@ const char *LOG_LEVEL_TEXT[8] = {
     "DEBUG"                     /* 7 */
 };
 
-int log_facility = LOG_USER;
+int log_facility = LOG_CONSOLE;
 
 const char *log_ident = NULL;
