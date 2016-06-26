@@ -315,10 +315,10 @@ find_label(
 #define dbcalloc calloc
 #define dbfree free
 #else
-uchar *
+void *
 dbcalloc(
-    int,
-    int);
+    size_t,
+    size_t);
 #endif
 #define ASN_UNDEFINED_LTH 0x7FFFFFFF
     // for reals
