@@ -39,10 +39,10 @@ int get_casn_file(
     const char *name,
     int fd)
 {
-    long siz,
-        tmp;
-    uchar *b,
-       *c;
+    long siz;
+    long tmp;
+    uchar *b;
+    uchar *c;
 
     // if name is NULL, we were passed an active file descriptor
     if (name)

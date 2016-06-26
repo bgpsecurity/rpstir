@@ -407,13 +407,13 @@ inject_casn(
     struct casn *casnp,
     int num)
 {
-    struct casn *fcasnp = &casnp[1],    // first member
-        *lcasnp, // last "member" (could be terminator)
-        *pcasnp, // previous
-        *tcasnp; // the
-    int icount,
-        ncount,
-        err = 0;
+    struct casn *fcasnp = &casnp[1]; // first member
+    struct casn *lcasnp; // last "member" (could be terminator)
+    struct casn *pcasnp; // previous
+    struct casn *tcasnp; // the
+    int icount;
+    int ncount;
+    int err = 0;
 
     if (_clear_error(casnp) < 0)
         return (struct casn *)0;
@@ -671,8 +671,8 @@ _calc_lth(
     (void)ftag;
 
     uchar *c = *cpp;
-    int tmp,
-        lth;
+    int tmp;
+    int lth;
 
     if (*c > 0x84 || (*c == 0x84 && c[1] > 0x7F))
         /** @bug shouldn't _casn_obj_err() be called here? */
@@ -1134,10 +1134,10 @@ _gather_crumbs(
     uchar **frompp)
 {
     uchar *c = *frompp;
-    uchar *startp = 0,
-        *curr_endp;
-    int lth,
-        tot_lth;
+    uchar *startp = 0;
+    uchar *curr_endp;
+    int lth;
+    int tot_lth;
     tot_lth = _count_crumbs_size(*frompp);
     if (!(startp = (uchar *) calloc(1, tot_lth)))
         return -1;
@@ -2159,14 +2159,14 @@ void
 _stuff_string(
     struct casn *casnp)
 {
-    struct casn *tcasnp,
-       *ucasnp;
+    struct casn *tcasnp;
+    struct casn *ucasnp;
     int count;
 
 #ifdef ASN_VERBOSE
     int lth;
-    uchar *c,
-        lbuf[10];
+    uchar *c;
+    uchar lbuf[10];
     char *b;
 
     memset(lbuf, 0, 16);
@@ -2266,12 +2266,12 @@ _write_casn(
     uchar *c,
     int lth)
 {
-    int num,
-        err,
-        tmp,
-        has_indef = 0;
-    uchar *b,
-        mask;
+    int num;
+    int err;
+    int tmp;
+    int has_indef = 0;
+    uchar *b;
+    uchar mask;
     ulong val;
     struct casn *tcasnp;
 

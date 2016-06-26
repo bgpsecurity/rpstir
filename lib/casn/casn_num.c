@@ -84,8 +84,8 @@ int read_casn_num_max(
     intmax_t *valp)
 {
     struct casn *tcasnp;
-    int ansr,
-        err = 0;
+    int ansr;
+    int err = 0;
     uchar *c;
 
     if (_clear_error(casnp) < 0)
