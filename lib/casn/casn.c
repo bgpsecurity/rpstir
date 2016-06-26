@@ -438,7 +438,7 @@ inject_casn(
         casnp->lastp = fcasnp;
     // how many struct casns in this casnp
     ncount = _num_casns(casnp->lastp);
-    tcasnp = (struct casn *)dbcalloc(ncount, sizeof(struct casn));
+    tcasnp = dbcalloc(ncount, sizeof(struct casn));
     // set up tags etc. in tcasnp.
     if (!casnp->num_items)
         lcasnp = fcasnp;
@@ -899,8 +899,8 @@ _dup_casn(
 {
     int err = 0;
     _free_it(casnp->ptr);
-    casnp->ptr = (struct casn *)dbcalloc(1, casnp->min);
-    ((void (*)(void *, ushort))casnp->startp) ((void *)casnp->ptr, 0);
+    casnp->ptr = dbcalloc(1, casnp->min);
+    ((void (*)(void *, ushort))casnp->startp)(casnp->ptr, 0);
     // assumes duped object will be filled. writing pointed-to won't
     // go up through pointer
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
@@ -1876,8 +1876,7 @@ _readsize(
             for (tcasnp = casnp; tcasnp;
                  num++, tcasnp = _skip_casn(tcasnp, 1));
         // prepare table of num + 1 entries for the SET
-        tablep =
-            (struct set_struct *)dbcalloc(num + 1, sizeof(struct set_struct));
+        tablep = dbcalloc(num + 1, sizeof(struct set_struct));
         tablep[0].nextp = &tablep[1];
         // for entries [1] to [num]
         for (tcasnp = casnp, sstp1 = &tablep[i = 1]; i <= num;)
@@ -2153,11 +2152,11 @@ _stuff_num(
         while (*c)
             c++;
         /** @bug magic number */
-        c = (char *)dbcalloc(1, (c - casn_err_struct.asn_map_string) + 8);
+        c = dbcalloc(1, (c - casn_err_struct.asn_map_string) + 8);
     }
     else
         /** @bug magic number */
-        c = (char *)dbcalloc(1, 8);
+        c = dbcalloc(1, 8);
     a = c;
     c = _putd(c, count);
     *c++ = '.';
@@ -2231,7 +2230,7 @@ _stuff_string(
     }
     else
         count = 0;
-    b = (char *)dbcalloc(1, sizeof(lbuf) + count);
+    b = dbcalloc(1, sizeof(lbuf) + count);
     memcpy(b, (char *)lbuf, lth);
     if (count)
         memcpy(&b[lth], casn_err_struct.asn_map_string, count);
@@ -2311,7 +2310,7 @@ _write_casn(
             return 0;
         }
         return _match_casn(&casnp[1], c, lth, (casnp->flags & ASN_OF_FLAG),
-                           (ushort) 1,
+                           1,
                            ((casnp->
                              flags & ASN_OF_FLAG)) ? casnp : NULL,
                            &has_indef);
@@ -2392,7 +2391,7 @@ _write_casn(
     casnp->flags &= ~(ASN_FILLED_FLAG);
     if (casnp->startp)
         casnp->startp = _free_it(casnp->startp);
-    casnp->startp = (uchar *) dbcalloc(1, (casnp->lth = lth));
+    casnp->startp = dbcalloc(1, (casnp->lth = lth));
     memcpy(casnp->startp, c, casnp->lth);
     // fill up to top
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
@@ -2432,7 +2431,7 @@ _write_objid(
     _clear_casn(casnp, ~(ASN_FILLED_FLAG));
     for (e = (uchar *) from, tmp = 0; *e; tmp++, e++);
     // bigger than needed
-    casnp->startp = buf = (uchar *) dbcalloc(1, tmp);
+    casnp->startp = buf = dbcalloc(1, tmp);
     if (casnp->type == ASN_OBJ_ID)
     {
         for (val = 0; c < (char *)e && *c && *c != '.';
