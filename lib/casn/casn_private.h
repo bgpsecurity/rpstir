@@ -89,7 +89,7 @@ _dump_tag(
     unsigned short flags,
     int mode);
 
-int
+void
 casn_error(
     int,
     char *);
