@@ -26,14 +26,20 @@ static struct Extension *find_CRLextension(
     int creat)
 {
     struct Extension *extp;
+    /** @bug error code ignored without explanation */
     for (extp = (struct Extension *)member_casn(&extsp->self, 0);
+         /** @bug error code ignored without explanation */
          extp && diff_objid(&extp->extnID, idp);
+         /** @bug error code ignored without explanation */
          extp = (struct Extension *)next_of(&extp->self));
     if (!extp && creat)
     {
+        /** @bug error code ignored without explanation */
         int num = num_items(&extsp->self);
+        /** @bug error code ignored without explanation */
         extp = (struct Extension *)inject_casn(&extsp->self, num);
         if (extp)
+            /** @bug error code ignored without explanation */
             write_objid(&extp->extnID, idp);
     }
     return extp;

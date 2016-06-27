@@ -288,15 +288,6 @@ Procedure:
     casnp->lth = 0;
 }
 
-struct casn *
-dup_casn(
-    struct casn *casnp)
-{
-    if (!(casnp->flags & ASN_POINTER_FLAG))
-        return (struct casn *)0;
-    return _dup_casn(casnp);
-}
-
 int
 eject_casn(
     struct casn *casnp,
@@ -406,13 +397,17 @@ inject_casn(
     struct casn *casnp,
     int num)
 {
-    struct casn *fcasnp = &casnp[1],    // first member
-        *lcasnp, // last "member" (could be terminator)
-        *pcasnp, // previous
-        *tcasnp; // the
-    int icount,
-        ncount,
-        err = 0;
+    // first member
+    struct casn *fcasnp = &casnp[1];
+    // last "member" (could be terminator)
+    struct casn *lcasnp;
+    // previous
+    struct casn *pcasnp;
+    // the
+    struct casn *tcasnp;
+    int icount;
+    int ncount;
+    int err = 0;
 
     if (_clear_error(casnp) < 0)
         return (struct casn *)0;
@@ -431,28 +426,36 @@ inject_casn(
     }
     if (!casnp->num_items)
         casnp->lastp = fcasnp;
-    ncount = _num_casns(casnp->lastp);  // how many struct casns in this casnp
-    tcasnp = (struct casn *)dbcalloc(ncount, sizeof(struct casn));
+    // how many struct casns in this casnp
+    ncount = _num_casns(casnp->lastp);
+    tcasnp = calloc(ncount, sizeof(struct casn));
     // set up tags etc. in tcasnp.
     if (!casnp->num_items)
         lcasnp = fcasnp;
     else
         lcasnp = casnp->lastp->ptr;
     memcpy(tcasnp, lcasnp, (ncount * sizeof(struct casn)));
-    if (!num)                   // has to go in front, but fcasnp must be
-                                // first
+    // has to go in front, but fcasnp must be first
+    if (!num)
     {
-        if (!casnp->num_items)  // there is only one, including final
+        if (!casnp->num_items)
         {
-            tcasnp->level = 0;  // fcasnp's ptr was null, so OK
+            // there is only one, including final
+
+            // fcasnp's ptr was null, so OK
+            tcasnp->level = 0;
             casnp->lastp = fcasnp;
         }
-        else                    // there's more than one, including final
+        else
         {
-            copy_casn(tcasnp, fcasnp);  // so copy the first to the new one
-            tcasnp->ptr = fcasnp->ptr;  // make new one point to where first
-                                        // did
-            _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));    // clear the old first
+            // there's more than one, including final
+
+            // so copy the first to the new one
+            copy_casn(tcasnp, fcasnp);
+            // make new one point to where first did
+            tcasnp->ptr = fcasnp->ptr;
+            // clear the old first
+            _clear_casn(fcasnp, ~(ASN_FILLED_FLAG));
             if (casnp->num_items == 1)
             {
                 // We're in the process of moving the first item into its
@@ -463,11 +466,16 @@ inject_casn(
                 casnp->lastp = tcasnp;
             }
         }
-        fcasnp->ptr = tcasnp;   // then link first one to new one
-        tcasnp = fcasnp;        // return ptr to first
+        // then link first one to new one
+        fcasnp->ptr = tcasnp;
+        // return ptr to first
+        tcasnp = fcasnp;
     }
-    else                        // there's more than one, including final
-    {                           // if it's the last
+    else
+    {
+        // there's more than one, including final
+
+        // if it's the last
         if ((ulong)num == casnp->num_items)
             pcasnp = casnp->lastp;
         // else find previous item
@@ -475,12 +483,15 @@ inject_casn(
             for (pcasnp = fcasnp, icount = num; --icount;
                  pcasnp = pcasnp->ptr);
         // copy blank last to new one
-        tcasnp->ptr = pcasnp->ptr;      // new one points to where previous
-                                        // did
-        pcasnp->ptr = tcasnp;   // previous points to new one
+
+        // new one points to where previous did
+        tcasnp->ptr = pcasnp->ptr;
+        // previous points to new one
+        pcasnp->ptr = tcasnp;
         if ((ulong)num == casnp->num_items)
             casnp->lastp = tcasnp;
-        tcasnp->level = 0;      // this may be redundant
+        // this may be redundant
+        tcasnp->level = 0;
     }
     casnp->num_items++;
     return tcasnp;
@@ -670,10 +681,11 @@ _calc_lth(
     (void)ftag;
 
     uchar *c = *cpp;
-    int tmp,
-        lth;
+    int tmp;
+    int lth;
 
     if (*c > 0x84 || (*c == 0x84 && c[1] > 0x7F))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return -2;
     if (*c == ASN_INDEF_LTH)
     {
@@ -724,6 +736,7 @@ _check_enum(
     struct casn *tcasnp;
 
     if (!(tcasnp = _go_up(*casnpp)))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return -1;
     if ((*casnpp)->lth != tcasnp->lth ||
         memcmp((*casnpp)->startp, tcasnp->startp, tcasnp->lth))
@@ -858,10 +871,12 @@ _csize(
         for (lth = 0; from < e; lth++)
         {
             if (*from == 0xFE || *from == 0xFF)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -1;
             for (typ = *from, tlth = -1; typ & 0x80; typ <<= 1, tlth++);
             for (from++; tlth-- >= 0 && (*from & 0xC0) == 0x80; from++);
             if (tlth >= 0 || from > e)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -1;
         }
     }
@@ -874,16 +889,14 @@ _dup_casn(
 {
     int err = 0;
     _free_it(casnp->ptr);
-    casnp->ptr = (struct casn *)dbcalloc(1, casnp->min);
-    ((void (*)(void *, ushort))casnp->startp) ((void *)casnp->ptr, 0);
-    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)       // assumes
-                                                                // duped
-                                                                // object will
-                                                                // be
-    {                           // filled. writing pointed-to won't go up
-                                // through pointer
+    casnp->ptr = calloc(1, casnp->min);
+    ((void (*)(void *, ushort))casnp->startp)(casnp->ptr, 0);
+    // assumes duped object will be filled. writing pointed-to won't
+    // go up through pointer
+    if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
+    {
         _casn_obj_err(casnp, -err);
-        casnp = (struct casn *)0;
+        casnp = NULL;
     }
     return casnp->ptr;
 }
@@ -1115,8 +1128,11 @@ _count_crumbs_size(
     long lth;
     for (c = fromp; *c || c[1]; c += lth)
     {
-        c++;                    // go to length field;
-        lth = _calc_lth(&c, (uchar) 0); // c ends at 1st data byte
+        // go to length field;
+        c++;
+        // c ends at 1st data byte
+        /** @bug error code ignored without explanation */
+        lth = _calc_lth(&c, (uchar) 0);
         ansr += lth;
     }
     return ansr;
@@ -1128,17 +1144,20 @@ _gather_crumbs(
     uchar **frompp)
 {
     uchar *c = *frompp;
-    uchar *startp = 0,
-        *curr_endp;
-    int lth,
-        tot_lth;
+    uchar *startp = 0;
+    uchar *curr_endp;
+    int lth;
+    int tot_lth;
     tot_lth = _count_crumbs_size(*frompp);
     if (!(startp = (uchar *) calloc(1, tot_lth)))
         return -1;
     for (curr_endp = startp; *c || c[1]; c += lth)
     {
-        c++;                    // c goes to length field
-        lth = _calc_lth(&c, (uchar) 0); // c ends at 1st data byte
+        // c goes to length field
+        c++;
+        // c ends at 1st data byte
+        /** @bug error code ignored without explanation */
+        lth = _calc_lth(&c, (uchar) 0);
         memcpy(curr_endp, c, lth);
         curr_endp += lth;
     }
@@ -1713,6 +1732,7 @@ _putd(
 
     if (tmp)
         to = _putd(to, tmp);
+    /** @bug this emits garbage if val is negative */
     *to++ = (char)((val % 10) + '0');
     return to;
 }
@@ -1846,8 +1866,7 @@ _readsize(
             for (tcasnp = casnp; tcasnp;
                  num++, tcasnp = _skip_casn(tcasnp, 1));
         // prepare table of num + 1 entries for the SET
-        tablep =
-            (struct set_struct *)dbcalloc(num + 1, sizeof(struct set_struct));
+        tablep = calloc(num + 1, sizeof(struct set_struct));
         tablep[0].nextp = &tablep[1];
         // for entries [1] to [num]
         for (tcasnp = casnp, sstp1 = &tablep[i = 1]; i <= num;)
@@ -1859,7 +1878,7 @@ _readsize(
             }
             if (sstp1->lth)     // if not empty, fill it in
             {
-                sstp1->c = dbcalloc(1, sstp1->lth + 1);
+                sstp1->c = calloc(1, sstp1->lth + 1);
                 sstp1->casnp = tcasnp;
                 sstp1->nextp = &sstp1[1];
                 _encodesize(tcasnp, (sstp1++)->c, ASN_READ);
@@ -2122,10 +2141,12 @@ _stuff_num(
     {
         while (*c)
             c++;
-        c = (char *)dbcalloc(1, (c - casn_err_struct.asn_map_string) + 8);
+        /** @bug magic number */
+        c = calloc(1, (c - casn_err_struct.asn_map_string) + 8);
     }
     else
-        c = (char *)dbcalloc(1, 8);
+        /** @bug magic number */
+        c = calloc(1, 8);
     a = c;
     c = _putd(c, count);
     *c++ = '.';
@@ -2149,14 +2170,14 @@ void
 _stuff_string(
     struct casn *casnp)
 {
-    struct casn *tcasnp,
-       *ucasnp;
+    struct casn *tcasnp;
+    struct casn *ucasnp;
     int count;
 
 #ifdef ASN_VERBOSE
     int lth;
-    uchar *c,
-        lbuf[10];
+    uchar *c;
+    uchar lbuf[10];
     char *b;
 
     memset(lbuf, 0, 16);
@@ -2199,7 +2220,7 @@ _stuff_string(
     }
     else
         count = 0;
-    b = (char *)dbcalloc(1, sizeof(lbuf) + count);
+    b = calloc(1, sizeof(lbuf) + count);
     memcpy(b, (char *)lbuf, lth);
     if (count)
         memcpy(&b[lth], casn_err_struct.asn_map_string, count);
@@ -2256,12 +2277,12 @@ _write_casn(
     uchar *c,
     int lth)
 {
-    int num,
-        err,
-        tmp,
-        has_indef = 0;
-    uchar *b,
-        mask;
+    int num;
+    int err;
+    int tmp;
+    int has_indef = 0;
+    uchar *b;
+    uchar mask;
     ulong val;
     struct casn *tcasnp;
 
@@ -2278,18 +2299,18 @@ _write_casn(
                 return _casn_obj_err(casnp, -err);
             return 0;
         }
-        return _match_casn(&casnp[1], c, lth, (casnp->flags & ASN_OF_FLAG),
-                           (ushort) 1,
-                           ((casnp->
-                             flags & ASN_OF_FLAG)) ? casnp : (struct casn *)0,
-                           &has_indef);
+        return _match_casn(
+            &casnp[1], c, lth, casnp->flags & ASN_OF_FLAG, 1,
+            (casnp->flags & ASN_OF_FLAG) ? casnp : NULL, &has_indef);
     }
-    if (casnp->type == ASN_CHOICE)      // can't be defined-by here
+    if (casnp->type == ASN_CHOICE)
     {
+        // can't be defined-by here
         if (casnp[1].type > sizeof(mask_table) || !mask_table[casnp[1].type])
             err = ASN_CHOICE_ERR;
         else
-        {                       // what's the most elaborate character
+        {
+            // what's the most elaborate character
             for (val = 0xFF, b = c, tmp = lth; tmp--;
                  val &= (char_table[*b++]));
             // have we an option for it?
@@ -2304,7 +2325,9 @@ _write_casn(
             return _casn_obj_err(casnp, err);
         casnp = tcasnp;
     }
-    tmp = _csize(casnp, c, lth);        // tmp is 'byte' count
+    // tmp is 'byte' count
+    /** @bug error code ignored without explanation */
+    tmp = _csize(casnp, c, lth);
     int64_t timeval = 0;
     if (casnp->type == ASN_NONE)
         err = ASN_NONE_ERR;
@@ -2356,7 +2379,7 @@ _write_casn(
     casnp->flags &= ~(ASN_FILLED_FLAG);
     if (casnp->startp)
         casnp->startp = _free_it(casnp->startp);
-    casnp->startp = (uchar *) dbcalloc(1, (casnp->lth = lth));
+    casnp->startp = calloc(1, (casnp->lth = lth));
     memcpy(casnp->startp, c, casnp->lth);
     // fill up to top
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
@@ -2395,7 +2418,8 @@ _write_objid(
 
     _clear_casn(casnp, ~(ASN_FILLED_FLAG));
     for (e = (uchar *) from, tmp = 0; *e; tmp++, e++);
-    casnp->startp = buf = (uchar *) dbcalloc(1, tmp);   // bigger than needed
+    // bigger than needed
+    casnp->startp = buf = calloc(1, tmp);
     if (casnp->type == ASN_OBJ_ID)
     {
         for (val = 0; c < (char *)e && *c && *c != '.';

@@ -287,10 +287,6 @@ load_oidtable(
     char *name);
 
 struct casn *
-dup_casn(
-    struct casn *casnp);
-
-struct casn *
 inject_casn(
     struct casn *,
     int);
@@ -311,15 +307,6 @@ find_label(
     struct oidtable *oidtable,
     int oidtable_size);
 
-#ifndef DEBUG
-#define dbcalloc calloc
-#define dbfree free
-#else
-uchar *
-dbcalloc(
-    int,
-    int);
-#endif
 #define ASN_UNDEFINED_LTH 0x7FFFFFFF
     // for reals
 #define ASN_PLUS_INFINITY  0x40

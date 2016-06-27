@@ -14,6 +14,7 @@ Cambridge, Ma. 02138
 *****************************************************************************/
 
 #include "casn.h"
+#include "casn_private.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -24,25 +25,15 @@ Cambridge, Ma. 02138
 #define O_DOS (O_BINARY | S_IWRITE |  S_IREAD)
 #endif
 
-extern long _get_tag(
-    uchar ** tagpp);
-extern int _calc_lth(
-    uchar ** cpp,
-    uchar b);
-
-int _casn_obj_err(
-    struct casn *,
-    int);
-
 int get_casn_file(
     struct casn *casnp,
     const char *name,
     int fd)
 {
-    long siz,
-        tmp;
-    uchar *b,
-       *c;
+    long siz;
+    long tmp;
+    uchar *b;
+    uchar *c;
 
     // if name is NULL, we were passed an active file descriptor
     if (name)
@@ -79,6 +70,7 @@ int get_casn_file(
     // defend against a truncated file
     c = b;
     tmp = _get_tag(&c);
+    /** @bug error code ignored without explanation */
     if ((tmp = _calc_lth(&c, *b)) >= 0)
     {
         tmp += (c - b);

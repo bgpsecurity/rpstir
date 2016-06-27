@@ -68,8 +68,10 @@ static void check_access_methods(
          accDesp;
          accDesp = (struct AccessDescription *)next_of(&accDesp->self))
     {
+        /** @bug error code ignored without explanation */
         if (!diff_objid(&accDesp->accessMethod, id_ad_caRepository))
             rep++;
+        /** @bug error code ignored without explanation */
         else if (!diff_objid(&accDesp->accessMethod, id_ad_rpkiManifest))
             man++;
         else

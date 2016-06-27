@@ -95,8 +95,11 @@ struct CRLExtension *findCrlExtension(
     if (!num_items(&extsp->self))
         return (struct CRLExtension *)0;
 
+    /** @bug error code ignored without explanation */
     for (extp = (struct CRLExtension *)member_casn(&extsp->self, 0);
+         /** @bug error code ignored without explanation */
          extp && diff_objid(&extp->extnID, oid);
+         /** @bug error code ignored without explanation */
          extp = (struct CRLExtension *)next_of(&extp->self));
     return extp;
 }

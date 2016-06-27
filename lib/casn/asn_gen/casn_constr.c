@@ -132,6 +132,7 @@ static char simple_opener[] = "void %s(struct %s *mine, ushort level)\n\
     return 0;\n\
     }\n\n",
     int_constraint[] = "!diff_casn(&casnp->self, &casnp->%s)",
+    /** @bug diff_objid() error code ignored without explanation */
     objid_constraint[] = "!diff_objid(&casnp->self, \"%s\")",
     start_int_constraint[] = "    long val;\n\
     if (read_casn_num((struct casn *)casnp, &val) < 0) return 0;\n\

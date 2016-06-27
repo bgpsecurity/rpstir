@@ -107,6 +107,7 @@ int main(
         int len = 0;
         int print_this_one = 0;
 
+        /** @bug error code ignored without explanation */
         if (diff_objid(&adp->accessMethod, id_ad_rpkiManifest) == 0 &&
             option_mft)
         {
@@ -115,6 +116,7 @@ int main(
              */
             print_this_one = 1;
         }
+        /** @bug error code ignored without explanation */
         else if (diff_objid(&adp->accessMethod, id_ad_caRepository) == 0 &&
                  option_dir)
         {
@@ -123,6 +125,7 @@ int main(
              */
             print_this_one = 1;
         }
+        /** @bug error code ignored without explanation */
         else if (diff_objid(&adp->accessMethod, id_ad_signedObject) == 0)
         {
             /*

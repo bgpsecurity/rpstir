@@ -31,17 +31,44 @@ int diff_objid(
     lth2 = c_const - objid + 1;
     if ((lth = vsize_objid(casnp)) <= 0)
         return -2;
-    c = dbcalloc(1, lth);
+    /** @bug error code ignored without explanation */
+    c = calloc(1, lth);
     /** @bug error code ignored without explanation */
     read_objid(casnp, c);
     if (lth < lth2)
         ansr = lth;
     else
         ansr = lth2;
+    /**
+     * @bug
+     *     Callers might expect -1 to indicate that the first OID
+     *     "comes before" the second OID in the OID tree, but a
+     *     comparison of OID strings with strcmp() or memcmp() doesn't
+     *     provide this property.  If -1 is returned, the first OID
+     *     may or may not come before the second OID in the OID tree.
+     *     Similarly, if 1 is returned, the first OID may or may not
+     *     come after the second OID.  Thus, -1 and 1 must be treated
+     *     the same by the caller, so this function might as well
+     *     return 0 if the two are the same, positive if they are
+     *     different, and negative on error.
+     */
+    /** @bug should just use strcmp() instead */
     if ((ansr = memcmp(c, objid, ansr)) == 0)
     {
+        /**
+         * @bug
+         *     this will never be true because the null terminator is
+         *     included in the comparison, so if the memcmp() returns
+         *     0 then the lengths must equal each other
+         */
         if (lth2 > lth)
             ansr = 1;
+        /**
+         * @bug
+         *     this will never be true because the null terminator is
+         *     included in the comparison, so if the memcmp() returns
+         *     0 then the lengths must equal each other
+         */
         else if (lth < lth2)
             ansr = -1;
     }
@@ -106,8 +133,10 @@ int _readsize_objid(
     ulong val;
 
     if (casnp->tag == ASN_NOTYPE && (lth = _check_enum(&casnp)) <= 0)
+        /** @bug null terminator hasn't been written if lth is 0 */
         return lth;
     if (!casnp->lth)
+        /** @bug null terminator hasn't been written */
         return 0;
     // elements 1 & 2
     if (casnp->type == ASN_OBJ_ID ||
@@ -121,8 +150,9 @@ int _readsize_objid(
          */
         /**
          * @bug
-         *     BER and DER prohibit leading bytes equal to 0x80.  This
-         *     logic ignores them.  Should it error out somehow?
+         *     BER and DER require the minimal number of octets.  This
+         *     logic ignores excess octets.  Should it error out
+         *     instead?
          */
         for (val = 0; c < e && (*c & 0x80); c++)
         {
@@ -131,11 +161,13 @@ int _readsize_objid(
         /** @bug invalid read if c == e */
         val = (val << 7) + *c++;
         /** @bug magic numbers */
+        /** @bug _putd() takes a long, not an unsigned long */
         /** @bug might overflow buffer */
         b = _putd(to, (val < 120) ? (val / 40) : 2);
         /** @bug might overflow buffer */
         *b++ = '.';
         /** @bug magic numbers */
+        /** @bug _putd() takes a long, not an unsigned long */
         /** @bug might overflow buffer */
         b = _putd(b, (val < 120) ? (val % 40) : val - 80);
         /** @bug callers seem to assume that mode is a boolean */
@@ -155,12 +187,20 @@ int _readsize_objid(
          *     This logic does not properly handle OID components that
          *     are too big to fit in an unsigned long
          */
+        /**
+         * @bug
+         *     BER and DER require the minimal number of octets.  This
+         *     logic ignores excess octets.  Should it error out
+         *     instead?
+         */
         /** @bug invalid read if c >= e */
         for (val = 0; (*c & 0x80); c++)
         {
             val = (val << 7) + (*c & 0x7F);
         }
+        /** @bug invalid read if c >= e */
         val = (val << 7) + *c++;
+        /** @bug _putd() takes a long, not an unsigned long */
         /** @bug might overflow buffer */
         b = _putd(b, val);
         if (c < e)

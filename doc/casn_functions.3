@@ -493,7 +493,7 @@ CASN Functions (3)         ASN.1 C LIBRARY FUNCTIONS   CASN Functions (3)
         The 'objid'  functions  convert  from  and  to  the  human-readable  dot
         notation used for object identifiers, e.g. "1.2.3.4".  The 'write_objid'
         function converts  from  dot  notation  and  returns  the  size  of  the
-        converted  value.   The function 'read_objid' converts from dot notation
+        converted  value.   The function 'read_objid' converts to dot notation
         and returns the size of the resulting string.  'vsize_objid' reports how
         many    characters    'read_objid'    will    return.     The   function
         'readvsize_objid' combines 'vsize_objid', a  'calloc'  operation  and  a
@@ -1040,7 +1040,7 @@ DIAGNOSTICS
 
         In order to provide guidance as to what kind of error  was  encountered,
         various   error   conditions  and  messages  are  defined  in  the  file
-        asn_error.h.  A function, 'void  casn_error(int,  char  *)'  prints  the
+        asn_error.h. A function, 'void casn_error(int, const char *)' prints the
         error  message  on the standard output.  The meanings of the messages in
         that file are described in  Appendix  B.   The  user  may  replace  this
         function  with  another of the same name if standard error output is not

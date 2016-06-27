@@ -30,6 +30,7 @@ static struct casn *findSID(
     // check each extension's oid against the SID oid
     while (extp != NULL)
     {
+        /** @bug error code ignored without explanation */
         if (diff_objid(&extp->extnID, id_subjectKeyIdentifier) == 0)
         {
             return (&extp->extnValue.subjectKeyIdentifier);     /* found it */

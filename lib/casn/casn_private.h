@@ -30,7 +30,7 @@ _find_filled_or_chosen(
 struct casn *
 _find_tag(
     struct casn *casnp,
-    ulong tag);
+    unsigned long tag);
 
 struct casn *
 _go_up(
@@ -89,10 +89,10 @@ _dump_tag(
     unsigned short flags,
     int mode);
 
-int
+void
 casn_error(
     int,
-    char *);
+    const char *);
 
 int
 _calc_lth(

@@ -59,6 +59,7 @@ int main(
         FATAL(MSG_GET, argv[1]);
     if (get_casn_file(&hicert.self, argv[2], 0) < 0)
         FATAL(MSG_GET, argv[2]);
+    /** @bug error code ignored without explanation */
     if (diff_objid(&algp->algorithm, id_sha_256WithRSAEncryption))
     {
         char oidbuf[80];
