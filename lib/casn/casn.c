@@ -1118,7 +1118,7 @@ _free_it(
 {
     if (itp)
         free(itp);
-    return (void *)0;
+    return NULL;
 }
 
 long
@@ -1202,7 +1202,7 @@ _go_up(
     int lev;
 
     if (!casnp->level)
-        return (struct casn *)0;
+        return NULL;
 
     for (lev = casnp->level; casnp->level >= lev; casnp--);
     return casnp;
