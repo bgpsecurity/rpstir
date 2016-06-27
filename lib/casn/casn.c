@@ -2309,11 +2309,9 @@ _write_casn(
                 return _casn_obj_err(casnp, -err);
             return 0;
         }
-        return _match_casn(&casnp[1], c, lth, (casnp->flags & ASN_OF_FLAG),
-                           1,
-                           ((casnp->
-                             flags & ASN_OF_FLAG)) ? casnp : NULL,
-                           &has_indef);
+        return _match_casn(
+            &casnp[1], c, lth, casnp->flags & ASN_OF_FLAG, 1,
+            (casnp->flags & ASN_OF_FLAG) ? casnp : NULL, &has_indef);
     }
     if (casnp->type == ASN_CHOICE)
     {
