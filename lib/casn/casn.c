@@ -1151,7 +1151,7 @@ _gather_crumbs(
     int lth;
     int tot_lth;
     tot_lth = _count_crumbs_size(*frompp);
-    if (!(startp = (uchar *) calloc(1, tot_lth)))
+    if (!(startp = calloc(1, tot_lth)))
         /** @bug shouldn't _casn_obj_err() be called here? */
         return -1;
     for (curr_endp = startp; *c || c[1]; c += lth)
@@ -1160,7 +1160,7 @@ _gather_crumbs(
         c++;
         // c ends at 1st data byte
         /** @bug error code ignored without explanation */
-        lth = _calc_lth(&c, (uchar) 0);
+        lth = _calc_lth(&c, 0);
         memcpy(curr_endp, c, lth);
         curr_endp += lth;
     }
