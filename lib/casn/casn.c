@@ -288,16 +288,6 @@ Procedure:
     casnp->lth = 0;
 }
 
-struct casn *
-dup_casn(
-    struct casn *casnp)
-{
-    if (!(casnp->flags & ASN_POINTER_FLAG))
-        /** @bug shouldn't _casn_obj_err() be called here? */
-        return (struct casn *)0;
-    return _dup_casn(casnp);
-}
-
 int
 eject_casn(
     struct casn *casnp,

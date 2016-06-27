@@ -287,10 +287,6 @@ load_oidtable(
     char *name);
 
 struct casn *
-dup_casn(
-    struct casn *casnp);
-
-struct casn *
 inject_casn(
     struct casn *,
     int);
