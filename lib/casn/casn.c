@@ -723,7 +723,10 @@ _casn_obj_err(
     casn_err_struct.errnum = num;
     casn_err_struct.casnp = casnp;
     casn_err_struct.asn_map_string = _free_it(casn_err_struct.asn_map_string);
-    _stuff_string(casnp);
+    if (casnp)
+    {
+        _stuff_string(casnp);
+    }
     for (errp = casn_errors; errp->num && errp->num != num; errp++);
     if (casn_error)
     {
