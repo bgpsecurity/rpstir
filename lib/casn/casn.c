@@ -1175,8 +1175,8 @@ _get_tag(
     uchar **tagpp)
 {
     uchar *c = *tagpp;
-    long ansr,
-        tmp;
+    long ansr;
+    long tmp;
     int shift;
 
     if (((ansr = *c) & 0x1F) == 0x1F)
@@ -2248,11 +2248,11 @@ int
 _table_op(
     struct casn *casnp)
 {
-    struct casn *tcasnp,
-       *where_casnp;
-    int num,
-        tmp,
-        err;
+    struct casn *tcasnp;
+    struct casn *where_casnp;
+    int num;
+    int tmp;
+    int err;
 
     where_casnp = casnp->ptr;
     for (num = 0, tmp = where_casnp->lth, tcasnp = &where_casnp[1]; tmp--;
