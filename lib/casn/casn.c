@@ -1041,11 +1041,13 @@ _fill_upward(
         if (ucasnp)
         {                       // writing to terminal OF?
             if ((ucasnp->flags & ASN_OF_FLAG) && !casnp->ptr)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -(ASN_OF_BOUNDS_ERR);
             // writing or injecting to unchosen definee?
             if ((ucasnp->type & ASN_CHOICE) == ASN_CHOICE &&
                 (ucasnp->flags & ASN_DEFINED_FLAG) > 0 &&
                 (casnp->flags & ASN_CHOSEN_FLAG) == 0)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -(ASN_NO_DEF_ERR);
         }
         casnp->flags |= val;
@@ -1150,6 +1152,7 @@ _gather_crumbs(
     int tot_lth;
     tot_lth = _count_crumbs_size(*frompp);
     if (!(startp = (uchar *) calloc(1, tot_lth)))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return -1;
     for (curr_endp = startp; *c || c[1]; c += lth)
     {
@@ -1464,6 +1467,7 @@ Procedure:
             continue;
         }
         if ((curr_casnp->flags & ASN_POINTER_FLAG))
+            /** @bug error code ignored without explanation */
             curr_casnp = _dup_casn(curr_casnp);
         // step 3a
         if ((lth = _calc_lth(&c, ftag)) < -1)
@@ -1511,19 +1515,23 @@ Procedure:
                     if (tag == (ansr | ASN_CONSTRUCTED))
                     {
                         if (*c != ansr)
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return -1;
                         did += explicit_extra;
                         uchar *cc,
                            *oldc = c;
                         int newlth = _gather_crumbs(&cc, &c);
                         if (newlth < 0)
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return ASN_LENGTH_ERR;
                         if (!(tcasnp = _find_chosen(curr_casnp)))
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return ASN_MATCH_ERR;
                         ansr = _match_casn(tcasnp, cc, newlth, 0,
                                            this_level + 1, NULL, had_indefp);
                         free(cc);
                         if (ansr < 0)
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return ASN_LENGTH_ERR;
                         ansr = c - oldc;        // how much to advance 'c'
                         def_lth = skip_match = 1;
