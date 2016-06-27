@@ -14,6 +14,7 @@ Cambridge, Ma. 02138
 *****************************************************************************/
 
 #include "casn.h"
+#include "casn_private.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -23,16 +24,6 @@ Cambridge, Ma. 02138
 #else
 #define O_DOS (O_BINARY | S_IWRITE |  S_IREAD)
 #endif
-
-extern long _get_tag(
-    uchar ** tagpp);
-extern int _calc_lth(
-    uchar ** cpp,
-    uchar b);
-
-int _casn_obj_err(
-    struct casn *,
-    int);
 
 int get_casn_file(
     struct casn *casnp,
