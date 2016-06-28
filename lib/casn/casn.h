@@ -44,6 +44,30 @@ struct casn_err_struct {
 
 extern struct casn_err_struct casn_err_struct;
 
+/**
+ * @brief
+ *     type for a callback executed whenever a casn error is
+ *     encountered
+ *
+ * @param[in] errno
+ *     casn error code from asn_error.h
+ * @param[in] errmsg
+ *     description of @p errno.  This must not be NULL.
+ */
+typedef void
+casn_error_callback(
+    int errno,
+    const char *errmsg);
+
+/**
+ * @brief
+ *     callback executed whenever a casn error is encountered
+ *
+ * May be NULL, which is equivalent to a no-op function.  Initialized
+ * to a function that logs the error.
+ */
+extern casn_error_callback *casn_error;
+
 struct oidtable {
     char *oid;
     char *label;

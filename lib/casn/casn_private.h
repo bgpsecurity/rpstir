@@ -89,11 +89,6 @@ _dump_tag(
     unsigned short flags,
     int mode);
 
-void
-casn_error(
-    int,
-    const char *);
-
 int
 _calc_lth(
     unsigned char **cpp,
