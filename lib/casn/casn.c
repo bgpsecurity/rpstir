@@ -1116,8 +1116,7 @@ void *
 _free_it(
     void *itp)
 {
-    if (itp)
-        free(itp);
+    free(itp);
     return NULL;
 }
 
