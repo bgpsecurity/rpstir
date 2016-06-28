@@ -896,7 +896,7 @@ _dup_casn(
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
     {
         _casn_obj_err(casnp, -err);
-        casnp = NULL;
+        return NULL;
     }
     return casnp->ptr;
 }
