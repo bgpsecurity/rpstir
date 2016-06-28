@@ -183,6 +183,7 @@ Procedure:
     tcasnp = fr_casnp;
     if ((to_casnp->flags & ASN_POINTER_FLAG))
     {
+        /** @bug error code ignored without explanation */
         to_casnp = _dup_casn(to_casnp);
         fr_casnp = fr_casnp->ptr;
     }

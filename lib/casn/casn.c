@@ -896,7 +896,7 @@ _dup_casn(
     if ((err = _fill_upward(casnp, ASN_FILLED_FLAG)) < 0)
     {
         _casn_obj_err(casnp, -err);
-        casnp = NULL;
+        return NULL;
     }
     return casnp->ptr;
 }
@@ -1041,11 +1041,13 @@ _fill_upward(
         if (ucasnp)
         {                       // writing to terminal OF?
             if ((ucasnp->flags & ASN_OF_FLAG) && !casnp->ptr)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -(ASN_OF_BOUNDS_ERR);
             // writing or injecting to unchosen definee?
             if ((ucasnp->type & ASN_CHOICE) == ASN_CHOICE &&
                 (ucasnp->flags & ASN_DEFINED_FLAG) > 0 &&
                 (casnp->flags & ASN_CHOSEN_FLAG) == 0)
+                /** @bug shouldn't _casn_obj_err() be called here? */
                 return -(ASN_NO_DEF_ERR);
         }
         casnp->flags |= val;
@@ -1114,9 +1116,8 @@ void *
 _free_it(
     void *itp)
 {
-    if (itp)
-        free(itp);
-    return (void *)0;
+    free(itp);
+    return NULL;
 }
 
 long
@@ -1149,7 +1150,8 @@ _gather_crumbs(
     int lth;
     int tot_lth;
     tot_lth = _count_crumbs_size(*frompp);
-    if (!(startp = (uchar *) calloc(1, tot_lth)))
+    if (!(startp = calloc(1, tot_lth)))
+        /** @bug shouldn't _casn_obj_err() be called here? */
         return -1;
     for (curr_endp = startp; *c || c[1]; c += lth)
     {
@@ -1157,7 +1159,7 @@ _gather_crumbs(
         c++;
         // c ends at 1st data byte
         /** @bug error code ignored without explanation */
-        lth = _calc_lth(&c, (uchar) 0);
+        lth = _calc_lth(&c, 0);
         memcpy(curr_endp, c, lth);
         curr_endp += lth;
     }
@@ -1172,8 +1174,8 @@ _get_tag(
     uchar **tagpp)
 {
     uchar *c = *tagpp;
-    long ansr,
-        tmp;
+    long ansr;
+    long tmp;
     int shift;
 
     if (((ansr = *c) & 0x1F) == 0x1F)
@@ -1199,7 +1201,7 @@ _go_up(
     int lev;
 
     if (!casnp->level)
-        return (struct casn *)0;
+        return NULL;
 
     for (lev = casnp->level; casnp->level >= lev; casnp--);
     return casnp;
@@ -1464,6 +1466,7 @@ Procedure:
             continue;
         }
         if ((curr_casnp->flags & ASN_POINTER_FLAG))
+            /** @bug error code ignored without explanation */
             curr_casnp = _dup_casn(curr_casnp);
         // step 3a
         if ((lth = _calc_lth(&c, ftag)) < -1)
@@ -1511,21 +1514,26 @@ Procedure:
                     if (tag == (ansr | ASN_CONSTRUCTED))
                     {
                         if (*c != ansr)
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return -1;
                         did += explicit_extra;
                         uchar *cc,
                            *oldc = c;
                         int newlth = _gather_crumbs(&cc, &c);
                         if (newlth < 0)
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return ASN_LENGTH_ERR;
                         if (!(tcasnp = _find_chosen(curr_casnp)))
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return ASN_MATCH_ERR;
                         ansr = _match_casn(tcasnp, cc, newlth, 0,
                                            this_level + 1, NULL, had_indefp);
                         free(cc);
                         if (ansr < 0)
+                            /** @bug shouldn't _casn_obj_err() be called? */
                             return ASN_LENGTH_ERR;
-                        ansr = c - oldc;        // how much to advance 'c'
+                        // how much to advance 'c'
+                        ansr = c - oldc;
                         def_lth = skip_match = 1;
                     }
                 }
@@ -1549,7 +1557,8 @@ Procedure:
         }
         if (!skip_match)
         {
-            ansr = -1;          // step 4b
+            // step 4b
+            ansr = -1;
             // IF at a primitive item which isn't a wrapper
             // Note what the call to write a primitive returns.
             if (!(curr_casnp->type & ASN_CONSTRUCTED))
@@ -1558,14 +1567,15 @@ Procedure:
                     && !(casnp->flags & ASN_CHOSEN_FLAG))
                     return _casn_obj_err(casnp, ASN_NO_DEF_ERR) - did;
                 if ((ansr = _write_casn(curr_casnp, c, lth)) < 0)
-                {               // if first OF, casn_obj_err stuffed right on
-                                // up
+                {
+                    // if first OF, casn_obj_err stuffed right on up
                     if (of_casnp && num_ofs > 1)
                         _stuff_ofs(of_casnp, num_ofs);
                     return ansr - did;
                 }
             }
-            else if (!curr_casnp->lth)  // no contents?
+            // no contents?
+            else if (!curr_casnp->lth)
             {
                 if (curr_casnp->min)
                     return _casn_obj_err(curr_casnp, ASN_OF_BOUNDS_ERR);
@@ -1588,8 +1598,9 @@ Procedure:
                 // ELSE choose the next struct casn
                 else
                     tcasnp = &curr_casnp[1];
-                if (ansr < 0)   // didn't have ASN_NOT_ASN1
+                if (ansr < 0)
                 {
+                    // didn't have ASN_NOT_ASN1
                     struct casn *offp = (struct casn *)0;
                     num = send_flag = 0;
                     if (tag == ASN_BITSTRING)
@@ -1609,15 +1620,16 @@ Procedure:
                         xlth = lth;
                     else
                         xlth = curr_casnp->lth - explicit_extra - num;
+                    // if first OF, casn_obj_err stuffed right on up
                     if ((ansr = _match_casn(tcasnp, &c[num],
                                             xlth, send_flag, this_level + 1,
                                             offp, &has_indef)) < 0)
-                    {           // if first OF, casn_obj_err stuffed right on
-                                // up
+                    {
                         if (of_casnp && num_ofs > 1)
                             _stuff_ofs(of_casnp, num_ofs);
                         return ansr - did;
-                    }           // then pass the indef flag up
+                    }
+                    // then pass the indef flag up
                     *had_indefp |= has_indef;
                     curr_casnp->flags |= has_indef;
                     if (sav_casnp && curr_casnp != sav_casnp)
@@ -1641,10 +1653,12 @@ Procedure:
             }
             curr_casnp->flags |= ASN_INDEF_LTH_FLAG;
             if (def_lth)
-                nbytes = did;   // to force for loop in step 5
+                // to force for loop in step 5
+                nbytes = did;
         }
         if (nbytes == 0x7FFFFFFF && *c == 0 && c[1] == 0)
-            return did;         // indefs to be processed by parent
+            // indefs to be processed by parent
+            return did;
         from = c;
         // step 5
         if (!of_casnp && this_level)
@@ -1653,15 +1667,19 @@ Procedure:
                 curr_casnp = set_casnp;
             else
                 curr_casnp = _skip_casn(sav_casnp, 1);
-            if (did == nbytes)  // all done
-            {                   // are any remining defined members all
-                                // optional?
+            if (did == nbytes)
+            {
+                // all done
+
+                // are any remining defined members all optional?
                 if (!(flags & ASN_CHOSEN_FLAG))
-                {               // if chosen, don't look at remaining items
+                {
+                    // if chosen, don't look at remaining items
                     for (num = 0; curr_casnp && curr_casnp->level == level;
                          curr_casnp = _skip_casn(curr_casnp, 1))
-                    {           // is there a chosen member that must be
-                                // present?
+                    {
+                        // is there a chosen member that must be
+                        // present?
                         if ((curr_casnp->flags &
                              (ASN_DEFINED_FLAG | ASN_OPTIONAL_FLAG)) ==
                             ASN_DEFINED_FLAG)
@@ -1671,7 +1689,8 @@ Procedure:
                                             (tcasnp->
                                              flags & ASN_OPTIONAL_FLAG)))
                                 num = 1;
-                        }       // or another member that must be present?
+                        }
+                        // or another member that must be present?
                         else if (!(curr_casnp->flags &
                                    (ASN_OPTIONAL_FLAG | ASN_FILLED_FLAG)))
                             num = 1;
@@ -1683,10 +1702,12 @@ Procedure:
                     }
                 }
             }
-            else if (!curr_casnp)       // have no more struct casns
+            else if (!curr_casnp)
+                // have no more struct casns
                 return _casn_obj_err(curr_casnp, ASN_MATCH_ERR) - did;
         }
-    }                           // end of for loop
+    }
+    // end of for loop
     return did;
 }
 
@@ -2240,22 +2261,21 @@ int
 _table_op(
     struct casn *casnp)
 {
-    struct casn *tcasnp,
-       *where_casnp;
-    int num,
-        tmp,
-        err;
+    struct casn *tcasnp;
+    struct casn *where_casnp;
+    int num;
+    int tmp;
+    int err;
 
     where_casnp = casnp->ptr;
     for (num = 0, tmp = where_casnp->lth, tcasnp = &where_casnp[1]; tmp--;
          num++, tcasnp++)
     {
-        if ((tcasnp->lth == casnp->lth && !memcmp(tcasnp->startp, casnp->startp, tcasnp->lth)) || (tcasnp->lth == 2 && *tcasnp->startp == 0xFF &&       // catch-all
-                                                                                                   tcasnp->
-                                                                                                   startp
-                                                                                                   [1]
-                                                                                                   ==
-                                                                                                   0xFF))
+        if ((tcasnp->lth == casnp->lth
+             && !memcmp(tcasnp->startp, casnp->startp, tcasnp->lth))
+            // catch-all
+            || (tcasnp->lth == 2 && *tcasnp->startp == 0xFF
+                && tcasnp->startp[1] == 0xFF))
             break;
     }
     err = 0;
