@@ -2271,12 +2271,11 @@ _table_op(
     for (num = 0, tmp = where_casnp->lth, tcasnp = &where_casnp[1]; tmp--;
          num++, tcasnp++)
     {
-        if ((tcasnp->lth == casnp->lth && !memcmp(tcasnp->startp, casnp->startp, tcasnp->lth)) || (tcasnp->lth == 2 && *tcasnp->startp == 0xFF &&       // catch-all
-                                                                                                   tcasnp->
-                                                                                                   startp
-                                                                                                   [1]
-                                                                                                   ==
-                                                                                                   0xFF))
+        if ((tcasnp->lth == casnp->lth
+             && !memcmp(tcasnp->startp, casnp->startp, tcasnp->lth))
+            // catch-all
+            || (tcasnp->lth == 2 && *tcasnp->startp == 0xFF
+                && tcasnp->startp[1] == 0xFF))
             break;
     }
     err = 0;
