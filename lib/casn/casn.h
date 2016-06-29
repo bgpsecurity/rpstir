@@ -197,7 +197,8 @@ read_casn_time(
 int
 read_objid(
     struct casn *,
-    char *);
+    char *buf,
+    size_t buflen);
 
 int
 size_casn(

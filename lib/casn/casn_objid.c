@@ -15,6 +15,7 @@ Cambridge, Ma. 02138
 
 #include "casn.h"
 #include "casn_private.h"
+#include "util/stringutils.h"
 
 int diff_objid(
     struct casn *casnp,
@@ -34,7 +35,7 @@ int diff_objid(
     /** @bug error code ignored without explanation */
     c = calloc(1, lth);
     /** @bug error code ignored without explanation */
-    read_objid(casnp, c);
+    read_objid(casnp, c, lth);
     if (lth < lth2)
         ansr = lth;
     else
@@ -82,13 +83,14 @@ int diff_objid(
 
 int read_objid(
     struct casn *casnp,
-    char *to)
+    char *to,
+    size_t tolen)
 {
     if (_clear_error(casnp) < 0)
         return -1;
     if (casnp->type != ASN_OBJ_ID && casnp->type != ASN_RELATIVE_OID)
         return _casn_obj_err(casnp, ASN_TYPE_ERR);
-    return _readsize_objid(casnp, to, 1);
+    return _readsize_objid(casnp, to, tolen, 1);
 }
 
 int vsize_objid(
@@ -101,7 +103,7 @@ int vsize_objid(
         return -1;
     if (casnp->type != ASN_OBJ_ID && casnp->type != ASN_RELATIVE_OID)
         return _casn_obj_err(casnp, ASN_TYPE_ERR);
-    return _readsize_objid(casnp, buf, 0);
+    return _readsize_objid(casnp, buf, sizeof(buf), 0);
 }
 
 int write_objid(
@@ -124,6 +126,7 @@ int write_objid(
 int _readsize_objid(
     struct casn *casnp,
     char *to,
+    size_t tolen,
     int mode)
 {
     int lth = 0;
@@ -162,14 +165,11 @@ int _readsize_objid(
         val = (val << 7) + *c++;
         /** @bug magic numbers */
         /** @bug _putd() takes a long, not an unsigned long */
-        /** @bug might overflow buffer */
-        b = _putd(to, (val < 120) ? (val / 40) : 2);
-        /** @bug might overflow buffer */
-        *b++ = '.';
+        b = _putd(b, tolen - (b - to), (val < 120) ? (val / 40) : 2);
+        b += xstrlcpy(b, ".", tolen - (b - to));
         /** @bug magic numbers */
         /** @bug _putd() takes a long, not an unsigned long */
-        /** @bug might overflow buffer */
-        b = _putd(b, (val < 120) ? (val % 40) : val - 80);
+        b = _putd(b, tolen - (b - to), (val < 120) ? (val % 40) : val - 80);
         /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
@@ -177,8 +177,9 @@ int _readsize_objid(
             b = to;
         }
         if (c < e)
-            /** @bug might overflow buffer */
-            *b++ = '.';
+        {
+            b += xstrlcpy(b, ".", tolen - (b - to));
+        }
     }
     while (c < e)
     {
@@ -201,11 +202,11 @@ int _readsize_objid(
         /** @bug invalid read if c >= e */
         val = (val << 7) + *c++;
         /** @bug _putd() takes a long, not an unsigned long */
-        /** @bug might overflow buffer */
-        b = _putd(b, val);
+        b = _putd(b, tolen - (b - to), val);
         if (c < e)
-            /** @bug might overflow buffer */
-            *b++ = '.';
+        {
+            b += xstrlcpy(b, ".", tolen - (b - to));
+        }
         /** @bug callers seem to assume that mode is a boolean */
         if (!(mode & ASN_READ))
         {
@@ -213,10 +214,7 @@ int _readsize_objid(
             b = to;
         }
     }
+    // add one to include the nul terminator in the length
     /** @bug callers seem to assume that mode is a boolean */
-    if ((mode & ASN_READ))
-        /** @bug might overflow buffer */
-        *b++ = 0;
-    /** @bug callers seem to assume that mode is a boolean */
-    return (mode & ASN_READ) ? (b - to) : ++lth;
+    return (mode & ASN_READ) ? (b - to) + 1 : ++lth;
 }

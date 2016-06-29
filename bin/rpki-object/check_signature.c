@@ -64,7 +64,7 @@ int main(
     {
         char oidbuf[80];
         /** @bug error code ignored without explanation */
-        read_objid(&algp->algorithm, oidbuf);
+        read_objid(&algp->algorithm, oidbuf, sizeof(oidbuf));
         FATAL(MSG_ALG, oidbuf);
     }
     if (!check_signature(tbsp, &hicert, sigp))

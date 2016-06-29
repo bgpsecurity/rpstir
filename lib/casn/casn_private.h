@@ -1,6 +1,7 @@
 #ifndef LIB_CASN_CASN_PRIVATE_H
 #define LIB_CASN_CASN_PRIVATE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct casn;
@@ -137,11 +138,13 @@ int
 _readsize_objid(
     struct casn *casnp,
     char *to,
+    size_t tolen,
     int mode);
 
 char *
 _putd(
     char *to,
+    size_t tolen,
     long val);
 
 #endif /* LIB_CASN_CASN_PRIVATE_H */
