@@ -93,6 +93,7 @@ to build @PACKAGE_NAME@.
       ODBC mySql Connector (Section 2.1.3) at least @MIN_MYSQL_ODBC_VERSION@
       rsync (Section 2.1.5) at least @MIN_RSYNC_VERSION@
       Python (Section 2.1.6) at least @MIN_PYTHON_VERSION@
+      patch (Section 2.5)
 
 2.1.1 User Account
 
