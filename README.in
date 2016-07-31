@@ -48,7 +48,7 @@ Appendix A. Troubleshooting
       A.2.2 FreeBSD
       A.2.3 Ubuntu 12.04-12.10 x86
       A.2.4 Mac OS X 10.8.5 (64-bit)
-      A.2.5 RHEL/CentOS 7
+      A.2.5 RHEL/CentOS 7 x86_64
     A.3 Configure can't find installed software
 
 ===============================================================================
@@ -923,7 +923,7 @@ sudo chown rpstir:rpstir /usr/local/var/cache/rpstir /usr/local/var/log/rpstir #
 sudo chmod 700 /usr/local/var/cache/rpstir /usr/local/var/log/rpstir
 rpstir-initialize -f # if this is not a fresh install, THIS STEP WILL ERASE RPSTIR'S OLD DATA
 
-A.2.5 CentOS 7 x86_64
+A.2.5 RHEL/CentOS 7 x86_64
 
 These are the exact instructions for installing RPSTIR on a fresh copy
 of 64-bit CentOS 7 (as of July 2016)
