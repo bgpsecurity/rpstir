@@ -5189,6 +5189,8 @@ err_code add_cert_validation_reconsidered(scmcon *conp, char *ski,
   }
   SQLCloseCursor(conp->hstmtp->hstmt);
   pophstmt(conp);
+  LOG(LOG_DEBUG, "add_cert_validation_reconsidered returned: %s: %s", 
+      err2name(sta), err2string(sta));
   return sta;
 }
 
