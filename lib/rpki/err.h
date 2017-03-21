@@ -173,6 +173,7 @@
     f(ERR_SCM_TAINHERIT, "TA cert has inherit resources")               \
     f(ERR_SCM_TRUNCATED, "Truncated data")                              \
     f(ERR_SCM_BREAK, "Stop iteration (no error)")                       \
+    f(ERR_SCM_UNRES, "Certificate unnested resource")           \
     // end of error codes list
 
 #define ERROR_ENUM_POS(NAME, DESCR) POS_##NAME,
