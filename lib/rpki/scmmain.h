@@ -66,6 +66,7 @@ static scmtab scmtabbuilder[] = {
      "ipb      BLOB,"
      "ts_mod   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
      "local_id INT UNSIGNED NOT NULL UNIQUE,"
+     "vrs_file VARCHAR(4096),"
      "         PRIMARY KEY (filename, dir_id),"
      "         KEY ski (ski, subject),"
      "         KEY aki (aki, issuer),"

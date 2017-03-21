@@ -48,8 +48,9 @@ make_clean_dir () {
 
 CACHE_DIR="`config_get RPKICacheDir`"
 LOG_DIR="`config_get LogDir`"
+VRS_CACHE_DIR="`config_get VRSCacheDir`"
 
-make_clean_dir "$CACHE_DIR" "$LOG_DIR"
+make_clean_dir "$CACHE_DIR" "$LOG_DIR" "$VRS_CACHE_DIR"
 
 rcli -x -t "$CACHE_DIR" -y || fatal "Couldn't initialize database"
 

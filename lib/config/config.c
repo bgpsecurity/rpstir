@@ -249,6 +249,16 @@ static const struct config_option config_options[] = {
      NULL, NULL,
      "\"" PKGCACHEDIR "\""},
 
+    // CONFIG_VRS_CACHE_DIR
+    {
+      "VRSCacheDir",
+      false,
+      config_type_path_converter, NULL,
+      config_type_path_converter_inverse, NULL,
+      free,
+      NULL, NULL,
+      "\"" VRSCACHEDIR "\""},
+
     // CONFIG_LOG_DIR
     {
      "LogDir",
