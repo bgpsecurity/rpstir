@@ -11,6 +11,7 @@ lib_config_libconfig_a_SOURCES = \
 lib_config_libconfig_a_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-DPKGCACHEDIR='"$(pkgcachedir)"' \
+	-DVRSCACHEDIR='"$(vrscachedir)"' \
 	-DPKGDATADIR='"$(pkgdatadir)"' \
 	-DPKGLOGDIR='"$(pkglogdir)"' \
 	-DPKGVARLIBDIR='"$(pkgvarlibdir)"' \

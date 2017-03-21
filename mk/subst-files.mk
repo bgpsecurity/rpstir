@@ -39,6 +39,7 @@ do_subst = $(SED) \
 	-e 's,[@]abs_top_srcdir[@],$(abs_top_srcdir),g' \
 	-e 's,[@]examplesdir[@],$(examplesdir),g' \
 	-e 's,[@]pkgcachedir[@],$(pkgcachedir),g' \
+	-e 's,[@]vrscachedir[@],$(vrscachedir),g' \
 	-e 's,[@]pkgdatadir[@],$(pkgdatadir),g' \
 	-e 's,[@]pkglibexecdir[@],$(pkglibexecdir),g' \
 	-e 's,[@]pkglogdir[@],$(pkglogdir),g' \
