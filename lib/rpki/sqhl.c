@@ -4800,7 +4800,7 @@ void get_resources_set_from_X509(RS *node, X509 *x) {
             char buf_v6[40];
             int flag_v6 = 0;
             int count_v6 = 0;
-            for (size_t i = 0; i < 8; i += 2) {
+            for (size_t i = 0; i < 16; i += 2) {
               flag_v6 +=
                   sprintf(buf_v6 + flag_v6, "%02x%02x:", min[i], min[i + 1]);
               count_v6++;
@@ -5088,8 +5088,7 @@ err_code validation_reconsidered(scmcon *conp, char *aki, char *issuer, X509 *x,
   // build the SELECT query
   sprintf(stmt, "SELECT filename,dirname,vrs_file FROM rpki_cert LEFT JOIN "
                 "rpki_dir on rpki_cert.dir_id = rpki_dir.dir_id WHERE "
-                "rpki_cert.dir_id=rpki_dir.dir_id AND (flags & 0x%x)!=0 "
-                "AND subject='%s';",
+                "(flags & 0x%x)!=0 AND subject='%s';",
           SCM_FLAG_VALID, issuer);
 
   rc = newhstmt(conp);
