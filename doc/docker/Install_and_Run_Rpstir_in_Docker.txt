@@ -1,0 +1,44 @@
+Install and Run Rpstir in Docker
+
+1. Install Docker
+Docker is available on multiple platforms. Please refer to  https://docs.docker.com/engine/installation/ for detailed installation steps.
+
+
+2. Get Rpstir Images in Docker
+There are two ways to get Rpstir images. The Rpstir images is based on centos6.9, and it includes rpstitr, all dependent softwares and mysql server.
+
+Note: The root user name and password of mysql is root/Rpstir-123, and the rpstir user name and password is rpstir/Rpstir-123.
+
+
+2.1 Compile Dockerfile
+By run the docker_build_centos6.9.sh in doc/docker, which compiles the Dockerfile in doc/docker/dockerbuilder/Dockerfile, a Rpstir Images which name is rpstir/rpstir_docker_centos6.9 can be builded. The step is:
+./docker_build_centos6.9.sh
+
+
+2.2 Pull from Dockerhub
+By run the docker_pull_centos6.9.sh in doc/docker, which pull rpstir images from Dockerhub, a Rpstir Images which name is rpstir/rpstir_docker_centos6.9 can be getted. The step is:
+./docker_pull_centos6.9.sh
+
+
+3 Initialize and Rpstir in Docker
+
+3.1 Initialize Docker
+The docker_init_run_centos6.9.sh initialize the volume and create the container.The volume uses /root/dockervolume in host machine as persistent storage, and it's subdirectories store different data. The step is:
+./docker_init_run_centos6.9.sh
+
+
+3.2 Start Docker
+The  docker_start_centos6.9.sh start the rpstir in docker, and will attach in the docker. The step is:
+./docker_start_centos6.9.sh
+
+
+3.3 Stop Docker
+The  docker_stop_centos6.9.sh stop the running rpstir in docker. The step is:
+./docker_stop_centos6.9.sh
+
+
+4 Using Rpstir 
+Please refer to "3. Running the RPKI Software" in  README.in .
+
+
+
