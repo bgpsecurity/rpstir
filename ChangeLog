@@ -1,7 +1,8 @@
 0.14, not yet released
 
 0.13, relased 2017-11-
-  * Increased the running mode in Docker, and the handbook is doc/docker/Install_and_Run_Rpstir_in_Docker.txt
+  * Increased the running mode in Docker, and the handbook is doc/docker/Install_and_Run_Rpstir_in_Docker.txt.
+  * Because the code does not change, so the version number remains unchanged.
   
 
 
