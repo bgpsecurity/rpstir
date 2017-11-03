@@ -27,7 +27,7 @@ RUN yum -y update && yum install -y -q \
 # install autoconf
 RUN mkdir /root/autoconf \
     && cd /root/autoconf \
-    && wget  http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz  \
+    && wget --inet4-only  http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz  \
     && tar xzvf autoconf-2.69.tar.gz \
     && cd autoconf-2.69 \
     && ./configure  \
@@ -39,7 +39,7 @@ RUN mkdir /root/autoconf \
 # install automake
 RUN mkdir /root/automake \
     && cd /root/automake \
-    && wget  http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz \
+    && wget --inet4-only http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz \
     && tar xzvf automake-1.15.tar.gz \
     && cd automake-1.15 \
     && ./configure  \
@@ -50,7 +50,7 @@ RUN mkdir /root/automake \
 # install netcat
 RUN mkdir /root/netcat \
     && cd /root/netcat \
-    && wget   https://downloads.sourceforge.net/project/netcat/netcat/0.7.1/netcat-0.7.1.tar.gz?r=http%3A%2F%2Fnetcat.sourceforge.net%2Fdownload.php -O netcat-0.7.1.tar.gz \
+    && wget --inet4-only  https://downloads.sourceforge.net/project/netcat/netcat/0.7.1/netcat-0.7.1.tar.gz?r=http%3A%2F%2Fnetcat.sourceforge.net%2Fdownload.php -O netcat-0.7.1.tar.gz \
     && tar xzvf netcat-0.7.1.tar.gz \
     && cd /root/netcat/netcat-0.7.1 \
     && ./configure \
@@ -61,7 +61,7 @@ RUN mkdir /root/netcat \
 # install python 2.7
 RUN mkdir /root/python \
     && cd /root/python \
-    && wget --no-verbose https://www.python.org/ftp/python/2.7.14/Python-2.7.14.tgz \
+    && wget --inet4-only https://www.python.org/ftp/python/2.7.14/Python-2.7.14.tgz \
     && tar zxf Python-2.7.14.tgz \
     && cd /root/python/Python-2.7.14 \
     && ./configure  \
@@ -73,7 +73,7 @@ RUN mkdir /root/python \
 # install cryptlib
 RUN mkdir /root/cryptlib \
     && cd /root/cryptlib \
-    && wget  --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl3431.zip \
+    && wget  --inet4-only --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl3431.zip \
     && unzip -a cl3431.zip -d cryptlib3431 \
     && cd cryptlib3431 \
     && make  shared  \
@@ -86,7 +86,7 @@ RUN mkdir /root/cryptlib \
 # install openssl1.0.2l
 RUN mkdir /root/openssl \
     && cd /root/openssl \
-    && wget  --no-verbose https://www.openssl.org/source/openssl-1.0.2l.tar.gz \
+    && wget --inet4-only https://www.openssl.org/source/openssl-1.0.2l.tar.gz \
     && tar xzvf openssl-1.0.2l.tar.gz \
     && cd openssl-1.0.2l \
     && ./config  shared enable-rfc3779 \
@@ -102,13 +102,13 @@ RUN mkdir /root/openssl \
 RUN mkdir /root/mysql \
     && cd /root/mysql \
     && rm -rf /var/lib/mysql  \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-server-5.7.20-1.el6.x86_64.rpm \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-client-5.7.20-1.el6.x86_64.rpm \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-devel-5.7.20-1.el6.x86_64.rpm \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-common-5.7.20-1.el6.x86_64.rpm \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-libs-5.7.20-1.el6.x86_64.rpm \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-5.3.9-1.el6.x86_64.rpm \
-    && wget  --no-verbose https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-setup-5.3.9-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-server-5.7.20-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-client-5.7.20-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-devel-5.7.20-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-common-5.7.20-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-libs-5.7.20-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-5.3.9-1.el6.x86_64.rpm \
+    && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-setup-5.3.9-1.el6.x86_64.rpm \
     && yum  localinstall -y -q *.rpm  \ 
     && cp /root/file/mysqlinit.* /root/mysql/  \ 
 #   && rm -rf /var/lib/mysql \ 
@@ -124,7 +124,7 @@ RUN mkdir /root/mysql \
 # install unixodbc
 RUN mkdir /root/unixodbc \
     && cd /root/unixodbc \
-    && wget  --no-verbose ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-2.3.4.tar.gz \
+    && wget --inet4-only ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-2.3.4.tar.gz \
     && tar xzvf unixODBC-2.3.4.tar.gz \
     && cd unixODBC-2.3.4 \
     && ./configure  \
