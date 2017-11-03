@@ -22,84 +22,84 @@ RUN yum -y update && yum install -y -q \
     libtool  \
     libevent \
     rsyslog  \
-    wget     \
+    wget     
 
 # install autoconf
-    && mkdir /root/autoconf \
+RUN mkdir /root/autoconf \
     && cd /root/autoconf \
-    && wget  --no-verbose http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz  \
+    && wget  http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz  \
     && tar xzvf autoconf-2.69.tar.gz \
     && cd autoconf-2.69 \
-    && ./configure -q \
-    && make -s \
-    && make -s install \
-    && rm -rf  /root/autoconf \
+    && ./configure  \
+    && make  \
+    && make  install \
+    && rm -rf  /root/autoconf 
 
 
 # install automake
-    && mkdir /root/automake \
+RUN mkdir /root/automake \
     && cd /root/automake \
-    && wget --no-verbose http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz \
+    && wget  http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz \
     && tar xzvf automake-1.15.tar.gz \
     && cd automake-1.15 \
-    && ./configure -q \
-    && make -s \
-    && make -s install \
-    && rm -rf /root/automake \
+    && ./configure  \
+    && make  \
+    && make  install \
+    && rm -rf /root/automake 
 
 # install netcat
-    && mkdir /root/netcat \
+RUN mkdir /root/netcat \
     && cd /root/netcat \
-    && wget --no-verbose  https://downloads.sourceforge.net/project/netcat/netcat/0.7.1/netcat-0.7.1.tar.gz?r=http%3A%2F%2Fnetcat.sourceforge.net%2Fdownload.php -O netcat-0.7.1.tar.gz \
+    && wget   https://downloads.sourceforge.net/project/netcat/netcat/0.7.1/netcat-0.7.1.tar.gz?r=http%3A%2F%2Fnetcat.sourceforge.net%2Fdownload.php -O netcat-0.7.1.tar.gz \
     && tar xzvf netcat-0.7.1.tar.gz \
     && cd /root/netcat/netcat-0.7.1 \
     && ./configure \
-    && make -s \
-    && make -s install \ 
-    && rm -rf /root/netcat \
+    && make  \
+    && make  install \ 
+    && rm -rf /root/netcat 
 
 # install python 2.7
-    && mkdir /root/python \
+RUN mkdir /root/python \
     && cd /root/python \
     && wget --no-verbose https://www.python.org/ftp/python/2.7.14/Python-2.7.14.tgz \
     && tar zxf Python-2.7.14.tgz \
     && cd /root/python/Python-2.7.14 \
-    && ./configure -q \
-    && make -s \
-    && make -s install \
+    && ./configure  \
+    && make  \
+    && make  install \
     && rm -rf /root/python \
-    && echo "export PATH=/usr/local/bin:$PATH" >>  /etc/profile \
+    && echo "export PATH=/usr/local/bin:$PATH" >>  /etc/profile 
     
 # install cryptlib
-    && mkdir /root/cryptlib \
+RUN mkdir /root/cryptlib \
     && cd /root/cryptlib \
-    && wget  --no-verbose --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl3431.zip \
+    && wget  --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl3431.zip \
     && unzip -a cl3431.zip -d cryptlib3431 \
     && cd cryptlib3431 \
-    && make -s shared  \
+    && make  shared  \
     && install -o root -g root -m 755 libcl.so.3.4.3 /usr/local/lib \
     && ln -s /usr/local/lib/libcl.so.3.4.3 /usr/local/lib/libcl.so.3.4  \
     && ln -s /usr/local/lib/libcl.so.3.4.3 /usr/local/lib/libcl.so  \
     && install -o root -g root -m 644 cryptlib.h /usr/local/include \
-    && rm -rf /root/cryptlib \
+    && rm -rf /root/cryptlib 
 
 # install openssl1.0.2l
-    &&  mkdir /root/openssl \
+RUN mkdir /root/openssl \
     && cd /root/openssl \
     && wget  --no-verbose https://www.openssl.org/source/openssl-1.0.2l.tar.gz \
     && tar xzvf openssl-1.0.2l.tar.gz \
     && cd openssl-1.0.2l \
     && ./config  shared enable-rfc3779 \
-    && make -s depend \
-    && make -s \
-    && make -s install \
+    && make  depend \
+    && make  \
+    && make  install \
     && echo "export PATH=/usr/local/ssl/bin:$PATH" >> /etc/profile \
     && source /etc/profile \
-    && rm -rf /root/openssl \
+    && rm -rf /root/openssl 
 
 
 # install mysql
-    && mkdir /root/mysql \
+RUN mkdir /root/mysql \
     && cd /root/mysql \
     && rm -rf /var/lib/mysql  \
     && wget  --no-verbose https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-community-server-5.7.20-1.el6.x86_64.rpm \
@@ -119,24 +119,24 @@ RUN yum -y update && yum install -y -q \
     && chmod +x *.sh \
     && ./mysqlinit.sh \
     && cp /root/mysql/my.cnf  /etc/my.cnf \
-    && rm -rf /root/mysql \
+    && rm -rf /root/mysql 
 
 # install unixodbc
-    && mkdir /root/unixodbc \
+RUN mkdir /root/unixodbc \
     && cd /root/unixodbc \
     && wget  --no-verbose ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-2.3.4.tar.gz \
     && tar xzvf unixODBC-2.3.4.tar.gz \
     && cd unixODBC-2.3.4 \
-    && ./configure -q \
-    && make -s \
-    && make -s install \ 
+    && ./configure  \
+    && make  \
+    && make  install \ 
     && rm -rf /root/unixodbc \
     && mkdir -p /usr/local/etc/ \
-    && cp /root/file/*.ini /usr/local/etc/  \
+    && cp /root/file/*.ini /usr/local/etc/  
 
 
 # install rpstir
-    && cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
+RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && mkdir -p /root/rpstir /usr/local/etc/rpstir /usr/local/var/cache/rpstir \
              /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
     && cp /root/file/rpstir.conf /root/rpstir/  \
@@ -145,7 +145,7 @@ RUN yum -y update && yum install -y -q \
     && cd ./rpstir \
     && ./autogen.sh \
     && ./configure -q \
-    && make -s \
+    && make  \
     && mkdir -p /usr/local/var/cache/rpstir-tmp \
 ##    && make -s check \ 
     && make install \
