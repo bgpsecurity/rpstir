@@ -30,6 +30,7 @@ Table of Contents
     2.7 Post-Installation Procedures
     2.8 Upgrade Procedure
     2.9 Firewall
+    2.10 Run in Docker
 3. Running the RPKI Software
     3.1 Normal Operation
       3.1.1 Note About Cron Jobs
@@ -532,6 +533,11 @@ then attempts to fetch, recursively. If you plan to make the results of @PACKAGE
 validation public and if your local network (or localhost) contains any
 confidential data available over rsync, you may want to set up a firewall to
 prevent @PACKAGE_NAME@ from downloading any data it shouldn't.
+
+
+2.10 Run in Docker
+
+The @PACKAGE_NAME@ can run in Docker, please refer to the handbook in doc/docker/Install_and_Run_Rpstir_in_Docker.txt
 
 ===============================================================================
 
