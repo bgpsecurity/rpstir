@@ -29,3 +29,8 @@ rsync_cord.config
 *REPOSITORY
 *LOGS
 *EEcertificates
+/doc/docker/dockerbuilder/Dockerfile_20171101_ok
+/doc/docker/Install_and_Run_Rpstir_in_Docker.txt.bak
+/ChangeLog.bak
+/README.in.bak
+/doc/~$kidesign.doc
