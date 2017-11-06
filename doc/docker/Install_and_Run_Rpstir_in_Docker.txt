@@ -12,7 +12,7 @@ Note: The root user name and password of mysql is root/Rpstir-123, and the RPSTI
 
 
 2.1 Compile Docker Images by Dockerfile 
-By run the docker_build_centos6.9.sh in doc/docker, which compiles the Dockerfile in doc/docker/dockerbuilder/Dockerfile, a Rpstir Images which name is rpstir/rpstir_docker_centos6.9 can be builded. The step is:
+By run the docker_build_centos6.9.sh in doc/docker, which compiles the Dockerfile in doc/docker/dockerbuilder/Dockerfile, a RPSTIR Images which name is rpstir/rpstir_docker_centos6.9 can be builded. The step is:
 ./docker_build_centos6.9.sh
 
 
