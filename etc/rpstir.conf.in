@@ -48,11 +48,7 @@ DatabaseDSN myodbc
 #     # They are for testing only.
 #     TrustAnchorLocators \
 #         @sampletadir@/afrinic.tal \
-#         @sampletadir@/apnic-rpki-root-afrinic-origin.tal \
-#         @sampletadir@/apnic-rpki-root-arin-origin.tal \
 #         @sampletadir@/apnic-rpki-root-iana-origin.tal \
-#         @sampletadir@/apnic-rpki-root-lacnic-origin.tal \
-#         @sampletadir@/apnic-rpki-root-ripe-origin.tal \
 #         @sampletadir@/lacnic.tal \
 #         @sampletadir@/ripe-ncc-root.tal
 #

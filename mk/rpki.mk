@@ -344,11 +344,7 @@ PACKAGE_NAME_BINS += upgrade
 dist_sampleta_DATA = \
 	etc/sample-ta/README \
 	etc/sample-ta/afrinic.tal \
-	etc/sample-ta/apnic-rpki-root-afrinic-origin.tal \
-	etc/sample-ta/apnic-rpki-root-arin-origin.tal \
 	etc/sample-ta/apnic-rpki-root-iana-origin.tal \
-	etc/sample-ta/apnic-rpki-root-lacnic-origin.tal \
-	etc/sample-ta/apnic-rpki-root-ripe-origin.tal \
 	etc/sample-ta/lacnic.tal \
 	etc/sample-ta/ripe-ncc-root.tal
 
