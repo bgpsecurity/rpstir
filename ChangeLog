@@ -1,4 +1,6 @@
-0.14, not yet released
+0.14, released 2018-02-27
+  * Remove the stale TAL of APNIC RPKI 
+  * Validation-reconsidered is commented out temporarily, because the new OID
 
 
 0.13, relased 2017-11-04
