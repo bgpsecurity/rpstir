@@ -321,7 +321,7 @@ prerequisites, you'll need to install git (http://git-scm.com/), automake
 (http://www.gnu.org/software/automake/), and autoconf
 (http://www.gnu.org/software/autoconf/). Then run the below commands:
 
-    $ git clone git://git.code.sf.net/p/rpstir/code rpstir
+    $ git clone https://github.com/bgpsecurity/rpstir.git
     $ cd rpstir
     $ ./autogen.sh
 
@@ -1078,3 +1078,19 @@ If you installed a dependency from your operating system's package manager and
 ./configure is giving an error about being unable to find the dependency, you
 may need to install an additional package with the extension -dev or -devel.
 For example, on Ubuntu, you need to install unixodbc-dev and libmysqlclient-dev.
+
+
+
+
+
+
+
+Appendix B. Remove the stale TAL of APNIC RPKI 
+
+If you have installed the RPSTIR, you should removing the stale TAL of APNIC RPKI  by the following command.
+
+cd /usr/local/share/doc/rpstir/examples/sample-ta/
+rm apnic-rpki-root-ripe-origin.tal
+rm apnic-rpki-root-arin-origin.tal
+rm apnic-rpki-root-lacnic-origin.tal
+rm apnic-rpki-root-afrinic-origin.tal
