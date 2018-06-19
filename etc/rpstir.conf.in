@@ -50,7 +50,8 @@ DatabaseDSN myodbc
 #         @sampletadir@/afrinic.tal \
 #         @sampletadir@/apnic-rpki-root-iana-origin.tal \
 #         @sampletadir@/lacnic.tal \
-#         @sampletadir@/ripe-ncc-root.tal
+#         @sampletadir@/ripe-ncc-root.tal \
+#         @sampletadir@/arin.tal
 #
 # If you know which TALs you want to use, put them in @pkgsysconfdir@
 # and list them below:
