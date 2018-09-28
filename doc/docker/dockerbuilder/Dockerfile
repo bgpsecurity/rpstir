@@ -73,7 +73,8 @@ RUN mkdir /root/python \
 # install cryptlib
 RUN mkdir /root/cryptlib \
     && cd /root/cryptlib \
-    && wget  --inet4-only --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl3431.zip \
+#    && wget  --inet4-only --passive ftp://ftp.franken.de/pub/crypt/cryptlib/cl3431.zip \
+    && cp /root/file/cl3431.zip /root/cryptlib/ \
     && unzip -a cl3431.zip -d cryptlib3431 \
     && cd cryptlib3431 \
     && make  shared  \
