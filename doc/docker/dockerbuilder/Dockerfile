@@ -138,9 +138,9 @@ RUN mkdir /root/unixodbc \
 # install crontab
 RUN  mkdir /root/crontab \
     && cd /root/crontab \
-    && wget http://www.rpmfind.net/linux/centos/6.9/os/x86_64/Packages/cronie-1.4.4-16.el6_8.2.x86_64.rpm \ 
-    && wget http://www.rpmfind.net/linux/centos/6.9/os/x86_64/Packages/crontabs-1.10-33.el6.noarch.rpm \
-    && wget http://www.rpmfind.net/linux/centos/6.9/os/x86_64/Packages/cronie-anacron-1.4.4-16.el6_8.2.x86_64.rpm \
+    && wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-1.4.4-16.el6_8.2.x86_64.rpm \
+    && wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/crontabs-1.10-33.el6.noarch.rpm \
+    && wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-anacron-1.4.4-16.el6_8.2.x86_64.rpm \
     && rpm -ivh cronie-1.4.4-16.el6_8.2.x86_64.rpm --nodeps \
     && rpm -ivh crontabs-1.10-33.el6.noarch.rpm \
     && rpm -ivh cronie-anacron-1.4.4-16.el6_8.2.x86_64.rpm \
