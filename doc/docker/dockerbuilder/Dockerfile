@@ -137,14 +137,13 @@ RUN mkdir /root/unixodbc \
 
 # install crontab
 RUN  mkdir /root/crontab \
-    && cd /root/crontab \
-    && wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-1.4.4-16.el6_8.2.x86_64.rpm \
+    && cd /root/crontab 
+RUN  wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-1.4.4-16.el6_8.2.x86_64.rpm \
     && wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/crontabs-1.10-33.el6.noarch.rpm \
     && wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-anacron-1.4.4-16.el6_8.2.x86_64.rpm \
     && rpm -ivh cronie-1.4.4-16.el6_8.2.x86_64.rpm --nodeps \
     && rpm -ivh crontabs-1.10-33.el6.noarch.rpm \
     && rpm -ivh cronie-anacron-1.4.4-16.el6_8.2.x86_64.rpm \
-    && service crontab start \
     && rm -rf /root/crontab 
     
 # install rpstir
@@ -159,21 +158,23 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && ./configure -q \
     && make  \
     && mkdir -p /usr/local/var/cache/rpstir-tmp \
-##    && make -s check \ 
     && make install \
-    && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf   \
+    && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf   
 
 
 
 # clean all rmp
-    && yum clean all \
-    && rm -rf /root/file 
+RUN  yum clean all \ 
+    && cd /root/file \
+    && chmod +x *.sh
+#    && rm -rf /root/file 
 
 
 # start 
 #CMD /bin/bash
-ENTRYPOINT service mysqld restart  && /bin/bash 
-
+#ENTRYPOINT service mysqld restart  && /bin/bash 
+ENTRYPOINT ["/root/file/start_service.sh"]  
+CMD ["/bin/bash"] 
 
     
 
