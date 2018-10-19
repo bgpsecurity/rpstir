@@ -1,3 +1,4 @@
 #!/bin/bash
-service crond start
+service crond restart
 service mysqld restart
+/bin/bash 
