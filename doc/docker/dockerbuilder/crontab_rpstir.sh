@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# chmod +x crontab_rpstir.sh
+# set crontab -e
+# 0 */4  * * *  /root/rpstir/rpstir/doc/docker/dockerbuilder/crontab_rpstir.sh
+
+
 export /root/.bash_profile  
 PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 SHELL=/bin/bash
