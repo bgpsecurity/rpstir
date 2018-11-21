@@ -2911,7 +2911,7 @@ rescert_sia_chk(
         for (; adp; adp = (struct AccessDescription *)next_of(&adp->self))
         {
             /** @bug error code ignored without explanation */
-            if (!diff_objid(&adp->accessMethod, id_ad_signedObject))
+            if (!diff_objid(&adp->accessMethod, id_ad_signedObject)  || !diff_objid(&adp->accessMethod, id_ad_rpkiNotify) )
             {
                 if (size_casn((struct casn *)&adp->accessLocation.url))
                 {
