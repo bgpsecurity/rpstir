@@ -174,7 +174,7 @@ RUN  yum clean all \
 #CMD /bin/bash
 #ENTRYPOINT service mysqld restart  && /bin/bash 
 ENTRYPOINT ["/root/file/start_service.sh"]  
-CMD ["/bin/bash"] 
+#CMD ["/bin/bash"] 
 
     
 

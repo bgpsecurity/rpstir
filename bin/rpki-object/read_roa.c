@@ -67,7 +67,8 @@ static int read_family(
 {
     uchar ub[8];
     read_casn(&roafamp->addressFamily, ub);
-    int bsize = 100;
+    // from bsize=100 to besize=1024
+    int bsize = 1024;
     char *a,
        *c,
        *buf = (char *)calloc(1, bsize);

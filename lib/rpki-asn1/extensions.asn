@@ -137,6 +137,7 @@ id-ad-caRepository              ID ::= { id-ad 5 }
 id-ad-signedObjectRepository    ID ::= { id-ad 9 }
 id-ad-rpkiManifest              ID ::= { id-ad 10}
 id-ad-signedObject              ID ::= { id-ad 11 }
+id-ad-rpkiNotify                ID ::= { id-ad 13 }
 id-pe-ipAddrBlock               ID ::= { id-pkix-pe 7 }
 id-pe-autonomousSysNum          ID ::= { id-pkix-pe 8 }
 id-pe-routerIdentifier          ID ::= { id-pkix-pe 9 }
