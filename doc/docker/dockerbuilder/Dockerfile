@@ -159,7 +159,10 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && make  \
     && mkdir -p /usr/local/var/cache/rpstir-tmp \
     && make install \
-    && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf   
+    && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf  \
+    && cd /root/rpstir/rpstir/doc/docker/dockerbuilder \
+    && chomd +x *.sh \
+    && crontab crontab_rpstir.conf
 
 
 
