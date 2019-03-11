@@ -120,6 +120,7 @@ RUN mkdir /root/mysql \
     && chmod +x *.sh \
     && ./mysqlinit.sh \
     && cp /root/mysql/my.cnf  /etc/my.cnf \
+    && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  \
     && rm -rf /root/mysql 
 
 # install unixodbc
