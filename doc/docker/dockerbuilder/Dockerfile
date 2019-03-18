@@ -163,7 +163,7 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && make install \
     && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf  \
     && cd /root/rpstir/rpstir/doc/docker/dockerbuilder \
-    && chomd +x *.sh \
+    && chmod +x *.sh \
     && crontab crontab_rpstir.conf
 
 # install rpki-transfer and slurm 
