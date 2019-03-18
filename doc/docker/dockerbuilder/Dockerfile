@@ -165,7 +165,28 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && chomd +x *.sh \
     && crontab crontab_rpstir.conf
 
-
+# install rpki-transfer and slurm 
+RUN cd /root/ \
+    && cp /root/file/rpki.tar.gz /root/ \
+    && tar xzvf rpki.tar.gz \
+    && cd /root/rpki/rpki-transfer/bin/ \
+    && chmod +x * \
+    && cd /root/rpki/slurm \
+    && chmod +x slurm \
+    && mkdir -p /root/rpki/rpstir /root/rpki/rpstir/bin \
+    && mv /root/rpsitr /root/rpki/rpstir/src \
+    && cd /root/rpki/rpstir/bin \
+    && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
+    && ln -s /usr/local/bin/rpstir-query  /root/rpki/rpstir/bin/rpstir-query \
+    && ln -s /usr/local/bin/rpstir-results  /root/rpki/rpstir/bin/rpstir-results \
+	  && ln -s /usr/local/bin/rpki-rtr-update  /root/rpki/rpstir/bin/rpki-rtr-update \
+	  && ln -s /usr/local/libexec/rpstir/rpki-rtr-daemon /root/rpki/rpstir/bin/rpki-rtr-daemon \
+	  && ln -s /usr/local/bin/rpstir-synchronize  /root/rpki/rpstir/bin/rpstir-synchronize \
+	  && ln -s /usr/local/var/cache/rpstir /root/rpki/rpstir/cache \
+	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
+	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
+	  && echo "Asia/shanghai" > /etc/timezone 
+	   
 
 # clean all rmp
 RUN  yum clean all \ 
