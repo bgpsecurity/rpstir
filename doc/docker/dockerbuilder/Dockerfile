@@ -111,7 +111,8 @@ RUN mkdir /root/mysql \
     && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-5.3.9-1.el6.x86_64.rpm \
     && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-setup-5.3.9-1.el6.x86_64.rpm \
     && yum  localinstall -y -q *.rpm  \ 
-    && cp /root/file/mysqlinit.* /root/mysql/  \ 
+    && cp /root/file/mysqlinit.sh /root/mysql/  \ 
+    && cp /root/file/*.sql /root/mysql/  \ 
 #   && rm -rf /var/lib/mysql \ 
     && cp /etc/my.cnf /root/mysql/my.cnf \
     && echo 'skip-grant-tables' >> /etc/my.cnf \
