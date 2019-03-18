@@ -154,7 +154,7 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
              /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
     && cp /root/file/rpstir.conf /root/rpstir/  \
     && cd /root/rpstir \
-    && git clone https://github.com/bgpsecurity/rpstir.git \
+    && git clone https://github.com/cpusoft/rpstir.git \
     && cd ./rpstir \
     && ./autogen.sh \
     && ./configure -q \
