@@ -45,12 +45,10 @@ CREATE TABLE `rpki_link_rpvc_log` (
 
 
 
-									 
-'for rp, to set vc 									 
+							 
 insert into rpki_link_rpvc(protocol,address,port,style,create_time,state) 
 									 values ('https','202.173.14.103','8444','vc','2019-03-12 1:1:1','valid');
 
-'for vc, to set rp
 insert into rpki_link_rpvc(protocol,address,port,style,create_time,state) 
 									 values ('https','202.173.14.102','8443','rp','2019-03-12 1:1:1','valid');									 									 
 									 
