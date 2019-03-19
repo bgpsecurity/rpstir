@@ -7,7 +7,7 @@ if [ ! -d "/var/lib/mysql" ]; then
 fi
 
 
-mysql -uroot < mysql-transfer.sql
+mysql -uroot < mysql-table.sql
 
 
-##mysql -u rpstir -pRpstir-123 < mysql-transfer.sql
+## mysql -u rpstir -pRpstir-123 < mysql-transfer.sql

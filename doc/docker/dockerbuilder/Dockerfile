@@ -111,18 +111,15 @@ RUN mkdir /root/mysql \
     && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-5.3.9-1.el6.x86_64.rpm \
     && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-setup-5.3.9-1.el6.x86_64.rpm \
     && yum  localinstall -y -q *.rpm  \ 
-    && cp /root/file/mysqlinit.sh /root/mysql/  \ 
-    && cp /root/file/*.sql /root/mysql/  \ 
+    && cp /root/file/mysql* /root/mysql/  \ 
 #   && rm -rf /var/lib/mysql \ 
     && cp /etc/my.cnf /root/mysql/my.cnf \
     && echo 'skip-grant-tables' >> /etc/my.cnf \
     && service mysqld start \
     && cd /root/mysql \
     && chmod +x *.sh \
-    && ./mysqlinit.sh \
-    && cp /root/mysql/my.cnf  /etc/my.cnf \
-    && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  \
-    && rm -rf /root/mysql 
+    && ./mysqlinit.sh 
+   
 
 # install unixodbc
 RUN mkdir /root/unixodbc \
@@ -186,10 +183,17 @@ RUN cd /root/ \
 	  && ln -s /usr/local/var/cache/rpstir /root/rpki/rpstir/cache \
 	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
 	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
-	  && echo "Asia/shanghai" > /etc/timezone \
-	  && service mysqld restart \
+	  && echo "Asia/shanghai" > /etc/timezone 
+
+# rpstir initialize and create db table	  
+RUN service mysqld restart \
 	  && cd /root/rpki/rpstir/bin/ \
-	  && ./rpstir-initialize -f 
+	  && ./rpstir-initialize -f \
+	  && cd /root/mysql \
+	  && ./mysql-table.sh \
+	  && cp /root/mysql/my.cnf  /etc/my.cnf \
+    && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  \
+    && rm -rf /root/mysql 
 	   
 
 # clean all rmp
