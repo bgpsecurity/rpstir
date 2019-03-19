@@ -177,7 +177,7 @@ RUN cd /root/ \
     && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
     && ln -s /usr/local/bin/rpstir-query  /root/rpki/rpstir/bin/rpstir-query \
     && ln -s /usr/local/bin/rpstir-results  /root/rpki/rpstir/bin/rpstir-results \
-	  && ln -s /usr/local/bin/rpki-rtr-update  /root/rpki/rpstir/bin/rpki-rtr-update \
+	  && ln -s /usr/local/bin/rpstir-rpki-rtr-update  /root/rpki/rpstir/bin/rpstir-rpki-rtr-update \
 	  && ln -s /usr/local/libexec/rpstir/rpki-rtr-daemon /root/rpki/rpstir/bin/rpki-rtr-daemon \
 	  && ln -s /usr/local/bin/rpstir-synchronize  /root/rpki/rpstir/bin/rpstir-synchronize \
 	  && ln -s /usr/local/var/cache/rpstir /root/rpki/rpstir/cache \
