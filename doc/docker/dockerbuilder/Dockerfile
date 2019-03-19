@@ -186,7 +186,9 @@ RUN cd /root/ \
 	  && ln -s /usr/local/var/cache/rpstir /root/rpki/rpstir/cache \
 	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
 	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
-	  && echo "Asia/shanghai" > /etc/timezone 
+	  && echo "Asia/shanghai" > /etc/timezone \
+	  && cd /root/rpki/rpstir/bin/ \
+	  && ./rpstir-initialize -f 
 	   
 
 # clean all rmp
