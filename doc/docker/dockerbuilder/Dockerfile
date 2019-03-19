@@ -187,6 +187,7 @@ RUN cd /root/ \
 	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
 	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
 	  && echo "Asia/shanghai" > /etc/timezone \
+	  && service mysqld restart \
 	  && cd /root/rpki/rpstir/bin/ \
 	  && ./rpstir-initialize -f 
 	   
