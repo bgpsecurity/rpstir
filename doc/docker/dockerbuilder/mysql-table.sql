@@ -26,13 +26,7 @@ CREATE TABLE `rpki_link_rpvc_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8 COLLATE=utf8_bin comment='log';
 
 
-
-							 
-insert into rpki_link_rpvc(protocol,address,port,style,create_time,state) 
-									 values ('https','202.173.14.103','8444','vc','2019-03-12 1:1:1','valid');
-
-insert into rpki_link_rpvc(protocol,address,port,style,create_time,state) 
-									 values ('https','202.173.14.102','8443','rp','2019-03-12 1:1:1','valid');									 									 
+							 									 
 									 
 									 
 set global read_only=1;
