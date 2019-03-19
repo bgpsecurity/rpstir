@@ -172,7 +172,9 @@ RUN cd /root/ \
     && cd /root/rpki/slurm \
     && chmod +x slurm \
     && mkdir -p /root/rpki/rpstir /root/rpki/rpstir/bin \
-#    && mv /root/rpstir/rpstir /root/rpki/rpstir/src \
+    && cd /root/rpstir/  \
+    && ls -R \
+    && mv /root/rpstir/rpstir/ /root/rpki/rpstir/src \
     && cd /root/rpki/rpstir/bin \
     && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
     && ln -s /usr/local/bin/rpstir-query  /root/rpki/rpstir/bin/rpstir-query \
