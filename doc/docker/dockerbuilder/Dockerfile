@@ -183,7 +183,7 @@ RUN cd /root/ \
 	  && ln -s /usr/local/var/cache/rpstir /root/rpki/rpstir/cache \
 	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
 	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
-	  && cp /root/rpki/rpstir/src/doc/docker/dockerbuilder/crontab_rpstir.sh /root/rpki/rpstir/bin/
+	  && cp /root/rpki/rpstir/src/doc/docker/dockerbuilder/crontab_rpstir.sh /root/rpki/rpstir/bin/ \
 	  && echo "Asia/shanghai" > /etc/timezone 
 
 # rpstir initialize and create db table	  
