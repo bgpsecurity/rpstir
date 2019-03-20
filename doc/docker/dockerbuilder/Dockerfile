@@ -170,10 +170,12 @@ RUN cd /root/ \
     && cd /root/rpki/rpki-transfer/bin/ \
     && chmod +x * \
     && cp /root/file/slurm.zip /root/rpki/ \
+    && cd /root/rpki/  \
     && unzip -a slurm.zip \
     && cd /root/rpki/slurm \
     && chmod +x slurm \
     && cp /root/file/cert.zip /root/rpki/ \
+    && cd /root/rpki/  \
     && unzip -a cert.zip \
     && mkdir -p  /root/rpki/rpstir/bin \
     && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
@@ -186,6 +188,8 @@ RUN cd /root/ \
 	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
 	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
 	  && cp /root/rpki/rpstir/src/doc/docker/dockerbuilder/crontab_rpstir.sh /root/rpki/rpstir/bin/ \
+	  && cd /root/rpki/rpstir/bin/ \
+	  && chmod +x * \
 	  && echo "Asia/shanghai" > /etc/timezone 
 
 # rpstir initialize and create db table	  
