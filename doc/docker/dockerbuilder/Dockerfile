@@ -165,6 +165,7 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
 # install rpki-transfer and slurm 
 RUN cd /root/ \
     && cp /root/file/rpki-transfer.zip /root/rpki/ \
+    && cd /root/rpki/  \
     && unzip -a rpki-transfer.zip \
     && cd /root/rpki/rpki-transfer/bin/ \
     && chmod +x * \
