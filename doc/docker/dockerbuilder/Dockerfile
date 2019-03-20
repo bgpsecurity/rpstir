@@ -199,8 +199,8 @@ RUN cd /root/ \
 #	  && cd /root/mysql \
 #	  && ./mysql-table.sh \
 RUN	cp /root/mysql/my.cnf  /etc/my.cnf \
-    && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  \
-    && rm -rf /root/mysql 
+    && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  
+#    && rm -rf /root/mysql 
 	   
 
 # clean all rmp
