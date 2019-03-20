@@ -193,12 +193,12 @@ RUN cd /root/ \
 	  && echo "Asia/shanghai" > /etc/timezone 
 
 # rpstir initialize and create db table	  
-RUN service mysqld restart \
-	  && cd /root/rpki/rpstir/bin/ \
-	  && ./rpstir-initialize -f \
-	  && cd /root/mysql \
-	  && ./mysql-table.sh \
-	  && cp /root/mysql/my.cnf  /etc/my.cnf \
+#RUN service mysqld restart \
+#	  && cd /root/rpki/rpstir/bin/ \
+#	  && ./rpstir-initialize -f \
+#	  && cd /root/mysql \
+#	  && ./mysql-table.sh \
+RUN	cp /root/mysql/my.cnf  /etc/my.cnf \
     && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  \
     && rm -rf /root/mysql 
 	   
