@@ -147,10 +147,9 @@ RUN  wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-1.4
     
 # install rpstir
 RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
-    && mkdir -p /root/rpstir /usr/local/etc/rpstir /usr/local/var/cache/rpstir \
-             /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
-    && cp /root/file/rpstir.conf /root/rpstir/  \
-    && cd /root/rpstir \
+    && mkdir -p /root/rpki /root/rpki/rpstir /root/rpki/rpstir/bin /root/rpki/rpstir/src /usr/local/etc/rpstir /usr/local/var/cache/rpstir  /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
+    && cp /root/file/rpstir.conf /root/rpki/rpstir/src  \
+    && cd /root/rpki/rpstir/src \
     && git clone https://github.com/cpusoft/rpstir.git \
     && cd ./rpstir \
     && ./autogen.sh \
@@ -158,24 +157,24 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && make  \
     && mkdir -p /usr/local/var/cache/rpstir-tmp \
     && make install \
-    && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf  \
-    && cd /root/rpstir/rpstir/doc/docker/dockerbuilder \
+    && cp /root/rpki/rpstir/src/rpstir.conf /usr/local/etc/rpstir/rpstir.conf  \
+    && cd /root/rpki/rpstir/src/rpstir/doc/docker/dockerbuilder \
     && chmod +x *.sh \
     && crontab crontab_rpstir.conf
 
 # install rpki-transfer and slurm 
 RUN cd /root/ \
-    && cp /root/file/rpki.zip /root/ \
-    && unzip -a rpki.zip \
+    && cp /root/file/rpki-transfer.zip /root/rpki/ \
+    && unzip -a rpki-transfer.zip \
     && cd /root/rpki/rpki-transfer/bin/ \
     && chmod +x * \
+    && cp /root/file/slurm.zip /root/rpki/ \
+    && unzip -a slurm.zip \
     && cd /root/rpki/slurm \
     && chmod +x slurm \
-    && mkdir -p /root/rpki/rpstir /root/rpki/rpstir/bin \
-    && cd /root/rpstir/  \
-    && ls -R \
-    && mv /root/rpstir/rpstir/ /root/rpki/rpstir/src \
-    && cd /root/rpki/rpstir/bin \
+    && cp /root/file/cert.zip /root/rpki/ \
+    && unzip -a cert.zip \
+    && mkdir -p  /root/rpki/rpstir/bin \
     && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
     && ln -s /usr/local/bin/rpstir-query  /root/rpki/rpstir/bin/rpstir-query \
     && ln -s /usr/local/bin/rpstir-results  /root/rpki/rpstir/bin/rpstir-results \
