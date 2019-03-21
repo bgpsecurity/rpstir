@@ -267,8 +267,6 @@ static scmtab scmtabbuilder[] = {
      "PRIMARY KEY (id)",
      NULL,
      0},
-)
-
 };
 
 #undef SCM_COLDEFS_PREFIX_MAXLEN
