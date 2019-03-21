@@ -254,6 +254,21 @@ static scmtab scmtabbuilder[] = {
      SCM_CHECKS_PREFIX_MAXLEN,
      NULL,
      0},
+    {
+     "rpki_link_rpvc",
+     "RPKI_LINK_RPVC",
+     "id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,"
+     "protocol VARCHAR(64) NOT NULL COMMENT 'http or https'",
+     "address VARCHAR(64) NOT NULL COMMENT 'IP or domain'",
+     "port    INT(10) UNSIGNED NOT NULL COMMENT 'port'",
+     "style   VARCHAR(64) NOT NULL COMMENT 'vc/rp'",
+     "create_time DATETIME NOT NULL COMMENT 'create time'",
+     "state VARCHAR(16) NOT NULL DEFAULT 'valid'  COMMENT 'valid/invalid'",
+     "PRIMARY KEY (id)",
+     NULL,
+     0},
+)
+
 };
 
 #undef SCM_COLDEFS_PREFIX_MAXLEN
