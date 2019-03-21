@@ -190,6 +190,7 @@ RUN cd /root/ \
 	  && cp /root/rpki/rpstir/src/rpstir/doc/docker/dockerbuilder/crontab_rpstir.sh /root/rpki/rpstir/bin/ \
 	  && cd /root/rpki/rpstir/bin/ \
 	  && chmod +x * \
+	  && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 	  && echo "Asia/shanghai" > /etc/timezone 
 
 # rpstir initialize and create db table	  
