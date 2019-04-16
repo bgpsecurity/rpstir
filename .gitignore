@@ -34,3 +34,5 @@ rsync_cord.config
 /ChangeLog.bak
 /README.in.bak
 /doc/~$kidesign.doc
+/doc/docker/dockerbuilder/*.bak
+/etc/*.bak

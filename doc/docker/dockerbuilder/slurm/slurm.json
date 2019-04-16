@@ -1,0 +1,25 @@
+{
+    "slurmVersion": 1, 
+    "validationOutputFilters": {
+        "prefixFilters": [
+            {
+                "prefix": "1.10.10.0/24", 
+                "comment": "test prefix filters"
+            }, 
+            {
+                "asn": 999996, 
+                "prefix": "1.9.6.0/24", 
+                "comment": "test prefix and asn filters"
+            }
+        ] 
+    }, 
+    "locallyAddedAssertions": {
+        "prefixAssertions": [
+            {
+                "asn": 9999989, 
+                "prefix": "19.99.89.0/24", 
+                "comment": "test assertions"
+            }
+        ]
+    }
+}
