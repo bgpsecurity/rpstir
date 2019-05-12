@@ -150,7 +150,7 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && mkdir -p /root/rpki /root/rpki/rpstir /root/rpki/rpstir/bin /root/rpki/rpstir/src /usr/local/etc/rpstir /usr/local/var/cache/rpstir  /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
     && cp /root/file/rpstir.conf /root/rpki/rpstir/src  \
     && cd /root/rpki/rpstir/src \
-    && git clone https://github.com/cpusoft/rpstir.git \
+    && git clone https://github.com/bgpsecurity/rpstir.git \
     && cd ./rpstir \
     && ./autogen.sh \
     && ./configure -q \

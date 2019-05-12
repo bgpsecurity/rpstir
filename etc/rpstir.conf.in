@@ -65,7 +65,7 @@ TrustAnchorLocators \
 
 # How many downloads to attempt at one time.
 #DownloadConcurrency 24
-DownloadConcurrency 30
+DownloadConcurrency 300
 
 # Port that rcli listens on. Pick any available port above 1024.
 #RPKIPort 7344
