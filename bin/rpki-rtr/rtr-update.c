@@ -93,8 +93,9 @@ int main(
         case GET_SERNUM_NONE:
             first_time = true;
             // Set previous_serial to a pseudo-random number
+            // set the serail_number is in 1 to 10
             srandom((unsigned int)time(NULL));
-            previous_serial = (serial_number_t)random();
+            previous_serial = (serial_number_t)(random()%10+1);
             break;
 
         case GET_SERNUM_ERR:

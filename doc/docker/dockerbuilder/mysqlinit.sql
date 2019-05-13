@@ -17,6 +17,7 @@ flush privileges;
 
 SELECT USER,HOST FROM mysql.user;
 
+
 set global read_only=1;
 flush privileges;
 

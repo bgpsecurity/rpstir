@@ -111,16 +111,15 @@ RUN mkdir /root/mysql \
     && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-5.3.9-1.el6.x86_64.rpm \
     && wget  --no-verbose --inet4-only https://dev.mysql.com/get/Downloads/Connector-ODBC/5.3/mysql-connector-odbc-setup-5.3.9-1.el6.x86_64.rpm \
     && yum  localinstall -y -q *.rpm  \ 
-    && cp /root/file/mysqlinit.* /root/mysql/  \ 
+    && cp /root/file/mysql* /root/mysql/  \ 
 #   && rm -rf /var/lib/mysql \ 
     && cp /etc/my.cnf /root/mysql/my.cnf \
     && echo 'skip-grant-tables' >> /etc/my.cnf \
     && service mysqld start \
     && cd /root/mysql \
     && chmod +x *.sh \
-    && ./mysqlinit.sh \
-    && cp /root/mysql/my.cnf  /etc/my.cnf \
-    && rm -rf /root/mysql 
+    && ./mysqlinit.sh 
+   
 
 # install unixodbc
 RUN mkdir /root/unixodbc \
@@ -148,10 +147,9 @@ RUN  wget http://www.rpmfind.net/linux/centos/6.10/os/x86_64/Packages/cronie-1.4
     
 # install rpstir
 RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
-    && mkdir -p /root/rpstir /usr/local/etc/rpstir /usr/local/var/cache/rpstir \
-             /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
-    && cp /root/file/rpstir.conf /root/rpstir/  \
-    && cd /root/rpstir \
+    && mkdir -p /root/rpki /root/rpki/rpstir /root/rpki/rpstir/bin /root/rpki/rpstir/src /usr/local/etc/rpstir /usr/local/var/cache/rpstir  /usr/local/var/lib/rpstir   /usr/local/var/log/rpstir \
+    && cp /root/file/rpstir.conf /root/rpki/rpstir/src  \
+    && cd /root/rpki/rpstir/src \
     && git clone https://github.com/bgpsecurity/rpstir.git \
     && cd ./rpstir \
     && ./autogen.sh \
@@ -159,9 +157,53 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && make  \
     && mkdir -p /usr/local/var/cache/rpstir-tmp \
     && make install \
-    && cp /root/rpstir/rpstir.conf /usr/local/etc/rpstir/rpstir.conf   
+    && cp /root/rpki/rpstir/src/rpstir.conf /usr/local/etc/rpstir/rpstir.conf  \
+    && cd /root/rpki/rpstir/src/rpstir/doc/docker/dockerbuilder \
+    && chmod +x *.sh \
+    && crontab crontab_rpstir.conf
 
+# install rpki-transfer and slurm 
+RUN cd /root/ \
+    && cp /root/file/rpki-transfer.zip /root/rpki/ \
+    && cd /root/rpki/  \
+    && unzip -a rpki-transfer.zip \
+    && cd /root/rpki/rpki-transfer/bin/ \
+    && chmod +x * \
+    && cp /root/file/slurm.zip /root/rpki/ \
+    && cd /root/rpki/  \
+    && unzip -a slurm.zip \
+    && cd /root/rpki/slurm \
+    && chmod +x slurm \
+    && cp /root/file/cert.zip /root/rpki/ \
+    && cd /root/rpki/  \
+    && unzip -a cert.zip \
+    && mkdir -p  /root/rpki/rpstir/bin \
+    && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
+    && ln -s /usr/local/bin/rpstir-query  /root/rpki/rpstir/bin/rpstir-query \
+    && ln -s /usr/local/bin/rpstir-results  /root/rpki/rpstir/bin/rpstir-results \
+	  && ln -s /usr/local/bin/rpstir-rpki-rtr-update  /root/rpki/rpstir/bin/rpstir-rpki-rtr-update \
+	  && ln -s /usr/local/libexec/rpstir/rpki-rtr-daemon /root/rpki/rpstir/bin/rpki-rtr-daemon \
+	  && ln -s /usr/local/bin/rpstir-synchronize  /root/rpki/rpstir/bin/rpstir-synchronize \
+	  && ln -s /usr/local/var/cache/rpstir /root/rpki/rpstir/cache \
+	  && ln -s /usr/local/var/cache/rpstir-tmp /root/rpki/rpstir/cache-valid \
+	  && ln -s /usr/local/var/log/rpstir /root/rpki/rpstir/log \
+	  && cp /root/rpki/rpstir/src/rpstir/doc/docker/dockerbuilder/crontab_rpstir.sh /root/rpki/rpstir/bin/ \
+	  && cd /root/rpki/rpstir/bin/ \
+	  && chmod +x * \
+	  && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+	  && echo "Asia/shanghai" > /etc/timezone 
 
+# rpstir initialize and create db table	  
+#RUN service mysqld restart \
+#	  && cd /root/rpki/rpstir/bin/ \
+#	  && ./rpstir-initialize -f \
+#	  && cd /root/mysql \
+#	  && ./mysql-table.sh \
+RUN	cp /root/mysql/my.cnf  /etc/my.cnf \
+    && echo "max_prepared_stmt_count=1048576" >> /etc/my.cnf  \
+    && echo "innodb_flush_log_at_trx_commit=2" >> /etc/my.cnf
+#    && rm -rf /root/mysql 
+	   
 
 # clean all rmp
 RUN  yum clean all \ 
