@@ -22,30 +22,12 @@ RUN yum -y update && yum install -y -q \
     libtool  \
     libevent \
     rsyslog  \
-    wget     
+    wget     \
+    autoconf \
+    automake \
+    crontab \
 
-# install autoconf
-RUN mkdir /root/autoconf \
-    && cd /root/autoconf \
-    && wget --inet4-only  http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz  \
-    && tar xzvf autoconf-2.69.tar.gz \
-    && cd autoconf-2.69 \
-    && ./configure  \
-    && make  \
-    && make  install \
-    && rm -rf  /root/autoconf 
-
-
-# install automake
-RUN mkdir /root/automake \
-    && cd /root/automake \
-    && wget --inet4-only http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz \
-    && tar xzvf automake-1.15.tar.gz \
-    && cd automake-1.15 \
-    && ./configure  \
-    && make  \
-    && make  install \
-    && rm -rf /root/automake 
+manuall install 
 
 # install netcat
 RUN mkdir /root/netcat \
@@ -87,9 +69,9 @@ RUN mkdir /root/cryptlib \
 # install openssl1.0.2l
 RUN mkdir /root/openssl \
     && cd /root/openssl \
-    && wget --inet4-only https://www.openssl.org/source/openssl-1.0.2l.tar.gz \
-    && tar xzvf openssl-1.0.2l.tar.gz \
-    && cd openssl-1.0.2l \
+    && wget --inet4-only https://www.openssl.org/source/openssl-1.1.1d.tar.gz \
+    && tar xzvf openssl-1.1.1d.tar.gz \
+    && cd openssl-1.1.1d \
     && ./config  shared enable-rfc3779 \
     && make  depend \
     && make  \
@@ -132,7 +114,7 @@ RUN mkdir /root/unixodbc \
     && make  install \ 
     && rm -rf /root/unixodbc \
     && mkdir -p /usr/local/etc/ \
-    && cp /root/file/*.ini /usr/local/etc/  
+    && cp /root/file/*.ini cd  
 
 # install crontab
 RUN  mkdir /root/crontab \
@@ -162,21 +144,8 @@ RUN cp /root/file/rpstir.test.conf /root/.rpstir.test.conf \
     && chmod +x *.sh \
     && crontab crontab_rpstir.conf
 
-# install rpki-transfer and slurm 
+# init rpstir
 RUN cd /root/ \
-    && cp /root/file/rpki-transfer.zip /root/rpki/ \
-    && cd /root/rpki/  \
-    && unzip -a rpki-transfer.zip \
-    && cd /root/rpki/rpki-transfer/bin/ \
-    && chmod +x * \
-    && cp /root/file/slurm.zip /root/rpki/ \
-    && cd /root/rpki/  \
-    && unzip -a slurm.zip \
-    && cd /root/rpki/slurm \
-    && chmod +x slurm \
-    && cp /root/file/cert.zip /root/rpki/ \
-    && cd /root/rpki/  \
-    && unzip -a cert.zip \
     && mkdir -p  /root/rpki/rpstir/bin \
     && ln -s /usr/local/bin/rpstir-initialize  /root/rpki/rpstir/bin/rpstir-initialize \
     && ln -s /usr/local/bin/rpstir-query  /root/rpki/rpstir/bin/rpstir-query \
